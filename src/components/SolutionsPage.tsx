@@ -263,7 +263,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
               Whether you're an employer looking for talent, a professional seeking opportunities, 
-              or a university issuing credentials — swipe has you covered.
+              or a university issuing credentials — CoreID has you covered.
             </p>
           </motion.div>
 
@@ -500,7 +500,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
               Ready to Transform How You Work?
             </h2>
             <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 px-4">
-              Join thousands of employers, professionals, and universities using swipe to build trust and create opportunities.
+              Join thousands of employers, professionals, and universities using CoreID to build trust and create opportunities.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 

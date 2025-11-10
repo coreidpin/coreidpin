@@ -285,8 +285,8 @@ export function CookiesPolicy() {
                 If you have questions about how we use cookies:
               </p>
               <ul className="space-y-1 text-sm">
-                <li><strong>Email:</strong> privacy@swipe.work</li>
-                <li><strong>Address:</strong> swipe, Lagos, Nigeria</li>
+            <li><strong>Email:</strong> privacy@CoreID.work</li>
+            <li><strong>Address:</strong> CoreID, Lagos, Nigeria</li>
               </ul>
             </CardContent>
           </Card>

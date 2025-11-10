@@ -41,6 +41,8 @@ import {
   CheckCheck
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import TrustBanner from "./TrustBanner";
+import "../styles/hero-mobile.css";
 
 interface LandingPageProps {
   onLogin: (
@@ -86,13 +88,14 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         <div className="container mx-auto px-4 py-12 sm:py-20 relative z-10">
           <div className="max-w-7xl mx-auto">
             {/* Hero Content */}
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center hero-grid">
               {/* Left: Text Content */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
-                className="text-center lg:text-left"
+                className="text-center lg:text-left hero-mobile hero-text"
+                data-testid="hero-text"
               >
                 {/* Badge */}
                 <motion.div
@@ -112,7 +115,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-[48px] sm:text-[60px] lg:text-[84px] mb-4 sm:mb-6 lg:mb-8 text-white leading-[1.1] lg:leading-[1.05]"
+                  className="text-5xl sm:text-6xl lg:text-7xl mb-6 text-white leading-tight"
                 >
                   Your Global<br />
                   <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
@@ -120,6 +123,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   </span>
                   <br />Number
                 </motion.h1>
+
 
                 {/* Subheadline */}
                 <motion.p
@@ -247,6 +251,11 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         >
           <ChevronRight className="h-6 w-6 text-white/40 rotate-90" />
         </motion.div>
+      </section>
+
+      {/* Trust & Compliance Banner */}
+      <section>
+        <TrustBanner />
       </section>
 
       {/* WHAT IS PIN - Light Section */}

@@ -76,7 +76,7 @@ export function ProfileBadge({
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `swipe-badge-${userName.replace(/\s+/g, '-').toLowerCase()}.png`;
+  link.download = `coreid-badge-${userName.replace(/\s+/g, '-').toLowerCase()}.png`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -106,7 +106,7 @@ export function ProfileBadge({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-xs font-semibold text-primary">swipe</span>
+    <span className="text-xs font-semibold text-primary">CoreID</span>
             </div>
             <Icon className={`h-6 w-6 bg-gradient-to-br ${getLevelColor(analysis.experienceLevel)} bg-clip-text text-transparent`} />
           </div>

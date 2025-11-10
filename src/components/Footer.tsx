@@ -6,7 +6,6 @@ import { Separator } from './ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Logo } from './Logo';
 import { 
-  Shield, 
   Mail, 
   Phone, 
   MessageCircle, 
@@ -14,9 +13,6 @@ import {
   CheckCircle,
   Award,
   Lock,
-  Users,
-  Building,
-  GraduationCap,
   ExternalLink,
   Twitter,
   Linkedin,
@@ -26,6 +22,7 @@ import {
   UserCheck,
   School
 } from 'lucide-react';
+// Trust metrics banner removed from Footer
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -104,9 +101,9 @@ const partnerships = [
 ];
 
 const trustMetrics = [
-  { label: 'Verified Professionals', value: '50,000+', icon: Users },
-  { label: 'Global Employers', value: '2,500+', icon: Building },
-  { label: 'Partner Universities', value: '150+', icon: GraduationCap },
+  { label: 'Verified Professionals', value: '50,000+', icon: Globe },
+  { label: 'Global Employers', value: '2,500+', icon: Globe },
+  { label: 'Partner Universities', value: '150+', icon: Globe },
   { label: 'Countries Served', value: '45+', icon: Globe }
 ];
 
@@ -119,32 +116,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
 
   return (
     <footer className="bg-card border-t border-border mt-12">
-      {/* Trust Banner */}
-      <div className="bg-primary/5 border-b border-border">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Shield className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Verified & Compliant Talents Only</h3>
-            </div>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Every professional on our platform undergoes rigorous KYC, AML, and sanctions screening. 
-              Your hiring process is secure, compliant, and globally recognized.
-            </p>
-            
-            {/* Trust Metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-              {trustMetrics.map((metric) => (
-                <div key={metric.label} className="text-center">
-                  <metric.icon className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-primary">{metric.value}</div>
-                  <div className="text-sm text-muted-foreground">{metric.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Trust Banner removed from Footer to avoid duplication */}
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
@@ -154,7 +126,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
             <div>
               <Logo size="lg" showText={true} />
               <p className="text-muted-foreground leading-relaxed mt-4">
-                The world's first social network where real skills, verified experience, and authentic people connect to create opportunity. Swipe. Verify. Match. Hire.
+                The world's first social network where real skills, verified experience, and authentic people connect to create opportunity. CoreID. Verify. Match. Hire.
               </p>
             </div>
 
@@ -186,14 +158,14 @@ export function Footer({ onNavigate }: FooterProps = {}) {
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <Mail className="h-4 w-4 text-primary" />
-                  <a href="mailto:support@swipe.work" className="text-muted-foreground hover:text-foreground transition-colors">
-                    support@swipe.work
+                  <a href="mailto:support@COREID.work" className="text-muted-foreground hover:text-foreground transition-colors">
+                    support@COREID.work
                   </a>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Phone className="h-4 w-4 text-primary" />
                   <a href="tel:+2348008556226" className="text-muted-foreground hover:text-foreground transition-colors">
-                    +234 (0) 800-SWIPE
+                    +234 (0) 800-COREID
                   </a>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
@@ -286,7 +258,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-muted-foreground">
-            <span>© 2025 swipe. All rights reserved.</span>
+            <span>© 2025 CoreID. All rights reserved.</span>
             <div className="flex items-center gap-4">
               <button onClick={() => handleNavigate('privacy')} className="hover:text-foreground transition-colors">Privacy Policy</button>
               <button onClick={() => handleNavigate('terms')} className="hover:text-foreground transition-colors">Terms of Service</button>
@@ -304,7 +276,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
         {/* Disclaimer */}
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
           <p className="text-xs text-muted-foreground text-center leading-relaxed">
-            <strong>Important:</strong> swipe is the world's first social network where real skills meet verified opportunities. 
+            <strong>Important:</strong> CoreID is the world's first social network where real skills meet verified opportunities. 
             We implement rigorous KYC, AML, and credential verification. All data collection and processing 
             comply with international data protection regulations including GDPR, NDPR, and other applicable privacy laws. 
             For sensitive data handling, please consult our detailed privacy policy and compliance documentation.

@@ -143,7 +143,7 @@ export function PINIdentityCard({
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Fingerprint className="h-6 w-6 text-blue-400" />
-                <span className="text-sm font-semibold text-blue-300">swipe PIN</span>
+        <span className="text-sm font-semibold text-blue-300">CoreID PIN</span>
               </div>
               <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400">
                 Verified
@@ -249,7 +249,7 @@ export function PINIdentityCard({
                   <Fingerprint className="h-7 w-7 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-blue-100">swipe Professional ID</h3>
+        <h3 className="text-lg font-bold text-blue-100">CoreID Professional ID</h3>
                   <p className="text-xs text-blue-300">Globally Recognized Identity</p>
                 </div>
               </div>

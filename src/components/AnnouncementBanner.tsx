@@ -14,7 +14,7 @@ interface AnnouncementBannerProps {
 }
 
 export function AnnouncementBanner({ 
-  message = "🎉 Welcome to Swipe! The world's first social network where real skills meet verified opportunities.",
+  message = "🎉 Welcome to CoreID! The world's first social network where real skills meet verified opportunities.",
   type = 'info',
   dismissible = true,
   link

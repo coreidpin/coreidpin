@@ -216,7 +216,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             Simple, Secure, Compliant
           </h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            Discover how swipe transforms the way verified African talent connects with global opportunities 
+Discover how CoreID transforms the way verified African talent connects with global opportunities
             through our comprehensive compliance-first platform.
           </p>
         </motion.div>
@@ -232,7 +232,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              The swipe Process
+The CoreID Process
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Our four-step process ensures secure, compliant, and efficient connections 
@@ -292,7 +292,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             Detailed Workflows
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore the specific journey for each user type on the swipe platform.
+Explore the specific journey for each user type on the CoreID platform.
           </p>
         </motion.div>
 
@@ -492,7 +492,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Why Choose swipe?
+Why Choose CoreID?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Experience the benefits of our compliance-first approach to global talent acquisition.
@@ -577,7 +577,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
               Ready to Get Started?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Join thousands of professionals, employers, and universities already using swipe 
+Join thousands of professionals, employers, and universities already using CoreID
               to create compliant global connections.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

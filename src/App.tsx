@@ -417,11 +417,11 @@ export default function App() {
     const pageConfig = {
       'trust-safety': {
         title: 'Trust & Safety',
-        description: 'Learn about our comprehensive security measures and compliance protocols that protect all users on the swipe platform.'
+        description: 'Learn about our comprehensive security measures and compliance protocols that protect all users on the CoreID platform.'
       },
       'help': {
         title: 'Help Center',
-        description: 'Find answers to common questions and get support for using the swipe platform.'
+        description: 'Find answers to common questions and get support for using the CoreID platform.'
       },
       'contact': {
         title: 'Contact Us',

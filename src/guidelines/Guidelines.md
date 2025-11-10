@@ -66,8 +66,10 @@ Purpose: Record canonical font-size values for the LandingPage hero heading.
 - Mobile (base): `48px`
 - Small screens (`sm`): `60px`
 - Large screens (`lg` ≥1024px): `84px`
+ - Large screens (`lg` ≥1024px): `72px`
 
-Notes:
-- These values match the original hero text dimensions shown in the provided screenshot and prior Tailwind scales (approx. `text-5xl`, `text-6xl`, `text-7xl`).
-- Other properties (font family, weight, color, line-height) remain unchanged and inherit from component styles.
+ Notes:
+ - These values restore the original hero text dimensions and align with prior Tailwind scales (approx. `text-5xl`, `text-6xl`, `text-7xl`).
+ - Font weight: bold emphasis (component uses `font-extrabold`).
+ - Line height: tight for display (`leading-[1.1]`). Color and font family inherit from component styles.
 - Scope: Only applied to the LandingPage hero `<h1>` element.

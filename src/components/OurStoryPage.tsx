@@ -127,7 +127,7 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
             Bridging Africa to the World
           </h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            Born from the vision to unlock Africa's immense talent potential, swipe is transforming 
+ Born from the vision to unlock Africa's immense talent potential, CoreID is transforming
             how verified professionals connect with global opportunities through compliance-first technology.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
