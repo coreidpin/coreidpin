@@ -30,6 +30,7 @@ import {
   MapPin,
   Briefcase
 } from 'lucide-react';
+import RegistrationFlow from './RegistrationFlow';
 
 interface OnboardingFlowProps {
   userType: 'employer' | 'professional' | 'university';
@@ -38,6 +39,13 @@ interface OnboardingFlowProps {
 }
 
 export function OnboardingFlow({ userType, onComplete, onBack }: OnboardingFlowProps) {
+  // Route professional to the new unified RegistrationFlow
+  if (userType === 'professional') {
+    return (
+      <RegistrationFlow userType="professional" origin="onboarding" onComplete={onComplete} onBack={onBack} />
+    );
+  }
+
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -72,11 +80,51 @@ export function OnboardingFlow({ userType, onComplete, onBack }: OnboardingFlowP
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   const handleNext = async () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      // Show welcome badge before completing
-      setShowWelcomeBadge(true);
+    // Validate data consistency before moving forward
+    try {
+      setIsLoading(true);
+      const payload: any = {
+        entryPoint: 'get-started',
+        userType,
+        data: userType === 'professional' ? {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          phone: formData.phone,
+          title: formData.title,
+          location: formData.location,
+        } : userType === 'employer' ? {
+          name: formData.companyName,
+          email: formData.contactEmail,
+          contactEmail: formData.contactEmail,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          phone: formData.phone,
+          companyName: formData.companyName,
+          industry: formData.industry,
+          headquarters: formData.headquarters,
+        } : {}
+      };
+
+      const res = await api.validateRegistration(payload);
+      if (!res.valid) {
+        const firstErr = res.errors?.[0] || 'Invalid registration data';
+        toast.error(firstErr);
+        setIsLoading(false);
+        return;
+      }
+
+      if (currentStep < steps.length - 1) {
+        setCurrentStep(currentStep + 1);
+      } else {
+        // Show welcome badge before completing
+        setShowWelcomeBadge(true);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Validation failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -353,20 +401,44 @@ function ProfessionalBasicInfo({ formData, updateFormData, isLoading, setIsLoadi
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Info Box */}
-          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-primary mb-1">Complete your profile after signup!</p>
-                <p className="text-muted-foreground">
-                  You can add your LinkedIn, GitHub, portfolio, and other details in the Setup tab on your dashboard to unlock AI verification and get discovered by employers.
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password || ''}
+                  onChange={(e) => updateFormData('password', e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Must be at least 6 characters</p>
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword || ''}
+                  onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                />
               </div>
             </div>
+
+            <div>
+              <Label htmlFor="phone">Phone Number (optional)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="e.g., +234 801 234 5678"
+                value={formData.phone || ''}
+                onChange={(e) => updateFormData('phone', e.target.value)}
+              />
+            </div>
           </div>
+
+          
         </CardContent>
       </Card>
     </div>
@@ -512,20 +584,44 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
                 />
               </div>
             </div>
-          </div>
 
-          {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-blue-900 mb-1">Start swiping immediately!</p>
-                <p className="text-blue-800">
-                  Once you complete this quick setup, you can post jobs and start discovering verified talent right away. Add additional company details anytime from your dashboard.
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password || ''}
+                  onChange={(e) => updateFormData('password', e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Must be at least 6 characters</p>
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword || ''}
+                  onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                />
               </div>
             </div>
+
+            <div>
+              <Label htmlFor="phone">Phone Number (optional)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="e.g., +234 801 234 5678"
+                value={formData.phone || ''}
+                onChange={(e) => updateFormData('phone', e.target.value)}
+              />
+            </div>
           </div>
+
+          
         </CardContent>
       </Card>
     </div>

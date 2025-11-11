@@ -1,0 +1,33 @@
+name: Post-Deploy Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      SUPABASE_URL:
+        description: 'Supabase project URL (https://<project>.supabase.co)'
+        required: true
+      FUNCTION_SLUG:
+        description: 'Functions route slug'
+        required: false
+        default: 'server'
+  schedule:
+    - cron: '0 */6 * * *' # every 6 hours
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run post-deploy checks
+        env:
+          SUPABASE_URL: ${{ github.event.inputs.SUPABASE_URL || vars.SUPABASE_URL }}
+          FUNCTION_SLUG: ${{ github.event.inputs.FUNCTION_SLUG || vars.FUNCTION_SLUG }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY }}
+        run: node scripts/postdeploy-check.mjs

@@ -306,10 +306,12 @@ Explore the specific journey for each user type on the CoreID platform.
               <UserCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Professionals</span>
             </TabsTrigger>
+            {/*
             <TabsTrigger value="universities" className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4" />
               <span className="hidden sm:inline">Universities</span>
             </TabsTrigger>
+            */}
           </TabsList>
 
           <TabsContent value="employers">
@@ -424,61 +426,10 @@ Explore the specific journey for each user type on the CoreID platform.
             </div>
           </TabsContent>
 
-          <TabsContent value="universities">
-            <div className="space-y-6">
-              {universitySteps.map((step, index) => (
-                <motion.div
-                  key={step.step}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="p-6">
-                    <CardContent className="p-0">
-                      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold">
-                            {step.step}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                            <p className="text-muted-foreground">{step.description}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="lg:w-1/3 space-y-3">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            <span>Time: {step.time}</span>
-                          </div>
-                          <div className="space-y-1">
-                            {step.features.map((feature, i) => (
-                              <div key={i} className="flex items-center gap-2 text-sm">
-                                <CheckCircle className="h-3 w-3 text-emerald-600" />
-                                <span>{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-              
-              <div className="text-center pt-6">
-                <Button 
-                  size="lg" 
-                  onClick={() => onLogin?.('university')}
-                  className="group"
-                >
-                  Partner With Us
-                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
+          {/* Universities tab hidden */}
+          {false && (
+            <TabsContent value="universities"></TabsContent>
+          )}
         </Tabs>
       </section>
 
@@ -577,7 +528,7 @@ Why Choose CoreID?
               Ready to Get Started?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-Join thousands of professionals, employers, and universities already using CoreID
+Join thousands of professionals and employers already using CoreID
               to create compliant global connections.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

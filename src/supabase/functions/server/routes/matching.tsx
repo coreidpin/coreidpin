@@ -1,20 +1,16 @@
 import { Hono } from "npm:hono";
-import { createClient } from "npm:@supabase/supabase-js";
+import { getSupabaseClient, getAuthUser } from "../lib/supabaseClient.tsx";
 import * as kv from "../kv_store.tsx";
 
 const matching = new Hono();
 
-// Create Supabase client
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-);
+// Supabase client singleton
+const supabase = getSupabaseClient();
 
 // Get recommended profiles/jobs for swipe interface
 matching.get("/make-server-5cd3a043/recommendations", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const { user, error } = await getAuthUser(c);
     
     if (!user?.id || error) {
       return c.json({ error: "Unauthorized" }, 401);

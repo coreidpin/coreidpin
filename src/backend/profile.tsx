@@ -375,6 +375,34 @@ profile.post("/complete", async (c) => {
       updatedAt: new Date().toISOString()
     });
 
+    // Sync to public.profiles (service role bypasses RLS)
+    try {
+      const userType = (userProfile?.userType) || (profileData?.userType) || 'professional';
+      const { error: upsertErr } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: userId,
+          email: profileData.email,
+          name: profileData.name,
+          user_type: userType,
+          profile_complete: true,
+          onboarding_complete: (userProfile?.onboardingComplete === true),
+        }, { onConflict: 'user_id' });
+      if (upsertErr) {
+        console.log('profiles upsert error on /profile/complete:', upsertErr);
+      }
+    } catch (profilesErr) {
+      console.log('profiles sync failed on /profile/complete:', profilesErr);
+    }
+
+    // Audit trail for profile completion
+    await kv.set(`audit:profile_complete:${userId}:${Date.now()}`, {
+      userId,
+      completionPercentage,
+      timestamp: new Date().toISOString(),
+      action: 'profile_complete',
+    });
+
     return c.json({ 
       success: true, 
       message: "Profile saved successfully",

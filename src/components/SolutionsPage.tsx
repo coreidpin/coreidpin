@@ -131,50 +131,50 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
     }
   ];
 
-  const universityFeatures = [
-    {
-      icon: FileCheck,
-      title: 'Issue Tamper-Proof Credentials',
-      description: 'Issue blockchain-verified digital certificates that can\'t be forged or faked.',
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50'
-    },
-    {
-      icon: Users,
-      title: 'Track Alumni Success',
-      description: 'Monitor your graduates\' career progress and employment outcomes in real-time.',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    {
-      icon: BarChart,
-      title: 'Employability Analytics',
-      description: 'Get insights into which skills employers seek and how your programs perform.',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      icon: Briefcase,
-      title: 'Connect Students to Jobs',
-      description: 'Help graduates get hired faster with verified credentials employers trust.',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    {
-      icon: Lock,
-      title: 'Secure & Compliant',
-      description: 'GDPR compliant, encrypted storage, and full audit trails for all credentials.',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50'
-    },
-    {
-      icon: Lightbulb,
-      title: 'Institutional Branding',
-      description: 'Enhance your reputation with modern, verifiable credentials that students value.',
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50'
-    }
-  ];
+  // const universityFeatures = [
+  //   {
+  //     icon: FileCheck,
+  //     title: 'Issue Tamper-Proof Credentials',
+  //     description: 'Issue blockchain-verified digital certificates that can\'t be forged or faked.',
+  //     color: 'text-indigo-600',
+  //     bgColor: 'bg-indigo-50'
+  //   },
+  //   {
+  //     icon: Users,
+  //     title: 'Track Alumni Success',
+  //     description: 'Monitor your graduates\' career progress and employment outcomes in real-time.',
+  //     color: 'text-green-600',
+  //     bgColor: 'bg-green-50'
+  //   },
+  //   {
+  //     icon: BarChart,
+  //     title: 'Employability Analytics',
+  //     description: 'Get insights into which skills employers seek and how your programs perform.',
+  //     color: 'text-blue-600',
+  //     bgColor: 'bg-blue-50'
+  //   },
+  //   {
+  //     icon: Briefcase,
+  //     title: 'Connect Students to Jobs',
+  //     description: 'Help graduates get hired faster with verified credentials employers trust.',
+  //     color: 'text-purple-600',
+  //     bgColor: 'bg-purple-50'
+  //   },
+  //   {
+  //     icon: Lock,
+  //     title: 'Secure & Compliant',
+  //     description: 'GDPR compliant, encrypted storage, and full audit trails for all credentials.',
+  //     color: 'text-red-600',
+  //     bgColor: 'bg-red-50'
+  //   },
+  //   {
+  //     icon: Lightbulb,
+  //     title: 'Institutional Branding',
+  //     description: 'Enhance your reputation with modern, verifiable credentials that students value.',
+  //     color: 'text-amber-600',
+  //     bgColor: 'bg-amber-50'
+  //   }
+  // ];
 
   const employerStats = [
     { label: 'Average Time to Hire', value: '12 days', icon: Clock },
@@ -190,12 +190,12 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
     { label: 'Verified Employers', value: '500+', icon: Building }
   ];
 
-  const universityStats = [
-    { label: 'Partner Universities', value: '50+', icon: GraduationCap },
-    { label: 'Credentials Issued', value: '100,000+', icon: FileCheck },
-    { label: 'Graduate Employment', value: '73%', icon: TrendingUp },
-    { label: 'Employer Trust Score', value: '96%', icon: Star }
-  ];
+  // const universityStats = [
+  //   { label: 'Partner Universities', value: '50+', icon: GraduationCap },
+  //   { label: 'Credentials Issued', value: '100,000+', icon: FileCheck },
+  //   { label: 'Graduate Employment', value: '73%', icon: TrendingUp },
+  //   { label: 'Employer Trust Score', value: '96%', icon: Star }
+  // ];
 
   const renderFeatures = (features: typeof employerFeatures) => (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -287,6 +287,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                   <span className="hidden sm:inline">For Professionals</span>
                   <span className="sm:hidden">Talent</span>
                 </TabsTrigger>
+                {/*
                 <TabsTrigger 
                   value="universities" 
                   className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700"
@@ -295,6 +296,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                   <span className="hidden sm:inline">For Universities</span>
                   <span className="sm:hidden">Universities</span>
                 </TabsTrigger>
+                */}
               </TabsList>
             </div>
 
@@ -422,67 +424,12 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
               </motion.div>
             </TabsContent>
 
-            {/* Universities Tab */}
-            <TabsContent value="universities" className="space-y-12">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="space-y-8 sm:space-y-12"
-              >
-                {/* Hero Image */}
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl max-w-5xl mx-auto">
-                  <ImageWithFallback
-                    src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1bml2ZXJzaXR5JTIwZ3JhZHVhdGlvbnxlbnwxfHx8fDE3NTkyMTk3OTR8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                    alt="University graduation"
-                    className="w-full h-48 sm:h-64 lg:h-96 object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-                    <div className="p-4 sm:p-8 w-full">
-                      <h3 className="text-lg sm:text-2xl text-white mb-2">Modern Credentials. Better Outcomes.</h3>
-                      <p className="text-sm sm:text-base text-white/90">
-                        Issue blockchain-verified credentials that employers trust.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                {renderStats(universityStats)}
-
-                {/* Features */}
-                <div>
-                  <h2 className="text-2xl sm:text-3xl mb-6 sm:mb-8 text-center">Key Features for Universities</h2>
-                  {renderFeatures(universityFeatures)}
-                </div>
-
-                {/* CTA */}
-                <div className="text-center py-8 sm:py-12 bg-gradient-to-br from-purple-50 to-white rounded-2xl border-2 border-purple-100 px-4">
-                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Issue Verified Credentials?</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
-                    Join 50+ universities enhancing graduate employability with digital credentials.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                    <Button 
-                      size="lg" 
-                      onClick={() => onLogin('university')}
-                      className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6"
-                    >
-                      <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                      Partner With Us
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                    <Button 
-                      size="lg" 
-                      variant="outline"
-                      onClick={() => onNavigate('contact')}
-                      className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6"
-                    >
-                      Schedule a Demo
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            </TabsContent>
+            {/* Universities Tab hidden */}
+            {false && (
+              <TabsContent value="universities" className="space-y-12">
+                {/* University content removed */}
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </section>

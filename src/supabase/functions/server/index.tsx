@@ -1,17 +1,17 @@
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
-import { createClient } from "npm:@supabase/supabase-js";
+import { getSupabaseClient } from "./lib/supabaseClient.tsx";
+import { validateServerEnv } from "./lib/envCheck.tsx";
 import * as kv from "./kv_store.tsx";
 import { matching } from "./routes/matching.tsx";
 
+// Validate environment before app initializes
+validateServerEnv();
 const app = new Hono();
 
-// Create Supabase client
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-);
+// Supabase client singleton
+const supabase = getSupabaseClient();
 
 // Enable logger
 app.use('*', logger(console.log));
@@ -31,6 +31,76 @@ app.use(
 // Health check endpoint
 app.get("/make-server-5cd3a043/health", (c) => {
   return c.json({ status: "ok" });
+});
+
+// Registration data validation endpoint
+app.post("/make-server-5cd3a043/validate-registration", async (c) => {
+  try {
+    const body = await c.req.json();
+    const entryPoint = body.entryPoint as 'signup' | 'get-started' | undefined;
+    const userType = body.userType as 'professional' | 'employer' | 'university' | undefined;
+    const data = body.data || {};
+
+    const errors: string[] = [];
+
+    if (!entryPoint) errors.push('Missing entryPoint');
+    if (!userType) errors.push('Missing userType');
+
+    // Common fields
+    const email = (data.email || data.contactEmail || '').toString().trim();
+    const name = (data.name || '').toString().trim();
+    const phone = (data.phone || '').toString().trim();
+    const password = (data.password || '').toString();
+    const confirmPassword = (data.confirmPassword || '').toString();
+
+    // Email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      errors.push('Email Address must be a valid email');
+    }
+
+    if (!name) {
+      errors.push('Full Name is required');
+    }
+
+    // Phone optional: allow +country and digits, spaces, hyphens
+    if (phone && !/^\+?[0-9\s-]{7,20}$/.test(phone)) {
+      errors.push('Phone Number format is invalid');
+    }
+
+    // Password requirements for both entry points
+    if (!password || password.length < 6) {
+      errors.push('Password must be at least 6 characters');
+    }
+    if (password !== confirmPassword) {
+      errors.push('Password and Confirm Password must match');
+    }
+
+    // User-type specific validations
+    if (userType === 'professional') {
+      const title = (data.title || '').toString().trim();
+      const location = (data.location || '').toString().trim();
+      if (!title) errors.push('Professional Title is required');
+      if (!location) errors.push('Location is required');
+    }
+
+    if (userType === 'employer') {
+      const companyName = (data.companyName || '').toString().trim();
+      const industry = (data.industry || '').toString().trim();
+      const headquarters = (data.headquarters || '').toString().trim();
+      const contactEmail = (data.contactEmail || '').toString().trim();
+      if (!companyName) errors.push('Company Name is required');
+      if (!industry) errors.push('Industry is required');
+      if (!headquarters) errors.push('Headquarters Location is required');
+      if (!contactEmail || !emailRegex.test(contactEmail)) {
+        errors.push('Contact Email must be a valid email');
+      }
+    }
+
+    return c.json({ valid: errors.length === 0, errors });
+  } catch (error: any) {
+    return c.json({ valid: false, errors: ['Validation failed', error?.message] }, 400);
+  }
 });
 
 // User Registration Endpoint

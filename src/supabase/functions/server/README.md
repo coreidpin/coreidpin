@@ -19,7 +19,7 @@
 
 ### 1. Authentication Routes (`/routes/auth.tsx`)
 
-**Base Path:** `/make-server-5cd3a043`
+**Base Path:** `/server`
 
 #### Endpoints:
 - `POST /register` - Register new user
@@ -30,9 +30,16 @@
   - Body: `{ email, password, name, userType }`
   - Returns: `{ success, user }`
 
+- `POST /login` - Secure login with CSRF + rate limiting
+  - Headers: `X-CSRF-Token: <token>` (required)
+  - Body: `{ email, password }`
+  - Returns: `{ success, accessToken, refreshToken, expiresIn, user, userData }`
+  - Rate limit: 5 attempts per 15 minutes per IP
+  - Logs: Success and failure attempts written to KV (and table via migration when enabled)
+
 ### 2. Profile Routes (`/routes/profile.tsx`)
 
-**Base Path:** `/make-server-5cd3a043/profile`
+**Base Path:** `/server/profile`
 
 #### Endpoints:
 - `GET /:userId` - Get user profile
@@ -60,7 +67,7 @@
 
 ### 3. AI Routes (`/routes/ai.tsx`)
 
-**Base Path:** `/make-server-5cd3a043/ai`
+**Base Path:** `/server/ai`
 
 #### Endpoints:
 - `POST /match-talent` - AI-powered talent matching
@@ -75,7 +82,7 @@
 
 ### 4. Professionals Routes (`/routes/professionals.tsx`)
 
-**Base Path:** `/make-server-5cd3a043/professionals`
+**Base Path:** `/server/professionals`
 
 #### Endpoints:
 - `GET /` - Get all verified professionals
@@ -145,7 +152,7 @@ To migrate from legacy `index.tsx` to modular structure:
 2. Import and mount in `index.tsx`
    ```typescript
    import { myRoute } from "./routes/myRoute.tsx";
-   app.route("/make-server-5cd3a043/my-route", myRoute);
+   app.route("/server/my-route", myRoute);
    ```
 
 ## Error Handling
@@ -165,6 +172,10 @@ All routes include standardized error handling:
 - Service role key never exposed to frontend
 - CORS configured for web access
 - Input validation on all endpoints
+- CSRF required for `/login` via `X-CSRF-Token` header
+  - Frontend generates token on app load and sends on secure requests
+  - In production, use double-submit cookie or session-bound CSRF token
+  - Configure allowed origins via `ALLOWED_ORIGINS` env (comma-separated)
 
 ## Testing
 
@@ -172,16 +183,16 @@ Test endpoints using curl:
 
 ```bash
 # Health check
-curl https://{project-id}.supabase.co/functions/v1/make-server-5cd3a043/health
+curl https://{project-id}.supabase.co/functions/v1/server/health
 
 # Register user
-curl -X POST https://{project-id}.supabase.co/functions/v1/make-server-5cd3a043/register \
+curl -X POST https://{project-id}.supabase.co/functions/v1/server/register \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {anon-key}" \
   -d '{"email":"user@example.com","password":"password123","name":"John Doe","userType":"professional"}'
 
 # Analyze profile
-curl -X POST https://{project-id}.supabase.co/functions/v1/make-server-5cd3a043/profile/analyze \
+curl -X POST https://{project-id}.supabase.co/functions/v1/server/profile/analyze \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {access-token}" \
   -d '{"linkedinUrl":"https://linkedin.com/in/johndoe","name":"John Doe","title":"Product Manager"}'
@@ -198,7 +209,7 @@ curl -X POST https://{project-id}.supabase.co/functions/v1/make-server-5cd3a043/
 
 Monitor your API using Supabase dashboard:
 1. Go to Edge Functions
-2. Select `make-server-5cd3a043`
+2. Select `server`
 3. View Logs tab for request/response logs
 4. Check Metrics for performance data
 
@@ -208,3 +219,14 @@ For issues or questions:
 - Check Supabase Edge Function logs
 - Review error responses for detailed messages
 - Consult main documentation in `/IMPLEMENTATION_SUMMARY.md`
+# Secure login
+curl -X POST https://{project-id}.supabase.co/functions/v1/server/login \
+  -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: {generated-csrf-token}" \
+  -d '{"email":"user@example.com","password":"password123"}'
+
+Expected responses:
+- 200 `{ success: true, accessToken, refreshToken, user }`
+- 401 `{ error: "Login failed: <reason>" }`
+- 403 `{ error: "CSRF token missing" }`
+- 429 `{ error: "Too many login attempts. Try again later." }`

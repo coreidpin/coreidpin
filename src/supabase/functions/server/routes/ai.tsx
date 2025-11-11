@@ -1,19 +1,15 @@
 import { Hono } from "npm:hono";
-import { createClient } from "npm:@supabase/supabase-js";
+import { getSupabaseClient, getAuthUser } from "../lib/supabaseClient.tsx";
 
 const ai = new Hono();
 
-// Create Supabase client
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-);
+// Supabase client singleton
+const supabase = getSupabaseClient();
 
 // AI-Powered Talent Matching Endpoint
 ai.post("/match-talent", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const { user, error } = await getAuthUser(c);
     
     if (!user?.id || error) {
       return c.json({ error: "Unauthorized" }, 401);
@@ -75,8 +71,7 @@ ai.post("/match-talent", async (c) => {
 // AI-Powered Compliance Check Endpoint
 ai.post("/compliance-check", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const { user, error } = await getAuthUser(c);
     
     if (!user?.id || error) {
       return c.json({ error: "Unauthorized" }, 401);

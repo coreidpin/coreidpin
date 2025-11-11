@@ -13,12 +13,20 @@ const app = new Hono();
 // Enable logger
 app.use('*', logger(console.log));
 
-// Enable CORS for all routes and methods
+// Enable CORS with optional origin restriction via env ALLOWED_ORIGINS (comma-separated)
+const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') || '').split(',').map(s => s.trim()).filter(Boolean);
 app.use(
   "/*",
   cors({
-    origin: "*",
-    allowHeaders: ["Content-Type", "Authorization"],
+    origin: (origin) => {
+      if (!origin || allowedOrigins.length === 0) return "*"; // default: allow all
+      try {
+        return allowedOrigins.includes(origin) ? origin : "null";
+      } catch {
+        return "*";
+      }
+    },
+    allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,

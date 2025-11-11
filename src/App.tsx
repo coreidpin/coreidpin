@@ -25,7 +25,9 @@ import { AdminLoginDialog } from './components/AdminLoginDialog';
 import { WelcomeToast } from './components/WelcomeToast';
 import { SolutionsPage } from './components/SolutionsPage';
 import { supabase } from './utils/supabase/client';
+import { api } from './utils/api';
 import { CheckCircle, Globe, Shield, Award, Users, Building, GraduationCap } from 'lucide-react';
+import PasswordResetDialog from './components/PasswordResetDialog';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university';
 type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions';
@@ -38,9 +40,21 @@ export default function App() {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
+  const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
+  const [passwordRecoveryEmail, setPasswordRecoveryEmail] = useState<string | null>(null);
 
   // Check for existing session on mount and handle OAuth callback
   useEffect(() => {
+    // Ensure CSRF token exists (double-submit token stored client-side)
+    try {
+      if (!localStorage.getItem('csrfToken')) {
+        const bytes = new Uint8Array(16);
+        (window.crypto || ({} as any)).getRandomValues?.(bytes);
+        const token = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('') || Math.random().toString(36).slice(2);
+        localStorage.setItem('csrfToken', token);
+      }
+    } catch {}
+
     const checkSession = async () => {
       // Check for OAuth callback
       const { data: { session } } = await supabase.auth.getSession();
@@ -94,6 +108,60 @@ export default function App() {
 
     checkSession();
 
+    // Parse verification errors from Supabase redirect and offer resend
+    const parseVerificationError = () => {
+      try {
+        const hash = typeof window !== 'undefined' ? window.location.hash || '' : '';
+        const query = typeof window !== 'undefined' ? window.location.search || '' : '';
+        const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : '');
+        const queryParams = new URLSearchParams(query);
+
+        const error = hashParams.get('error') || hashParams.get('error_code') || queryParams.get('error') || queryParams.get('error_code');
+        const description = hashParams.get('error_description') || queryParams.get('error_description');
+
+        if (error || description) {
+          const message = (description || error || 'Verification error').replace(/_/g, ' ');
+
+          // Try to determine the email to resend to
+          let email: string | null = null;
+          try {
+            email = localStorage.getItem('registrationEmail');
+            if (!email) {
+              const pending = JSON.parse(localStorage.getItem('pendingRegistrationData') || '{}');
+              email = pending?.email || pending?.contactEmail || null;
+            }
+          } catch {}
+
+          toast.error(`Email verification issue: ${message}`, {
+            description: email ? 'You can resend the verification email.' : 'Please enter your email on the login page to resend.',
+            action: email ? {
+              label: 'Resend Email',
+              onClick: async () => {
+                try {
+                  await api.resendVerificationLink(email!);
+                  toast.success('Verification email resent');
+                } catch (err: any) {
+                  toast.error(err?.message || 'Failed to resend verification email');
+                }
+              }
+            } : undefined
+          });
+
+          // Clean error params from URL after notifying
+          try {
+            const url = new URL(window.location.href);
+            url.hash = '';
+            url.searchParams.delete('error');
+            url.searchParams.delete('error_code');
+            url.searchParams.delete('error_description');
+            window.history.replaceState(null, '', url.toString());
+          } catch {}
+        }
+      } catch {}
+    };
+
+    parseVerificationError();
+
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
@@ -101,6 +169,20 @@ export default function App() {
         localStorage.setItem('accessToken', session.access_token);
         localStorage.setItem('userId', session.user.id);
         localStorage.setItem('userType', userType);
+
+        // If email is confirmed, sync verification status to server profile (KV store)
+        try {
+          if (session.user.email_confirmed_at) {
+            await api.updateProfile(session.user.id, session.access_token, { verificationStatus: 'verified' });
+            toast.success('Email verified');
+          }
+        } catch (syncErr) {
+          console.warn('Failed to sync verification status:', syncErr);
+        }
+      } else if (event === 'PASSWORD_RECOVERY') {
+        // Supabase redirects after reset email; show dialog to set new password
+        setPasswordRecoveryEmail(session?.user?.email ?? null);
+        setShowPasswordResetDialog(true);
       } else if (event === 'SIGNED_OUT') {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
@@ -196,6 +278,30 @@ export default function App() {
       console.error('Error updating onboarding status:', error);
     }
     
+    // Reflect onboarding complete in public.profiles
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        await supabase.from('profiles').update({ onboarding_complete: true }).eq('user_id', user.id);
+      }
+    } catch (err) {
+      console.error('Error syncing onboarding_complete to profiles:', err);
+    }
+
+    // Inject access token into URL for dashboard deep-linking
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || localStorage.getItem('accessToken');
+      if (token && typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('token', token);
+        url.searchParams.set('view', String(currentView));
+        window.history.replaceState(null, '', url.toString());
+      }
+    } catch (err) {
+      console.error('Error injecting token into URL:', err);
+    }
+
     setIsAuthenticated(true);
     setAppState('dashboard');
     setShowWelcomeToast(true);
@@ -220,6 +326,14 @@ export default function App() {
     toast.success('Signed out successfully');
   };
 
+  const handlePasswordResetConfirm = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    toast.success('Password updated. Please sign in with your new password.');
+    setShowPasswordResetDialog(false);
+    await supabase.auth.signOut();
+  };
+
   if (appState === 'landing') {
     return (
       <>
@@ -233,6 +347,12 @@ export default function App() {
           open={showLoginDialog}
           onOpenChange={setShowLoginDialog}
           onLoginSuccess={handleLoginSuccess}
+        />
+        <PasswordResetDialog
+          open={showPasswordResetDialog}
+          email={passwordRecoveryEmail}
+          onClose={() => setShowPasswordResetDialog(false)}
+          onReset={handlePasswordResetConfirm}
         />
         <Toaster position="top-right" />
       </>

@@ -20,6 +20,7 @@ import { ProfileViewModal } from './ProfileViewModal';
 import { PINIdentityCard, generateMockPINData } from './PINIdentityCard';
 import { PINOnboarding } from './PINOnboarding';
 import { api } from '../utils/api';
+import { supabase } from '../utils/supabase/client';
 import { mockJobOpportunities } from './mockSwipeData';
 import { toast } from 'sonner@2.0.3';
 import { 
@@ -43,6 +44,10 @@ import {
   Share2
 } from 'lucide-react';
 import { Sun, Moon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { Lock } from 'lucide-react';
+
+const TASKBAR_DISABLED = (import.meta.env.VITE_BETA_DISABLE_TASKBAR ?? 'true') === 'true';
 
 export function ProfessionalDashboard() {
   const [profileCompletion, setProfileCompletion] = useState(35); // Start at 35% after basic info
@@ -61,6 +66,7 @@ export function ProfessionalDashboard() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState<'summary' | 'portfolio' | 'endorsements' | 'opportunities' | 'activity' | 'settings'>('summary');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [registrationSummary, setRegistrationSummary] = useState<any>(null);
 
   // Section refs for smooth-scroll wiring
   const welcomeRef = useRef<HTMLDivElement>(null);
@@ -87,8 +93,8 @@ export function ProfessionalDashboard() {
     setShowProfileModal(true);
   };
 
-  // Mock user data
-  const userProfile = {
+  // User display data with sensible defaults; updated from metadata/profile
+  const [userProfile, setUserProfile] = useState({
     name: "Adebayo Olatunji",
     title: "Senior Frontend Developer",
     location: "Lagos, Nigeria",
@@ -96,7 +102,7 @@ export function ProfessionalDashboard() {
     hourlyRate: 45,
     availability: "Available",
     complianceScore: 0
-  };
+  });
 
   // Load analysis on mount
   useEffect(() => {
@@ -120,6 +126,36 @@ export function ProfessionalDashboard() {
 
     loadAnalysis();
   }, []);
+
+  // Load pending registration summary from localStorage (set by RegistrationFlow)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pendingRegistrationData');
+      if (raw) {
+        const data = JSON.parse(raw);
+        setRegistrationSummary(data);
+      }
+    } catch {}
+  }, []);
+
+  // Load name/title from Supabase metadata; prefer savedProfile title when available
+  useEffect(() => {
+    const applyUserMetadata = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const name = (user.user_metadata as any)?.name || user.email || userProfile.name;
+          const titleFromSaved = (savedProfile && (savedProfile.title || savedProfile.professionalTitle)) || null;
+          const titleFromMeta = (user.user_metadata as any)?.title || null;
+          const title = titleFromSaved || titleFromMeta || userProfile.title;
+          setUserProfile((prev) => ({ ...prev, name, title }));
+        }
+      } catch (err) {
+        // Non-fatal: keep defaults
+      }
+    };
+    applyUserMetadata();
+  }, [savedProfile]);
 
   // Initialize and persist theme, apply global dark class
   useEffect(() => {
@@ -197,6 +233,49 @@ export function ProfessionalDashboard() {
   return (
     <div className={theme === 'dark' ? 'min-h-screen bg-[#0a0b0d] text-white' : 'min-h-screen bg-white text-slate-900'}>
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Registration Summary Banner */}
+        {registrationSummary && (
+          <Card className={theme === 'dark' ? 'bg-[#32f08c]/10 border-[#32f08c]/30' : 'bg-emerald-50 border-emerald-200'}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="h-4 w-4 text-[#32f08c]" />
+                    <span className={theme === 'dark' ? 'text-sm text-white/80' : 'text-sm text-emerald-800'}>
+                      Registration complete — here’s your summary
+                    </span>
+                  </div>
+                  <div className={theme === 'dark' ? 'text-xs text-white/70' : 'text-xs text-slate-700'}>
+                    <span className="font-medium">{registrationSummary?.name}</span>
+                    {registrationSummary?.title ? ` • ${registrationSummary.title}` : ''}
+                    {registrationSummary?.resumeFileName ? ` • Resume: ${registrationSummary.resumeFileName}` : ''}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-emerald-300 text-emerald-900 hover:bg-emerald-100'}
+                    onClick={() => setCurrentTab('setup')}
+                  >
+                    Edit Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={theme === 'dark' ? 'text-white/70 hover:text-white' : 'text-slate-700 hover:text-slate-900'}
+                    onClick={() => {
+                      try { localStorage.removeItem('pendingRegistrationData'); } catch {}
+                      setRegistrationSummary(null);
+                    }}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {/* Mobile Header: title, theme toggle, and scroll chips */}
         <div className={theme === 'dark' ? 'lg:hidden sticky top-0 z-20 -mx-4 px-4 py-3 backdrop-blur bg-black/30 border-b border-white/10' : 'lg:hidden sticky top-0 z-20 -mx-4 px-4 py-3 backdrop-blur bg-white/70 border-b border-slate-200'}>
           <div className="flex items-center justify-between">
@@ -562,7 +641,7 @@ export function ProfessionalDashboard() {
           </motion.div>
         )}
 
-        {/* Main Tabs (existing functionality retained) */}
+        {/* Main Tabs (existing functionality retained; taskbar items disabled in beta) */}
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/10 border border-white/10 text-white">
             <TabsTrigger value="dashboard" className="gap-2">
@@ -570,24 +649,100 @@ export function ProfessionalDashboard() {
               <span className="hidden sm:inline">My PIN</span>
               {!pinData && <Badge variant="secondary" className="ml-auto hidden lg:inline-flex bg-yellow-100 text-yellow-800">New</Badge>}
             </TabsTrigger>
-            <TabsTrigger value="swipe" className="gap-2">
-              <Heart className="h-4 w-4" />
-              <span className="hidden sm:inline">Swipe Jobs</span>
-              <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">15</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="matches" className="gap-2">
-              <Target className="h-4 w-4" />
-              <span className="hidden sm:inline">Matches</span>
-              <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">3</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="setup" className="gap-2">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Setup</span>
-            </TabsTrigger>
-            <TabsTrigger value="verify" className="gap-2">
-              <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Verify</span>
-            </TabsTrigger>
+            {TASKBAR_DISABLED ? (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      role="button"
+                      aria-disabled="true"
+                      title="Coming soon"
+                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Swipe Jobs'); }}
+                    >
+                      <Heart className="h-4 w-4" />
+                      <span className="hidden sm:inline">Swipe Jobs</span>
+                      <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">15</Badge>
+                      <Lock className="h-3 w-3 ml-2 opacity-70" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={6}>Swipe Jobs is unavailable in beta</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      role="button"
+                      aria-disabled="true"
+                      title="Coming soon"
+                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Matches'); }}
+                    >
+                      <Target className="h-4 w-4" />
+                      <span className="hidden sm:inline">Matches</span>
+                      <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">3</Badge>
+                      <Lock className="h-3 w-3 ml-2 opacity-70" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={6}>Matches are unavailable in beta</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      role="button"
+                      aria-disabled="true"
+                      title="Coming soon"
+                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Setup'); }}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span className="hidden sm:inline">Setup</span>
+                      <Lock className="h-3 w-3 ml-2 opacity-70" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={6}>Setup is unavailable in beta</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      role="button"
+                      aria-disabled="true"
+                      title="Coming soon"
+                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Verify'); }}
+                    >
+                      <Shield className="h-4 w-4" />
+                      <span className="hidden sm:inline">Verify</span>
+                      <Lock className="h-3 w-3 ml-2 opacity-70" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={6}>Verification is unavailable in beta</TooltipContent>
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                <TabsTrigger value="swipe" className="gap-2">
+                  <Heart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Swipe Jobs</span>
+                  <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">15</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="matches" className="gap-2">
+                  <Target className="h-4 w-4" />
+                  <span className="hidden sm:inline">Matches</span>
+                  <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">3</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="setup" className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  <span className="hidden sm:inline">Setup</span>
+                </TabsTrigger>
+                <TabsTrigger value="verify" className="gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Verify</span>
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
           {/* My PIN Tab */}

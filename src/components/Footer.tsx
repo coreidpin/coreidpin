@@ -70,17 +70,17 @@ const quickLinkCategories = [
     ]
   },
   {
-    title: 'For Universities',
-    icon: School,
-    colorClasses: 'bg-orange-50 border-orange-200 hover:bg-orange-100',
-    iconColor: 'text-orange-600',
-    links: [
-      { name: 'Partner Program', href: '/universities/partner' },
-      { name: 'Issue Credentials', href: '/universities/credentials' },
-      { name: 'Verification Tools', href: '/universities/tools' },
-      { name: 'API Access', href: '/universities/api' },
-      { name: 'Documentation', href: '/universities/docs' }
-    ]
+    // title: 'For Universities',
+    // icon: School,
+    // colorClasses: 'bg-orange-50 border-orange-200 hover:bg-orange-100',
+    // iconColor: 'text-orange-600',
+    // links: [
+    //   { name: 'Partner Program', href: '/universities/partner' },
+    //   { name: 'Issue Credentials', href: '/universities/credentials' },
+    //   { name: 'Verification Tools', href: '/universities/tools' },
+    //   { name: 'API Access', href: '/universities/api' },
+    //   { name: 'Documentation', href: '/universities/docs' }
+    // ]
   }
 ];
 
@@ -103,7 +103,7 @@ const partnerships = [
 const trustMetrics = [
   { label: 'Verified Professionals', value: '50,000+', icon: Globe },
   { label: 'Global Employers', value: '2,500+', icon: Globe },
-  { label: 'Partner Universities', value: '150+', icon: Globe },
+  // { label: 'Partner Universities', value: '150+', icon: Globe },
   { label: 'Countries Served', value: '45+', icon: Globe }
 ];
 
@@ -113,6 +113,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
       onNavigate(page);
     }
   };
+  const validCategories = quickLinkCategories.filter((c: any) => c && c.title && c.icon && Array.isArray(c.links));
 
   return (
     <footer className="bg-card border-t border-border mt-12">
@@ -182,7 +183,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
           <div className="lg:col-span-2">
             <h4 className="font-semibold mb-6">Quick Links</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {quickLinkCategories.map((category) => (
+              {validCategories.map((category) => (
                 <Card key={category.title} className={`transition-all duration-200 ${category.colorClasses}`}>
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">

@@ -53,7 +53,7 @@ export function Navbar({
       items: [
         { label: 'For Employers', href: 'employers', icon: Building },
         { label: 'For Professionals', href: 'professionals', icon: UserCheck },
-        { label: 'For Universities', href: 'universities', icon: GraduationCap }
+        // { label: 'For Universities', href: 'universities', icon: GraduationCap }
       ]
     },
     {
@@ -166,7 +166,7 @@ export function Navbar({
                   <span className="text-sm font-medium text-foreground">
                     {userType === 'employer' && 'Employer Dashboard'}
                     {userType === 'professional' && 'Professional Dashboard'}
-                    {userType === 'university' && 'University Dashboard'}
+                    {/* {userType === 'university' && 'University Dashboard'} */}
                   </span>
                 </div>
               </div>
@@ -305,6 +305,7 @@ export function Navbar({
                             <div className="text-xs text-muted-foreground">Hire verified talent</div>
                           </div>
                         </Button>
+                          {/*
                           <Button 
                             variant="ghost" 
                             className="w-full justify-start h-12 px-4"
@@ -316,6 +317,7 @@ export function Navbar({
                               <div className="text-xs text-muted-foreground">Issue credentials</div>
                             </div>
                           </Button>
+                          */}
                         </div>
                       </div>
                     </div>
@@ -330,7 +332,7 @@ export function Navbar({
                       <p className="font-medium">
                         {userType === 'employer' && 'Employer Dashboard'}
                         {userType === 'professional' && 'Professional Dashboard'}
-                        {userType === 'university' && 'University Dashboard'}
+                        {/* {userType === 'university' && 'University Dashboard'} */}
                       </p>
                     </div>
                     <Button 

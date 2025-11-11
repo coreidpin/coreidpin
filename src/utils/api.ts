@@ -1,12 +1,13 @@
 import { projectId, publicAnonKey } from './supabase/info';
 
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-5cd3a043`;
+const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
 
 export interface RegisterUserData {
   email: string;
   password: string;
   name: string;
   userType: 'employer' | 'professional' | 'university';
+  title?: string;
   companyName?: string;
   role?: string;
   institution?: string;
@@ -32,24 +33,121 @@ export interface AIComplianceRequest {
 }
 
 class APIClient {
-  private getHeaders(accessToken?: string) {
+  private getHeaders(accessToken?: string, includeAnonForPublic: boolean = false) {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken || publicAnonKey}`
+      'Content-Type': 'application/json'
     };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    } else if (includeAnonForPublic) {
+      // For public endpoints when Verify JWT is enabled on Edge Functions,
+      // include anon key (prefer env, fallback to bundled publicAnonKey).
+      const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
+      if (anonKey) headers['Authorization'] = `Bearer ${anonKey}`;
+    }
+    const csrfToken = typeof window !== 'undefined' ? localStorage.getItem('csrfToken') : null;
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
     return headers;
   }
 
-  async register(data: RegisterUserData) {
-    const response = await fetch(`${BASE_URL}/register`, {
+  private async fetchWithRetry(url: string, options: RequestInit, retries = 2): Promise<Response> {
+    let attempt = 0;
+    let lastError: any = null;
+    while (attempt <= retries) {
+      try {
+        const res = await fetch(url, options);
+        if (res.status >= 500 || res.status === 429) {
+          throw Object.assign(new Error(`Transient error: ${res.status}`), { status: res.status });
+        }
+        return res;
+      } catch (err: any) {
+        lastError = err;
+        const isTransient = !!(err && (err.status >= 500 || err.status === 429));
+        if (!isTransient || attempt === retries) break;
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt), 4000);
+        await new Promise((r) => setTimeout(r, backoffMs));
+        attempt++;
+      }
+    }
+    throw lastError;
+  }
+
+  async validateRegistration(payload: {
+    entryPoint: 'signup' | 'get-started';
+    userType: 'professional' | 'employer' | 'university';
+    data: Record<string, any>;
+  }) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/validate-registration`, {
       method: 'POST',
-      headers: this.getHeaders(),
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      try {
+        const error = await response.json();
+        return { valid: false, errors: error.errors || ['Validation failed'] };
+      } catch {
+        return { valid: false, errors: ['Validation failed'] };
+      }
+    }
+
+    return response.json();
+  }
+
+  async register(data: RegisterUserData) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/register`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
       body: JSON.stringify(data)
     });
 
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Registration failed');
+    }
+
+    return response.json();
+  }
+
+  async sendVerificationLink(email: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/send-verification`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to send verification link');
+    }
+    return response.json();
+  }
+
+  async resendVerificationLink(email: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/resend-verification`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to resend verification link');
+    }
+    return response.json();
+  }
+
+  async loginSecure(data: LoginData) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/login`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Login failed' }));
+      throw new Error(error.error || 'Login failed');
     }
 
     return response.json();
@@ -103,7 +201,7 @@ class APIClient {
   }
 
   async getProfile(userId: string, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/profile/${userId}`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/profile/${userId}`, {
       method: 'GET',
       headers: this.getHeaders(accessToken)
     });
@@ -117,7 +215,7 @@ class APIClient {
   }
 
   async updateProfile(userId: string, accessToken: string, data: Partial<RegisterUserData>) {
-    const response = await fetch(`${BASE_URL}/profile/${userId}`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/profile/${userId}`, {
       method: 'PUT',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify(data)
@@ -132,7 +230,7 @@ class APIClient {
   }
 
   async matchTalent(data: AIMatchingRequest, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/ai/match-talent`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/ai/match-talent`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify(data)
@@ -147,7 +245,7 @@ class APIClient {
   }
 
   async checkCompliance(data: AIComplianceRequest, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/ai/compliance-check`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/ai/compliance-check`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify(data)
@@ -162,7 +260,7 @@ class APIClient {
   }
 
   async getProfessionals(accessToken: string) {
-    const response = await fetch(`${BASE_URL}/professionals`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/professionals`, {
       method: 'GET',
       headers: this.getHeaders(accessToken)
     });
@@ -176,7 +274,7 @@ class APIClient {
   }
 
   async checkHealth() {
-    const response = await fetch(`${BASE_URL}/health`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/health`, {
       method: 'GET',
       headers: this.getHeaders()
     });
@@ -195,7 +293,7 @@ class APIClient {
     name?: string;
     title?: string;
   }, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/profile/analyze`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/profile/analyze`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify(data)
@@ -210,7 +308,7 @@ class APIClient {
   }
 
   async saveCompleteProfile(data: any, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/profile/complete`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/profile/complete`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify(data)
@@ -225,7 +323,7 @@ class APIClient {
   }
 
   async getProfileAnalysis(userId: string, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/profile/analysis/${userId}`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/profile/analysis/${userId}`, {
       method: 'GET',
       headers: this.getHeaders(accessToken)
     });
@@ -240,7 +338,7 @@ class APIClient {
 
   // Matching API Methods
   async getRecommendations(userType: 'employer' | 'professional', accessToken: string, limit = 20) {
-    const response = await fetch(`${BASE_URL}/recommendations?userType=${userType}&limit=${limit}`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/recommendations?userType=${userType}&limit=${limit}`, {
       method: 'GET',
       headers: this.getHeaders(accessToken)
     });
@@ -254,7 +352,7 @@ class APIClient {
   }
 
   async recordSwipe(targetId: string, direction: 'left' | 'right', targetType: 'profile' | 'job', accessToken: string) {
-    const response = await fetch(`${BASE_URL}/swipe`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/swipe`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify({ targetId, direction, targetType })
@@ -269,7 +367,7 @@ class APIClient {
   }
 
   async getMatches(accessToken: string) {
-    const response = await fetch(`${BASE_URL}/matches`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/matches`, {
       method: 'GET',
       headers: this.getHeaders(accessToken)
     });
@@ -283,7 +381,7 @@ class APIClient {
   }
 
   async updateMatchStatus(matchId: string, status: string, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/match/${matchId}/status`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/match/${matchId}/status`, {
       method: 'PUT',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify({ status })
@@ -298,7 +396,7 @@ class APIClient {
   }
 
   async sendMatchMessage(matchId: string, message: string, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/match/${matchId}/message`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/match/${matchId}/message`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify({ message })
@@ -313,7 +411,7 @@ class APIClient {
   }
 
   async getMatchMessages(matchId: string, accessToken: string) {
-    const response = await fetch(`${BASE_URL}/match/${matchId}/messages`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/match/${matchId}/messages`, {
       method: 'GET',
       headers: this.getHeaders(accessToken)
     });

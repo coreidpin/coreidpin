@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+
 test.describe('Hero mobile alignment & desktop stability', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
