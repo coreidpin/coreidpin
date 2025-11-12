@@ -26,14 +26,37 @@ serve(async (req) => {
       );
     }
 
-    // Generate 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Store verification code in Supabase (expires in 15 minutes)
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Rate limiting: 1 request per minute per email
+    const rateLimitKey = `rate_limit:verification:${email}`;
+    const kv = await Deno.openKv();
+    
+    const rateLimitEntry = await kv.get([rateLimitKey]);
+    if (rateLimitEntry.value) {
+      const lastSent = rateLimitEntry.value as number;
+      const now = Date.now();
+      const timeSinceLastSent = now - lastSent;
+      const oneMinute = 60 * 1000;
+      
+      if (timeSinceLastSent < oneMinute) {
+        const remainingSeconds = Math.ceil((oneMinute - timeSinceLastSent) / 1000);
+        return new Response(
+          JSON.stringify({ 
+            error: `Rate limit exceeded. Please wait ${remainingSeconds} seconds before requesting another code.`,
+            remainingSeconds 
+          }),
+          { status: 429, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+        );
+      }
+    }
+
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store verification code in Supabase (expires in 15 minutes)
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 15);
 
@@ -53,6 +76,9 @@ serve(async (req) => {
         { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
+
+    // Update rate limit after successful code generation
+    await kv.set([rateLimitKey], Date.now(), { expireIn: 60 * 1000 }); // Expires in 60 seconds
 
     // Send email via Resend
     const emailHtml = `
@@ -142,7 +168,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     );
   }

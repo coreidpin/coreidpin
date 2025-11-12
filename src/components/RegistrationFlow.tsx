@@ -10,6 +10,7 @@ import { Progress } from './ui/progress';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { supabase } from '../utils/supabase/client';
+import { EmailVerificationGate } from './EmailVerificationGate';
 import '../styles/auth-dark.css';
 import {
   Sparkles,
@@ -110,6 +111,8 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [showVerificationGate, setShowVerificationGate] = useState(false);
+  const [registeredUserId, setRegisteredUserId] = useState<string | null>(null);
 
   // Client-side retry with exponential backoff for transient failures
   async function withBackoff<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
@@ -241,109 +244,58 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
         setIsLoading(false);
         return;
       }
-      const { data: signUpData, error } = await withBackoff(() => supabase.auth.signUp({
+
+      // Register via backend /server/register endpoint
+      const registerResult = await withBackoff(() => api.register({
         email: formData.email!,
         password: formData.password!,
-        options: {
-          data: {
-            name: formData.name,
-            title: formData.title,
-            location: formData.location,
-            phone: formData.phone,
-            yearsOfExperience: formData.yearsOfExperience,
-            currentCompany: formData.currentCompany,
-            seniority: formData.seniority,
-            topSkills: formData.topSkills,
-            highestEducation: formData.highestEducation,
-            resumeFileName: resumeFile?.name || null,
-            verifyAI: !!formData.verifyAI,
-            verifyEmail: !!formData.verifyEmail,
-            verifyPeers: !!formData.verifyPeers,
-            pinReady: false,
-          }
-        }
+        name: formData.name!,
+        userType: 'professional',
+        title: formData.title,
+        phoneNumber: formData.phone,
+        location: formData.location,
+        yearsOfExperience: formData.yearsOfExperience,
+        currentCompany: formData.currentCompany,
+        seniority: formData.seniority,
+        topSkills: formData.topSkills,
+        highestEducation: formData.highestEducation,
+        resumeFileName: resumeFile?.name || formData.resumeFileName,
       }));
-      if (error) throw error;
 
-      // Persist session tokens and user identifiers
-      const sessionRes = await withBackoff(() => supabase.auth.getSession());
-      const session = sessionRes.data.session;
-      if (session) {
-        localStorage.setItem('accessToken', session.access_token);
-        if (session.refresh_token) localStorage.setItem('refreshToken', session.refresh_token);
-        if (session.user?.id) localStorage.setItem('userId', session.user.id);
-        if (session.user?.user_metadata?.userType) localStorage.setItem('userType', session.user.user_metadata.userType);
-        // Persist email to support resend flows on redirect error
-        try {
-          if (formData.email) {
-            localStorage.setItem('registrationEmail', formData.email);
-          }
-        } catch {}
+      if (!registerResult.success) {
+        throw new Error(registerResult.message || 'Registration failed');
       }
 
-      // Backend synchronization: save complete profile
-      try {
-        if (session?.access_token) {
-          await withBackoff(() => api.saveCompleteProfile({
-            name: formData.name,
-            title: formData.title,
-            email: formData.email,
-            phone: formData.phone,
-            location: formData.location,
-            gender: null,
-            linkedinUrl: null,
-            githubUrl: null,
-            portfolioUrl: null,
-            resumeUrl: null,
-            skills: formData.topSkills || [],
-            hourlyRate: '',
-            availability: 'Available',
-            yearsOfExperience: formData.yearsOfExperience === '1-5' ? 3 : formData.yearsOfExperience === '5-10' ? 7 : 12,
-            currentCompany: formData.currentCompany,
-            seniority: formData.seniority,
-            highestEducation: formData.highestEducation,
-            resumeFileName: resumeFile?.name || formData.resumeFileName,
-          }, session.access_token));
-        }
-      } catch (syncErr) {
-        // Non-fatal: keep local copy for retry
-        try {
-          localStorage.setItem('pendingRegistrationData', JSON.stringify({ ...formData, resumeFileName: resumeFile?.name }));
-        } catch (_) {}
-      }
+      const userId = registerResult.userId;
+      const userType = registerResult.userType;
 
-      // Send email verification link (server generates Supabase magic link)
+      // Persist user identifiers and registration email
+      localStorage.setItem('userId', userId);
+      localStorage.setItem('userType', userType);
+      setRegisteredUserId(userId);
+      
       try {
         if (formData.email) {
-          await withBackoff(() => api.sendVerificationLink(formData.email!));
-          toast.info('Verification email sent. Please check your inbox.', { duration: 3000 });
+          localStorage.setItem('registrationEmail', formData.email);
+        }
+      } catch {}
+
+      // Send 6-digit verification code immediately after registration
+      try {
+        if (formData.email) {
+          await withBackoff(() => api.sendVerificationEmail(formData.email!, formData.name));
+          toast.success('Registration successful! Verification code sent to your email.');
         }
       } catch (verifyErr: any) {
         console.error('Failed to send verification email:', verifyErr);
-        toast.error('Could not send verification email', {
-          description: 'You can resend from the link error prompt if needed.'
+        toast.error('Registration successful but could not send verification email', {
+          description: 'You can request a new code from the verification screen.'
         });
       }
 
-      try {
-        if (formData.verifySMS && formData.phone && session?.access_token) {
-          await withBackoff(() => api.smsSend(formData.phone!, session!.access_token));
-          toast.info('SMS code sent to your phone.', { duration: 3000 });
-        }
-      } catch (_) {}
-
-      // Mark completion timestamp for dashboard success confirmation
-      try {
-        localStorage.setItem('registrationCompletedAt', new Date().toISOString());
-      } catch (_) {}
-
-      sessionStorage.removeItem(SESSION_KEY);
-      toast.success('Account created! Redirecting you to your dashboard...', { duration: 1500 });
-      // Redirect within ~2 seconds of successful validation
-      setTimeout(() => {
-        setIsLoading(false);
-        onComplete?.(signUpData);
-      }, 1500);
+      // Show email verification gate instead of auto-login
+      setIsLoading(false);
+      setShowVerificationGate(true);
     } catch (err: any) {
       // Persist unsaved form for retry
       try {
@@ -360,6 +312,46 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
     if (currentStep > 0) setCurrentStep(s => s - 1);
     else onBack?.();
   };
+
+  const handleVerificationComplete = async () => {
+    try {
+      // Mark completion timestamp
+      localStorage.setItem('registrationCompletedAt', new Date().toISOString());
+      sessionStorage.removeItem(SESSION_KEY);
+      
+      toast.success('Email verified! Redirecting to login...', { duration: 1500 });
+      
+      // Redirect to login or dashboard
+      setTimeout(() => {
+        onComplete?.();
+      }, 1500);
+    } catch (err) {
+      console.error('Verification complete handler error:', err);
+      onComplete?.();
+    }
+  };
+
+  const handleCancelVerification = () => {
+    // User cancelled verification - allow them to go back or cancel entirely
+    setShowVerificationGate(false);
+    toast.info('You can verify your email later from the login page.');
+    onComplete?.();
+  };
+
+  // Show email verification gate after successful registration
+  if (showVerificationGate) {
+    return (
+      <div className={origin === 'modal' ? 'space-y-6' : 'auth-page-dark min-h-screen flex items-center justify-center p-4'}>
+        <EmailVerificationGate
+          email={formData.email}
+          userId={registeredUserId || undefined}
+          name={formData.name}
+          onVerified={handleVerificationComplete}
+          onCancel={handleCancelVerification}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={origin === 'modal' ? 'space-y-6' : 'auth-page-dark min-h-screen'}>

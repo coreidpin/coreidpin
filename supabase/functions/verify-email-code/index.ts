@@ -63,6 +63,27 @@ serve(async (req) => {
       );
     }
 
+    // Update Supabase Auth user email_confirmed_at
+    // First, find the user by email
+    const { data: authUser, error: authUserError } = await supabase.auth.admin.listUsers();
+    
+    if (!authUserError && authUser?.users) {
+      const user = authUser.users.find((u: any) => u.email === email);
+      
+      if (user && !user.email_confirmed_at) {
+        // Confirm the user's email in Supabase Auth
+        const { error: confirmError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          { email_confirm: true }
+        );
+        
+        if (confirmError) {
+          console.warn('Failed to confirm email in Auth:', confirmError);
+          // Don't fail the request - verification code is already marked as used
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -74,7 +95,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
     );
   }

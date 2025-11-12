@@ -290,6 +290,12 @@ export function LoginDialog({
           if (!session?.access_token || !session?.refresh_token || !data?.user) {
             throw new Error('Login failed: invalid response');
           }
+
+          // Check if email is verified
+          if (!data.user.email_confirmed_at) {
+            throw new Error('Email not verified. Please check your inbox for the verification code or request a new one.');
+          }
+
           await supabase.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
           localStorage.setItem('accessToken', session.access_token);
           localStorage.setItem('userId', data.user.id);
@@ -339,7 +345,7 @@ export function LoginDialog({
   ];
 
   const content = (
-    <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden">
+    <DialogContent className="sm:max-w-[500px] p-0 gap-0 overflow-hidden bg-surface text-foreground">
       <AnimatePresence mode="wait">
         {mode === 'select' && (
           <motion.div
@@ -359,7 +365,7 @@ export function LoginDialog({
               <DialogTitle className="text-center text-3xl">
                 Join <span style={{ color: '#7bb8ff' }}>PIN</span>
               </DialogTitle>
-              <p className="text-center text-gray-600">
+              <p className="text-center text-muted-foreground">
                 Choose your account type to get started
               </p>
             </DialogHeader>
@@ -381,8 +387,8 @@ export function LoginDialog({
                         : 'hover:shadow-md'
                     }`}
                     style={{
-                      borderColor: isSelected ? type.color : '#e5e7eb',
-                      backgroundColor: isSelected ? `${type.color}10` : 'white'
+                      borderColor: isSelected ? type.color : 'rgba(255,255,255,0.12)',
+                      backgroundColor: isSelected ? `${type.color}10` : 'transparent'
                     }}
                   >
                     <div className="flex items-start gap-4">
@@ -399,7 +405,7 @@ export function LoginDialog({
                             <CheckCircle className="h-4 w-4" style={{ color: type.color }} />
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{type.description}</p>
+                        <p className="text-sm text-muted-foreground mb-2">{type.description}</p>
                         <div className="flex flex-wrap gap-2">
                           {type.features.map((feature, i) => (
                             <Badge key={i} variant="outline" className="text-xs">
@@ -427,7 +433,7 @@ export function LoginDialog({
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
               
-              <div className="text-center text-sm text-gray-600">
+              <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{' '}
                 <button
                   onClick={() => setMode('login')}
@@ -452,14 +458,14 @@ export function LoginDialog({
             <DialogHeader className="space-y-3 mb-6">
               <button
                 onClick={() => setMode('select')}
-                className="text-sm text-gray-600 hover:text-gray-900 text-left flex items-center gap-1"
+                className="text-sm text-muted-foreground hover:text-foreground text-left flex items-center gap-1"
               >
                 ← Back
               </button>
               <DialogTitle className="text-2xl">
                 {mode === 'signup' ? 'Create Account' : 'Welcome Back'}
               </DialogTitle>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 {mode === 'signup' 
                   ? `Sign up as a ${userTypes.find(t => t.value === selectedUserType)?.label.toLowerCase()}`
                   : 'Sign in to your PIN account'}
@@ -470,10 +476,10 @@ export function LoginDialog({
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3"
+                className="mb-4 p-4 bg-[var(--brand-danger)]/10 border border-[var(--brand-danger)]/30 rounded-xl flex items-start gap-3"
               >
-                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{error}</p>
+                <AlertCircle className="h-5 w-5 text-[var(--brand-danger)] flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-[var(--brand-danger)]">{error}</p>
               </motion.div>
             )}
             {/* Scroll container to keep content within modal bounds */}
@@ -483,7 +489,7 @@ export function LoginDialog({
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
                         id="email"
                         type="email"
@@ -499,7 +505,7 @@ export function LoginDialog({
                   <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
                         id="password"
                         type={showPassword ? 'text' : 'password'}
@@ -514,7 +520,7 @@ export function LoginDialog({
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {showPassword ? (
                           <EyeOff className="h-5 w-5" />
