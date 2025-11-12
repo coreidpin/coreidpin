@@ -1,0 +1,104 @@
+/* Scoped mobile-only styles for the Landing hero text container */
+/* CSS containment prevents style leaks to desktop views */
+
+.hero-mobile {
+  contain: layout style paint;
+}
+
+/* Mobile centering for hero text container */
+@media (max-width: 768px) {
+  /* Center the entire hero grid column content */
+  .hero-grid {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* vertical */
+    align-items: center;     /* horizontal */
+    min-height: 75vh;        /* fill most of viewport for true centering */
+    width: 100%;
+  }
+
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 20px;
+    min-height: 60vh; /* helps vertical centering on tall mobiles */
+    margin: 0 auto; /* explicit horizontal centering */
+    width: 100%;
+    gap: 0.5rem; /* consistent spacing between text elements */
+  }
+}
+
+/* Mobile-first adjustments: base for narrow screens */
+@media (max-width: 430px) {
+  .hero-mobile {
+    margin-inline: auto;
+    text-align: center;
+    padding-inline: 16px;
+  }
+
+  /* Badge row alignment */
+  .hero-mobile .inline-flex {
+    margin-inline: auto;
+  }
+
+  /* Headline sizing and tracking for tight mobile fit */
+  .hero-mobile h1 {
+    font-size: clamp(30px, 7vw, 38px);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+  }
+
+  /* Subheadline width and spacing */
+  .hero-mobile p {
+    max-width: 92vw;
+    margin-inline: auto;
+  }
+
+  /* CTA block: touch-friendly sizing and spacing */
+  .hero-mobile button {
+    min-height: 52px;
+    padding: 14px 18px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Samsung S20 Ultra specific fine-tuning (412 x 915) */
+@media (max-width: 412px) {
+  .hero-mobile {
+    padding-inline: 18px;
+  }
+  .hero-mobile h1 {
+    font-size: clamp(30px, 6.6vw, 36px);
+    line-height: 1.12;
+  }
+}
+
+/* Common mobile breakpoints */
+@media (max-width: 428px) {
+  .hero-mobile h1 { font-size: clamp(30px, 6.8vw, 38px); }
+}
+
+@media (max-width: 414px) {
+  .hero-mobile h1 { font-size: clamp(28px, 6.6vw, 36px); }
+}
+
+@media (max-width: 375px) {
+  .hero-mobile h1 { font-size: clamp(26px, 6.4vw, 34px); }
+  .hero-mobile button { min-height: 50px; }
+}
+
+@media (max-width: 320px) {
+  .hero-mobile h1 { font-size: clamp(24px, 6.2vw, 32px); }
+  .hero-mobile p { max-width: 94vw; }
+}
+
+/* Ensure responsive image scaling in the hero area without impacting desktop */
+@media (max-width: 430px) {
+  .hero-mobile ~ div .relative.max-w-\[min\(90vw\,520px\)\] {
+    max-width: 94vw;
+  }
+}
