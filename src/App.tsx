@@ -25,7 +25,16 @@ import { AdminLoginDialog } from './components/AdminLoginDialog';
 import { WelcomeToast } from './components/WelcomeToast';
 import { SolutionsPage } from './components/SolutionsPage';
 import { supabase } from './utils/supabase/client';
+import { initAuth, isAuthenticated as authIsAuthed, onAuthChange } from './utils/auth';
 import { api } from './utils/api';
+import { 
+  restoreSession, 
+  setupAutoRefresh, 
+  setupCrossTabSync, 
+  updateActivity,
+  saveSessionState,
+  SessionState
+} from './utils/session';
 import { CheckCircle, Globe, Shield, Award, Users, Building, GraduationCap } from 'lucide-react';
 import PasswordResetDialog from './components/PasswordResetDialog';
 import { PublicPINPage } from './components/PublicPINPage';
@@ -69,33 +78,45 @@ export default function App() {
       }
     } catch {}
 
+    initAuth();
+    onAuthChange((authed) => {
+      setIsAuthenticated(authed);
+      if (authed) setAppState('dashboard');
+    });
     const checkSession = async () => {
       // Check for OAuth callback
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session) {
+      if (session || authIsAuthed()) {
         // We have a session from OAuth or existing login
-        const userType = session.user.user_metadata?.userType || localStorage.getItem('pendingUserType') || 'professional';
+        const userType = (session?.user.user_metadata?.userType) || localStorage.getItem('pendingUserType') || 'professional';
         
         // Update user metadata if it was set during OAuth
-        if (!session.user.user_metadata?.userType && localStorage.getItem('pendingUserType')) {
+        if (session && !session.user.user_metadata?.userType && localStorage.getItem('pendingUserType')) {
           await supabase.auth.updateUser({
             data: { userType }
           });
         }
         
-        // Store session data
-        localStorage.setItem('accessToken', session.access_token);
-        localStorage.setItem('userId', session.user.id);
-        localStorage.setItem('userType', userType);
+        // Store session data (Phase 3 session management)
+        if (session) {
+          saveSessionState({
+            accessToken: session.access_token,
+            refreshToken: session.refresh_token,
+            userId: session.user.id,
+            userType: userType as 'employer' | 'professional' | 'university',
+            expiresAt: Date.now() + (session.expires_in || 3600) * 1000
+          });
+        }
+        
         localStorage.removeItem('pendingUserType');
         
         setIsAuthenticated(true);
         setCurrentView(userType as UserType);
-        setUserData(session.user);
+        if (session) setUserData(session.user);
         
         // Check if user has completed onboarding
-        const hasCompletedOnboarding = session.user.user_metadata?.hasCompletedOnboarding;
+        const hasCompletedOnboarding = session?.user?.user_metadata?.hasCompletedOnboarding;
         
         if (!hasCompletedOnboarding) {
           // First time OAuth user - go to onboarding
@@ -136,6 +157,84 @@ export default function App() {
     };
 
     checkSession();
+
+    // Initialize session management (Phase 3)
+    let cleanupAutoRefresh: (() => void) | null = null;
+    let cleanupCrossTab: (() => void) | null = null;
+
+    const initializeSessionManagement = async () => {
+      // Restore session from localStorage if available
+      const restoredSession = await restoreSession();
+      
+      if (restoredSession) {
+        console.log('Session restored from localStorage');
+        setIsAuthenticated(true);
+        setCurrentView(restoredSession.userType as UserType);
+        setAppState('dashboard');
+        
+        // Setup auto-refresh interval (30 minutes)
+        cleanupAutoRefresh = setupAutoRefresh();
+        
+        // Setup cross-tab synchronization
+        cleanupCrossTab = setupCrossTabSync((session: SessionState | null) => {
+          if (!session) {
+            // Session cleared in another tab
+            console.log('Session cleared in another tab');
+            setIsAuthenticated(false);
+            setAppState('landing');
+            setUserData(null);
+          } else {
+            // Session updated in another tab
+            console.log('Session updated in another tab');
+            setIsAuthenticated(true);
+            setCurrentView(session.userType as UserType);
+          }
+        });
+
+        // Update activity on user interaction
+        const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+        const handleActivity = () => updateActivity();
+        activityEvents.forEach(event => {
+          window.addEventListener(event, handleActivity, { passive: true });
+        });
+      }
+    };
+
+    initializeSessionManagement();
+
+    try {
+      const query = typeof window !== 'undefined' ? window.location.search || '' : '';
+      const queryParams = new URLSearchParams(query);
+      const token = queryParams.get('token');
+      if (token) {
+        (async () => {
+          try {
+            await api.verifyLinkToken(token);
+            toast.success('Email verified');
+          } catch (e: any) {
+            toast.error(e?.message || 'Link verification failed');
+          } finally {
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('token');
+              window.history.replaceState(null, '', url.toString());
+            } catch {}
+          }
+        })();
+      }
+    } catch {}
+
+    // Cleanup function for session management
+    return () => {
+      if (cleanupAutoRefresh) cleanupAutoRefresh();
+      if (cleanupCrossTab) cleanupCrossTab();
+      
+      const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+      const handleActivity = () => updateActivity();
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+    };
 
     // Parse verification errors from Supabase redirect and offer resend
     const parseVerificationError = () => {
@@ -297,7 +396,19 @@ export default function App() {
     setUserData(user);
     setShowLoginDialog(false);
     
-    // Store session data
+    // Get the current Supabase session to persist (Phase 3)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      saveSessionState({
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        userId: session.user.id,
+        userType: userType,
+        expiresAt: Date.now() + (session.expires_in || 3600) * 1000
+      });
+    }
+    
+    // Store legacy session data (for backwards compatibility)
     if (user?.id) {
       localStorage.setItem('userId', user.id);
     }
@@ -357,10 +468,11 @@ export default function App() {
       // Sign out from Supabase first
       await supabase.auth.signOut();
       
-      // Clear all local storage items
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userType');
+      // Clear all session data (Phase 3 session management)
+      const { clearSessionState } = await import('./utils/session');
+      clearSessionState();
+      
+      // Clear legacy localStorage items
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminSession');
       
@@ -375,9 +487,8 @@ export default function App() {
       console.error('Error signing out:', error);
       
       // Still clear everything even if Supabase signout fails
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userType');
+      const { clearSessionState } = await import('./utils/session');
+      clearSessionState();
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminSession');
       

@@ -26,17 +26,41 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseKey =
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ||
+      Deno.env.get('SUPABASE_SERVICE_KEY') ||
+      Deno.env.get('SERVICE_ROLE_KEY') ||
+      Deno.env.get('SERVICE_KEY') ||
+      '';
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase env: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      return new Response(
+        JSON.stringify({ error: 'Server not configured (missing Supabase credentials)' }),
+        { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
+    }
     const supabase = createClient(supabaseUrl, supabaseKey);
+    try {
+      await supabase.rpc('refresh_postgrest');
+    } catch (_) {
+      // Ignore if function not present
+    }
 
     // Rate limiting: 1 request per minute per email
-    const rateLimitKey = `rate_limit:verification:${email}`;
-    const kv = await Deno.openKv();
+    // Check recent verification emails sent to this address
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
     
-    const rateLimitEntry = await kv.get([rateLimitKey]);
-    if (rateLimitEntry.value) {
-      const lastSent = rateLimitEntry.value as number;
+    const { data: recentVerifications, error: rateLimitError } = await supabase
+      .from('email_verifications')
+      .select('created_at')
+      .eq('email', email)
+      .gte('created_at', oneMinuteAgo)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (!rateLimitError && recentVerifications && recentVerifications.length > 0) {
+      const lastSent = new Date(recentVerifications[0].created_at).getTime();
       const now = Date.now();
       const timeSinceLastSent = now - lastSent;
       const oneMinute = 60 * 1000;
@@ -70,15 +94,12 @@ serve(async (req) => {
       });
 
     if (dbError) {
-      console.error('Database error:', dbError);
+      console.error('Database error:', { code: (dbError as any)?.code, message: dbError.message });
       return new Response(
-        JSON.stringify({ error: 'Failed to store verification code' }),
+        JSON.stringify({ error: 'Failed to store verification code', details: dbError.message }),
         { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
       );
     }
-
-    // Update rate limit after successful code generation
-    await kv.set([rateLimitKey], Date.now(), { expireIn: 60 * 1000 }); // Expires in 60 seconds
 
     // Send email via Resend
     const emailHtml = `

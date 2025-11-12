@@ -144,12 +144,12 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 >
                   <Button
                     size="lg"
-                    onClick={() => onLogin("professional")}
+                    onClick={() => (isAuthenticated ? handleNavigate('dashboard') : onLogin("professional"))}
                     className="text-base sm:text-lg px-5 py-4 sm:px-8 sm:py-6 group min-h-[48px]"
                     style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
                   >
                     <Fingerprint className="h-5 w-5 mr-2" />
-                    Get Your PIN
+                    {isAuthenticated ? 'Dashboard' : 'Get Your PIN'}
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                   <Button
@@ -696,7 +696,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   >
                     <stat.icon className="h-6 w-6" style={{ color: stat.color }} />
                   </div>
-                  <div className="text-4xl mb-2 text-gray-900">{stat.number}</div>
+                  <div className="text-4xl font-bold mb-2 text-gray-900">{stat.number}</div>
                   <div className="text-sm text-gray-600">{stat.label}</div>
                 </Card>
               </motion.div>

@@ -246,61 +246,113 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
       }
 
       // Register via backend /server/register endpoint
-      const registerResult = await withBackoff(() => api.register({
-        email: formData.email!,
-        password: formData.password!,
-        name: formData.name!,
-        userType: 'professional',
-        title: formData.title,
-        phoneNumber: formData.phone,
-        location: formData.location,
-        yearsOfExperience: formData.yearsOfExperience,
-        currentCompany: formData.currentCompany,
-        seniority: formData.seniority,
-        topSkills: formData.topSkills,
-        highestEducation: formData.highestEducation,
-        resumeFileName: resumeFile?.name || formData.resumeFileName,
-      }));
-
-      if (!registerResult.success) {
-        throw new Error(registerResult.message || 'Registration failed');
-      }
-
-      const userId = registerResult.userId;
-      const userType = registerResult.userType;
-
-      // Persist user identifiers and registration email
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('userType', userType);
-      setRegisteredUserId(userId);
+      let registerResult;
+      let userAlreadyExists = false;
       
       try {
-        if (formData.email) {
-          localStorage.setItem('registrationEmail', formData.email);
-        }
-      } catch {}
+        registerResult = await withBackoff(() => api.register({
+          email: formData.email!,
+          password: formData.password!,
+          name: formData.name!,
+          userType: 'professional',
+          title: formData.title,
+          phoneNumber: formData.phone,
+          location: formData.location,
+          yearsOfExperience: formData.yearsOfExperience,
+          currentCompany: formData.currentCompany,
+          seniority: formData.seniority,
+          topSkills: formData.topSkills,
+          highestEducation: formData.highestEducation,
+          resumeFileName: resumeFile?.name || formData.resumeFileName,
+        }));
 
-      // Send 6-digit verification code immediately after registration
+        if (!registerResult.success) {
+          throw new Error(registerResult.message || 'Registration failed');
+        }
+      } catch (regError: any) {
+        // Check if user already exists
+        const errorMsg = regError.message || '';
+        if (errorMsg.includes('already been registered') || errorMsg.includes('already exists')) {
+          userAlreadyExists = true;
+          console.log('User already exists, proceeding to email verification');
+          
+          // Store email for verification
+          if (formData.email) {
+            localStorage.setItem('registrationEmail', formData.email);
+          }
+          
+          toast.info('Account already exists. Please verify your email to continue.', {
+            description: 'We\'ll send you a verification code.'
+          });
+        } else {
+          // Other registration errors - re-throw
+          throw regError;
+        }
+      }
+
+      // Only set userId if registration was successful (new user)
+      if (!userAlreadyExists && registerResult) {
+        const userId = registerResult.userId;
+        const userType = registerResult.userType;
+
+        // Persist user identifiers
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('userType', userType);
+        setRegisteredUserId(userId);
+      }
+
+      // Send 6-digit verification code (for both new and existing users)
       try {
         if (formData.email) {
           await withBackoff(() => api.sendVerificationEmail(formData.email!, formData.name));
-          toast.success('Registration successful! Verification code sent to your email.');
+          
+          if (userAlreadyExists) {
+            toast.success('Verification code sent to your email.');
+          } else {
+            toast.success('Registration successful! Verification code sent to your email.');
+          }
         }
       } catch (verifyErr: any) {
         console.error('Failed to send verification email:', verifyErr);
-        toast.error('Registration successful but could not send verification email', {
-          description: 'You can request a new code from the verification screen.'
-        });
+        const msg = (verifyErr?.message || '').toLowerCase();
+        const notConfigured = /server not configured|supabase credentials|failed to store verification code/i.test(msg);
+        const rateLimited = /rate limit/i.test(msg);
+        if (notConfigured) {
+          toast.error('PIN verification temporarily unavailable', {
+            description: 'We will send a verification link instead. Please check your inbox.'
+          });
+          try {
+            if (formData.email) {
+              await withBackoff(() => api.sendVerificationLink(formData.email!));
+              toast.info('Verification link sent. Please check your inbox.', { duration: 3000 });
+            }
+          } catch (linkErr: any) {
+            console.error('Fallback link send failed:', linkErr);
+          }
+        } else if (rateLimited) {
+          toast.error('Too many PIN requests. Please retry later.');
+        } else {
+          if (userAlreadyExists) {
+            toast.error('Could not send verification email', {
+              description: 'You can request a new code from the verification screen.'
+            });
+          } else {
+            toast.error('Registration successful but could not send verification email', {
+              description: 'You can request a new code from the verification screen.'
+            });
+          }
+        }
       }
 
-      // Show email verification gate instead of auto-login
+      // Show email verification gate for both new and existing users
       setIsLoading(false);
       setShowVerificationGate(true);
     } catch (err: any) {
-      // Persist unsaved form for retry
+      // Persist unsaved form for retry (only for non-duplicate errors)
       try {
         localStorage.setItem('pendingRegistrationData', JSON.stringify({ ...formData, resumeFileName: resumeFile?.name }));
       } catch (_) {}
+      
       toast.error(err.message || 'Failed to submit registration', {
         description: 'Your data has been preserved. Please retry when connection is stable.'
       });

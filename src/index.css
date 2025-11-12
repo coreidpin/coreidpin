@@ -6190,3 +6190,13 @@ html {
   .border-surface { border-color: rgba(255,255,255,0.12); }
   .text-foreground { color: #ffffff; }
 }
+
+:root {
+  --brand-primary: #32f08c;
+  --brand-primary-contrast: #0b132b;
+  --brand-secondary: #7bb8ff;
+  --brand-accent: #bfa5ff;
+  --brand-danger: #ff4d4f;
+  --brand-bg: #0b132b;
+  --brand-fg: #ffffff;
+}

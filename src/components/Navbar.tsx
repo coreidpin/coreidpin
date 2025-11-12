@@ -38,6 +38,7 @@ export function Navbar({
 }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const isLight = currentPage === 'landing';
 
   const navigationItems = [
     {
@@ -146,12 +147,12 @@ export function Navbar({
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-surface bg-surface backdrop-blur-md sticky top-0 z-50 shadow-sm"
+        className={isLight ? "border-b bg-white/70 text-black backdrop-blur-md sticky top-0 z-50 shadow-sm" : "border-b bg-[var(--brand-bg)]/70 text-[var(--brand-fg)] backdrop-blur-md sticky top-0 z-50 shadow-sm"}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-18">
           {/* Logo */}
-          <Logo size="md" onClick={() => handleNavigate('landing')} />
+          <Logo size="md" isLight={isLight} onClick={() => handleNavigate('landing')} />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
@@ -181,7 +182,7 @@ export function Navbar({
                   variant="ghost" 
                   size="sm"
                   onClick={() => onNavigate('login')}
-                  className="text-foreground hover:bg-surface transition-colors"
+                  className="hover:bg-primary/10 transition-colors"
                 >
                   Login
                 </Button>
@@ -190,7 +191,6 @@ export function Navbar({
                   variant="default" 
                   size="sm"
                   onClick={() => handleLogin('professional')}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
                   <span className="hidden xl:inline">Get Started</span>
@@ -203,7 +203,6 @@ export function Navbar({
                   variant="default" 
                   size="sm"
                   onClick={() => handleNavigate('dashboard')}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
                 >
                   <Building className="h-4 w-4 mr-2" />
                   Dashboard
@@ -212,7 +211,7 @@ export function Navbar({
                   variant="outline" 
                   onClick={onLogout} 
                   size="sm"
-                  className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
+                  className="border-[var(--brand-primary)] text-[var(--brand-primary)] hover:bg-[var(--brand-primary)] hover:text-[var(--brand-primary-contrast)] transition-colors"
                 >
                   Logout
                 </Button>
@@ -227,12 +226,12 @@ export function Navbar({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] max-w-[350px] p-0">
-              <SheetHeader className="px-6 py-4 border-b border-border">
+            <SheetContent side="right" className={isLight ? "w-[85vw] max-w-[350px] p-0 bg-white text-black" : "w-[85vw] max-w-[350px] p-0 bg-[var(--brand-bg)] text-[var(--brand-fg)]"}>
+              <SheetHeader className={isLight ? "px-6 py-4 border-b border-black/10" : "px-6 py-4 border-b border-surface"}>
                 <SheetTitle className="flex items-center gap-2 text-left">
-                  <Logo size="sm" />
+                  <Logo size="sm" isLight={isLight} />
                 </SheetTitle>
-                <SheetDescription className="text-left">
+                <SheetDescription className={isLight ? "text-left text-black/70" : "text-left text-[var(--brand-fg)]/70"}>
                   Navigate through swipe platform sections and features
                 </SheetDescription>
               </SheetHeader>
@@ -244,7 +243,7 @@ export function Navbar({
                     <div className="space-y-6">
                       {navigationItems.map((item) => (
                         <div key={item.label} className="space-y-3">
-                          <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider px-2">
+                          <h4 className={isLight ? "font-medium text-sm text-black/70 uppercase tracking-wider px-2" : "font-medium text-sm text-[var(--brand-fg)]/70 uppercase tracking-wider px-2"}>
                             {item.label}
                           </h4>
                           <div className="space-y-1">
@@ -252,9 +251,9 @@ export function Navbar({
                               <button
                                 key={subItem.href}
                                 onClick={() => handleNavigate(subItem.href)}
-                                className="flex items-center gap-3 w-full px-4 py-3 text-left text-foreground hover:bg-accent/50 rounded-lg transition-all duration-200 active:scale-95"
+                                className={isLight ? "flex items-center gap-3 w-full px-4 py-3 text-left text-black hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all duration-200 active:scale-95" : "flex items-center gap-3 w-full px-4 py-3 text-left text-[var(--brand-fg)] hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all duration-200 active:scale-95"}
                               >
-                                {subItem.icon && <subItem.icon className="h-5 w-5 text-primary flex-shrink-0" />}
+                                {subItem.icon && <subItem.icon className={isLight ? "h-5 w-5 text-[var(--brand-primary)] flex-shrink-0" : "h-5 w-5 text-[var(--brand-primary)] flex-shrink-0"} />}
                                 <span className="font-medium">{subItem.label}</span>
                               </button>
                             ))}

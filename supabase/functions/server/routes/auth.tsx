@@ -2,6 +2,7 @@ import { Hono } from "npm:hono";
 import { getSupabaseClient } from "../lib/supabaseClient.tsx";
 import * as kv from "../kv_store.tsx";
 import { maybeEncryptKVValue } from "../lib/crypto.tsx";
+import { verifyVerificationToken } from "../lib/token.ts";
 
 const auth = new Hono();
 
@@ -34,7 +35,25 @@ auth.post("/register", async (c) => {
     }
 
     const body = await c.req.json();
-    const { email, password, name, userType, title, companyName, role, institution, gender, phoneNumber } = body;
+    const { 
+      email, 
+      password, 
+      name, 
+      userType, 
+      title, 
+      companyName, 
+      role, 
+      institution, 
+      gender, 
+      phoneNumber,
+      location,
+      yearsOfExperience,
+      currentCompany,
+      seniority,
+      topSkills,
+      highestEducation,
+      resumeFileName
+    } = body;
 
     // Basic field validation
     const errors: string[] = [];
@@ -76,7 +95,7 @@ auth.post("/register", async (c) => {
 
     // Unique email check (service role)
     try {
-      const { data: existing } = await supabase.from('auth.users').select('id').eq('email', emailStr).maybeSingle();
+      const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', emailStr).maybeSingle();
       if (existing?.id) {
         return c.json({ error: 'Email already registered' }, 409);
       }
@@ -100,7 +119,14 @@ auth.post("/register", async (c) => {
         companyName: companyName || null,
         role: role || null,
         institution: institution || null,
-        gender: gender || null
+        gender: gender || null,
+        location: location || null,
+        yearsOfExperience: yearsOfExperience || null,
+        currentCompany: currentCompany || null,
+        seniority: seniority || null,
+        topSkills: topSkills || null,
+        highestEducation: highestEducation || null,
+        resumeFileName: resumeFileName || null
       },
       email_confirm: false
     });
@@ -124,6 +150,13 @@ auth.post("/register", async (c) => {
         institution: institution || null,
         gender: gender || null,
         phoneNumber: phoneNumber || null,
+        location: location || null,
+        yearsOfExperience: yearsOfExperience || null,
+        currentCompany: currentCompany || null,
+        seniority: seniority || null,
+        topSkills: topSkills || [],
+        highestEducation: highestEducation || null,
+        resumeFileName: resumeFileName || null,
         createdAt: new Date().toISOString(),
         verificationStatus: "pending"
       };
@@ -357,7 +390,7 @@ auth.post('/login', async (c) => {
         await kv.set(`user:${userId}`, {
           ...current,
           id: userId,
-          email,
+          email: emailStr,
           verificationStatus: 'verified',
           updatedAt: new Date().toISOString(),
         });
@@ -459,6 +492,52 @@ auth.post('/resend-verification', async (c) => {
   } catch (err: any) {
     console.log('resend-verification error:', err);
     return c.json({ error: err?.message || 'Unknown error' }, 500);
+  }
+});
+
+// Signed link verification (public GET)
+auth.get('/auth/verify-link', async (c) => {
+  try {
+    const url = new URL(c.req.url);
+    const token = url.searchParams.get('token') || '';
+    if (!token) return c.json({ success: false, error: 'Missing token' }, 400);
+    const textEncoder = new TextEncoder();
+    const raw = textEncoder.encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const hash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const usedKey = `verify:used:${hash}`;
+    const used = await kv.get(usedKey);
+    if (used?.used) return c.json({ success: false, error: 'Link already used' }, 410);
+    const email = await verifyVerificationToken(token);
+    const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
+    const userId = existing?.id || null;
+    try {
+      const key = `email_verified:${email}:${Date.now()}`;
+      await kv.set(key, { email, userId, timestamp: new Date().toISOString() });
+      if (userId) {
+        const current = (await kv.get(`user:${userId}`)) || {};
+        await kv.set(`user:${userId}`, { ...current, id: userId, email, verificationStatus: 'verified', updatedAt: new Date().toISOString() });
+      }
+      await kv.set(usedKey, { used: true, at: new Date().toISOString() });
+    } catch (_) {}
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Invalid token' }, 400);
+  }
+});
+
+auth.post('/auth/dev/sign-token', async (c) => {
+  try {
+    const allow = Deno.env.get('ALLOW_TEST_SIGNING') === 'true';
+    if (!allow) return c.json({ success: false, error: 'Not allowed' }, 403);
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    const minutes = Number(body?.minutes || 60);
+    if (!email) return c.json({ success: false, error: 'Email required' }, 400);
+    const token = await (await import('../lib/token.ts')).signVerificationToken(email, minutes);
+    return c.json({ success: true, token });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
   }
 });
 

@@ -588,8 +588,8 @@ export function ProfessionalDashboard() {
 
         {/* Main Tabs (existing functionality retained; taskbar items disabled in beta) */}
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 bg-white/10 border border-white/10 text-white">
-            <TabsTrigger value="dashboard" className="gap-2">
+          <TabsList className="flex w-full gap-2 overflow-x-auto no-scrollbar px-1 bg-white/10 border border-white/10 text-white md:flex-wrap md:justify-between md:overflow-visible snap-x snap-mandatory scroll-smooth">
+            <TabsTrigger value="dashboard" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
               <Fingerprint className="h-4 w-4" />
               <span className="hidden sm:inline">My PIN</span>
               {!pinData && <Badge variant="secondary" className="ml-auto hidden lg:inline-flex bg-yellow-100 text-yellow-800">New</Badge>}
@@ -602,7 +602,7 @@ export function ProfessionalDashboard() {
                       role="button"
                       aria-disabled="true"
                       title="Coming soon"
-                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      className="gap-2 inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full opacity-50 cursor-not-allowed select-none flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px]"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Swipe Jobs'); }}
                     >
                       <Heart className="h-4 w-4" />
@@ -620,7 +620,7 @@ export function ProfessionalDashboard() {
                       role="button"
                       aria-disabled="true"
                       title="Coming soon"
-                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      className="gap-2 inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full opacity-50 cursor-not-allowed select-none flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px]"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Matches'); }}
                     >
                       <Target className="h-4 w-4" />
@@ -638,7 +638,7 @@ export function ProfessionalDashboard() {
                       role="button"
                       aria-disabled="true"
                       title="Coming soon"
-                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      className="gap-2 inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full opacity-50 cursor-not-allowed select-none flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px]"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Setup'); }}
                     >
                       <Sparkles className="h-4 w-4" />
@@ -655,7 +655,7 @@ export function ProfessionalDashboard() {
                       role="button"
                       aria-disabled="true"
                       title="Coming soon"
-                      className="gap-2 inline-flex items-center px-3 py-2 rounded-md opacity-50 cursor-not-allowed select-none"
+                      className="gap-2 inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full opacity-50 cursor-not-allowed select-none flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px]"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); console.info('[Beta] Disabled taskbar click: Verify'); }}
                     >
                       <Shield className="h-4 w-4" />
@@ -668,21 +668,21 @@ export function ProfessionalDashboard() {
               </>
             ) : (
               <>
-                <TabsTrigger value="swipe" className="gap-2">
+                <TabsTrigger value="swipe" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Heart className="h-4 w-4" />
                   <span className="hidden sm:inline">Swipe Jobs</span>
                   <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">15</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="matches" className="gap-2">
+                <TabsTrigger value="matches" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Target className="h-4 w-4" />
                   <span className="hidden sm:inline">Matches</span>
                   <Badge variant="secondary" className="ml-auto hidden lg:inline-flex">3</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="setup" className="gap-2">
+                <TabsTrigger value="setup" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Sparkles className="h-4 w-4" />
                   <span className="hidden sm:inline">Setup</span>
                 </TabsTrigger>
-                <TabsTrigger value="verify" className="gap-2">
+                <TabsTrigger value="verify" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Shield className="h-4 w-4" />
                   <span className="hidden sm:inline">Verify</span>
                 </TabsTrigger>

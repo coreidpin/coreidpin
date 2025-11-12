@@ -82,7 +82,18 @@
             "format": "prettier --write .",
             "typecheck": "tsc -p tsconfig.json --noEmit",
             "preview": "vite preview --strictPort",
-            "test:visual": "playwright test",
-            "test": "vitest"
+            "test": "vitest",
+            "test:unit": "vitest run tests/unit",
+            "test:integration": "vitest run tests/integration",
+            "test:coverage": "vitest run --coverage",
+            "test:watch": "vitest watch",
+            "test:ui": "vitest --ui",
+            "test:e2e": "playwright test",
+            "test:e2e:ui": "playwright test --ui",
+            "test:visual": "playwright test tests/visual",
+            "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+            "audit:backend": "node scripts/audit-backend.mjs",
+            "audit:resend": "node scripts/validate-resend.mjs",
+            "audit:all": "npm run audit:backend && npm run audit:resend"
       }
 }

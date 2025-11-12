@@ -1,4 +1,5 @@
 import { projectId, publicAnonKey } from './supabase/info';
+import { ensureValidSession, refreshTokenIfNeeded, handleSessionExpiry } from './session';
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
 
@@ -11,6 +12,15 @@ export interface RegisterUserData {
   companyName?: string;
   role?: string;
   institution?: string;
+  gender?: string;
+  phoneNumber?: string;
+  location?: string;
+  yearsOfExperience?: string;
+  currentCompany?: string;
+  seniority?: string;
+  topSkills?: string[];
+  highestEducation?: string;
+  resumeFileName?: string;
 }
 
 export interface LoginData {
@@ -61,9 +71,47 @@ class APIClient {
     while (attempt <= retries) {
       try {
         const res = await fetch(url, options);
+        
+        // Handle 401 Unauthorized - token might be expired
+        if (res.status === 401 && attempt === 0) {
+          console.log('Received 401, attempting token refresh...');
+          
+          // Try to refresh the token
+          const refreshedSession = await refreshTokenIfNeeded();
+          
+          if (refreshedSession) {
+            // Update authorization header with new token
+            const updatedOptions = {
+              ...options,
+              headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${refreshedSession.accessToken}`,
+              },
+            };
+            
+            // Retry the request with refreshed token
+            attempt++;
+            const retryRes = await fetch(url, updatedOptions);
+            
+            // If still 401 after refresh, session is truly invalid
+            if (retryRes.status === 401) {
+              await handleSessionExpiry('invalid');
+              throw new Error('Session expired. Please log in again.');
+            }
+            
+            return retryRes;
+          } else {
+            // Refresh failed, session expired
+            await handleSessionExpiry('token_expired');
+            throw new Error('Session expired. Please log in again.');
+          }
+        }
+        
+        // Handle transient errors (500, 429)
         if (res.status >= 500 || res.status === 429) {
           throw Object.assign(new Error(`Transient error: ${res.status}`), { status: res.status });
         }
+        
         return res;
       } catch (err: any) {
         lastError = err;
@@ -139,6 +187,18 @@ class APIClient {
       throw new Error(error.error || 'Failed to resend verification link');
     }
     return response.json();
+  }
+
+  async verifyLinkToken(token: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/verify-link?token=${encodeURIComponent(token)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Invalid verification link');
+    }
+    return data;
   }
 
   async loginSecure(data: LoginData) {
@@ -526,11 +586,12 @@ class APIClient {
       body: JSON.stringify({ email, name }),
     });
     
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to send verification email');
+      const msg = data?.error || 'Failed to send verification email';
+      throw new Error(msg);
     }
-    return response.json();
+    return data;
   }
 
   async verifyEmailCode(email: string, code: string) {

@@ -1,0 +1,801 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - img [ref=e8]
+        - paragraph [ref=e12]: "🎉 New: Swipe. Verify. Match. Hire. Join the world's first social network for verified talent!"
+      - button "Dismiss announcement" [ref=e13]:
+        - img
+        - generic [ref=e14]: Dismiss announcement
+    - banner [ref=e15]:
+      - generic [ref=e17]:
+        - generic [ref=e18] [cursor=pointer]:
+          - generic [ref=e20]: C
+          - generic [ref=e21]: CoreID
+        - navigation [ref=e22]:
+          - button "About" [ref=e24]:
+            - text: About
+            - img [ref=e26]
+          - button "Solutions" [ref=e29]:
+            - text: Solutions
+            - img [ref=e31]
+          - button "Resources" [ref=e34]:
+            - text: Resources
+            - img [ref=e36]
+        - generic [ref=e38]:
+          - button "Login" [ref=e39]
+          - button "Get Started" [ref=e41]:
+            - img
+            - generic [ref=e42]: Get Started
+    - generic [ref=e43]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - img [ref=e51]
+            - generic [ref=e53]: Introducing PIN
+            - generic [ref=e54]: New
+          - heading "Your Global Professional Identity Number" [level=1] [ref=e55]:
+            - text: Your Global
+            - text: Professional Identity
+            - text: Number
+          - paragraph [ref=e56]: Own a secure, verifiable, blockchain-backed identity trusted across borders and employers.
+          - generic [ref=e57]:
+            - button "Get Your PIN" [ref=e58]:
+              - img
+              - text: Get Your PIN
+              - img
+            - button "See How It Works" [ref=e59]:
+              - img
+              - text: See How It Works
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - img [ref=e62]
+              - generic [ref=e65]: Free forever
+            - generic [ref=e66]:
+              - img [ref=e67]
+              - generic [ref=e70]: 5 min setup
+            - generic [ref=e71]:
+              - img [ref=e72]
+              - generic [ref=e74]: Blockchain secured
+        - generic [ref=e79]:
+          - generic [ref=e82]:
+            - generic [ref=e83]:
+              - generic [ref=e84]:
+                - img [ref=e86]
+                - generic [ref=e95]:
+                  - heading "CoreID Professional ID" [level=3] [ref=e96]
+                  - paragraph [ref=e97]: Globally Recognized Identity
+              - generic [ref=e98]:
+                - img
+                - text: Verified
+            - generic [ref=e99]:
+              - generic [ref=e101]: AO
+              - generic [ref=e102]:
+                - generic [ref=e103]:
+                  - heading "Adebayo Olatunji" [level=2] [ref=e104]
+                  - paragraph [ref=e105]: Senior Full-Stack Developer
+                  - generic [ref=e106]:
+                    - img [ref=e107]
+                    - generic [ref=e110]: Lagos, Nigeria
+                - generic [ref=e111]:
+                  - generic [ref=e112]:
+                    - img
+                    - text: LinkedIn
+                  - generic [ref=e113]:
+                    - img
+                    - text: GitHub
+                  - generic [ref=e114]:
+                    - img
+                    - text: Portfolio
+            - generic [ref=e116]:
+              - generic [ref=e117]:
+                - paragraph [ref=e118]: Professional Identity Number (PIN)
+                - paragraph [ref=e119]: PIN-NG-2025-WE1P5N
+              - button [ref=e121]:
+                - img
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - img [ref=e125]
+                - generic [ref=e127]: 96%
+                - generic [ref=e128]: Trust Score
+              - generic [ref=e129]:
+                - img [ref=e131]
+                - generic [ref=e134]: "3"
+                - generic [ref=e135]: Experiences
+              - generic [ref=e136]:
+                - img [ref=e138]
+                - generic [ref=e141]: "23"
+                - generic [ref=e142]: Projects
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - generic [ref=e147]: "47"
+                - generic [ref=e148]: Endorsements
+            - generic [ref=e149]:
+              - heading "Top Verified Skills" [level=4] [ref=e150]
+              - generic [ref=e151]:
+                - generic [ref=e152]:
+                  - text: React
+                  - img
+                - generic [ref=e153]:
+                  - text: TypeScript
+                  - img
+                - generic [ref=e154]:
+                  - text: Node.js
+                  - img
+                - generic [ref=e155]:
+                  - text: Python
+                  - img
+                - generic [ref=e156]:
+                  - text: AWS
+                  - img
+                - generic [ref=e157]:
+                  - text: Docker
+                  - img
+            - generic [ref=e158]:
+              - generic [ref=e159]:
+                - img [ref=e160]
+                - generic [ref=e162]: Verified on November 2, 2025
+              - generic [ref=e163]:
+                - img [ref=e164]
+                - generic [ref=e167]: Blockchain Secured
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - heading "Verified Experiences" [level=3] [ref=e171]
+              - button "Back" [ref=e172]
+            - generic [ref=e173]:
+              - generic [ref=e174]:
+                - generic [ref=e175]:
+                  - generic [ref=e176]:
+                    - heading "Senior Software Engineer" [level=4] [ref=e177]
+                    - paragraph [ref=e178]: TechCorp Global
+                  - generic [ref=e179]:
+                    - img
+                    - text: Verified
+                - paragraph [ref=e180]: 2022 - Present
+              - generic [ref=e181]:
+                - generic [ref=e182]:
+                  - generic [ref=e183]:
+                    - heading "Full-Stack Developer" [level=4] [ref=e184]
+                    - paragraph [ref=e185]: StartupHub Africa
+                  - generic [ref=e186]:
+                    - img
+                    - text: Verified
+                - paragraph [ref=e187]: 2020 - 2022
+              - generic [ref=e188]:
+                - generic [ref=e189]:
+                  - generic [ref=e190]:
+                    - heading "Junior Developer" [level=4] [ref=e191]
+                    - paragraph [ref=e192]: Digital Solutions Ltd
+                  - generic [ref=e193]:
+                    - img
+                    - text: Verified
+                - paragraph [ref=e194]: 2018 - 2020
+            - generic [ref=e195]:
+              - heading "All Verified Skills" [level=4] [ref=e196]
+              - generic [ref=e197]:
+                - generic [ref=e198]:
+                  - generic [ref=e199]:
+                    - generic [ref=e200]: React
+                    - img [ref=e201]
+                  - generic [ref=e204]: Expert
+                - generic [ref=e205]:
+                  - generic [ref=e206]:
+                    - generic [ref=e207]: TypeScript
+                    - img [ref=e208]
+                  - generic [ref=e211]: Expert
+                - generic [ref=e212]:
+                  - generic [ref=e213]:
+                    - generic [ref=e214]: Node.js
+                    - img [ref=e215]
+                  - generic [ref=e218]: Advanced
+                - generic [ref=e219]:
+                  - generic [ref=e220]:
+                    - generic [ref=e221]: Python
+                    - img [ref=e222]
+                  - generic [ref=e225]: Advanced
+                - generic [ref=e226]:
+                  - generic [ref=e227]:
+                    - generic [ref=e228]: AWS
+                    - img [ref=e229]
+                  - generic [ref=e232]: Intermediate
+                - generic [ref=e233]:
+                  - generic [ref=e234]:
+                    - generic [ref=e235]: Docker
+                    - img [ref=e236]
+                  - generic [ref=e239]: Intermediate
+                - generic [ref=e240]:
+                  - generic [ref=e241]:
+                    - generic [ref=e242]: GraphQL
+                    - img [ref=e243]
+                  - generic [ref=e246]: Advanced
+                - generic [ref=e247]:
+                  - generic [ref=e248]:
+                    - generic [ref=e249]: PostgreSQL
+                    - img [ref=e250]
+                  - generic [ref=e253]: Advanced
+      - img [ref=e255]
+    - generic [ref=e260]:
+      - generic [ref=e261]:
+        - img [ref=e262]
+        - heading "Verified & Compliant Talents Only" [level=3] [ref=e264]
+      - paragraph [ref=e265]: Every professional on our platform undergoes rigorous KYC, AML, and sanctions screening. Your hiring process is secure, compliant, and globally recognized.
+      - generic [ref=e266]:
+        - generic [ref=e267]:
+          - img [ref=e268]
+          - generic [ref=e273]: 50,000+
+          - generic [ref=e274]: Verified Professionals
+        - generic [ref=e275]:
+          - img [ref=e276]
+          - generic [ref=e279]: 2,500+
+          - generic [ref=e280]: Global Employers
+        - generic [ref=e281]:
+          - img [ref=e282]
+          - generic [ref=e285]: 150+
+          - generic [ref=e286]: Partner Universities
+        - generic [ref=e287]:
+          - img [ref=e288]
+          - generic [ref=e291]: 45+
+          - generic [ref=e292]: Countries Served
+    - generic [ref=e294]:
+      - generic [ref=e295]:
+        - generic [ref=e296]:
+          - img
+          - text: What is PIN?
+        - heading "A Passport for Your Career" [level=2] [ref=e297]
+        - paragraph [ref=e298]: PIN transforms your professional experience into a globally recognized, verified digital identity
+      - generic [ref=e299]:
+        - generic [ref=e301]:
+          - img [ref=e303]
+          - heading "Verified Identity" [level=3] [ref=e312]
+          - paragraph [ref=e313]: AI-powered verification of your skills, experience, and credentials
+        - generic [ref=e315]:
+          - img [ref=e317]
+          - heading "Blockchain-Backed" [level=3] [ref=e321]
+          - paragraph [ref=e322]: Immutable, tamper-proof records secured by blockchain technology
+        - generic [ref=e324]:
+          - img [ref=e326]
+          - heading "Global Recognition" [level=3] [ref=e329]
+          - paragraph [ref=e330]: Accepted by employers worldwide across 195+ countries
+        - generic [ref=e332]:
+          - img [ref=e334]
+          - heading "AI Skill Verification" [level=3] [ref=e340]
+          - paragraph [ref=e341]: Machine learning analyzes your work to certify real competencies
+    - generic [ref=e344]:
+      - generic [ref=e345]:
+        - generic [ref=e346]:
+          - img
+          - text: Simple Process
+        - heading "How PIN Works" [level=2] [ref=e347]
+        - paragraph [ref=e348]: Get verified and start matching with global opportunities in minutes
+      - generic [ref=e349]:
+        - generic [ref=e351]:
+          - generic [ref=e352]: "01"
+          - img [ref=e354]
+          - heading "Create Your Profile" [level=3] [ref=e359]
+          - paragraph [ref=e360]: Sign up and add your basic professional information
+        - generic [ref=e363]:
+          - generic [ref=e364]: "02"
+          - img [ref=e366]
+          - heading "Connect Accounts" [level=3] [ref=e369]
+          - paragraph [ref=e370]: Link LinkedIn, GitHub, portfolio, or upload resume
+        - generic [ref=e373]:
+          - generic [ref=e374]: "03"
+          - img [ref=e376]
+          - heading "AI Analyzes" [level=3] [ref=e386]
+          - paragraph [ref=e387]: Our AI verifies your skills and experience automatically
+        - generic [ref=e390]:
+          - generic [ref=e391]: "04"
+          - img [ref=e393]
+          - heading "Blockchain Records" [level=3] [ref=e396]
+          - paragraph [ref=e397]: Your verified identity is secured on the blockchain
+        - generic [ref=e400]:
+          - generic [ref=e401]: "05"
+          - img [ref=e403]
+          - heading "Share Globally" [level=3] [ref=e409]
+          - paragraph [ref=e410]: Use your PIN to apply for jobs worldwide instantly
+    - generic [ref=e412]:
+      - generic [ref=e413]:
+        - heading "PIN vs Traditional Methods" [level=2] [ref=e414]
+        - paragraph [ref=e415]: See why PIN is the superior choice for modern professionals
+      - table [ref=e418]:
+        - rowgroup [ref=e419]:
+          - row "Feature PIN Portfolio CV/Resume" [ref=e420]:
+            - cell "Feature" [ref=e421]
+            - cell "PIN" [ref=e422]:
+              - generic [ref=e423]:
+                - img [ref=e424]
+                - text: PIN
+            - cell "Portfolio" [ref=e433]
+            - cell "CV/Resume" [ref=e434]
+        - rowgroup [ref=e435]:
+          - row "Verified Identity" [ref=e436]:
+            - cell "Verified Identity" [ref=e437]
+            - cell [ref=e438]:
+              - img [ref=e439]
+            - cell [ref=e442]:
+              - img [ref=e443]
+            - cell [ref=e447]:
+              - img [ref=e448]
+          - row "Blockchain Secured" [ref=e452]:
+            - cell "Blockchain Secured" [ref=e453]
+            - cell [ref=e454]:
+              - img [ref=e455]
+            - cell [ref=e458]:
+              - img [ref=e459]
+            - cell [ref=e463]:
+              - img [ref=e464]
+          - row "AI-Powered Analysis" [ref=e468]:
+            - cell "AI-Powered Analysis" [ref=e469]
+            - cell [ref=e470]:
+              - img [ref=e471]
+            - cell [ref=e474]:
+              - img [ref=e475]
+            - cell [ref=e479]:
+              - img [ref=e480]
+          - row "Global Recognition" [ref=e484]:
+            - cell "Global Recognition" [ref=e485]
+            - cell [ref=e486]:
+              - img [ref=e487]
+            - cell [ref=e490]:
+              - img [ref=e491]
+            - cell [ref=e495]:
+              - img [ref=e496]
+          - row "One-Click Sharing" [ref=e500]:
+            - cell "One-Click Sharing" [ref=e501]
+            - cell [ref=e502]:
+              - img [ref=e503]
+            - cell [ref=e506]:
+              - img [ref=e507]
+            - cell [ref=e510]:
+              - img [ref=e511]
+          - row "Real-time Updates" [ref=e515]:
+            - cell "Real-time Updates" [ref=e516]
+            - cell [ref=e517]:
+              - img [ref=e518]
+            - cell [ref=e521]:
+              - img [ref=e522]
+            - cell [ref=e525]:
+              - img [ref=e526]
+          - row "Employer Trust Score" [ref=e530]:
+            - cell "Employer Trust Score" [ref=e531]
+            - cell [ref=e532]:
+              - img [ref=e533]
+            - cell [ref=e536]:
+              - img [ref=e537]
+            - cell [ref=e541]:
+              - img [ref=e542]
+          - row "Automatic Compliance" [ref=e546]:
+            - cell "Automatic Compliance" [ref=e547]
+            - cell [ref=e548]:
+              - img [ref=e549]
+            - cell [ref=e552]:
+              - img [ref=e553]
+            - cell [ref=e557]:
+              - img [ref=e558]
+      - button "Start Your PIN Journey" [ref=e563]:
+        - text: Start Your PIN Journey
+        - img
+    - generic [ref=e565]:
+      - generic [ref=e566]:
+        - heading "Why Professionals Love PIN" [level=2] [ref=e567]
+        - paragraph [ref=e568]: Join thousands of verified professionals building their global careers
+      - generic [ref=e569]:
+        - generic [ref=e571]:
+          - generic [ref=e572]:
+            - img [ref=e573]
+            - img [ref=e575]
+            - img [ref=e577]
+            - img [ref=e579]
+            - img [ref=e581]
+          - paragraph [ref=e583]: "\"PIN helped me land my dream remote job in under a week. The verification process gave employers instant confidence in my skills.\""
+          - generic [ref=e584]:
+            - img [ref=e586]
+            - generic [ref=e587]:
+              - generic [ref=e588]: Sarah Chen
+              - generic [ref=e589]: Senior Developer at TechCorp
+        - generic [ref=e591]:
+          - generic [ref=e592]:
+            - img [ref=e593]
+            - img [ref=e595]
+            - img [ref=e597]
+            - img [ref=e599]
+            - img [ref=e601]
+          - paragraph [ref=e603]: "\"As a Nigerian professional, PIN opened doors to global opportunities I never thought possible. True game-changer.\""
+          - generic [ref=e604]:
+            - img [ref=e606]
+            - generic [ref=e607]:
+              - generic [ref=e608]: David Okonkwo
+              - generic [ref=e609]: Product Designer at DesignHub
+        - generic [ref=e611]:
+          - generic [ref=e612]:
+            - img [ref=e613]
+            - img [ref=e615]
+            - img [ref=e617]
+            - img [ref=e619]
+            - img [ref=e621]
+          - paragraph [ref=e623]: "\"The blockchain verification means I don't have to prove myself repeatedly. One PIN, unlimited opportunities.\""
+          - generic [ref=e624]:
+            - img [ref=e626]
+            - generic [ref=e627]:
+              - generic [ref=e628]: Maria Garcia
+              - generic [ref=e629]: Data Scientist at DataFlow
+    - generic [ref=e631]:
+      - generic [ref=e632]:
+        - heading "Trusted by Global Employers" [level=2] [ref=e633]
+        - paragraph [ref=e634]: Leading companies worldwide use PIN to discover and hire verified talent
+      - generic [ref=e635]:
+        - link "Paystack website" [ref=e637] [cursor=pointer]:
+          - /url: https://paystack.com
+          - img "Paystack logo"
+        - link "Microsoft website" [ref=e639] [cursor=pointer]:
+          - /url: https://www.microsoft.com
+          - img "Microsoft logo"
+        - link "AWS website" [ref=e641] [cursor=pointer]:
+          - /url: https://aws.amazon.com
+          - img "AWS logo"
+        - link "Moniepoint website" [ref=e643] [cursor=pointer]:
+          - /url: https://moniepoint.com
+          - img "Moniepoint logo"
+        - link "Stripe website" [ref=e645] [cursor=pointer]:
+          - /url: https://stripe.com
+          - img "Stripe logo"
+        - link "3MTT website" [ref=e647] [cursor=pointer]:
+          - /url: https://3mtt.nitda.gov.ng
+          - img "3MTT logo"
+        - link "Google website" [ref=e649] [cursor=pointer]:
+          - /url: https://www.google.com
+          - img "Google logo"
+        - link "Meta website" [ref=e651] [cursor=pointer]:
+          - /url: https://www.meta.com
+          - img "Meta logo"
+        - link "Shopify website" [ref=e653] [cursor=pointer]:
+          - /url: https://www.shopify.com
+          - img "Shopify logo"
+        - link "Airbnb website" [ref=e655] [cursor=pointer]:
+          - /url: https://www.airbnb.com
+          - img "Airbnb logo"
+        - link "Oracle website" [ref=e657] [cursor=pointer]:
+          - /url: https://www.oracle.com
+          - img "Oracle logo"
+        - link "IBM website" [ref=e659] [cursor=pointer]:
+          - /url: https://www.ibm.com
+          - img "IBM logo"
+      - generic [ref=e660]:
+        - generic [ref=e662]:
+          - img [ref=e664]
+          - generic [ref=e667]: 195+
+          - generic [ref=e668]: Countries
+        - generic [ref=e670]:
+          - img [ref=e672]
+          - generic [ref=e677]: 50K+
+          - generic [ref=e678]: Verified Professionals
+        - generic [ref=e680]:
+          - img [ref=e682]
+          - generic [ref=e685]: 1,200+
+          - generic [ref=e686]: Hiring Companies
+        - generic [ref=e688]:
+          - img [ref=e690]
+          - generic [ref=e693]: 99.9%
+          - generic [ref=e694]: Verification Accuracy
+    - generic [ref=e698]:
+      - generic [ref=e699]:
+        - generic [ref=e700]:
+          - img
+          - text: Simple Pricing
+        - heading "Choose Your Plan" [level=2] [ref=e701]
+        - paragraph [ref=e702]: Start free, upgrade when you need more features
+      - generic [ref=e703]:
+        - generic [ref=e705]:
+          - generic [ref=e706]:
+            - heading "Basic" [level=3] [ref=e707]
+            - paragraph [ref=e708]: Perfect for getting started
+            - generic [ref=e709]:
+              - text: Free
+              - generic [ref=e710]: / forever
+          - list [ref=e711]:
+            - listitem [ref=e712]:
+              - img [ref=e713]
+              - generic [ref=e716]: Create your PIN
+            - listitem [ref=e717]:
+              - img [ref=e718]
+              - generic [ref=e721]: Basic verification
+            - listitem [ref=e722]:
+              - img [ref=e723]
+              - generic [ref=e726]: Profile page
+            - listitem [ref=e727]:
+              - img [ref=e728]
+              - generic [ref=e731]: Apply to unlimited jobs
+            - listitem [ref=e732]:
+              - img [ref=e733]
+              - generic [ref=e736]: Community support
+          - button "Get Started" [ref=e737]
+        - generic [ref=e738]:
+          - generic [ref=e739]: Most Popular
+          - generic [ref=e740]:
+            - generic [ref=e741]:
+              - heading "Professional" [level=3] [ref=e742]
+              - paragraph [ref=e743]: For serious career builders
+              - generic [ref=e744]:
+                - text: $9
+                - generic [ref=e745]: / per month
+            - list [ref=e746]:
+              - listitem [ref=e747]:
+                - img [ref=e748]
+                - generic [ref=e751]: Everything in Basic
+              - listitem [ref=e752]:
+                - img [ref=e753]
+                - generic [ref=e756]: Priority verification
+              - listitem [ref=e757]:
+                - img [ref=e758]
+                - generic [ref=e761]: Advanced analytics
+              - listitem [ref=e762]:
+                - img [ref=e763]
+                - generic [ref=e766]: Featured profile
+              - listitem [ref=e767]:
+                - img [ref=e768]
+                - generic [ref=e771]: Direct employer messaging
+              - listitem [ref=e772]:
+                - img [ref=e773]
+                - generic [ref=e776]: Priority support
+            - button "Start Free Trial" [ref=e777]
+        - generic [ref=e779]:
+          - generic [ref=e780]:
+            - heading "Enterprise" [level=3] [ref=e781]
+            - paragraph [ref=e782]: For teams and organizations
+            - generic [ref=e783]:
+              - text: Custom
+              - generic [ref=e784]: / contact us
+          - list [ref=e785]:
+            - listitem [ref=e786]:
+              - img [ref=e787]
+              - generic [ref=e790]: Everything in Professional
+            - listitem [ref=e791]:
+              - img [ref=e792]
+              - generic [ref=e795]: Team management
+            - listitem [ref=e796]:
+              - img [ref=e797]
+              - generic [ref=e800]: Custom branding
+            - listitem [ref=e801]:
+              - img [ref=e802]
+              - generic [ref=e805]: API access
+            - listitem [ref=e806]:
+              - img [ref=e807]
+              - generic [ref=e810]: Dedicated success manager
+            - listitem [ref=e811]:
+              - img [ref=e812]
+              - generic [ref=e815]: Custom integrations
+          - button "Contact Sales" [ref=e816]
+    - generic [ref=e819]:
+      - heading "Ready to Own Your Professional Future?" [level=2] [ref=e820]:
+        - text: Ready to Own Your
+        - text: Professional Future?
+      - paragraph [ref=e821]: Join 50,000+ verified professionals using PIN to unlock global opportunities
+      - generic [ref=e822]:
+        - button "Create Your PIN — Free" [ref=e823]:
+          - img
+          - text: Create Your PIN — Free
+          - img
+        - button "Schedule a Demo" [ref=e824]
+      - paragraph [ref=e825]: ✨ No credit card required • Get verified in 5 minutes
+    - contentinfo [ref=e826]:
+      - generic [ref=e830]:
+        - generic [ref=e833]:
+          - generic [ref=e834]:
+            - img [ref=e835]
+            - generic [ref=e837]: Professional Identity Number
+            - img [ref=e838]
+          - generic [ref=e840]:
+            - heading "Your Career Passport, Verified & Trusted Globally" [level=2] [ref=e841]:
+              - text: Your Career Passport,
+              - text: Verified & Trusted Globally
+            - paragraph [ref=e842]: Join 50,000+ verified professionals using PIN as their digital career identity. Blockchain-secured, AI-verified, globally recognized.
+          - generic [ref=e843]:
+            - button "Get Your PIN" [ref=e844]:
+              - text: Get Your PIN
+              - img
+            - button "Verify a PIN" [ref=e845]:
+              - text: Verify a PIN
+              - img
+          - generic [ref=e846]:
+            - generic [ref=e848]:
+              - img [ref=e850]
+              - generic [ref=e852]: 50K+
+              - generic [ref=e853]: Verified PINs
+            - generic [ref=e855]:
+              - img [ref=e857]
+              - generic [ref=e860]: 2.5K+
+              - generic [ref=e861]: Global Employers
+            - generic [ref=e863]:
+              - img [ref=e865]
+              - generic [ref=e868]: 150+
+              - generic [ref=e869]: Partner Institutions
+            - generic [ref=e871]:
+              - img [ref=e873]
+              - generic [ref=e876]: 45+
+              - generic [ref=e877]: Countries Active
+        - generic [ref=e880]:
+          - generic [ref=e881]:
+            - generic [ref=e882]:
+              - generic [ref=e883]:
+                - generic [ref=e885]: C
+                - generic [ref=e886]: CoreID
+              - paragraph [ref=e887]: The world's first Professional Identity Network. Swipe, verify, match, and hire verified talent with blockchain-secured credentials.
+            - generic [ref=e888]:
+              - text: Connect with us
+              - generic [ref=e889]:
+                - link "Follow us on Twitter" [ref=e890] [cursor=pointer]:
+                  - /url: https://twitter.com/swipe
+                  - img
+                - link "Connect on LinkedIn" [ref=e891] [cursor=pointer]:
+                  - /url: https://linkedin.com/company/swipe
+                  - img
+                - link "Follow us on Instagram" [ref=e892] [cursor=pointer]:
+                  - /url: https://instagram.com/swipe
+                  - img
+                - link "Like us on Facebook" [ref=e893] [cursor=pointer]:
+                  - /url: https://facebook.com/swipe
+                  - img
+            - generic [ref=e894]:
+              - generic [ref=e895] [cursor=pointer]:
+                - img [ref=e897]
+                - link "support@swipe.work" [ref=e900]:
+                  - /url: mailto:support@swipe.work
+              - generic [ref=e901] [cursor=pointer]:
+                - img [ref=e903]
+                - link "+234 (0) 800-SWIPE" [ref=e905]:
+                  - /url: tel:+2348008556226
+              - generic [ref=e906] [cursor=pointer]:
+                - img [ref=e908]
+                - generic [ref=e910]: 24/7 Live Support
+          - generic [ref=e912]:
+            - generic [ref=e913]:
+              - heading "Product" [level=4] [ref=e914]
+              - list [ref=e915]:
+                - listitem [ref=e916]:
+                  - link "How It Works" [ref=e917] [cursor=pointer]:
+                    - /url: /how-it-works
+                    - generic [ref=e918]: How It Works
+                    - img [ref=e919]
+                - listitem [ref=e921]:
+                  - link "Get Your PIN" [ref=e922] [cursor=pointer]:
+                    - /url: /get-pin
+                    - generic [ref=e923]: Get Your PIN
+                    - img [ref=e924]
+                - listitem [ref=e926]:
+                  - link "Verify PIN" [ref=e927] [cursor=pointer]:
+                    - /url: /verify
+                    - generic [ref=e928]: Verify PIN
+                    - img [ref=e929]
+                - listitem [ref=e931]:
+                  - link "Pricing" [ref=e932] [cursor=pointer]:
+                    - /url: /pricing
+                    - generic [ref=e933]: Pricing
+                    - img [ref=e934]
+            - generic [ref=e936]:
+              - heading "For Users" [level=4] [ref=e937]
+              - list [ref=e938]:
+                - listitem [ref=e939]:
+                  - link "Professionals" [ref=e940] [cursor=pointer]:
+                    - /url: /professionals
+                    - generic [ref=e941]: Professionals
+                    - img [ref=e942]
+                - listitem [ref=e944]:
+                  - link "Employers" [ref=e945] [cursor=pointer]:
+                    - /url: /employers
+                    - generic [ref=e946]: Employers
+                    - img [ref=e947]
+                - listitem [ref=e949]:
+                  - link "Universities" [ref=e950] [cursor=pointer]:
+                    - /url: /universities
+                    - generic [ref=e951]: Universities
+                    - img [ref=e952]
+                - listitem [ref=e954]:
+                  - link "Success Stories" [ref=e955] [cursor=pointer]:
+                    - /url: /stories
+                    - generic [ref=e956]: Success Stories
+                    - img [ref=e957]
+            - generic [ref=e959]:
+              - heading "Company" [level=4] [ref=e960]
+              - list [ref=e961]:
+                - listitem [ref=e962]:
+                  - link "About Us" [ref=e963] [cursor=pointer]:
+                    - /url: /about
+                    - generic [ref=e964]: About Us
+                    - img [ref=e965]
+                - listitem [ref=e967]:
+                  - link "Compliance" [ref=e968] [cursor=pointer]:
+                    - /url: /compliance
+                    - generic [ref=e969]: Compliance
+                    - img [ref=e970]
+                - listitem [ref=e972]:
+                  - link "Security" [ref=e973] [cursor=pointer]:
+                    - /url: /security
+                    - generic [ref=e974]: Security
+                    - img [ref=e975]
+                - listitem [ref=e977]:
+                  - link "Contact" [ref=e978] [cursor=pointer]:
+                    - /url: /contact
+                    - generic [ref=e979]: Contact
+                    - img [ref=e980]
+            - generic [ref=e982]:
+              - heading "Resources" [level=4] [ref=e983]
+              - list [ref=e984]:
+                - listitem [ref=e985]:
+                  - link "Documentation" [ref=e986] [cursor=pointer]:
+                    - /url: /docs
+                    - generic [ref=e987]: Documentation
+                    - img [ref=e988]
+                - listitem [ref=e990]:
+                  - link "API Access" [ref=e991] [cursor=pointer]:
+                    - /url: /api
+                    - generic [ref=e992]: API Access
+                    - img [ref=e993]
+                - listitem [ref=e995]:
+                  - link "Support Center" [ref=e996] [cursor=pointer]:
+                    - /url: /support
+                    - generic [ref=e997]: Support Center
+                    - img [ref=e998]
+                - listitem [ref=e1000]:
+                  - link "Blog" [ref=e1001] [cursor=pointer]:
+                    - /url: /blog
+                    - generic [ref=e1002]: Blog
+                    - img [ref=e1003]
+        - generic [ref=e1006]:
+          - generic [ref=e1007]:
+            - generic [ref=e1008]:
+              - img [ref=e1009]
+              - generic [ref=e1011]: Trusted & Compliant
+            - heading "Security & Compliance Certifications" [level=3] [ref=e1012]
+          - generic [ref=e1013]:
+            - generic [ref=e1015]:
+              - img [ref=e1016]
+              - generic [ref=e1018]: NDPR
+              - generic [ref=e1019]: Nigeria Data Protection
+            - generic [ref=e1021]:
+              - img [ref=e1022]
+              - generic [ref=e1025]: NIMC
+              - generic [ref=e1026]: Identity Verified
+            - generic [ref=e1028]:
+              - img [ref=e1029]
+              - generic [ref=e1032]: NUC
+              - generic [ref=e1033]: Education Partner
+            - generic [ref=e1035]:
+              - img [ref=e1036]
+              - generic [ref=e1039]: ISO 27001
+              - generic [ref=e1040]: Security Certified
+            - generic [ref=e1042]:
+              - img [ref=e1043]
+              - generic [ref=e1046]: GDPR
+              - generic [ref=e1047]: EU Compliant
+            - generic [ref=e1049]:
+              - img [ref=e1050]
+              - generic [ref=e1053]: SOC 2
+              - generic [ref=e1054]: Type II Certified
+        - generic [ref=e1055]:
+          - generic [ref=e1056]:
+            - generic [ref=e1057]:
+              - generic [ref=e1058]: © 2025 swipe. All rights reserved.
+              - generic [ref=e1059]:
+                - button "Privacy" [ref=e1060]
+                - button "Terms" [ref=e1061]
+                - button "Cookies" [ref=e1062]
+                - button "GDPR" [ref=e1063]
+            - generic [ref=e1064]:
+              - generic [ref=e1065]:
+                - img [ref=e1066]
+                - generic [ref=e1069]: 45+ Countries
+              - generic [ref=e1070]:
+                - img [ref=e1071]
+                - generic [ref=e1073]: Powered by AI
+          - paragraph [ref=e1076]: 🇳🇬 Built with pride in Nigeria · Serving the world
+          - paragraph [ref=e1078]:
+            - strong [ref=e1079]: "Important:"
+            - text: swipe implements rigorous KYC, AML, and credential verification. All data processing complies with GDPR, NDPR, and international privacy regulations. Professional Identity Numbers (PINs) are blockchain-secured and AI-verified for maximum trust and authenticity.
+        - button "Admin" [ref=e1083]:
+          - img
+          - text: Admin
+  - region "Notifications alt+T"
+```
