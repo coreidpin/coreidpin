@@ -10,6 +10,7 @@ import { Progress } from './ui/progress';
 import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { supabase } from '../utils/supabase/client';
+import '../styles/auth-dark.css';
 import {
   Sparkles,
   ArrowRight,
@@ -361,16 +362,16 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
   };
 
   return (
-    <div className={origin === 'modal' ? 'space-y-6' : 'min-h-screen bg-surface'}>
+    <div className={origin === 'modal' ? 'space-y-6' : 'auth-page-dark min-h-screen'}>
       {origin === 'onboarding' && (
-        <header className="border-b border-surface bg-surface sticky top-0 z-50">
+        <header className="reg-header border-b sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-sm text-muted-foreground">Professional Setup</span>
+                <Sparkles className="reg-icon-primary h-5 w-5" />
+                <span className="auth-subtitle text-sm">Professional Setup</span>
               </div>
-              <Badge variant="secondary" className="hidden sm:flex">
+              <Badge variant="secondary" className="hidden sm:flex reg-badge">
                 Quick Setup
               </Badge>
             </div>
@@ -378,17 +379,17 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
         </header>
       )}
 
-      <div className={origin === 'onboarding' ? 'bg-surface border-b border-surface' : ''}>
+      <div className={origin === 'onboarding' ? 'reg-divider border-b' : ''}>
         <div className={origin === 'onboarding' ? 'container mx-auto px-4 py-6' : ''}>
           <div className={origin === 'onboarding' ? 'max-w-2xl mx-auto space-y-4' : ''}>
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Step {currentStep + 1} of 4</span>
-              <span className="text-muted-foreground">{progressValue}% Complete</span>
+              <span className="auth-title font-medium">Step {currentStep + 1} of 4</span>
+              <span className="auth-subtitle">{progressValue}% Complete</span>
             </div>
-            <Progress value={progressValue} className="w-full h-2" />
+            <Progress value={progressValue} className="w-full h-2 reg-progress-bg" />
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm text-muted-foreground">
+              <Sparkles className="reg-icon-primary h-4 w-4" />
+              <span className="auth-subtitle text-sm">
                 {currentStep === 0 && 'Basic Information'}
                 {currentStep === 1 && 'Professional Details'}
                 {currentStep === 2 && 'Skills'}

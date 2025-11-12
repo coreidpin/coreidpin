@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { api } from '../utils/api';
+import '../styles/auth-dark.css';
 
 interface LoginPageProps {
   onLoginSuccess: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
@@ -133,22 +134,22 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-sm p-6">
-        <h1 className="text-2xl font-semibold mb-2">Welcome Back</h1>
-        <p className="text-sm text-muted-foreground mb-6">Sign in to your account</p>
+    <div className="auth-page-dark min-h-screen flex items-center justify-center">
+      <div className="auth-card w-full max-w-md border rounded-2xl shadow-lg p-8">
+        <h1 className="auth-title text-2xl font-semibold mb-2">Welcome Back</h1>
+        <p className="auth-subtitle text-sm mb-6">Sign in to your account</p>
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg border border-destructive/30 bg-destructive/10 text-sm text-destructive">
+          <div className="auth-error mb-4 p-3 rounded-lg border text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email" className="auth-label">Email Address</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Mail className="auth-icon absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" />
               <Input
                 id="email"
                 type="email"
@@ -156,16 +157,16 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className={`h-11 pl-10 ${error ? 'border-destructive/50 ring-1 ring-destructive/30' : ''}`}
+                className={`auth-input h-11 pl-10 ${error ? 'auth-input-error' : ''}`}
                 aria-invalid={!!error}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="auth-label">Password</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Lock className="auth-icon absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" />
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -173,13 +174,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className={`h-11 pl-10 pr-10 ${error ? 'border-destructive/50 ring-1 ring-destructive/30' : ''}`}
+                className={`auth-input h-11 pl-10 pr-10 ${error ? 'auth-input-error' : ''}`}
                 aria-invalid={!!error}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="auth-icon-button absolute right-3 top-1/2 -translate-y-1/2"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -188,7 +189,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <button
                 type="button"
                 onClick={handlePasswordResetRequest}
-                className="text-sm font-medium hover:underline text-primary"
+                className="auth-link text-sm"
                 aria-label="Forgot password? Request a reset email"
               >
                 Forgot your password?
