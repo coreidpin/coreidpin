@@ -17,10 +17,19 @@ create table if not exists public.profiles (
   updated_at timestamptz default now()
 );
 
--- Optional: link to auth.users if available
-alter table public.profiles
-  add constraint profiles_user_fk
-  foreign key (user_id) references auth.users(id) on delete cascade;
+-- Optional: link to auth.users if available (idempotent)
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'profiles_user_fk'
+      and conrelid = 'public.profiles'::regclass
+  ) then
+    alter table public.profiles
+      add constraint profiles_user_fk
+      foreign key (user_id) references auth.users(id) on delete cascade;
+  end if;
+end $$;
 
 -- Ensure email column exists on profiles for idempotency
 alter table public.profiles
@@ -85,9 +94,19 @@ create table if not exists public.login_history (
   created_at timestamptz default now()
 );
 
-alter table public.login_history
-  add constraint login_history_user_fk
-  foreign key (user_id) references auth.users(id) on delete set null;
+-- Link to auth.users (idempotent)
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'login_history_user_fk'
+      and conrelid = 'public.login_history'::regclass
+  ) then
+    alter table public.login_history
+      add constraint login_history_user_fk
+      foreign key (user_id) references auth.users(id) on delete set null;
+  end if;
+end $$;
 
 -- Ensure email column exists on login_history for idempotency
 alter table public.login_history

@@ -19,7 +19,8 @@ import {
   Star,
   Fingerprint
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
+import { api } from '../utils/api';
 
 interface Experience {
   title: string;
@@ -77,10 +78,27 @@ export function PINIdentityCard({
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const shareUrl = `${window.location.origin}/pin/${data.pinNumber}`;
+    
+    // Track share event via API
+    try {
+      await api.trackPINShare(data.pinNumber);
+      console.log('Share tracked for PIN:', data.pinNumber);
+    } catch (error) {
+      console.log('Failed to track share:', error);
+      // Non-fatal, continue with copy
+    }
+    
+    // Copy to clipboard
     navigator.clipboard.writeText(shareUrl);
     toast.success('Public PIN link copied to clipboard');
+  };
+
+  const handleViewPublic = () => {
+    const publicUrl = `${window.location.origin}/pin/${data.pinNumber}`;
+    window.open(publicUrl, '_blank');
+    toast.success('Opening public profile in new tab');
   };
 
   const getSkillColor = (level: string) => {
@@ -398,11 +416,19 @@ export function PINIdentityCard({
                   Share PIN
                 </Button>
                 <Button
+                  onClick={handleViewPublic}
+                  variant="outline"
+                  className="border-blue-400 text-blue-300 hover:bg-blue-500/20"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  View Public
+                </Button>
+                <Button
                   onClick={() => setIsFlipped(!isFlipped)}
                   variant="outline"
                   className="border-blue-400 text-blue-300 hover:bg-blue-500/20"
                 >
-                  View Details
+                  Details
                 </Button>
               </div>
             )}

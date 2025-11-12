@@ -620,15 +620,21 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             </p>
           </motion.div>
 
-          {/* Company logos */}
+          {/* Company logos (prefers local brand assets; falls back to icons) */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-16">
             {[
-              { name: 'TechCorp', seed: 'techcorp' },
-              { name: 'FinanceHub', seed: 'financehub' },
-              { name: 'CloudNine', seed: 'cloudnine' },
-              { name: 'DataStream', seed: 'datastream' },
-              { name: 'WebFlow', seed: 'webflow' },
-              { name: 'AI Innovations', seed: 'aiinnovations' }
+              { name: 'Paystack', logo: '/logos/Paystack_idSL4BuSLF_1.png', url: 'https://paystack.com' },
+              { name: 'Microsoft', logo: '/logos/Microsoft_Logo_512px.png', url: 'https://www.microsoft.com' },
+              { name: 'AWS', logo: '/logos/Amazon Web Services_idS5TK0MYh_1.png', url: 'https://aws.amazon.com' },
+              { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
+              { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com', url: 'https://stripe.com' },
+              { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
+              { name: 'Google', logo: 'https://logo.clearbit.com/google.com', url: 'https://www.google.com' },
+              { name: 'Meta', logo: 'https://logo.clearbit.com/meta.com', url: 'https://www.meta.com' },
+              { name: 'Shopify', logo: 'https://logo.clearbit.com/shopify.com', url: 'https://www.shopify.com' },
+              { name: 'Airbnb', logo: 'https://logo.clearbit.com/airbnb.com', url: 'https://www.airbnb.com' },
+              { name: 'Oracle', logo: 'https://logo.clearbit.com/oracle.com', url: 'https://www.oracle.com' },
+              { name: 'IBM', logo: 'https://logo.clearbit.com/ibm.com', url: 'https://www.ibm.com' }
             ].map((company, index) => (
               <motion.div
                 key={company.name}
@@ -636,15 +642,34 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.05 }}
                 className="flex items-center justify-center"
               >
-                <div className="p-6 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-lg transition-all">
-                  <Avatar className="h-16 w-16 rounded-lg">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/identicon/svg?seed=${company.seed}`} />
-                    <AvatarFallback className="rounded-lg">{company.name}</AvatarFallback>
-                  </Avatar>
-                </div>
+                <a
+                  href={company.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${company.name} website`}
+                  title={`Visit ${company.name}`}
+                  className="p-6 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-lg transition-all w-full flex items-center justify-center"
+                >
+                  <img
+                    src={company.logo}
+                    alt={`${company.name} logo`}
+                    title={company.name}
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                    className="h-10 sm:h-12 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+                    sizes="(min-width: 1024px) 16.6vw, (min-width: 768px) 33.3vw, 50vw"
+                    onError={(e) => {
+                      const fallback = `https://api.dicebear.com/7.x/identicon/svg?seed=${company.name.toLowerCase()}`;
+                      if ((e.currentTarget as HTMLImageElement).src !== fallback) {
+                        (e.currentTarget as HTMLImageElement).src = fallback;
+                      }
+                    }}
+                  />
+                </a>
               </motion.div>
             ))}
           </div>

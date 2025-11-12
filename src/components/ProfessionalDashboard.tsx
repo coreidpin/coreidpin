@@ -22,7 +22,7 @@ import { PINOnboarding } from './PINOnboarding';
 import { api } from '../utils/api';
 import { supabase } from '../utils/supabase/client';
 import { mockJobOpportunities } from './mockSwipeData';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   Award, 
   CheckCircle, 
@@ -43,7 +43,6 @@ import {
   Fingerprint,
   Share2
 } from 'lucide-react';
-import { Sun, Moon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Lock } from 'lucide-react';
 
@@ -62,7 +61,6 @@ export function ProfessionalDashboard() {
   const [pinData, setPinData] = useState<any>(null);
   const [showPINOnboarding, setShowPINOnboarding] = useState(false);
   const [currentTab, setCurrentTab] = useState('dashboard');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState<'summary' | 'portfolio' | 'endorsements' | 'opportunities' | 'activity' | 'settings'>('summary');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -127,6 +125,33 @@ export function ProfessionalDashboard() {
     loadAnalysis();
   }, []);
 
+  // Load PIN data on mount
+  useEffect(() => {
+    const loadPINData = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        const accessToken = localStorage.getItem('accessToken');
+        
+        if (userId && accessToken) {
+          console.log('Loading PIN data for user:', userId);
+          const result = await api.getUserPIN(userId, accessToken);
+          
+          if (result.success && result.data) {
+            console.log('PIN data loaded successfully:', result.data.pinNumber);
+            setPinData(result.data);
+          } else {
+            console.log('No PIN found for user');
+          }
+        }
+      } catch (error) {
+        console.log('Failed to load PIN:', error);
+        // User doesn't have a PIN yet, that's okay
+      }
+    };
+
+    loadPINData();
+  }, []);
+
   // Load pending registration summary from localStorage (set by RegistrationFlow)
   useEffect(() => {
     try {
@@ -157,26 +182,12 @@ export function ProfessionalDashboard() {
     applyUserMetadata();
   }, [savedProfile]);
 
-  // Initialize and persist theme, apply global dark class
+  // Set dark mode permanently
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)');
-      const initial = (saved === 'light' || saved === 'dark')
-        ? saved
-        : (prefersDark && prefersDark.matches ? 'dark' : 'light');
-      setTheme(initial as 'dark' | 'light');
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('theme', theme);
-    } catch {}
     if (typeof document !== 'undefined') {
-      document.documentElement.classList.toggle('dark', theme === 'dark');
+      document.documentElement.classList.add('dark');
     }
-  }, [theme]);
+  }, []);
 
   // Reduced motion guard
   useEffect(() => {
@@ -231,21 +242,21 @@ export function ProfessionalDashboard() {
   };
 
   return (
-    <div className={theme === 'dark' ? 'min-h-screen bg-[#0a0b0d] text-white' : 'min-h-screen bg-white text-slate-900'}>
+    <div className="min-h-screen bg-[#0a0b0d] text-white" style={{ backgroundColor: '#0a0b0d' }}>
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Registration Summary Banner */}
         {registrationSummary && (
-          <Card className={theme === 'dark' ? 'bg-[#32f08c]/10 border-[#32f08c]/30' : 'bg-emerald-50 border-emerald-200'}>
+          <Card className="bg-[#32f08c]/10 border-[#32f08c]/30">
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <BadgeCheck className="h-4 w-4 text-[#32f08c]" />
-                    <span className={theme === 'dark' ? 'text-sm text-white/80' : 'text-sm text-emerald-800'}>
+                    <span className="text-sm text-white/80">
                       Registration complete — here’s your summary
                     </span>
                   </div>
-                  <div className={theme === 'dark' ? 'text-xs text-white/70' : 'text-xs text-slate-700'}>
+                  <div className="text-xs text-white/70">
                     <span className="font-medium">{registrationSummary?.name}</span>
                     {registrationSummary?.title ? ` • ${registrationSummary.title}` : ''}
                     {registrationSummary?.resumeFileName ? ` • Resume: ${registrationSummary.resumeFileName}` : ''}
@@ -255,7 +266,7 @@ export function ProfessionalDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-emerald-300 text-emerald-900 hover:bg-emerald-100'}
+                    className="border-white/20 text-white hover:bg-white/10"
                     onClick={() => setCurrentTab('setup')}
                   >
                     Edit Profile
@@ -263,7 +274,7 @@ export function ProfessionalDashboard() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={theme === 'dark' ? 'text-white/70 hover:text-white' : 'text-slate-700 hover:text-slate-900'}
+                    className="text-white/70 hover:text-white"
                     onClick={() => {
                       try { localStorage.removeItem('pendingRegistrationData'); } catch {}
                       setRegistrationSummary(null);
@@ -276,88 +287,44 @@ export function ProfessionalDashboard() {
             </CardContent>
           </Card>
         )}
-        {/* Mobile Header: title, theme toggle, and scroll chips */}
-        <div className={theme === 'dark' ? 'lg:hidden sticky top-0 z-20 -mx-4 px-4 py-3 backdrop-blur bg-black/30 border-b border-white/10' : 'lg:hidden sticky top-0 z-20 -mx-4 px-4 py-3 backdrop-blur bg-white/70 border-b border-slate-200'}>
+        {/* Mobile Header: title and scroll chips */}
+        <div className="lg:hidden sticky top-0 z-20 -mx-4 px-4 py-3 backdrop-blur bg-black/30 border-b border-white/10">
           <div className="flex items-center justify-between">
-            <span className={theme === 'dark' ? 'text-sm text-white/70' : 'text-sm text-slate-700'}>Dashboard</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'}
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4 mr-1" /> : <Moon className="h-4 w-4 mr-1" />}
-              {theme === 'dark' ? 'Light' : 'Dark'}
-            </Button>
+            <span className="text-sm text-white/70">Dashboard</span>
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar" role="navigation" aria-label="Dashboard sections">
-            <Button onClick={() => scrollTo(welcomeRef)} aria-controls="section-summary" aria-current={activeSection === 'summary' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'summary' ? (theme === 'dark' ? 'bg-[#bfa5ff]/20 border-[#bfa5ff]/40 text-[#bfa5ff]' : 'bg-slate-200 border-slate-300 text-slate-900') : (theme === 'dark' ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200')}>
+            <Button onClick={() => scrollTo(welcomeRef)} aria-controls="section-summary" aria-current={activeSection === 'summary' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'summary' ? 'bg-[#bfa5ff]/20 border-[#bfa5ff]/40 text-[#bfa5ff]' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}>
               Summary
             </Button>
-            <Button onClick={() => scrollTo(portfolioRef)} aria-controls="section-portfolio" aria-current={activeSection === 'portfolio' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'portfolio' ? (theme === 'dark' ? 'bg-[#7bb8ff]/20 border-[#7bb8ff]/40 text-[#7bb8ff]' : 'bg-slate-200 border-slate-300 text-slate-900') : (theme === 'dark' ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200')}>
+            <Button onClick={() => scrollTo(portfolioRef)} aria-controls="section-portfolio" aria-current={activeSection === 'portfolio' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'portfolio' ? 'bg-[#7bb8ff]/20 border-[#7bb8ff]/40 text-[#7bb8ff]' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}>
               Portfolio
             </Button>
-            <Button onClick={() => scrollTo(endorsementsRef)} aria-controls="section-endorsements" aria-current={activeSection === 'endorsements' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'endorsements' ? (theme === 'dark' ? 'bg-[#32f08c]/20 border-[#32f08c]/40 text-[#32f08c]' : 'bg-slate-200 border-slate-300 text-slate-900') : (theme === 'dark' ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200')}>
+            <Button onClick={() => scrollTo(endorsementsRef)} aria-controls="section-endorsements" aria-current={activeSection === 'endorsements' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'endorsements' ? 'bg-[#32f08c]/20 border-[#32f08c]/40 text-[#32f08c]' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}>
               Endorsements
             </Button>
-            <Button onClick={() => scrollTo(opportunitiesRef)} aria-controls="section-opportunities" aria-current={activeSection === 'opportunities' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'opportunities' ? (theme === 'dark' ? 'bg-[#bfa5ff]/20 border-[#bfa5ff]/40 text-[#bfa5ff]' : 'bg-slate-200 border-slate-300 text-slate-900') : (theme === 'dark' ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200')}>
+            <Button onClick={() => scrollTo(opportunitiesRef)} aria-controls="section-opportunities" aria-current={activeSection === 'opportunities' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'opportunities' ? 'bg-[#bfa5ff]/20 border-[#bfa5ff]/40 text-[#bfa5ff]' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}>
               Opportunities
             </Button>
-            <Button onClick={() => scrollTo(activityRef)} aria-controls="section-activity" aria-current={activeSection === 'activity' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'activity' ? (theme === 'dark' ? 'bg-[#7bb8ff]/20 border-[#7bb8ff]/40 text-[#7bb8ff]' : 'bg-slate-200 border-slate-300 text-slate-900') : (theme === 'dark' ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200')}>
+            <Button onClick={() => scrollTo(activityRef)} aria-controls="section-activity" aria-current={activeSection === 'activity' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'activity' ? 'bg-[#7bb8ff]/20 border-[#7bb8ff]/40 text-[#7bb8ff]' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}>
               Activity
             </Button>
-            <Button onClick={() => scrollTo(settingsRef)} aria-controls="section-settings" aria-current={activeSection === 'settings' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'settings' ? (theme === 'dark' ? 'bg-[#32f08c]/20 border-[#32f08c]/40 text-[#32f08c]' : 'bg-slate-200 border-slate-300 text-slate-900') : (theme === 'dark' ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' : 'bg-slate-100 border-slate-300 text-slate-900 hover:bg-slate-200')}>
+            <Button onClick={() => scrollTo(settingsRef)} aria-controls="section-settings" aria-current={activeSection === 'settings' ? 'page' : undefined} variant="secondary" size="sm" className={activeSection === 'settings' ? 'bg-[#32f08c]/20 border-[#32f08c]/40 text-[#32f08c]' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}>
               Settings
             </Button>
           </div>
         </div>
         {/* Split-view Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_320px] gap-6">
-          {/* Left Sidebar */}
-          <aside className="hidden lg:flex flex-col gap-2">
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm opacity-70">Navigation</span>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'}
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  >
-                    {theme === 'dark' ? <Sun className="h-4 w-4 mr-1" /> : <Moon className="h-4 w-4 mr-1" />}
-                    {theme === 'dark' ? 'Light' : 'Dark'}
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <Button onClick={() => scrollTo(welcomeRef)} variant="ghost" className={activeSection === 'summary' ? (theme === 'dark' ? 'w-full justify-start text-[#bfa5ff] bg-[#bfa5ff]/15 ring-1 ring-[#bfa5ff]/40' : 'w-full justify-start text-slate-900 bg-slate-100 ring-1 ring-slate-300') : (theme === 'dark' ? 'w-full justify-start text-white hover:text-[#bfa5ff] hover:bg-[#bfa5ff]/10' : 'w-full justify-start text-slate-900 hover:bg-slate-50')}>
-                    <Fingerprint className="h-4 w-4 mr-2 text-[#bfa5ff]" /> Dashboard Summary
-                  </Button>
-                  <Button onClick={() => scrollTo(portfolioRef)} variant="ghost" className={activeSection === 'portfolio' ? (theme === 'dark' ? 'w-full justify-start text-[#7bb8ff] bg-[#7bb8ff]/15 ring-1 ring-[#7bb8ff]/40' : 'w-full justify-start text-slate-900 bg-slate-100 ring-1 ring-slate-300') : (theme === 'dark' ? 'w-full justify-start text-white hover:text-[#bfa5ff] hover:bg-[#bfa5ff]/10' : 'w-full justify-start text-slate-900 hover:bg-slate-50')}>
-                    <Briefcase className="h-4 w-4 mr-2 text-[#7bb8ff]" /> Portfolio
-                  </Button>
-                  <Button onClick={() => scrollTo(endorsementsRef)} variant="ghost" className={activeSection === 'endorsements' ? (theme === 'dark' ? 'w-full justify-start text-[#32f08c] bg-[#32f08c]/15 ring-1 ring-[#32f08c]/40' : 'w-full justify-start text-slate-900 bg-slate-100 ring-1 ring-slate-300') : (theme === 'dark' ? 'w-full justify-start text-white hover:text-[#bfa5ff] hover:bg-[#bfa5ff]/10' : 'w-full justify-start text-slate-900 hover:bg-slate-50')}>
-                    <BadgeCheck className="h-4 w-4 mr-2 text-[#32f08c]" /> Endorsements
-                  </Button>
-                  <Button onClick={() => scrollTo(opportunitiesRef)} variant="ghost" className={activeSection === 'opportunities' ? (theme === 'dark' ? 'w-full justify-start text-[#bfa5ff] bg-[#bfa5ff]/15 ring-1 ring-[#bfa5ff]/40' : 'w-full justify-start text-slate-900 bg-slate-100 ring-1 ring-slate-300') : (theme === 'dark' ? 'w-full justify-start text-white hover:text-[#bfa5ff] hover:bg-[#bfa5ff]/10' : 'w-full justify-start text-slate-900 hover:bg-slate-50')}>
-                    <Target className="h-4 w-4 mr-2 text-[#bfa5ff]" /> Opportunities
-                  </Button>
-                  <Button onClick={() => scrollTo(activityRef)} variant="ghost" className={activeSection === 'activity' ? (theme === 'dark' ? 'w-full justify-start text-[#7bb8ff] bg-[#7bb8ff]/15 ring-1 ring-[#7bb8ff]/40' : 'w-full justify-start text-slate-900 bg-slate-100 ring-1 ring-slate-300') : (theme === 'dark' ? 'w-full justify-start text-white hover:text-[#bfa5ff] hover:bg-[#bfa5ff]/10' : 'w-full justify-start text-slate-900 hover:bg-slate-50')}>
-                    <Clock className="h-4 w-4 mr-2 text-[#7bb8ff]" /> Activity
-                  </Button>
-                  <Button onClick={() => scrollTo(settingsRef)} variant="ghost" className={activeSection === 'settings' ? (theme === 'dark' ? 'w-full justify-start text-[#32f08c] bg-[#32f08c]/15 ring-1 ring-[#32f08c]/40' : 'w-full justify-start text-slate-900 bg-slate-100 ring-1 ring-slate-300') : (theme === 'dark' ? 'w-full justify-start text-white hover:text-[#bfa5ff] hover:bg-[#bfa5ff]/10' : 'w-full justify-start text-slate-900 hover:bg-slate-50')}>
-                    <Shield className="h-4 w-4 mr-2 text-[#32f08c]" /> Settings & Security
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </aside>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr] gap-6">
+          {/* Left Sidebar - Temporarily hidden for dark theme migration */}
+          {/* <aside className="hidden lg:flex flex-col gap-2">
+            ...sidebar content removed...
+          </aside> */}
 
           {/* Main Content */}
           <main className="space-y-6">
             {/* Welcome + PIN Overview */}
             <motion.div ref={welcomeRef} id="section-summary" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+              <Card className="bg-black/40 border-[#bfa5ff]/30">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -365,14 +332,14 @@ export function ProfessionalDashboard() {
                         <h1 className="text-2xl font-bold">Welcome back, {userProfile.name.split(' ')[0]}! 👋</h1>
                         <Badge variant="outline" className="border-[#32f08c]/40 text-[#32f08c] bg-[#32f08c]/10">Active</Badge>
                       </div>
-                      <p className={theme === 'dark' ? 'text-sm text-white/70 mb-3' : 'text-sm text-slate-700 mb-3'}>{userProfile.title}</p>
+                      <p className="text-sm text-white/70 mb-3">{userProfile.title}</p>
                       <div className="space-y-2 max-w-md">
                         <div className="flex items-center justify-between text-xs">
-                          <span className={theme === 'dark' ? 'text-white/70' : 'text-slate-700'}>Trust & Completion</span>
+                          <span className="text-white/70">Trust & Completion</span>
                           <span className="text-[#32f08c]">{profileCompletion}%</span>
                         </div>
                         <Progress value={profileCompletion} className="h-2 bg-white/10" />
-                        <p className={theme === 'dark' ? 'text-xs text-white/50' : 'text-xs text-slate-500'}>Your PIN unlocks opportunities. Keep it active!</p>
+                        <p className="text-xs text-white/50">Your PIN unlocks opportunities. Keep it active!</p>
                       </div>
                     </div>
                     <div className="relative w-24 h-24 rounded-xl bg-[#bfa5ff]/10 border border-[#bfa5ff]/30 flex items-center justify-center shadow-[0_0_20px_#bfa5ff40] overflow-hidden" aria-live="polite">
@@ -396,10 +363,10 @@ export function ProfessionalDashboard() {
                     {pinData ? (
                       <PINIdentityCard data={pinData} variant="preview" />
                     ) : (
-                      <div className={theme === 'dark' ? 'p-4 rounded-lg bg-[#7bb8ff]/10 border border-[#7bb8ff]/30' : 'p-4 rounded-lg bg-blue-50 border border-blue-200'}>
+                      <div className="p-4 rounded-lg bg-[#7bb8ff]/10 border border-[#7bb8ff]/30">
                         <div className="flex items-center gap-2">
                           <Fingerprint className="h-5 w-5 text-[#7bb8ff]" />
-                          <span className={theme === 'dark' ? 'text-sm text-white/80' : 'text-sm text-slate-800'}>No active PIN yet. Create one to boost trust.</span>
+                          <span className="text-sm text-white/80">No active PIN yet. Create one to boost trust.</span>
                         </div>
                         <Button size="sm" onClick={() => setShowPINOnboarding(true)} className="mt-3 bg-gradient-to-r from-[#7bb8ff] to-[#bfa5ff] text-black hover:opacity-90">Create PIN</Button>
                       </div>
@@ -411,7 +378,7 @@ export function ProfessionalDashboard() {
 
             {/* Profile Snapshot */}
             <div ref={portfolioRef}>
-              <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+              <Card className="bg-black/40 border-[#bfa5ff]/30">
                 <CardContent className="p-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="p-4 rounded-lg bg-white/5 border border-white/10">
@@ -440,16 +407,16 @@ export function ProfessionalDashboard() {
             </div>
 
             {/* Portfolio Showcase */}
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+            <Card className="bg-black/40 border-[#bfa5ff]/30">
               <CardHeader>
                 <CardTitle>Portfolio Showcase</CardTitle>
-                <CardDescription className={theme === 'dark' ? 'text-white/60' : 'text-slate-600'}>Recent work and case studies</CardDescription>
+                <CardDescription className="text-white/60">Recent work and case studies</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {isInitialLoading ? (
                     Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className={theme === 'dark' ? 'rounded-lg overflow-hidden border border-white/10 bg-white/5' : 'rounded-lg overflow-hidden border border-slate-200 bg-slate-50'}>
+                      <div key={i} className="rounded-lg overflow-hidden border border-white/10 bg-white/5">
                         <Skeleton className="h-28 w-full" />
                         <div className="p-3 space-y-2">
                           <Skeleton className="h-4 w-1/2" />
@@ -459,7 +426,7 @@ export function ProfessionalDashboard() {
                     ))
                   ) : (
                     [1,2,3,4].map((i) => (
-                      <motion.div key={i} whileHover={reducedMotion ? undefined : { scale: 1.02 }} className={theme === 'dark' ? 'rounded-lg overflow-hidden border border-white/10 bg-white/5' : 'rounded-lg overflow-hidden border border-slate-200 bg-slate-50'}>
+                      <motion.div key={i} whileHover={reducedMotion ? undefined : { scale: 1.02 }} className="rounded-lg overflow-hidden border border-white/10 bg-white/5">
                         <div className="aspect-[16/9] bg-black/5">
                           <img
                             src={`https://placehold.co/600x338?text=Project+%23${i}`}
@@ -475,7 +442,7 @@ export function ProfessionalDashboard() {
                               <Badge className="bg-[#bfa5ff]/20 text-[#bfa5ff] border-[#bfa5ff]/30">Highlight</Badge>
                             )}
                           </div>
-                          <p className={theme === 'dark' ? 'text-xs text-white/60 mt-1' : 'text-xs text-slate-600 mt-1'}>Accessible image placeholder with alt text</p>
+                          <p className="text-xs text-white/60 mt-1">Accessible image placeholder with alt text</p>
                         </div>
                       </motion.div>
                     ))
@@ -486,25 +453,25 @@ export function ProfessionalDashboard() {
 
             {/* Endorsements & Recommendations */}
             <div ref={endorsementsRef} id="section-endorsements">
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+            <Card className="bg-black/40 border-[#bfa5ff]/30">
               <CardHeader>
                 <CardTitle>Endorsements</CardTitle>
-                <CardDescription className={theme === 'dark' ? 'text-white/60' : 'text-slate-600'}>What peers and employers say</CardDescription>
+                <CardDescription className="text-white/60">What peers and employers say</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4 overflow-x-auto no-scrollbar">
                   {["Exceptional UI work","Reliable and fast","Great communicator","High-quality code"].map((text, idx) => (
-                    <motion.div key={idx} whileHover={{ y: -2 }} className={theme === 'dark' ? 'min-w-[220px] p-4 rounded-lg bg-white/5 border border-white/10' : 'min-w-[220px] p-4 rounded-lg bg-slate-50 border border-slate-200'}>
+                    <motion.div key={idx} whileHover={{ y: -2 }} className="min-w-[220px] p-4 rounded-lg bg-white/5 border border-white/10">
                       <div className="flex items-center gap-2 mb-2">
                         <BadgeCheck className="h-4 w-4 text-[#32f08c]" />
                         <span className="text-sm">Verified</span>
                       </div>
-                      <p className={theme === 'dark' ? 'text-sm text-white/80' : 'text-sm text-slate-800'}>{text}</p>
+                      <p className="text-sm text-white/80">{text}</p>
                     </motion.div>
                   ))}
                 </div>
                 <div className="mt-4">
-                  <Button variant="outline" className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'}>Endorse More</Button>
+                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">Endorse More</Button>
                 </div>
               </CardContent>
             </Card>
@@ -512,16 +479,16 @@ export function ProfessionalDashboard() {
 
             {/* Opportunities & Recommendations */}
             <div ref={opportunitiesRef} id="section-opportunities">
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+            <Card className="bg-black/40 border-[#bfa5ff]/30">
               <CardHeader>
                 <CardTitle>Opportunities for You</CardTitle>
-                <CardDescription className={theme === 'dark' ? 'text-white/60' : 'text-slate-600'}>Smart suggestions based on your profile</CardDescription>
+                <CardDescription className="text-white/60">Smart suggestions based on your profile</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
                   {isInitialLoading ? (
                     Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className={theme === 'dark' ? 'p-4 rounded-lg bg-white/5 border border-white/10' : 'p-4 rounded-lg bg-slate-50 border border-slate-200'}>
+                      <div key={i} className="p-4 rounded-lg bg-white/5 border border-white/10">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2">
                             <Skeleton className="h-4 w-2/3" />
@@ -537,15 +504,15 @@ export function ProfessionalDashboard() {
                     ))
                   ) : (
                     mockJobOpportunities.slice(0,4).map((job) => (
-                      <motion.div key={job.id} whileHover={reducedMotion ? undefined : { scale: 1.02 }} className={theme === 'dark' ? 'p-4 rounded-lg bg-white/5 border border-white/10 cursor-pointer' : 'p-4 rounded-lg bg-slate-50 border border-slate-200 cursor-pointer'}>
+                      <motion.div key={job.id} whileHover={reducedMotion ? undefined : { scale: 1.02 }} className="p-4 rounded-lg bg-white/5 border border-white/10 cursor-pointer">
                         <div className="flex items-start justify-between">
                           <div>
                             <h4 className="font-semibold">{job.title}</h4>
-                            <p className={theme === 'dark' ? 'text-xs text-white/60' : 'text-xs text-slate-600'}>{job.company} • {job.location}</p>
+                            <p className="text-xs text-white/60">{job.company} • {job.location}</p>
                           </div>
                           <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30">{job.matchScore}%</Badge>
                         </div>
-                        <p className={theme === 'dark' ? 'text-sm text-white/70 mt-2 line-clamp-2' : 'text-sm text-slate-700 mt-2 line-clamp-2'}>{job.description}</p>
+                        <p className="text-sm text-white/70 mt-2 line-clamp-2">{job.description}</p>
                       </motion.div>
                     ))
                   )}
@@ -556,7 +523,7 @@ export function ProfessionalDashboard() {
 
             {/* Activity Feed */}
             <div ref={activityRef} id="section-activity">
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+            <Card className="bg-black/40 border-[#bfa5ff]/30">
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
               </CardHeader>
@@ -565,7 +532,7 @@ export function ProfessionalDashboard() {
                   {[{t:'Portfolio item added', v:true},{t:'Endorsed by TechCorp', v:true},{t:'Viewed by FinanceHub', v:false}].map((item, i) => (
                      <div key={i} className="flex items-center gap-3 text-sm">
                        {item.v ? <BadgeCheck className="h-4 w-4 text-[#32f08c]" /> : <Eye className="h-4 w-4 text-[#7bb8ff]" />}
-                      <span className={theme === 'dark' ? 'text-white/80' : 'text-slate-800'}>{item.t}</span>
+                      <span className="text-white/80">{item.t}</span>
                        {item.v && <Badge variant="outline" className="ml-auto border-[#32f08c]/40 text-[#32f08c]">PIN verified</Badge>}
                      </div>
                   ))}
@@ -576,17 +543,17 @@ export function ProfessionalDashboard() {
 
             {/* Settings & Security */}
             <div ref={settingsRef} id="section-settings">
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
+            <Card className="bg-black/40 border-[#bfa5ff]/30">
               <CardHeader>
                 <CardTitle>Settings & Security</CardTitle>
-                <CardDescription className={theme === 'dark' ? 'text-white/60' : 'text-slate-600'}>Manage your PIN and account</CardDescription>
+                <CardDescription className="text-white/60">Manage your PIN and account</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
-                  <Button variant="outline" className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'}>
+                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
                     <Shield className="h-4 w-4 mr-2" /> PIN Security Settings
                   </Button>
-                  <Button variant="outline" className={theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-slate-300 text-slate-900 hover:bg-slate-50'}>
+                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
                     <Fingerprint className="h-4 w-4 mr-2" /> Regenerate PIN
                   </Button>
                   <Button className="bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] text-black hover:opacity-90">
@@ -598,32 +565,10 @@ export function ProfessionalDashboard() {
             </div>
           </main>
 
-          {/* Right Sidebar */}
-          <aside className="hidden lg:block">
-            <Card className={theme === 'dark' ? 'bg-black/40 border-[#bfa5ff]/30' : 'bg-white border-slate-200'}>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-3">Insights</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className={theme === 'dark' ? 'p-3 rounded-lg bg-white/5 border border-white/10 text-center' : 'p-3 rounded-lg bg-slate-50 border border-slate-200 text-center'}>
-                    <div className="text-2xl text-[#32f08c]">{pinData?.trustScore ?? 72}%</div>
-                    <div className={theme === 'dark' ? 'text-xs text-white/60' : 'text-xs text-slate-600'}>Trust Score</div>
-                  </div>
-                  <div className={theme === 'dark' ? 'p-3 rounded-lg bg-white/5 border border-white/10 text-center' : 'p-3 rounded-lg bg-slate-50 border border-slate-200 text-center'}>
-                    <div className="text-2xl">124</div>
-                    <div className={theme === 'dark' ? 'text-xs text-white/60' : 'text-xs text-slate-600'}>Views</div>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Target className="h-4 w-4 text-[#bfa5ff]" /> Improve match score by adding a new skill
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Share2 className="h-4 w-4 text-[#7bb8ff]" /> Share PIN to increase visibility
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </aside>
+          {/* Right Sidebar - Temporarily hidden for dark theme migration */}
+          {/* <aside className="hidden lg:block">
+            ...right sidebar content removed...
+          </aside> */}
         </div>
 
         {/* AI Badge if available */}
@@ -755,13 +700,13 @@ export function ProfessionalDashboard() {
             ) : pinData ? (
               <div className="space-y-6">
                 {/* PIN Card Display */}
-                <Card className="p-6 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 border-2 border-primary/20">
+                <Card className="p-6 bg-gradient-to-br from-[#bfa5ff]/10 via-[#7bb8ff]/10 to-[#bfa5ff]/10 border-2 border-[#bfa5ff]/20">
                   <div className="text-center mb-6">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <Fingerprint className="h-6 w-6 text-primary" />
-                      <h2 className="text-2xl">Your Professional Identity</h2>
+                      <Fingerprint className="h-6 w-6 text-[#bfa5ff]" />
+                      <h2 className="text-2xl text-white">Your Professional Identity</h2>
                     </div>
-                    <p className="text-muted-foreground">
+                    <p className="text-white/70">
                       Your PIN is verified and active. Share it with employers worldwide.
                     </p>
                   </div>
@@ -771,106 +716,106 @@ export function ProfessionalDashboard() {
 
                 {/* PIN Actions */}
                 <div className="grid sm:grid-cols-3 gap-4">
-                  <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-blue-200">
+                  <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-[#7bb8ff]/20 bg-[#7bb8ff]/5">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Share2 className="h-5 w-5 text-blue-600" />
+                      <div className="p-2 bg-[#7bb8ff]/20 rounded-lg">
+                        <Share2 className="h-5 w-5 text-[#7bb8ff]" />
                       </div>
                       <div>
-                        <h4 className="font-semibold mb-1">Share Your PIN</h4>
-                        <p className="text-sm text-muted-foreground">Copy link to share with employers</p>
+                        <h4 className="font-semibold mb-1 text-white">Share Your PIN</h4>
+                        <p className="text-sm text-white/70">Copy link to share with employers</p>
                       </div>
                     </div>
                   </Card>
 
-                  <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-emerald-200">
+                  <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-[#32f08c]/20 bg-[#32f08c]/5">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-emerald-100 rounded-lg">
-                        <BadgeCheck className="h-5 w-5 text-emerald-600" />
+                      <div className="p-2 bg-[#32f08c]/20 rounded-lg">
+                        <BadgeCheck className="h-5 w-5 text-[#32f08c]" />
                       </div>
                       <div>
-                        <h4 className="font-semibold mb-1">Verify More Skills</h4>
-                        <p className="text-sm text-muted-foreground">Add experiences to increase trust score</p>
+                        <h4 className="font-semibold mb-1 text-white">Verify More Skills</h4>
+                        <p className="text-sm text-white/70">Add experiences to increase trust score</p>
                       </div>
                     </div>
                   </Card>
 
-                  <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-purple-200">
+                  <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer border-[#bfa5ff]/20 bg-[#bfa5ff]/5">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Eye className="h-5 w-5 text-purple-600" />
+                      <div className="p-2 bg-[#bfa5ff]/20 rounded-lg">
+                        <Eye className="h-5 w-5 text-[#bfa5ff]" />
                       </div>
                       <div>
-                        <h4 className="font-semibold mb-1">PIN Analytics</h4>
-                        <p className="text-sm text-muted-foreground">See who viewed your PIN</p>
+                        <h4 className="font-semibold mb-1 text-white">PIN Analytics</h4>
+                        <p className="text-sm text-white/70">See who viewed your PIN</p>
                       </div>
                     </div>
                   </Card>
                 </div>
 
                 {/* PIN Stats */}
-                <Card className="p-6">
-                  <h3 className="text-lg font-semibold mb-4">PIN Performance</h3>
+                <Card className="p-6 bg-white/5 border-white/10">
+                  <h3 className="text-lg font-semibold mb-4 text-white">PIN Performance</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="text-2xl text-blue-600">247</div>
-                      <div className="text-sm text-muted-foreground">PIN Views</div>
+                    <div className="text-center p-4 bg-[#7bb8ff]/10 rounded-lg border border-[#7bb8ff]/20">
+                      <div className="text-2xl text-[#7bb8ff]">247</div>
+                      <div className="text-sm text-white/70">PIN Views</div>
                     </div>
-                    <div className="text-center p-4 bg-emerald-50 rounded-lg">
-                      <div className="text-2xl text-emerald-600">{pinData.trustScore}%</div>
-                      <div className="text-sm text-muted-foreground">Trust Score</div>
+                    <div className="text-center p-4 bg-[#32f08c]/10 rounded-lg border border-[#32f08c]/20">
+                      <div className="text-2xl text-[#32f08c]">{pinData.trustScore}%</div>
+                      <div className="text-sm text-white/70">Trust Score</div>
                     </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <div className="text-2xl text-purple-600">{pinData.endorsements}</div>
-                      <div className="text-sm text-muted-foreground">Endorsements</div>
+                    <div className="text-center p-4 bg-[#bfa5ff]/10 rounded-lg border border-[#bfa5ff]/20">
+                      <div className="text-2xl text-[#bfa5ff]">{pinData.endorsements}</div>
+                      <div className="text-sm text-white/70">Endorsements</div>
                     </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <div className="text-2xl text-orange-600">12</div>
-                      <div className="text-sm text-muted-foreground">Employer Contacts</div>
+                    <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                      <div className="text-2xl text-orange-400">12</div>
+                      <div className="text-sm text-white/70">Employer Contacts</div>
                     </div>
                   </div>
                 </Card>
               </div>
             ) : (
-              <Card className="p-8 text-center bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50 border-2 border-primary/20">
+              <Card className="p-8 text-center bg-gradient-to-br from-[#7bb8ff]/10 via-[#bfa5ff]/10 to-[#7bb8ff]/10 border-2 border-[#bfa5ff]/20">
                 <div className="max-w-2xl mx-auto space-y-6">
-                  <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                    <Fingerprint className="h-12 w-12 text-primary" />
+                  <div className="w-20 h-20 bg-[#bfa5ff]/10 rounded-full flex items-center justify-center mx-auto">
+                    <Fingerprint className="h-12 w-12 text-[#bfa5ff]" />
                   </div>
                   <div>
-                    <h2 className="text-3xl mb-3">Create Your Professional Identity Number</h2>
-                    <p className="text-lg text-muted-foreground">
+                    <h2 className="text-3xl mb-3 text-white">Create Your Professional Identity Number</h2>
+                    <p className="text-lg text-white/70">
                       Get a verified digital identity that employers trust globally. Your PIN proves your skills and experience.
                     </p>
                   </div>
                   
                   <div className="grid sm:grid-cols-3 gap-4 my-8">
-                    <div className="p-4 bg-white rounded-lg border">
-                      <CheckCircle className="h-8 w-8 text-blue-600 mb-2 mx-auto" />
-                      <h4 className="font-semibold mb-1">Verified</h4>
-                      <p className="text-xs text-muted-foreground">AI-powered verification</p>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <CheckCircle className="h-8 w-8 text-[#7bb8ff] mb-2 mx-auto" />
+                      <h4 className="font-semibold mb-1 text-white">Verified</h4>
+                      <p className="text-xs text-white/70">AI-powered verification</p>
                     </div>
-                    <div className="p-4 bg-white rounded-lg border">
-                      <Shield className="h-8 w-8 text-emerald-600 mb-2 mx-auto" />
-                      <h4 className="font-semibold mb-1">Secure</h4>
-                      <p className="text-xs text-muted-foreground">Blockchain protected</p>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <Shield className="h-8 w-8 text-[#32f08c] mb-2 mx-auto" />
+                      <h4 className="font-semibold mb-1 text-white">Secure</h4>
+                      <p className="text-xs text-white/70">Blockchain protected</p>
                     </div>
-                    <div className="p-4 bg-white rounded-lg border">
-                      <Award className="h-8 w-8 text-purple-600 mb-2 mx-auto" />
-                      <h4 className="font-semibold mb-1">Global</h4>
-                      <p className="text-xs text-muted-foreground">Recognized worldwide</p>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <Award className="h-8 w-8 text-[#bfa5ff] mb-2 mx-auto" />
+                      <h4 className="font-semibold mb-1 text-white">Global</h4>
+                      <p className="text-xs text-white/70">Recognized worldwide</p>
                     </div>
                   </div>
 
                   <Button 
                     size="lg"
                     onClick={() => setShowPINOnboarding(true)}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 text-lg"
+                    className="bg-gradient-to-r from-[#7bb8ff] to-[#bfa5ff] hover:from-[#7bb8ff]/90 hover:to-[#bfa5ff]/90 text-white px-8 py-6 text-lg"
                   >
                     <Fingerprint className="h-5 w-5 mr-2" />
                     Create My PIN — Free
                   </Button>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-white/70">
                     ✨ Takes 5 minutes • Increases visibility by 10x
                   </p>
                 </div>

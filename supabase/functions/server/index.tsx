@@ -9,6 +9,7 @@ import { auth } from "./routes/auth.tsx";
 import { ai } from "./routes/ai.tsx";
 import { professionals } from "./routes/professionals.tsx";
 import { profile } from "./routes/profile.tsx";
+// Note: PIN routes are handled within profile routes for now
 
 // Validate environment before app initializes
 validateServerEnv();
@@ -25,12 +26,18 @@ app.use(
   "/*",
   cors({
     origin: "*",
-    allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
+    allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "apikey"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
+    credentials: false,
     maxAge: 600,
   }),
 );
+
+// Explicit OPTIONS handler for all routes to ensure preflight succeeds
+app.options("/*", (c) => {
+  return c.text("", 204);
+});
 
 // Health check endpoint (must include function slug in path)
 app.get("/server/health", (c) => {
@@ -112,6 +119,7 @@ app.route('/server', auth);
 app.route('/server/ai', ai);
 app.route('/server/professionals', professionals);
 app.route('/server/profile', profile);
+// PIN routes are handled within profile routes
 
 // Route handlers for professionals and profile are provided by modular routers above.
 

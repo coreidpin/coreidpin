@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { api } from '../utils/api';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import RegistrationFlow from './RegistrationFlow';
 
@@ -238,30 +238,74 @@ export function LoginDialog({
         }
       } else {
         // Route login through secure API for rate limiting & history
-        const result = await api.loginSecure({ email, password });
-        const accessToken = result.accessToken;
-        const refreshToken = result.refreshToken;
+        try {
+          const result = await api.loginSecure({ email, password });
+          const accessToken = result.accessToken;
+          const refreshToken = result.refreshToken;
 
-        if (!accessToken || !refreshToken || !result.user) {
-          throw new Error('Login failed: invalid response');
+          if (!accessToken || !refreshToken || !result.user) {
+            throw new Error('Login failed: invalid response');
+          }
+
+          // Persist session in Supabase client
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+
+          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem('userId', result.user.id);
+          localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
+
+          toast.success('You have successfully logged in');
+          onLoginSuccess(
+            result.user.user_metadata?.userType || 'professional',
+            result.user
+          );
+          if (onOpenChange) onOpenChange(false);
+        } catch (apiErr: any) {
+          // Fallback to direct Supabase auth when server function is unavailable
+          const msg = (apiErr?.message || '').toLowerCase();
+          const serviceDown = /503|fetch|network|temporarily unavailable|service unavailable/.test(msg);
+          const tooMany = /too many login attempts/i.test(apiErr?.message || '');
+          const csrfMissing = /csrf token/i.test(apiErr?.message || '');
+          if (tooMany) {
+            throw new Error('Too many login attempts. Please wait a few minutes and retry.');
+          }
+          if (csrfMissing) {
+            throw new Error('Security check failed. Please refresh the page and try again.');
+          }
+          if (!serviceDown) {
+            // Re-throw non-service errors to be handled by outer catch
+            throw apiErr;
+          }
+
+          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) {
+            const sanitized = /confirm/i.test(error.message)
+              ? 'Email not verified. Please check your inbox.'
+              : /invalid|credential/i.test(error.message)
+              ? 'Invalid email or password'
+              : 'Login failed';
+            throw new Error(sanitized);
+          }
+          const session = data?.session;
+          if (!session?.access_token || !session?.refresh_token || !data?.user) {
+            throw new Error('Login failed: invalid response');
+          }
+          await supabase.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
+          localStorage.setItem('accessToken', session.access_token);
+          localStorage.setItem('userId', data.user.id);
+          localStorage.setItem('userType', data.user.user_metadata?.userType || 'professional');
+          toast.success('You have successfully logged in');
+          onLoginSuccess(
+            data.user.user_metadata?.userType || 'professional',
+            data.user
+          );
+          if (onOpenChange) onOpenChange(false);
         }
-
-        // Persist session in Supabase client
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('userId', result.user.id);
-        localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
-
-        toast.success('Welcome back! 👋');
-        onLoginSuccess(
-          result.user.user_metadata?.userType || 'professional',
-          result.user
-        );
-        if (onOpenChange) onOpenChange(false);
       }
     } catch (err: any) {
       setError(err.message || `${mode === 'signup' ? 'Sign up' : 'Sign in'} failed. Please try again.`);
+      // Clear password field but retain email on failure
+      setPassword('');
     } finally {
       setIsLoading(false);
     }
@@ -519,7 +563,7 @@ export function LoginDialog({
                       <div className="w-full border-t border-gray-200" />
                     </div>
                     <div className="relative flex justify-center text-xs">
-                      <span className="px-2 bg-white text-gray-500">OR</span>
+                      <span className="px-2 bg-surface text-muted-foreground">OR</span>
                     </div>
                   </div>
 

@@ -3,8 +3,7 @@ import { getSupabaseClient, getAuthUser } from "../lib/supabaseClient.tsx";
 
 const ai = new Hono();
 
-// Supabase client singleton
-const supabase = getSupabaseClient();
+// Supabase client is initialized per-request when needed within handlers
 
 // AI-Powered Talent Matching Endpoint
 ai.post("/match-talent", async (c) => {

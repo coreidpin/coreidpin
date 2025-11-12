@@ -1,0 +1,41 @@
+name: K6 Load Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg software-properties-common
+          curl -s https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Run login load test
+        run: |
+          k6 run tests/k6/login.js -e BASE_URL=${{ secrets.BASE_URL }} --summary-export k6-login.json
+
+      - name: Run pin analytics load test
+        run: |
+          k6 run tests/k6/pin_analytics.js -e BASE_URL=${{ secrets.BASE_URL }} -e PIN=${{ secrets.TEST_PIN }} -e ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }} --summary-export k6-pin.json
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: k6-summaries
+          path: |
+            k6-login.json
+            k6-pin.json
+

@@ -1,12 +1,11 @@
 import { Hono } from "npm:hono";
 import { getSupabaseClient, getAuthUser } from "../lib/supabaseClient.tsx";
 import * as kv from "../kv_store.tsx";
-import { maybeEncryptKVValue } from "../lib/crypto.tsx";
+import { maybeEncryptKVValue, decryptJson } from "../lib/crypto.tsx";
 
 const profile = new Hono();
 
-// Supabase client singleton
-const supabase = getSupabaseClient();
+// Supabase client is initialized per-request within handlers to avoid boot-time errors
 
 // Get Profile Endpoint
 profile.get("/:userId", async (c) => {
@@ -24,7 +23,10 @@ profile.get("/:userId", async (c) => {
       return c.json({ error: "Forbidden" }, 403);
     }
 
-    const userProfile = await kv.get(`user:${userId}`);
+    let userProfile = await kv.get(`user:${userId}`);
+    try {
+      userProfile = await decryptJson(userProfile);
+    } catch (_) {}
     
     if (!userProfile) {
       return c.json({ error: "Profile not found" }, 404);
@@ -53,10 +55,19 @@ profile.put("/:userId", async (c) => {
     }
 
     const body = await c.req.json();
-    const currentProfile = await kv.get(`user:${userId}`);
+    let currentProfile = await kv.get(`user:${userId}`);
 
+    // If profile is missing, create a baseline so updates succeed (fixes race with email verification)
     if (!currentProfile) {
-      return c.json({ error: "Profile not found" }, 404);
+      const baseline = {
+        id: userId,
+        email: user.email,
+        userType: body?.userType || (user.user_metadata as any)?.userType || 'unknown',
+        createdAt: new Date().toISOString(),
+        verificationStatus: user.email_confirmed_at ? 'verified' : 'pending'
+      };
+      await kv.set(`user:${userId}`, baseline);
+      currentProfile = baseline;
     }
 
     const updatedProfile = {
@@ -329,6 +340,7 @@ Response format: JSON only, no markdown.`;
 // Save Complete Profile Data
 profile.post("/complete", async (c) => {
   try {
+    const supabase = getSupabaseClient();
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     
     const isDemoUser = accessToken?.startsWith('demo-token-');
@@ -400,6 +412,7 @@ profile.post("/complete", async (c) => {
 // Get Profile Analysis
 profile.get("/analysis/:userId", async (c) => {
   try {
+    const supabase = getSupabaseClient();
     const accessToken = c.req.header('Authorization')?.split(' ')[1];
     const isDemoUser = accessToken?.startsWith('demo-token-');
     

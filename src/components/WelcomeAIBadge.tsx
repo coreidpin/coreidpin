@@ -12,7 +12,7 @@ import {
   Download,
   X
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface WelcomeAIBadgeProps {
   userName: string;
@@ -87,7 +87,7 @@ export function WelcomeAIBadge({
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+        className="bg-surface rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
       >
         {/* Header */}
         <div className="p-6 pb-4 border-b border-border">

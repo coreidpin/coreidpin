@@ -4,8 +4,7 @@ import * as kv from "../kv_store.tsx";
 
 const matching = new Hono();
 
-// Supabase client singleton
-const supabase = getSupabaseClient();
+// Supabase client is initialized per-request when needed within handlers
 
 // Get recommended profiles/jobs for swipe interface
 matching.get("/recommendations", async (c) => {

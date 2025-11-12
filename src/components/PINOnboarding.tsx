@@ -32,8 +32,9 @@ import {
   Lock,
   Database
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { PINIdentityCard, generateMockPINData } from './PINIdentityCard';
+import { api } from '../utils/api';
 
 interface PINOnboardingProps {
   onComplete: (pinData: any) => void;
@@ -43,6 +44,9 @@ interface PINOnboardingProps {
 export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showPINReveal, setShowPINReveal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -106,25 +110,94 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final step - generate PIN with dramatic reveal
+      // Final step - CREATE PIN with real API call
       setShowPINReveal(true);
-      setTimeout(() => {
-        const pinData = generateMockPINData({
+      
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const userId = localStorage.getItem('userId');
+        
+        if (!accessToken || !userId) {
+          throw new Error('Not authenticated. Please login again.');
+        }
+
+        // Prepare PIN payload
+        const pinPayload = {
           name: formData.name,
           title: formData.title,
           location: formData.location,
-          linkedAccounts: {
-            linkedin: !!formData.linkedinUrl,
-            github: !!formData.githubUrl,
-            portfolio: !!formData.portfolioUrl
-          }
-        });
-        onComplete(pinData);
-      }, 3000);
+          avatar: formData.photoUrl || null,
+          linkedinUrl: formData.linkedinUrl,
+          githubUrl: formData.githubUrl,
+          portfolioUrl: formData.portfolioUrl,
+          experiences: formData.experiences,
+          skills: formData.skills.map(skill => ({
+            name: typeof skill === 'string' ? skill : skill,
+            level: 'Intermediate',
+            verified: false
+          }))
+        };
+
+        console.log('Creating PIN with payload:', pinPayload);
+
+        // Create PIN via API
+        const result = await api.createPIN(pinPayload, accessToken);
+        
+        if (result.success) {
+          console.log('PIN created successfully:', result.pinNumber);
+          
+          // Fetch the complete PIN data
+          const pinData = await api.getUserPIN(userId, accessToken);
+          
+          setTimeout(() => {
+            if (pinData.success && pinData.data) {
+              onComplete(pinData.data);
+            } else {
+              // Fallback to generated data if fetch fails
+              const fallbackData = generateMockPINData({
+                name: formData.name,
+                title: formData.title,
+                location: formData.location,
+                linkedAccounts: {
+                  linkedin: !!formData.linkedinUrl,
+                  github: !!formData.githubUrl,
+                  portfolio: !!formData.portfolioUrl
+                }
+              });
+              fallbackData.pinNumber = result.pinNumber;
+              onComplete(fallbackData);
+            }
+          }, 3000);
+        } else {
+          throw new Error(result.error || 'PIN creation failed');
+        }
+      } catch (error: any) {
+        console.error('PIN creation error:', error);
+        toast.error('Failed to create PIN: ' + error.message);
+        setShowPINReveal(false);
+        
+        // Optionally fall back to mock data for demo purposes
+        // Uncomment if you want to allow demo mode
+        /*
+        setTimeout(() => {
+          const pinData = generateMockPINData({
+            name: formData.name,
+            title: formData.title,
+            location: formData.location,
+            linkedAccounts: {
+              linkedin: !!formData.linkedinUrl,
+              github: !!formData.githubUrl,
+              portfolio: !!formData.portfolioUrl
+            }
+          });
+          onComplete(pinData);
+        }, 3000);
+        */
+      }
     }
   };
 
@@ -134,12 +207,52 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
     }
   };
 
-  const handleEmailVerification = () => {
-    toast.info('Sending verification code...');
-    setTimeout(() => {
+  const handleSendVerificationCode = async () => {
+    if (!formData.email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+      toast.info('Sending verification code...');
+      
+      await api.sendVerificationEmail(formData.email, formData.name);
+      
+      setVerificationSent(true);
+      toast.success('✓ Verification code sent! Check your email.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send verification code');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast.error('Please enter the 6-digit code');
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+      
+      await api.verifyEmailCode(formData.email, verificationCode);
+      
       setEmailVerified(true);
       toast.success('✓ Email verified successfully!');
-    }, 1500);
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid verification code');
+      setVerificationCode('');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   // PIN Reveal Animation Component
@@ -342,22 +455,64 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  disabled={emailVerified}
+                  disabled={emailVerified || verificationSent}
                   className="h-12 text-base"
                 />
               </div>
 
-              {!emailVerified ? (
+              {!emailVerified && !verificationSent && (
                 <Button 
-                  onClick={handleEmailVerification}
+                  onClick={handleSendVerificationCode}
                   className="w-full h-12 text-base"
-                  disabled={!formData.email}
+                  disabled={!formData.email || isVerifying}
                   style={{ backgroundColor: '#bfa5ff', color: '#0a0b0d' }}
                 >
                   <Mail className="h-5 w-5 mr-2" />
-                  Send Verification Code
+                  {isVerifying ? 'Sending...' : 'Send Verification Code'}
                 </Button>
-              ) : (
+              )}
+
+              {verificationSent && !emailVerified && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="code" className="text-base">Enter 6-Digit Code</Label>
+                    <Input
+                      id="code"
+                      type="text"
+                      placeholder="000000"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      maxLength={6}
+                      className="h-12 text-base text-center text-2xl tracking-widest font-mono"
+                      autoFocus
+                    />
+                    <p className="text-sm text-gray-500">Check your email for the verification code</p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button 
+                      onClick={handleVerifyCode}
+                      className="flex-1 h-12 text-base"
+                      disabled={verificationCode.length !== 6 || isVerifying}
+                      style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
+                    >
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      {isVerifying ? 'Verifying...' : 'Verify Code'}
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleSendVerificationCode}
+                      variant="outline"
+                      className="h-12"
+                      disabled={isVerifying}
+                    >
+                      Resend
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {emailVerified && (
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}

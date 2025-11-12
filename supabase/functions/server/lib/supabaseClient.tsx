@@ -1,21 +1,42 @@
 import { createClient } from "npm:@supabase/supabase-js";
 
-// Singleton Supabase client for server-side usage (Edge Functions)
-let supabaseSingleton: ReturnType<typeof createClient> | null = null;
+// Singleton Supabase clients for server-side usage (Edge Functions)
+let supabaseServiceSingleton: ReturnType<typeof createClient> | null = null;
+let supabasePublicSingleton: ReturnType<typeof createClient> | null = null;
 
+// Service-role client for admin/database operations
 export function getSupabaseClient() {
-  if (!supabaseSingleton) {
-    const url = Deno.env.get('SUPABASE_URL') ?? '';
+  if (!supabaseServiceSingleton) {
+    const url = Deno.env.get('SUPABASE_URL') ?? 'https://evcqpapvcvmljgqiuzsq.supabase.co';
     const serviceKey =
       Deno.env.get('SUPABASE_SERVICE_KEY') ??
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??
       Deno.env.get('SERVICE_KEY') ??
       Deno.env.get('SERVICE_ROLE_KEY') ??
-      '';
+      // Fallback to anon/publishable to avoid startup crash; admin ops will fail gracefully
+      Deno.env.get('SUPABASE_KEY') ??
+      Deno.env.get('SUPABASE_ANON_KEY') ??
+      'anon-key-placeholder';
 
-    supabaseSingleton = createClient(url, serviceKey);
+    supabaseServiceSingleton = createClient(url, serviceKey);
   }
-  return supabaseSingleton;
+  return supabaseServiceSingleton;
+}
+
+// Public anon client for end-user auth flows (signIn/signUp)
+export function getSupabasePublicClient() {
+  if (!supabasePublicSingleton) {
+    const url = Deno.env.get('SUPABASE_URL') ?? 'https://evcqpapvcvmljgqiuzsq.supabase.co';
+    const anonKey =
+      Deno.env.get('SUPABASE_KEY') ??
+      Deno.env.get('SUPABASE_ANON_KEY') ??
+      Deno.env.get('ANON_KEY') ??
+      Deno.env.get('PUBLIC_ANON_KEY') ??
+      'anon-key-placeholder';
+
+    supabasePublicSingleton = createClient(url, anonKey);
+  }
+  return supabasePublicSingleton;
 }
 
 // Helper to extract user from Authorization header consistently
@@ -44,3 +65,4 @@ export async function withRetry<T>(fn: () => Promise<T>, retries = 2): Promise<T
   }
   throw lastError;
 }
+// (duplicate definition removed)

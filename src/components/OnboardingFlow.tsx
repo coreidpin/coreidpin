@@ -12,7 +12,7 @@ import { Logo } from './Logo';
 import { WelcomeAIBadge } from './WelcomeAIBadge';
 import { supabase } from '../utils/supabase/client';
 import { api } from '../utils/api';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { 
   Shield, 
   ArrowLeft, 
@@ -140,9 +140,9 @@ export function OnboardingFlow({ userType, onComplete, onBack }: OnboardingFlowP
 
   return (
     <>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-surface">
         {/* Header */}
-        <header className="border-b border-border bg-white sticky top-0 z-50">
+        <header className="border-b border-surface bg-surface sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Logo size="md" />
@@ -164,7 +164,7 @@ export function OnboardingFlow({ userType, onComplete, onBack }: OnboardingFlowP
 
       {/* Progress Bar */}
       {userType !== 'university' && (
-        <div className="bg-white border-b border-border">
+        <div className="bg-surface border-b border-surface">
           <div className="container mx-auto px-4 py-6">
             <div className="max-w-2xl mx-auto space-y-4">
               <div className="flex items-center justify-between text-sm">
@@ -300,7 +300,7 @@ function ProfessionalBasicInfo({ formData, updateFormData, isLoading, setIsLoadi
         </p>
       </div>
 
-      <Card className="bg-white">
+      <Card className="bg-surface">
         <CardHeader>
           <CardTitle>Basic Information</CardTitle>
           <CardDescription>
@@ -333,7 +333,7 @@ function ProfessionalBasicInfo({ formData, updateFormData, isLoading, setIsLoadi
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">
+                  <span className="bg-surface px-2 text-muted-foreground">
                     Or fill manually
                   </span>
                 </div>
@@ -492,7 +492,7 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
         </p>
       </div>
 
-      <Card className="bg-white">
+      <Card className="bg-surface">
         <CardHeader>
           <CardTitle>Company Information</CardTitle>
           <CardDescription>
@@ -525,7 +525,7 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">
+                  <span className="bg-surface px-2 text-muted-foreground">
                     Or fill manually
                   </span>
                 </div>
@@ -711,7 +711,7 @@ function UniversityComingSoon() {
         </p>
       </motion.div>
 
-      <Card className="relative overflow-hidden text-center bg-white">
+      <Card className="relative overflow-hidden text-center bg-surface">
         <CardContent className="py-12">
           <div className="space-y-6">
             <div className="space-y-2">

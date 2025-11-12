@@ -1,4 +1,15 @@
-import { encode as b64encode, decode as b64decode } from "jsr:@std/encoding/base64";
+// Lightweight base64 helpers using Web APIs to avoid external imports on Edge
+const b64encode = (bytes: Uint8Array): string => {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+};
+const b64decode = (b64: string): Uint8Array => {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+};
 
 // Lightweight AES-GCM helpers for optionally encrypting sensitive KV values.
 // If ENCRYPTION_KEY_BASE64 is not set, values are stored as-is.

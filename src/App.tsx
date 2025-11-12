@@ -4,7 +4,7 @@ import { Button } from './components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { LandingPage } from './components/LandingPage';
 import { OurStoryPage } from './components/OurStoryPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
@@ -28,9 +28,11 @@ import { supabase } from './utils/supabase/client';
 import { api } from './utils/api';
 import { CheckCircle, Globe, Shield, Award, Users, Building, GraduationCap } from 'lucide-react';
 import PasswordResetDialog from './components/PasswordResetDialog';
+import { PublicPINPage } from './components/PublicPINPage';
+import LoginPage from './components/LoginPage';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university';
-type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions';
+type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions' | 'public-pin';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('landing');
@@ -42,9 +44,21 @@ export default function App() {
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [passwordRecoveryEmail, setPasswordRecoveryEmail] = useState<string | null>(null);
+  const [viewingPinNumber, setViewingPinNumber] = useState<string | null>(null);
 
   // Check for existing session on mount and handle OAuth callback
   useEffect(() => {
+    // Check for public PIN route first
+    const path = window.location.pathname;
+    const pinMatch = path.match(/^\/pin\/([A-Z0-9-]+)$/i);
+    if (pinMatch) {
+      const pinNumber = pinMatch[1];
+      console.log('Detected public PIN route:', pinNumber);
+      setViewingPinNumber(pinNumber);
+      setAppState('public-pin');
+      return; // Skip session check for public pages
+    }
+
     // Ensure CSRF token exists (double-submit token stored client-side)
     try {
       if (!localStorage.getItem('csrfToken')) {
@@ -93,15 +107,30 @@ export default function App() {
           setShowWelcomeToast(true);
         }
       } else {
-        // Check localStorage for existing session
+        // No Supabase session - check if localStorage has stale data
         const accessToken = localStorage.getItem('accessToken');
         const userId = localStorage.getItem('userId');
         const userType = localStorage.getItem('userType');
 
         if (accessToken && userId && userType) {
-          setIsAuthenticated(true);
-          setCurrentView(userType as UserType);
-          setAppState('dashboard');
+          // Validate the token with Supabase
+          const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+          
+          if (user && !error) {
+            // Valid session - restore it
+            setIsAuthenticated(true);
+            setCurrentView(userType as UserType);
+            setUserData(user);
+            setAppState('dashboard');
+          } else {
+            // Invalid/expired token - clear localStorage
+            console.log('Invalid session, clearing localStorage');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userType');
+            setIsAuthenticated(false);
+            setAppState('landing');
+          }
         }
       }
     };
@@ -211,8 +240,27 @@ export default function App() {
       'terms', 'privacy', 'cookies', 'gdpr', 'login', 'dashboard', 'admin', 'solutions'
     ];
     
+    // Handle public PIN navigation
+    if (page.startsWith('pin/')) {
+      const pinNumber = page.replace('pin/', '');
+      setViewingPinNumber(pinNumber);
+      setAppState('public-pin');
+      try {
+        const url = new URL(window.location.href);
+        url.pathname = `/pin/${pinNumber}`;
+        window.history.pushState(null, '', url.toString());
+      } catch {}
+      return;
+    }
+    
     if (page === 'login') {
-      setShowLoginDialog(true);
+      setShowLoginDialog(false);
+      setAppState('login');
+      try {
+        const url = new URL(window.location.href);
+        url.pathname = '/login';
+        window.history.pushState(null, '', url.toString());
+      } catch {}
       return;
     }
     
@@ -254,18 +302,15 @@ export default function App() {
       localStorage.setItem('userId', user.id);
     }
     
-    // Check if user has completed onboarding
-    const hasCompletedOnboarding = user?.user_metadata?.hasCompletedOnboarding;
-    
-    if (!hasCompletedOnboarding) {
-      // New user - go to onboarding
-      setAppState('onboarding');
-      toast.success('Welcome! Let\'s complete your profile.');
-    } else {
-      // Returning user - go to dashboard
-      setAppState('dashboard');
-      setShowWelcomeToast(true);
-    }
+    // Always redirect to dashboard on successful login per requirements
+    toast.success('You have successfully logged in');
+    setAppState('dashboard');
+    setShowWelcomeToast(true);
+    try {
+      const url = new URL(window.location.href);
+      url.pathname = '/dashboard';
+      window.history.pushState(null, '', url.toString());
+    } catch {}
   };
 
   const handleOnboardingComplete = async () => {
@@ -309,21 +354,40 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      // Sign out from Supabase first
       await supabase.auth.signOut();
+      
+      // Clear all local storage items
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('adminSession');
+      
+      // Reset state
+      setIsAuthenticated(false);
+      setUserData(null);
+      setAppState('landing');
+      setCurrentView('landing');
+      
+      toast.success('Signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);
+      
+      // Still clear everything even if Supabase signout fails
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('adminSession');
+      
+      setIsAuthenticated(false);
+      setUserData(null);
+      setAppState('landing');
+      setCurrentView('landing');
+      
+      toast.error('Signed out (with errors)');
     }
-    
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userType');
-    localStorage.removeItem('isAdmin');
-    localStorage.removeItem('adminSession');
-    setIsAuthenticated(false);
-    setUserData(null);
-    setAppState('landing');
-    setCurrentView('landing');
-    toast.success('Signed out successfully');
   };
 
   const handlePasswordResetConfirm = async (newPassword: string) => {
@@ -333,6 +397,16 @@ export default function App() {
     setShowPasswordResetDialog(false);
     await supabase.auth.signOut();
   };
+
+  // Public PIN Page - No authentication required
+  if (appState === 'public-pin' && viewingPinNumber) {
+    return (
+      <>
+        <PublicPINPage pinNumber={viewingPinNumber} onNavigate={handleNavigate} />
+        <Toaster position="top-right" />
+      </>
+    );
+  }
 
   if (appState === 'landing') {
     return (
@@ -532,6 +606,29 @@ export default function App() {
     );
   }
 
+  // Dedicated Login page route
+  if (appState === 'login') {
+    return (
+      <>
+        <div className="min-h-screen bg-background flex flex-col">
+          <Navbar 
+            currentPage="login"
+            onNavigate={handleNavigate}
+            onLogin={handleLogin}
+            onLogout={handleLogout}
+            isAuthenticated={isAuthenticated}
+            userType={currentView}
+          />
+          <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+            <LoginPage onLoginSuccess={handleLoginSuccess} />
+          </main>
+          <Footer onNavigate={handleNavigate} />
+        </div>
+        <Toaster position="top-right" />
+      </>
+    );
+  }
+
   // Handle all other static pages with placeholders
   if (['trust-safety', 'help', 'contact', 'docs'].includes(appState)) {
     const pageConfig = {
@@ -603,7 +700,7 @@ export default function App() {
             currentPage="admin"
             onNavigate={handleNavigate}
             onLogout={handleLogout}
-            isAuthenticated={true}
+            isAuthenticated={isAuthenticated}
             userType={currentView}
           />
           <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
@@ -623,7 +720,7 @@ export default function App() {
           currentPage="dashboard"
           onNavigate={handleNavigate}
           onLogout={handleLogout}
-          isAuthenticated={true}
+          isAuthenticated={isAuthenticated}
           userType={currentView}
         />
 

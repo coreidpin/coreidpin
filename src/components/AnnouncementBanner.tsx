@@ -22,10 +22,10 @@ export function AnnouncementBanner({
   const [isVisible, setIsVisible] = useState(true);
 
   const typeStyles = {
-    info: 'bg-primary/10 border-primary/20 text-primary',
-    success: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600',
-    warning: 'bg-amber-500/10 border-amber-500/20 text-amber-600',
-    promotional: 'bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-primary/10 border-primary/20 text-foreground'
+    info: 'bg-surface border-surface text-foreground',
+    success: 'bg-surface border-surface text-foreground',
+    warning: 'bg-surface border-surface text-foreground',
+    promotional: 'bg-surface border-surface text-foreground'
   };
 
   const iconMap = {

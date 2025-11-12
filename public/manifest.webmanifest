@@ -1,0 +1,23 @@
+{
+  "name": "CoreID",
+  "short_name": "CoreID",
+  "description": "Professional identity, PIN analytics and secure verification",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b132b",
+  "theme_color": "#0b132b",
+  "icons": [
+    {
+      "src": "/logos/coreid-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logos/Microsoft_Logo_512px.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

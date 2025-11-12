@@ -37,13 +37,16 @@ class APIClient {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
+    
+    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
+    
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
-    } else if (includeAnonForPublic) {
+    } else if (includeAnonForPublic && anonKey) {
       // For public endpoints when Verify JWT is enabled on Edge Functions,
       // include anon key (prefer env, fallback to bundled publicAnonKey).
-      const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
-      if (anonKey) headers['Authorization'] = `Bearer ${anonKey}`;
+      headers['Authorization'] = `Bearer ${anonKey}`;
+      headers['apikey'] = anonKey; // Supabase Edge Functions require apikey header
     }
     const csrfToken = typeof window !== 'undefined' ? localStorage.getItem('csrfToken') : null;
     if (csrfToken) {
@@ -139,14 +142,20 @@ class APIClient {
   }
 
   async loginSecure(data: LoginData) {
+    const headers = this.getHeaders(undefined, true);
+    console.log('Login request headers:', headers);
+    console.log('Login URL:', `${BASE_URL}/login`);
+    
     const response = await this.fetchWithRetry(`${BASE_URL}/login`, {
       method: 'POST',
-      headers: this.getHeaders(undefined, true),
+      headers,
       body: JSON.stringify(data)
     });
 
     if (!response.ok) {
+      console.error('Login failed with status:', response.status);
       const error = await response.json().catch(() => ({ error: 'Login failed' }));
+      console.error('Login error response:', error);
       throw new Error(error.error || 'Login failed');
     }
 
@@ -422,6 +431,129 @@ class APIClient {
     }
 
     return response.json();
+  }
+
+  // ============================================================================
+  // PIN API Methods
+  // ============================================================================
+
+  async createPIN(pinData: any, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/create`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify(pinData)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create PIN');
+    }
+
+    return response.json();
+  }
+
+  async getUserPIN(userId: string, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/user/${userId}`, {
+      method: 'GET',
+      headers: this.getHeaders(accessToken)
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return { success: false, message: 'No PIN found' };
+      }
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get PIN');
+    }
+
+    return response.json();
+  }
+
+  async getPublicPIN(pinNumber: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/public/${pinNumber}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get PIN');
+    }
+
+    return response.json();
+  }
+
+  async trackPINShare(pinNumber: string) {
+    try {
+      await this.fetchWithRetry(`${BASE_URL}/pin/${pinNumber}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      console.log('Share tracking failed:', error);
+      // Non-fatal error, don't throw
+    }
+  }
+
+  async getPINAnalytics(pinNumber: string, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/${pinNumber}/analytics`, {
+      method: 'GET',
+      headers: this.getHeaders(accessToken)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get analytics');
+    }
+
+    return response.json();
+  }
+
+  // Email Verification for PIN Onboarding
+  async sendVerificationEmail(email: string, name?: string) {
+    const verificationUrl = `https://${projectId}.supabase.co/functions/v1/send-verification-email`;
+    
+    // Get anon key for authentication
+    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
+    
+    const response = await fetch(verificationUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+        'apikey': anonKey
+      },
+      body: JSON.stringify({ email, name }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send verification email');
+    }
+    return response.json();
+  }
+
+  async verifyEmailCode(email: string, code: string) {
+    const verificationUrl = `https://${projectId}.supabase.co/functions/v1/verify-email-code`;
+    
+    // Get anon key for authentication
+    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
+    
+    const response = await fetch(verificationUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${anonKey}`,
+        'apikey': anonKey
+      },
+      body: JSON.stringify({ email, code }),
+    });
+    
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Invalid verification code');
+    }
+    return data;
   }
 }
 

@@ -128,6 +128,15 @@ auth.post("/register", async (c) => {
         verificationStatus: "pending"
       };
       await kv.set(`user:${userId}`, profileValue);
+      // Store sensitive details separately with optional encryption
+      try {
+        const sensitive = await maybeEncryptKVValue({
+          userId,
+          phoneNumber: phoneNumber || null,
+          gender: gender || null,
+        });
+        await kv.set(`user_sensitive:${userId}`, sensitive);
+      } catch (_) {}
       // Backup copy for recovery
       try {
         const backupVal = await maybeEncryptKVValue(profileValue);
@@ -227,6 +236,11 @@ auth.post("/register", async (c) => {
       } catch (_) {}
     }
 
+    // Increment registration rate limit counter for this IP
+    try {
+      await kv.set(rlKey, { count: rlCount + 1, resetAt: now > rlResetAt ? new Date(now + rlWindowMs).toISOString() : new Date(rlResetAt).toISOString() });
+    } catch (_) {}
+
     return c.json({ 
       success: true, 
       message: "Registration successful",
@@ -279,8 +293,13 @@ auth.post('/login', async (c) => {
 
     const body = await c.req.json();
     const { email, password } = body;
-    if (!email || !password) {
+    const emailStr = (email || '').toString().trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailStr || !password) {
       return c.json({ error: 'Email and password are required' }, 400);
+    }
+    if (!emailRegex.test(emailStr)) {
+      return c.json({ error: 'Email must be valid' }, 400);
     }
 
     const ip = getClientIp(c);
@@ -303,7 +322,7 @@ auth.post('/login', async (c) => {
     }
 
     // Attempt login
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: emailStr, password });
     const userAgent = c.req.header('user-agent') || 'unknown';
 
     // Update rate bucket
@@ -312,9 +331,9 @@ auth.post('/login', async (c) => {
     if (error) {
       console.log('Login error:', error);
       // Log failed attempt
-      const logKey = `login_history:${email}:${Date.now()}`;
+      const logKey = `login_history:${emailStr}:${Date.now()}`;
       const failPayload = {
-        email,
+        email: emailStr,
         ip,
         userAgent,
         success: false,
@@ -348,10 +367,10 @@ auth.post('/login', async (c) => {
     }
 
     // Log success attempt
-    const logKey = `login_history:${userId || email}:${Date.now()}`;
+    const logKey = `login_history:${userId || emailStr}:${Date.now()}`;
     const successPayload = {
       userId: userId || null,
-      email,
+      email: emailStr,
       ip,
       userAgent,
       success: true,
@@ -375,8 +394,6 @@ auth.post('/login', async (c) => {
     return c.json({ error: `Login failed: ${error?.message || 'Unknown error'}` }, 500);
   }
 });
-
-export { auth };
 
 // Additional routes: send/resend email verification
 auth.post('/send-verification', async (c) => {
@@ -444,3 +461,5 @@ auth.post('/resend-verification', async (c) => {
     return c.json({ error: err?.message || 'Unknown error' }, 500);
   }
 });
+
+export { auth };

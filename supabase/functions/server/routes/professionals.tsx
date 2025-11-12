@@ -4,8 +4,7 @@ import * as kv from "../kv_store.tsx";
 
 const professionals = new Hono();
 
-// Supabase client singleton
-const supabase = getSupabaseClient();
+// Supabase client is initialized per-request when needed within handlers
 
 // Get All Professionals (for employers)
 professionals.get("/", async (c) => {

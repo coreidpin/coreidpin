@@ -146,7 +146,7 @@ export function Navbar({
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-border bg-card/95 backdrop-blur-md sticky top-0 z-50 shadow-sm"
+        className="border-b border-surface bg-surface backdrop-blur-md sticky top-0 z-50 shadow-sm"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-18">
@@ -181,7 +181,7 @@ export function Navbar({
                   variant="ghost" 
                   size="sm"
                   onClick={() => onNavigate('login')}
-                  className="hover:bg-primary/10 transition-colors"
+                  className="text-foreground hover:bg-surface transition-colors"
                 >
                   Login
                 </Button>

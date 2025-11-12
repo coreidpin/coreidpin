@@ -23,10 +23,40 @@ profile.get("/:userId", async (c) => {
       return c.json({ error: "Forbidden" }, 403);
     }
 
-    const userProfile = await kv.get(`user:${userId}`);
+    let userProfile = await kv.get(`user:${userId}`);
     
+    // If profile doesn't exist, create a basic one from auth metadata
     if (!userProfile) {
-      return c.json({ error: "Profile not found" }, 404);
+      console.log(`Creating profile for user ${userId} from auth metadata`);
+      
+      const userType = user.user_metadata?.userType || 'professional';
+      userProfile = {
+        id: userId,
+        email: user.email,
+        name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+        userType,
+        companyName: user.user_metadata?.companyName || null,
+        role: user.user_metadata?.role || null,
+        institution: user.user_metadata?.institution || null,
+        gender: user.user_metadata?.gender || null,
+        createdAt: user.created_at || new Date().toISOString(),
+        verificationStatus: user.email_confirmed_at ? "verified" : "pending"
+      };
+      
+      // Store the new profile
+      await kv.set(`user:${userId}`, userProfile);
+      
+      // Create user profile entry if it doesn't exist
+      const profileKey = `profile:${userType}:${userId}`;
+      const existingProfile = await kv.get(profileKey);
+      if (!existingProfile) {
+        await kv.set(profileKey, {
+          userId,
+          profileComplete: false,
+          onboardingComplete: false,
+          createdAt: new Date().toISOString()
+        });
+      }
     }
 
     return c.json({ success: true, profile: userProfile });

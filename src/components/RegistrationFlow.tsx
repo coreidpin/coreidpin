@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { api } from '../utils/api';
 import { supabase } from '../utils/supabase/client';
 import {
@@ -63,6 +63,7 @@ interface RegistrationData {
   verifyAI?: boolean;
   verifyEmail?: boolean;
   verifyPeers?: boolean;
+  verifySMS?: boolean;
 }
 
 const SUGGESTED_COMPANIES = [
@@ -204,7 +205,7 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
         if (resumeFile.size > maxSize) stepErrors.resume = 'File must be less than 5MB';
       }
     } else if (step === 3) {
-      const methods = [formData.verifyAI, formData.verifyEmail, formData.verifyPeers].filter(Boolean).length;
+      const methods = [formData.verifyAI, formData.verifyEmail, formData.verifyPeers, formData.verifySMS].filter(Boolean).length;
       if (methods < 1) stepErrors.verification = 'Select at least one verification method';
       if (!formData.verifyEmail) stepErrors.verifyEmail = 'Email verification is required';
     }
@@ -323,6 +324,13 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
         });
       }
 
+      try {
+        if (formData.verifySMS && formData.phone && session?.access_token) {
+          await withBackoff(() => api.smsSend(formData.phone!, session!.access_token));
+          toast.info('SMS code sent to your phone.', { duration: 3000 });
+        }
+      } catch (_) {}
+
       // Mark completion timestamp for dashboard success confirmation
       try {
         localStorage.setItem('registrationCompletedAt', new Date().toISOString());
@@ -353,9 +361,9 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
   };
 
   return (
-    <div className={origin === 'modal' ? 'space-y-6' : 'min-h-screen bg-white'}>
+    <div className={origin === 'modal' ? 'space-y-6' : 'min-h-screen bg-surface'}>
       {origin === 'onboarding' && (
-        <header className="border-b border-border bg-white sticky top-0 z-50">
+        <header className="border-b border-surface bg-surface sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -370,7 +378,7 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
         </header>
       )}
 
-      <div className={origin === 'onboarding' ? 'bg-white border-b border-border' : ''}>
+      <div className={origin === 'onboarding' ? 'bg-surface border-b border-surface' : ''}>
         <div className={origin === 'onboarding' ? 'container mx-auto px-4 py-6' : ''}>
           <div className={origin === 'onboarding' ? 'max-w-2xl mx-auto space-y-4' : ''}>
             <div className="flex items-center justify-between text-sm">
@@ -402,7 +410,7 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
               transition={{ duration: 0.3 }}
             >
               {currentStep === 0 && (
-                <Card className="bg-white">
+                <Card className="bg-surface">
                   <CardHeader>
                     <CardTitle>Basic Information</CardTitle>
                     <CardDescription>Enter your details to create your account.</CardDescription>
@@ -471,7 +479,7 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
               )}
 
               {currentStep === 1 && (
-                <Card className="bg-white">
+                <Card className="bg-surface">
                   <CardHeader>
                     <CardTitle>Professional Details</CardTitle>
                     <CardDescription>Tell us about your experience and role.</CardDescription>
@@ -529,7 +537,7 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
               )}
 
               {currentStep === 2 && (
-                <Card className="bg-white">
+                <Card className="bg-surface">
                   <CardHeader>
                     <CardTitle>Skills</CardTitle>
                     <CardDescription>Add your top skills and education.</CardDescription>
@@ -606,7 +614,7 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
               )}
 
               {currentStep === 3 && (
-                <Card className="bg-white">
+                <Card className="bg-surface">
                   <CardHeader>
                     <CardTitle>Almost there!</CardTitle>
                     <CardDescription>Choose your verification methods. A PIN will be generated upon verification.</CardDescription>
@@ -644,6 +652,17 @@ export function RegistrationFlow({ userType = 'professional', origin = 'modal', 
                         <div className="flex items-center gap-2">
                           <input id="verifyPeers" type="checkbox" checked={!!formData.verifyPeers} onChange={(e) => updateFormData('verifyPeers', e.target.checked)} />
                           <Label htmlFor="verifyPeers">Enable</Label>
+                        </div>
+                      </div>
+                      <div className={`border rounded-lg p-4 ${formData.verifySMS ? 'border-primary' : 'border-muted'}`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Shield className="h-5 w-5 text-primary" />
+                          <span className="font-medium">SMS Verification</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">Optional. Requires a valid phone number.</p>
+                        <div className="flex items-center gap-2">
+                          <input id="verifySMS" type="checkbox" checked={!!formData.verifySMS} onChange={(e) => updateFormData('verifySMS', e.target.checked)} disabled={!formData.phone || !!validatePhone(formData.phone)} />
+                          <Label htmlFor="verifySMS">Enable</Label>
                         </div>
                       </div>
                     </div>

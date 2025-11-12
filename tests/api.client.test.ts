@@ -43,7 +43,7 @@ describe('APIClient helpers', () => {
     await api.getProfessionals('token-123');
 
     const [healthHeaders, profHeaders] = captured;
-    expect(healthHeaders['Authorization']).toBeUndefined();
+    expect(healthHeaders['apikey']).toBeDefined();
     expect(profHeaders['Authorization']).toBe('Bearer token-123');
   });
 
