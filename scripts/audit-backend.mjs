@@ -17,8 +17,10 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 
+import { getProjectInfo } from './lib/projectInfo.mjs';
+
 // Configuration
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const { supabaseUrl: SUPABASE_URL, projectRef } = getProjectInfo();
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const AUDIT_OUTPUT_DIR = './audit-reports';
 

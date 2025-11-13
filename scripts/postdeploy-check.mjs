@@ -1,5 +1,7 @@
 /* Simple post-deployment verification script */
-const SUPABASE_URL = process.env.SUPABASE_URL;
+import { getProjectInfo } from './lib/projectInfo.mjs';
+
+const { supabaseUrl: SUPABASE_URL, projectRef } = getProjectInfo();
 const FUNCTION_SLUG = process.env.FUNCTION_SLUG || 'server';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 if (!SUPABASE_URL) {

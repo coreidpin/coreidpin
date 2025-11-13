@@ -39,9 +39,10 @@ import { CheckCircle, Globe, Shield, Award, Users, Building, GraduationCap } fro
 import PasswordResetDialog from './components/PasswordResetDialog';
 import { PublicPINPage } from './components/PublicPINPage';
 import LoginPage from './components/LoginPage';
+import { AuthVerifyEmail } from './components/AuthVerifyEmail';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university';
-type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions' | 'public-pin';
+type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions' | 'public-pin' | 'verify-email';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('landing');
@@ -66,6 +67,21 @@ export default function App() {
       setViewingPinNumber(pinNumber);
       setAppState('public-pin');
       return; // Skip session check for public pages
+    }
+
+    // Basic path-based routing on initial load
+    // Support both lowercase and capitalized 'Registeration' per requirement
+    const normalized = path.toLowerCase();
+    if (normalized === '/login') {
+      setAppState('login');
+    } else if (normalized === '/dashboard') {
+      setAppState('dashboard');
+    } else if (normalized.startsWith('/auth/verify-email')) {
+      setAppState('verify-email');
+    } else if (normalized === '/registeration' || normalized === '/registration') {
+      // Show onboarding/registration flow (professional by default)
+      setCurrentView('professional');
+      setAppState('onboarding');
     }
 
     // Ensure CSRF token exists (double-submit token stored client-side)
@@ -519,6 +535,16 @@ export default function App() {
     );
   }
 
+  // Email Verification Page - Handles verification token from email link
+  if (appState === 'verify-email') {
+    return (
+      <>
+        <AuthVerifyEmail />
+        <Toaster position="top-right" />
+      </>
+    );
+  }
+
   if (appState === 'landing') {
     return (
       <>
@@ -721,7 +747,7 @@ export default function App() {
   if (appState === 'login') {
     return (
       <>
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
           <Navbar 
             currentPage="login"
             onNavigate={handleNavigate}
@@ -730,7 +756,7 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             userType={currentView}
           />
-          <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+          <main className="flex-1 flex items-center justify-center">
             <LoginPage onLoginSuccess={handleLoginSuccess} />
           </main>
           <Footer onNavigate={handleNavigate} />

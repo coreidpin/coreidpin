@@ -60,6 +60,7 @@
             "@types/node": "^20.10.0",
             "@types/react": "^19.2.2",
             "@vitejs/plugin-react-swc": "^3.10.2",
+            "dotenv": "^16.6.1",
             "eslint": "^9.16.0",
             "eslint-plugin-import": "^2.29.1",
             "eslint-plugin-react": "^7.37.2",
@@ -94,6 +95,7 @@
             "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
             "audit:backend": "node scripts/audit-backend.mjs",
             "audit:resend": "node scripts/validate-resend.mjs",
-            "audit:all": "npm run audit:backend && npm run audit:resend"
+            "audit:all": "npm run audit:backend && npm run audit:resend",
+            "verify:flow": "node scripts/verification-e2e.mjs"
       }
 }
