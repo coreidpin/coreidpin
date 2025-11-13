@@ -50,7 +50,7 @@ serve(async (req) => {
   const normalizedEmail = String(email).trim().toLowerCase();
   const { data: profileRow, error: profileErr } = await supabase
     .from('profiles')
-    .select('user_id, email_verified')
+    .select('user_id')
     .eq('email', normalizedEmail)
     .limit(1)
     .maybeSingle();
@@ -60,11 +60,6 @@ serve(async (req) => {
   }
   if (!profileRow?.user_id) {
     return json({ success: false, error_code: 'ERR_NOT_FOUND', message: 'User not found for email' }, 404);
-  }
-  
-  // Check if already verified
-  if (profileRow.email_verified) {
-    return json({ success: false, error_code: 'ERR_ALREADY_VERIFIED', message: 'Email is already verified' }, 400);
   }
   
   const userId = profileRow.user_id as string;
