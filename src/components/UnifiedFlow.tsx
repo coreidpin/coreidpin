@@ -17,6 +17,7 @@ import { supabase } from '../utils/supabase/client'
 import { EmailVerificationGate } from './EmailVerificationGate'
 import { WelcomeAIBadge } from './WelcomeAIBadge'
 import { Logo } from './Logo'
+import SimpleRegistration from './SimpleRegistration'
 import '../styles/auth-dark.css'
 import { Sparkles, ArrowRight, ArrowLeft, Loader2, Users, Mail, MapPin, Lock, Briefcase, Building, School, FileText, CheckCircle, Shield, Brain, BadgeCheck, X, Plus, GraduationCap, Chrome, User } from 'lucide-react'
 
@@ -951,7 +952,7 @@ function UniversityComingSoon() {
 }
 
 export default function UnifiedFlow({ userType, origin = 'onboarding', onComplete, onBack }: UnifiedFlowProps) {
-  if (userType === 'professional') return <ProfessionalFlow origin={origin} onComplete={onComplete} onBack={onBack} />
+  if (userType === 'professional') return <SimpleRegistration onComplete={onComplete} onBack={onBack} />
   if (userType === 'employer') return <EmployerFlow onComplete={onComplete} onBack={onBack} />
   return <UniversityComingSoon />
 }

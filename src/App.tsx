@@ -375,6 +375,13 @@ export default function App() {
     }
   };
 
+  const validPages: AppState[] = [
+    'landing', 'our-story', 'how-it-works', 'trust-safety', 
+    'employers', 'professionals', 'universities', 'help', 'contact', 'docs',
+    'terms', 'privacy', 'cookies', 'gdpr', 'login', 'dashboard', 'admin', 'solutions',
+    'monitoring', 'admin-monitoring'
+  ];
+
   useEffect(() => {
     // Listen for custom navigation events from child components
     const handleCustomNavigate = (event: CustomEvent) => {
@@ -392,12 +399,6 @@ export default function App() {
   }, []);
 
   const handleNavigate = (page: AppState | string) => {
-    const validPages: AppState[] = [
-      'landing', 'our-story', 'how-it-works', 'trust-safety', 
-      'employers', 'professionals', 'universities', 'help', 'contact', 'docs',
-      'terms', 'privacy', 'cookies', 'gdpr', 'login', 'dashboard', 'admin', 'solutions',
-      'monitoring', 'admin-monitoring'
-    ];
     
     // Handle public PIN navigation
     if (page.startsWith('pin/')) {

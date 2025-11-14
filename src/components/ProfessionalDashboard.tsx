@@ -11,6 +11,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ProfileCompletionForm } from './ProfileCompletionForm';
+import SetupTab from './SetupTab';
 import { AIAnalysisModal } from './AIAnalysisModal';
 import { AIBadge, getExperienceLevelFromAnalysis } from './AIBadge';
 import { SwipeInterface } from './SwipeInterface';
@@ -728,6 +729,7 @@ export function ProfessionalDashboard() {
                 <TabsTrigger value="setup" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Sparkles className="h-4 w-4" />
                   <span className="hidden sm:inline">Setup</span>
+                  {profileCompletion < 100 && <Badge variant="secondary" className="ml-auto hidden lg:inline-flex bg-yellow-100 text-yellow-800">!</Badge>}
                 </TabsTrigger>
                 <TabsTrigger value="verify" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Shield className="h-4 w-4" />
@@ -992,18 +994,9 @@ export function ProfessionalDashboard() {
             />
           </TabsContent>
 
-          {/* Setup Tab - Profile Completion with LinkedIn/GitHub */}
+          {/* Setup Tab - Profile Completion */}
           <TabsContent value="setup" className="space-y-6">
-            <div className="mb-6">
-              <h2 className="text-2xl mb-2">Connect Your Professional Profiles</h2>
-              <p className="text-muted-foreground">
-                Add your LinkedIn, GitHub, or portfolio for AI-powered verification and skill analysis. This helps employers discover your verified skills and increases your match quality.
-              </p>
-            </div>
-            <ProfileCompletionForm
-              onAnalysisComplete={handleAnalysisComplete}
-              onProfileSaved={handleProfileSaved}
-            />
+            <SetupTab />
           </TabsContent>
 
           {/* Verify Tab - Compliance & Documentation */}

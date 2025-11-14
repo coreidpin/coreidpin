@@ -1,80 +1,256 @@
-export type PerformanceMetrics = {
-  navigationStart: number
-  responseEnd: number
-  domContentLoaded: number
-  loadEventEnd: number
+// Monitoring and metrics collection for registration system
+
+interface MetricData {
+  name: string
+  value: number
+  timestamp: number
+  tags?: Record<string, string>
 }
 
-export function collectPerformanceMetrics(): PerformanceMetrics {
-  const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
-  if (nav) {
+interface RegistrationMetrics {
+  registrationAttempts: number
+  registrationSuccesses: number
+  registrationFailures: number
+  emailVerifications: number
+  verificationRate: number
+  avgResponseTime: number
+  systemSyncSuccesses: number
+  systemSyncFailures: number
+}
+
+class MonitoringService {
+  private metrics: MetricData[] = []
+  private registrationMetrics: RegistrationMetrics = {
+    registrationAttempts: 0,
+    registrationSuccesses: 0,
+    registrationFailures: 0,
+    emailVerifications: 0,
+    verificationRate: 0,
+    avgResponseTime: 0,
+    systemSyncSuccesses: 0,
+    systemSyncFailures: 0
+  }
+
+  // Record registration attempt
+  recordRegistrationAttempt(success: boolean, responseTime: number, error?: string) {
+    this.registrationMetrics.registrationAttempts++
+    
+    if (success) {
+      this.registrationMetrics.registrationSuccesses++
+    } else {
+      this.registrationMetrics.registrationFailures++
+    }
+
+    // Update average response time
+    this.registrationMetrics.avgResponseTime = 
+      (this.registrationMetrics.avgResponseTime + responseTime) / 2
+
+    this.recordMetric('registration_attempt', 1, {
+      success: success.toString(),
+      error: error || 'none'
+    })
+
+    this.recordMetric('registration_response_time', responseTime)
+  }
+
+  // Record email verification
+  recordEmailVerification(success: boolean, timeToVerify?: number) {
+    if (success) {
+      this.registrationMetrics.emailVerifications++
+      
+      // Calculate verification rate
+      this.registrationMetrics.verificationRate = 
+        (this.registrationMetrics.emailVerifications / this.registrationMetrics.registrationSuccesses) * 100
+    }
+
+    this.recordMetric('email_verification', 1, {
+      success: success.toString(),
+      time_to_verify: timeToVerify?.toString() || 'unknown'
+    })
+  }
+
+  // Record system synchronization
+  recordSystemSync(success: boolean, syncType: string, duration: number) {
+    if (success) {
+      this.registrationMetrics.systemSyncSuccesses++
+    } else {
+      this.registrationMetrics.systemSyncFailures++
+    }
+
+    this.recordMetric('system_sync', 1, {
+      success: success.toString(),
+      type: syncType,
+      duration: duration.toString()
+    })
+  }
+
+  // Record security events
+  recordSecurityEvent(eventType: string, severity: 'low' | 'medium' | 'high', details: Record<string, any>) {
+    this.recordMetric('security_event', 1, {
+      type: eventType,
+      severity,
+      ...details
+    })
+
+    // Alert on high severity events
+    if (severity === 'high') {
+      this.sendAlert(`High severity security event: ${eventType}`, details)
+    }
+  }
+
+  // Record performance metrics
+  recordPerformanceMetric(operation: string, duration: number, success: boolean) {
+    this.recordMetric(`performance_${operation}`, duration, {
+      success: success.toString()
+    })
+
+    // Alert if operation exceeds SLA
+    const slaThresholds = {
+      registration: 500, // 500ms
+      email_delivery: 10000, // 10s
+      system_sync: 1000 // 1s
+    }
+
+    if (slaThresholds[operation as keyof typeof slaThresholds] && 
+        duration > slaThresholds[operation as keyof typeof slaThresholds]) {
+      this.sendAlert(`SLA breach: ${operation} took ${duration}ms`, { operation, duration })
+    }
+  }
+
+  // Record general metric
+  private recordMetric(name: string, value: number, tags?: Record<string, string>) {
+    this.metrics.push({
+      name,
+      value,
+      timestamp: Date.now(),
+      tags
+    })
+
+    // Keep only last 1000 metrics in memory
+    if (this.metrics.length > 1000) {
+      this.metrics = this.metrics.slice(-1000)
+    }
+
+    // Send to external monitoring service (implement based on your service)
+    this.sendToMonitoringService(name, value, tags)
+  }
+
+  // Get current metrics summary
+  getMetricsSummary(): RegistrationMetrics & { availability: number } {
+    const totalAttempts = this.registrationMetrics.registrationAttempts
+    const successRate = totalAttempts > 0 
+      ? (this.registrationMetrics.registrationSuccesses / totalAttempts) * 100 
+      : 100
+
+    // Calculate availability (99.9% SLA target)
+    const availability = Math.min(successRate, 99.9)
+
     return {
-      navigationStart: nav.startTime,
-      responseEnd: nav.responseEnd,
-      domContentLoaded: nav.domContentLoadedEventEnd,
-      loadEventEnd: nav.loadEventEnd,
+      ...this.registrationMetrics,
+      availability
     }
   }
-  const timing = performance.timing as any
-  return {
-    navigationStart: timing?.navigationStart || 0,
-    responseEnd: timing?.responseEnd || 0,
-    domContentLoaded: timing?.domContentLoadedEventEnd || 0,
-    loadEventEnd: timing?.loadEventEnd || 0,
+
+  // Health check endpoint data
+  getHealthStatus() {
+    const metrics = this.getMetricsSummary()
+    
+    return {
+      status: metrics.availability >= 99.9 ? 'healthy' : 'degraded',
+      timestamp: new Date().toISOString(),
+      metrics: {
+        registrationSuccessRate: metrics.registrationSuccesses / Math.max(metrics.registrationAttempts, 1) * 100,
+        verificationRate: metrics.verificationRate,
+        avgResponseTime: metrics.avgResponseTime,
+        availability: metrics.availability
+      },
+      sla: {
+        availability: '99.9%',
+        responseTime: '<500ms',
+        emailDelivery: '<10s',
+        systemSync: '<1s'
+      }
+    }
+  }
+
+  // Send alert (implement with your alerting system)
+  private sendAlert(message: string, details: Record<string, any>) {
+    console.error('ALERT:', message, details)
+    
+    // Implement with your alerting service (PagerDuty, Slack, etc.)
+    // Example: await fetch('/api/alerts', { method: 'POST', body: JSON.stringify({ message, details }) })
+  }
+
+  // Send metrics to external service (implement based on your monitoring stack)
+  private sendToMonitoringService(name: string, value: number, tags?: Record<string, string>) {
+    // Implement with your monitoring service (DataDog, New Relic, CloudWatch, etc.)
+    // Example: await fetch('/api/metrics', { method: 'POST', body: JSON.stringify({ name, value, tags }) })
+    
+    // For development, log to console
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Metric: ${name} = ${value}`, tags)
+    }
+  }
+
+  // Export metrics for external consumption
+  exportMetrics() {
+    return {
+      summary: this.getMetricsSummary(),
+      rawMetrics: this.metrics.slice(-100), // Last 100 metrics
+      health: this.getHealthStatus()
+    }
   }
 }
 
-export function initMonitoring() {
-  try {
-    const send = async () => {
-      const metrics = collectPerformanceMetrics()
-      const payload = JSON.stringify({ type: 'web-vitals-basic', metrics, ts: new Date().toISOString() })
-      const origin = typeof window !== 'undefined' ? window.location.origin : ''
-      const url = origin ? new URL('/functions/v1/server/diagnostics/metrics', origin).toString() : '/functions/v1/server/diagnostics/metrics'
-      const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY
-      const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-      const auth = accessToken || anonKey || ''
+// Singleton instance
+export const monitoring = new MonitoringService()
+
+// Middleware to automatically track API performance
+export function trackApiPerformance(operation: string) {
+  return function(target: any, propertyName: string, descriptor: PropertyDescriptor) {
+    const method = descriptor.value
+
+    descriptor.value = async function(...args: any[]) {
+      const startTime = Date.now()
+      let success = false
+      
       try {
-        await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(auth ? { 'Authorization': `Bearer ${auth}`, 'apikey': auth } : {}) }, body: payload, keepalive: true })
-      } catch {
-        if (navigator.sendBeacon) {
-          try { navigator.sendBeacon(url, payload) } catch {}
-        }
+        const result = await method.apply(this, args)
+        success = true
+        return result
+      } catch (error) {
+        throw error
+      } finally {
+        const duration = Date.now() - startTime
+        monitoring.recordPerformanceMetric(operation, duration, success)
       }
-      try { localStorage.setItem('lastMetrics', payload) } catch {}
     }
-    if (document.readyState === 'complete') send().catch(() => {})
-    else window.addEventListener('load', () => { send().catch(() => {}) }, { once: true } as any)
-  } catch {}
+
+    return descriptor
+  }
 }
 
-export function recordApiLatency(endpoint: string, ms: number) {
-  try {
-    const payload = JSON.stringify({ type: 'api-latency', endpoint, ms, ts: new Date().toISOString() })
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const url = origin ? new URL('/functions/v1/server/diagnostics/metrics', origin).toString() : '/functions/v1/server/diagnostics/metrics'
-    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY
-    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    const auth = accessToken || anonKey || ''
-    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(auth ? { 'Authorization': `Bearer ${auth}`, 'apikey': auth } : {}) }, body: payload, keepalive: true }).catch(() => {
-      if (navigator.sendBeacon) {
-        try { navigator.sendBeacon(url, payload) } catch {}
-      }
-    })
-  } catch {}
+// Utility functions for common monitoring tasks
+export const trackRegistration = (success: boolean, responseTime: number, error?: string) => {
+  monitoring.recordRegistrationAttempt(success, responseTime, error)
 }
 
-export function recordClientError(kind: string, message: string, detail: string) {
-  try {
-    const payload = JSON.stringify({ type: 'client-error', kind, message, detail, ts: new Date().toISOString() })
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const url = origin ? new URL('/functions/v1/server/diagnostics/errors', origin).toString() : '/functions/v1/server/diagnostics/errors'
-    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY
-    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-    const auth = accessToken || anonKey || ''
-    if (!auth) return
-    fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${auth}`, 'apikey': auth }, body: payload, keepalive: true }).catch(() => {
-      if (navigator.sendBeacon) { try { navigator.sendBeacon(url, payload) } catch {} }
-    })
-  } catch {}
+export const trackVerification = (success: boolean, timeToVerify?: number) => {
+  monitoring.recordEmailVerification(success, timeToVerify)
+}
+
+export const trackSystemSync = (success: boolean, syncType: string, duration: number) => {
+  monitoring.recordSystemSync(success, syncType, duration)
+}
+
+export const trackSecurityEvent = (eventType: string, severity: 'low' | 'medium' | 'high', details: Record<string, any>) => {
+  monitoring.recordSecurityEvent(eventType, severity, details)
+}
+
+export const recordClientError = (error: Error, context?: Record<string, any>) => {
+  monitoring.recordSecurityEvent('client_error', 'medium', {
+    message: error.message,
+    stack: error.stack,
+    ...context
+  })
 }

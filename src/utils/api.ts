@@ -713,6 +713,19 @@ class APIClient {
     return data;
   }
 
+  async recordRegistrationStep(data: { email: string; step: number; status: 'started' | 'completed' }) {
+    try {
+      const response = await this.fetchWithRetry(`${BASE_URL}/registration/step`, {
+        method: 'POST',
+        headers: this.getHeaders(undefined, true),
+        body: JSON.stringify(data)
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
   async issuePIN(accessToken: string) {
     const response = await this.fetchWithRetry(`${BASE_URL}/pin/issue`, {
       method: 'POST',
