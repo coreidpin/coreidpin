@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { Button } from "./uii/button";
+import { Card, CardContent } from "./uii/card";
+import { Badge } from "./uii/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
@@ -37,11 +37,14 @@ import {
   Linkedin,
   Code,
   Briefcase,
-  XCircle,
   CheckCheck
 } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import TrustBanner from "./TrustBanner";
+import { MissionPage } from "./MissionPage";
+import { SolutionPage } from "./SolutionPage";
+import { WhyNowPage } from "./WhyNowPage";
+import { WhyWeExist } from "./WhyWeExist";
 import "../styles/hero-mobile.css";
 
 interface LandingPageProps {
@@ -115,10 +118,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-5xl sm:text-6xl lg:text-7xl mb-6 text-white leading-tight"
+                  className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-6 text-white leading-tight"
                 >
                   Your Global<br />
-                  <span className="bg-gradient-to-r from-purple-400 via-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-[#bfa5ff] via-[#7bb8ff] to-[#32f08c] bg-clip-text text-transparent">
                     Professional Identity
                   </span>
                   <br />Number
@@ -130,7 +133,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-[clamp(1rem,3.5vw,1.25rem)] text-gray-300 mb-6 sm:mb-8 max-w-[90vw] sm:max-w-2xl mx-auto lg:mx-0"
+                  className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
                 >
                   A unified identity powered by your phone number — verified through our global infrastructure and trusted across every professional ecosystem.
                 </motion.p>
@@ -145,7 +148,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   <Button
                     size="lg"
                     onClick={() => (isAuthenticated ? handleNavigate('dashboard') : onLogin("professional"))}
-                    className="text-base sm:text-lg px-5 py-4 sm:px-8 sm:py-6 group min-h-[48px]"
+                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200"
                     style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
                   >
                     <Fingerprint className="h-5 w-5 mr-2" />
@@ -155,7 +158,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-base sm:text-lg px-5 py-4 sm:px-8 sm:py-6 border-white/20 text-white hover:bg-white/10 min-h-[48px]"
+                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 border-white/20 text-white hover:bg-white/10 hover:scale-105 transition-all duration-200"
                   >
                     <Play className="h-5 w-5 mr-2" />
                     See How It Works
@@ -186,8 +189,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
 
               {/* Right: PIN Card Mockup */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, rotateY: -15 }}
-                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
                 className="relative max-w-[min(90vw,520px)] mx-auto"
               >
@@ -258,6 +261,18 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         <TrustBanner />
       </section>
 
+      {/* Why We Exist - Problem Statement */}
+      <WhyWeExist />
+
+      {/* Mission Page - What PIN Means for Everyone */}
+      <MissionPage />
+
+      {/* Solution Page - Technical Implementation */}
+      <SolutionPage />
+
+      {/* Why Now Page - Market Timing */}
+      <WhyNowPage />
+
       {/* WHAT IS PIN - Light Section */}
       <section className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-7xl">
@@ -267,7 +282,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <Badge className="mb-4 px-4 py-2" style={{ backgroundColor: '#bfa5ff', color: '#0a0b0d' }}>
+            <Badge className="mb-4 px-4 py-2 bg-[#bfa5ff] text-[#0a0b0d] border-0">
               <Fingerprint className="h-4 w-4 mr-2" />
               What is PIN?
             </Badge>
@@ -427,103 +442,6 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         </div>
       </section>
 
-      {/* PIN VS PORTFOLIO VS CV - Light Comparison Section */}
-      <section className="py-24 px-4 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl sm:text-5xl mb-6 text-gray-900">
-              PIN vs Traditional Methods
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              See why PIN is the superior choice for modern professionals
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="overflow-hidden rounded-2xl border-2 shadow-2xl"
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-blue-600 to-purple-600">
-                  <tr>
-                    <th className="text-left p-6 text-white text-lg">Feature</th>
-                    <th className="text-center p-6 text-white text-lg">
-                      <div className="flex items-center justify-center gap-2">
-                        <Fingerprint className="h-5 w-5" />
-                        PIN
-                      </div>
-                    </th>
-                    <th className="text-center p-6 text-white/70 text-lg">Portfolio</th>
-                    <th className="text-center p-6 text-white/70 text-lg">CV/Resume</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white">
-                  {[
-                    { feature: "Verified Identity", pin: true, portfolio: false, cv: false },
-                    { feature: "Blockchain Secured", pin: true, portfolio: false, cv: false },
-                    { feature: "AI-Powered Analysis", pin: true, portfolio: false, cv: false },
-                    { feature: "Global Recognition", pin: true, portfolio: false, cv: false },
-                    { feature: "One-Click Sharing", pin: true, portfolio: true, cv: false },
-                    { feature: "Real-time Updates", pin: true, portfolio: true, cv: false },
-                    { feature: "Employer Trust Score", pin: true, portfolio: false, cv: false },
-                    { feature: "Automatic Compliance", pin: true, portfolio: false, cv: false }
-                  ].map((row, index) => (
-                    <tr key={row.feature} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                      <td className="p-4 text-gray-900 border-b border-gray-200">{row.feature}</td>
-                      <td className="p-4 text-center border-b border-gray-200">
-                        {row.pin ? (
-                          <CheckCircle className="h-6 w-6 mx-auto" style={{ color: '#32f08c' }} />
-                        ) : (
-                          <XCircle className="h-6 w-6 text-gray-300 mx-auto" />
-                        )}
-                      </td>
-                      <td className="p-4 text-center border-b border-gray-200">
-                        {row.portfolio ? (
-                          <CheckCircle className="h-6 w-6 text-gray-400 mx-auto" />
-                        ) : (
-                          <XCircle className="h-6 w-6 text-gray-300 mx-auto" />
-                        )}
-                      </td>
-                      <td className="p-4 text-center border-b border-gray-200">
-                        {row.cv ? (
-                          <CheckCircle className="h-6 w-6 text-gray-400 mx-auto" />
-                        ) : (
-                          <XCircle className="h-6 w-6 text-gray-300 mx-auto" />
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Button
-              size="lg"
-              onClick={() => onLogin("professional")}
-              className="text-lg px-8 py-6"
-              style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
-            >
-              Start Your PIN Journey
-              <ArrowRight className="h-5 w-5 ml-2" />
-            </Button>
-          </motion.div>
-        </div>
-      </section>
 
       {/* TESTIMONIALS - Dark Section */}
       <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>
