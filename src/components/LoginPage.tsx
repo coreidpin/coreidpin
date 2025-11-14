@@ -7,19 +7,26 @@ import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { clearSession, initAuth } from '../utils/auth';
 import { api } from '../utils/api';
+import { Navbar } from './Navbar';
+import { Footer } from './Footer';
 import '../styles/auth-dark.css';
 
 interface LoginPageProps {
-  onLoginSuccess: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
+  onLoginSuccess?: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
 }
 
-export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
+  const defaultOnLoginSuccess = () => {
+    window.location.href = '/dashboard';
+  };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [canResend, setCanResend] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +114,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       toast.success('You have successfully logged in');
 
       // Hand back to App to update navigation and redirect
-      onLoginSuccess(result.user.user_metadata?.userType || 'professional', result.user);
+      (onLoginSuccess || defaultOnLoginSuccess)(result.user.user_metadata?.userType || 'professional', result.user);
       try { window.location.href = '/dashboard' } catch {}
     } catch (err: any) {
       const msg = err?.message || 'Sign in failed. Please try again.';
@@ -153,7 +160,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
+      <Navbar />
+      <div className="flex items-center justify-center p-4 min-h-[calc(100vh-140px)]">
+        <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
       <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
       <p className="text-sm mb-6 text-white/70">Sign in to your account</p>
 
@@ -240,6 +250,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             )}
           </Button>
         </form>
+        </div>
       </div>
+      <Footer />
+    </div>
   );
 }
