@@ -153,7 +153,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-[#0f1317] shadow-lg">
+    <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
       <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
       <p className="text-sm mb-6 text-white/70">Sign in to your account</p>
 

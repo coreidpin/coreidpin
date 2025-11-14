@@ -333,9 +333,9 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                 </div>
 
                 {/* CTA */}
-                <div className="text-center py-8 sm:py-12 bg-gradient-to-br from-blue-50 to-white rounded-2xl border-2 border-blue-100 px-4">
-                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Tap Into Unified Identity?</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
+                <div className="text-center py-8 sm:py-12 rounded-2xl border-2 px-4 bg-white/5 backdrop-blur-xl border-white/10">
+                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4 text-white">Ready to Tap Into Unified Identity?</h3>
+                  <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
                     Our API lets companies instantly onboard verified professionals, reduce fraud, and access trusted career data.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
@@ -395,9 +395,9 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                 </div>
 
                 {/* CTA */}
-                <div className="text-center py-8 sm:py-12 bg-gradient-to-br from-primary/5 to-white rounded-2xl border-2 border-primary/20 px-4">
-                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Build Your Verified Identity?</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
+                <div className="text-center py-8 sm:py-12 rounded-2xl border-2 px-4 bg-white/5 backdrop-blur-xl border-white/10">
+                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4 text-white">Ready to Build Your Verified Identity?</h3>
+                  <p className="text-sm sm:text-base text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
                     Professionals gain mobility, proof, and visibility — all from one identity that follows you everywhere.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
@@ -434,7 +434,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
       </section>
 
       {/* Bottom CTA */}
-      <section className="py-12 sm:py-16 px-4 bg-gradient-to-br from-primary to-primary/80">
+      <section className="py-12 sm:py-16 px-4" style={{ background: 'linear-gradient(135deg, #32f08c 0%, rgba(50, 240, 140, 0.8) 100%)' }}>
         <div className="container mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -442,18 +442,17 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
             viewport={{ once: true }}
             className="max-w-3xl mx-auto"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl text-white mb-4 sm:mb-6">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl text-black mb-4 sm:mb-6">
               Ready to Build the Future of Identity?
             </h2>
-            <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 px-4">
+            <p className="text-base sm:text-lg text-black/80 mb-6 sm:mb-8 px-4">
               CoreID is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 
                 size="lg" 
-                variant="secondary"
                 onClick={() => onLogin('professional')}
-                className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 bg-white hover:bg-white/90"
+                className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 bg-black hover:bg-black/90 text-white"
               >
                 Get Started Free
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -462,7 +461,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                 size="lg" 
                 variant="outline"
                 onClick={() => onNavigate('how-it-works')}
-                className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 bg-transparent border-2 border-white text-white hover:bg-white/10"
+                className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 bg-transparent border-2 border-black text-black hover:bg-black/10"
               >
                 Learn More
               </Button>
