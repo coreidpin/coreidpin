@@ -9,7 +9,7 @@ import { LandingPage } from './components/LandingPage';
 import { OurStoryPage } from './components/OurStoryPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
-import { OnboardingFlow } from './components/OnboardingFlow';
+import UnifiedFlow from './components/UnifiedFlow';
 import { EmployerDashboard } from './components/EmployerDashboard';
 import { ProfessionalDashboard } from './components/ProfessionalDashboard';
 import { UniversityDashboard } from './components/UniversityDashboard';
@@ -40,9 +40,10 @@ import PasswordResetDialog from './components/PasswordResetDialog';
 import { PublicPINPage } from './components/PublicPINPage';
 import LoginPage from './components/LoginPage';
 import { AuthVerifyEmail } from './components/AuthVerifyEmail';
+import MonitoringPage from './pages/Monitoring';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university';
-type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions' | 'public-pin' | 'verify-email';
+type AppState = 'landing' | 'our-story' | 'how-it-works' | 'trust-safety' | 'employers' | 'professionals' | 'universities' | 'help' | 'contact' | 'docs' | 'terms' | 'privacy' | 'cookies' | 'gdpr' | 'onboarding' | 'dashboard' | 'login' | 'admin' | 'solutions' | 'public-pin' | 'verify-email' | 'monitoring' | 'admin-monitoring';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('landing');
@@ -78,9 +79,13 @@ export default function App() {
       setAppState('dashboard');
     } else if (normalized.startsWith('/auth/verify-email')) {
       setAppState('verify-email');
-    } else if (normalized === '/registeration' || normalized === '/registration') {
-      // Show onboarding/registration flow (professional by default)
-      setCurrentView('professional');
+    } else if (normalized === '/registeration' || normalized === '/registration' || normalized === '/get-started') {
+      try {
+        const persisted = sessionStorage.getItem('selectedUserType');
+        setCurrentView((persisted as UserType) || 'professional');
+      } catch {
+        setCurrentView('professional');
+      }
       setAppState('onboarding');
     }
 
@@ -219,24 +224,27 @@ export default function App() {
     initializeSessionManagement();
 
     try {
-      const query = typeof window !== 'undefined' ? window.location.search || '' : '';
-      const queryParams = new URLSearchParams(query);
-      const token = queryParams.get('token');
-      if (token) {
-        (async () => {
-          try {
-            await api.verifyLinkToken(token);
-            toast.success('Email verified');
-          } catch (e: any) {
-            toast.error(e?.message || 'Link verification failed');
-          } finally {
+      const pathNow = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
+      if (!pathNow.startsWith('/auth/verify-email')) {
+        const query = typeof window !== 'undefined' ? window.location.search || '' : '';
+        const queryParams = new URLSearchParams(query);
+        const token = queryParams.get('token');
+        if (token) {
+          (async () => {
             try {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('token');
-              window.history.replaceState(null, '', url.toString());
-            } catch {}
-          }
-        })();
+              await api.verifyLinkToken(token);
+              toast.success('Email verified');
+            } catch (e: any) {
+              toast.error(e?.message || 'Link verification failed');
+            } finally {
+              try {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('token');
+                window.history.replaceState(null, '', url.toString());
+              } catch {}
+            }
+          })();
+        }
       }
     } catch {}
 
@@ -282,7 +290,7 @@ export default function App() {
               label: 'Resend Email',
               onClick: async () => {
                 try {
-                  await api.resendVerificationLink(email!);
+                  await api.sendVerificationEmail(email!);
                   toast.success('Verification email resent');
                 } catch (err: any) {
                   toast.error(err?.message || 'Failed to resend verification email');
@@ -344,15 +352,51 @@ export default function App() {
   }, []);
 
   const handleLogin = (userType: UserType) => {
-    setCurrentView(userType);
-    setAppState('onboarding');
+    try {
+      sessionStorage.setItem('selectedUserType', userType);
+      localStorage.setItem('pendingUserType', userType);
+      setCurrentView(userType);
+      setAppState('onboarding');
+      try {
+        const url = new URL(window.location.href);
+        url.pathname = '/get-started';
+        window.history.pushState(null, '', url.toString());
+      } catch (navErr) {
+        console.error('Navigation URL update failed:', navErr);
+      }
+    } catch (err) {
+      console.error('Navigation to Get Started failed:', err);
+      toast.error('Navigation failed. Please try again.', {
+        action: {
+          label: 'Retry',
+          onClick: () => handleLogin(userType)
+        }
+      });
+    }
   };
 
-  const handleNavigate = (page: string) => {
+  useEffect(() => {
+    // Listen for custom navigation events from child components
+    const handleCustomNavigate = (event: CustomEvent) => {
+      const page = event.detail;
+      if (page && validPages.includes(page)) {
+        handleNavigate(page);
+      }
+    };
+
+    window.addEventListener('navigate', handleCustomNavigate as EventListener);
+    
+    return () => {
+      window.removeEventListener('navigate', handleCustomNavigate as EventListener);
+    };
+  }, []);
+
+  const handleNavigate = (page: AppState | string) => {
     const validPages: AppState[] = [
       'landing', 'our-story', 'how-it-works', 'trust-safety', 
       'employers', 'professionals', 'universities', 'help', 'contact', 'docs',
-      'terms', 'privacy', 'cookies', 'gdpr', 'login', 'dashboard', 'admin', 'solutions'
+      'terms', 'privacy', 'cookies', 'gdpr', 'login', 'dashboard', 'admin', 'solutions',
+      'monitoring', 'admin-monitoring'
     ];
     
     // Handle public PIN navigation
@@ -756,7 +800,7 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             userType={currentView}
           />
-          <main className="flex-1 flex items-center justify-center">
+          <main className="flex-1 flex items-center justify-center py-16">
             <LoginPage onLoginSuccess={handleLoginSuccess} />
           </main>
           <Footer onNavigate={handleNavigate} />
@@ -819,11 +863,13 @@ export default function App() {
   if (appState === 'onboarding') {
     return (
       <>
-        <OnboardingFlow 
-          userType={currentView as Exclude<UserType, 'landing'>}
-          onComplete={handleOnboardingComplete}
-          onBack={() => setAppState('landing')}
-        />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+          <UnifiedFlow 
+            userType={currentView as Exclude<UserType, 'landing'>}
+            onComplete={handleOnboardingComplete}
+            onBack={() => setAppState('landing')}
+          />
+        </motion.div>
         <Toaster position="top-right" />
       </>
     );
@@ -842,6 +888,54 @@ export default function App() {
           />
           <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
             <AdminDashboard />
+          </main>
+          <Footer onNavigate={handleNavigate} />
+        </div>
+        <Toaster position="top-right" />
+      </>
+    );
+  }
+
+  if (appState === 'monitoring') {
+    return (
+      <>
+        <div className="min-h-screen bg-background flex flex-col">
+          <Navbar 
+            currentPage="monitoring"
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+            isAuthenticated={isAuthenticated}
+            userType={currentView}
+          />
+          <main className="flex-1">
+            <MonitoringPage />
+          </main>
+          <Footer onNavigate={handleNavigate} />
+        </div>
+        <Toaster position="top-right" />
+      </>
+    );
+  }
+
+  // Admin-only monitoring route
+  if (appState === 'admin-monitoring') {
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    if (!isAdmin) {
+      setAppState('landing');
+      return null;
+    }
+    return (
+      <>
+        <div className="min-h-screen bg-background flex flex-col">
+          <Navbar 
+            currentPage="admin-monitoring"
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+            isAuthenticated={isAuthenticated}
+            userType={currentView}
+          />
+          <main className="flex-1">
+            <MonitoringPage />
           </main>
           <Footer onNavigate={handleNavigate} />
         </div>

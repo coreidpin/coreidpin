@@ -1,8 +1,16 @@
 import { Hono } from "npm:hono";
 import { getSupabaseClient } from "../lib/supabaseClient.tsx";
+// Lazy load argon2-browser to avoid startup issues in Edge runtime
+let argonModPromise: Promise<any> | null = null;
+function getArgon() {
+  if (!argonModPromise) argonModPromise = import("npm:argon2-browser");
+  return argonModPromise;
+}
 import * as kv from "../kv_store.tsx";
 import { maybeEncryptKVValue } from "../lib/crypto.tsx";
 import { verifyVerificationToken } from "../lib/token.ts";
+import { sendEmail } from "../lib/email.ts";
+import { buildVerificationEmail } from "../templates/verification.ts";
 
 const auth = new Hono();
 
@@ -25,120 +33,98 @@ const requireCsrf = (c: any) => {
   // Simple double-submit style: header must exist. In production, compare cookie vs header.
   return true;
 };
+const disabled = Deno.env.get('DISABLE_AUTH_ENDPOINTS') === 'true';
+// Allow disabling CSRF requirement for login in dev/test environments
+const disableLoginCsrf = Deno.env.get('DISABLE_CSRF_FOR_LOGIN') === 'true';
+// Allow disabling CSRF for registration in dev/test environments
+const disableRegisterCsrf = Deno.env.get('DISABLE_CSRF_FOR_REGISTER') === 'true';
 
 // User Registration Endpoint
 auth.post("/register", async (c) => {
+  if (disabled) { return c.json({ error: 'Endpoint disabled' }, 410); }
   try {
-    // CSRF protection (double-submit header presence)
-    if (!requireCsrf(c)) {
+    if (!disableRegisterCsrf && !requireCsrf(c)) {
       return c.json({ error: 'CSRF token missing' }, 403);
     }
-
     const body = await c.req.json();
     const { 
-      email, 
-      password, 
-      name, 
-      userType, 
-      title, 
-      companyName, 
-      role, 
-      institution, 
-      gender, 
-      phoneNumber,
-      location,
-      yearsOfExperience,
-      currentCompany,
-      seniority,
-      topSkills,
-      highestEducation,
-      resumeFileName
+      email, password, name, userType, title, companyName, role, institution, gender, phoneNumber,
+      location, yearsOfExperience, currentCompany, seniority, topSkills, highestEducation, resumeFileName
     } = body;
-
-    // Basic field validation
-    const errors: string[] = [];
+    const ip = getClientIp(c);
     const emailStr = (email || '').toString().trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errors: string[] = [];
     if (!emailStr || !emailRegex.test(emailStr)) errors.push('Email must be valid');
     if (!password || typeof password !== 'string') errors.push('Password is required');
     if (!name || !name.toString().trim()) errors.push('Full name is required');
     if (!userType) errors.push('User type is required');
-    // Strong password rules
     if (password) {
-      const strong = [
-        password.length >= 8,
-        /[A-Z]/.test(password),
-        /[a-z]/.test(password),
-        /[0-9]/.test(password),
-        /[!@#$%^&*(),.?":{}|<>]/.test(password)
-      ].every(Boolean);
+      const strong = [password.length >= 8, /[A-Z]/.test(password), /[a-z]/.test(password), /[0-9]/.test(password), /[!@#$%^&*(),.?":{}|<>]/.test(password)].every(Boolean);
       if (!strong) errors.push('Password must be 8+ chars with upper, lower, number, symbol');
     }
     if (errors.length) {
+      try { await supabase.from('auth_audit_log').insert({ user_id: null, action: 'register_validation_failed', outcome: 'failure', ip, user_agent: c.req.header('user-agent') || 'unknown', details: { errors } }); } catch (_) {}
       return c.json({ error: errors[0], errors }, 400);
     }
-
-    // Registration rate limiting per IP
-    const ip = getClientIp(c);
-    const rlWindowMs = 60 * 60 * 1000; // 1 hour
-    const rlMax = 20; // max 20 registrations/hour/ip
-    const now = Date.now();
+    // Rate limit per IP
+    const rlWindowMs = 60 * 60 * 1000; const rlMax = 20; const now = Date.now();
     const rlKey = `rate:register:${ip}`;
     const rl = (await kv.get(rlKey)) || { count: 0, resetAt: new Date(now + rlWindowMs).toISOString() };
-    const rlResetAt = new Date(rl.resetAt).getTime();
-    let rlCount = rl.count || 0;
-    if (now > rlResetAt) rlCount = 0;
-    if (rlCount >= rlMax) {
-      await kv.set(rlKey, { count: rlCount, resetAt: new Date(rlResetAt).toISOString() });
-      return c.json({ error: 'Too many registrations. Try again later.' }, 429);
-    }
-
-    // Unique email check (service role)
-    try {
-      const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', emailStr).maybeSingle();
-      if (existing?.id) {
-        return c.json({ error: 'Email already registered' }, 409);
+    const rlResetAt = new Date(rl.resetAt).getTime(); let rlCount = rl.count || 0; if (now > rlResetAt) rlCount = 0;
+    if (rlCount >= rlMax) { await kv.set(rlKey, { count: rlCount, resetAt: new Date(rlResetAt).toISOString() }); return c.json({ error: 'Too many registrations. Try again later.' }, 429); }
+    // Unique email check
+    try { const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', emailStr).maybeSingle(); if (existing?.id) { return c.json({ error: 'Email already registered' }, 409); } } catch (_) {}
+    if (!emailStr || !password || !name || !userType) { return c.json({ error: 'Missing required fields: email, password, name, userType' }, 400); }
+    const serviceKeyRaw = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SUPABASE_SERVICE_KEY') || Deno.env.get('SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_KEY') || '';
+    const anonKeyRaw = Deno.env.get('SUPABASE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('ANON_KEY') || Deno.env.get('PUBLIC_ANON_KEY') || '';
+    const hasServiceKey = !!serviceKeyRaw && !/anon-key-placeholder/.test(serviceKeyRaw);
+    const hasAnonKey = !!anonKeyRaw && !/anon-key-placeholder/.test(anonKeyRaw);
+    let authData: any = null; let authError: any = null; let usedFallback = false; let fallbackError: any = null; let rawAdminJson: any = null;
+    if (hasServiceKey) {
+      const res = await supabase.auth.admin.createUser({ email: emailStr, password, user_metadata: { name, userType, title: title || null, companyName: companyName || null, role: role || null, institution: institution || null, gender: gender || null, location: location || null, yearsOfExperience: yearsOfExperience || null, currentCompany: currentCompany || null, seniority: seniority || null, topSkills: topSkills || null, highestEducation: highestEducation || null, resumeFileName: resumeFileName || null }, email_confirm: false });
+      authData = res.data; authError = res.error;
+      // Attempt raw admin endpoint fetch for deeper diagnostics if error and debug requested
+      if (authError && c.req.header('X-Debug-Register') === 'true') {
+        try {
+          const adminUrl = `${(Deno.env.get('SUPABASE_URL')||'').replace(/\/$/,'')}/auth/v1/admin/users`;
+          // Include both Authorization (service role) and apikey (anon) headers as required by GoTrue
+          const fetchRes = await fetch(adminUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKeyRaw}`, 'apikey': anonKeyRaw }, body: JSON.stringify({ email: emailStr, password, user_metadata: { name, userType }, email_confirm: false }) });
+          rawAdminJson = { status: fetchRes.status, body: await fetchRes.text() };
+        } catch (e: any) {
+          rawAdminJson = { status: null, body: e?.message || 'raw fetch failed' };
+        }
       }
-    } catch (_) {
-      // If auth.users not accessible, proceed and rely on createUser error handling
     }
-
-    // Validate required fields
-    if (!emailStr || !password || !name || !userType) {
-      return c.json({ error: "Missing required fields: email, password, name, userType" }, 400);
+    
+    if ((authError || fallbackError) || !authData?.user) {
+      let reason = (authError || fallbackError)?.message || 'Unknown error';
+      if (!hasServiceKey) reason = 'Service role key missing (set SUPABASE_SERVICE_ROLE_KEY)';
+      if (!hasAnonKey) reason += '; anon key missing (set SUPABASE_ANON_KEY)';
+      const debug = c.req.header('X-Debug-Register') === 'true';
+      if (debug) {
+        return c.json({
+          error: `Registration failed: ${reason}`,
+          diagnostics: {
+            hasServiceKey,
+            hasAnonKey,
+            usedFallback,
+            serviceKeyLength: serviceKeyRaw.length,
+            anonKeyLength: anonKeyRaw.length,
+            authError: authError ? { name: authError.name, message: authError.message, status: authError.status || null } : null,
+            fallbackError: fallbackError ? { name: fallbackError.name, message: fallbackError.message, status: fallbackError.status || null } : null,
+            rawAdminJson
+          }
+        }, 400);
+      }
+      return c.json({ error: `Registration failed: ${reason}` }, 400);
     }
-
-    // Create user in Supabase Auth (do NOT auto-confirm; require email verification)
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: emailStr,
-      password,
-      user_metadata: { 
-        name, 
-        userType,
-        title: title || null,
-        companyName: companyName || null,
-        role: role || null,
-        institution: institution || null,
-        gender: gender || null,
-        location: location || null,
-        yearsOfExperience: yearsOfExperience || null,
-        currentCompany: currentCompany || null,
-        seniority: seniority || null,
-        topSkills: topSkills || null,
-        highestEducation: highestEducation || null,
-        resumeFileName: resumeFileName || null
-      },
-      email_confirm: false
-    });
-
-    if (authError) {
-      console.log("Registration error during auth creation:", authError);
-      return c.json({ error: `Registration failed: ${authError.message}` }, 400);
-    }
-
-    // Store additional user data in KV store
-    const userId = authData.user?.id;
+    const userId = authData.user.id;
     if (userId) {
+      try {
+        await supabase.from('registration_step_events').update({ user_id: userId }).eq('email', emailStr).is('user_id', null);
+      } catch (_) {}
+      try { await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'register_auth_user_created', outcome: 'success', ip, user_agent: c.req.header('user-agent') || 'unknown', details: { email: emailStr, userType } }); } catch (_) {}
       const profileValue = {
         id: userId,
         email: emailStr,
@@ -173,7 +159,7 @@ auth.post("/register", async (c) => {
       // Backup copy for recovery
       try {
         const backupVal = await maybeEncryptKVValue(profileValue);
-        await kv.set(`backup:user:${userId}:${Date.now()}`, backupVal);
+      await kv.set(`backup:user:${userId}:${Date.now()}`, backupVal);
       } catch (_) {}
 
       // Create user profile entry
@@ -209,6 +195,22 @@ auth.post("/register", async (c) => {
         console.log('RPC call failed for register_app_user:', rpcErr);
       }
 
+      try {
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        let encodedHash = '';
+        try {
+          const { hash, argon2id } = await getArgon();
+          const h = await hash({ pass: password, salt, type: argon2id });
+          encodedHash = h.encoded || '';
+        } catch (_) {}
+        await supabase.from('credentials').upsert({
+          user_id: userId,
+          password_hash: encodedHash || `argon2id:${btoa(String.fromCharCode(...salt))}`,
+          password_require_reset: false,
+          password_updated_at: new Date().toISOString()
+        });
+      } catch (_) {}
+
       // Initialize public.profiles row (mirrors core identity fields)
       try {
         const { error: upsertErr } = await supabase
@@ -223,50 +225,37 @@ auth.post("/register", async (c) => {
           }, { onConflict: 'user_id' });
         if (upsertErr) {
           console.log('profiles upsert error during registration:', upsertErr);
+        } else {
+          try { await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'register_profile_upserted', outcome: 'success', ip, user_agent: c.req.header('user-agent') || 'unknown', details: {} }); } catch (_) {}
         }
       } catch (profilesErr) {
         console.log('profiles sync failed during registration:', profilesErr);
       }
 
-      // Send verification magic link (24h expiry configured in Supabase project settings)
+      // Send verification email via Resend immediately after registration
       try {
-        const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-          type: 'magiclink',
-          email,
-          options: {
-            redirect_to: 'http://localhost:3001/'
-          }
-        });
-        if (linkErr) {
-          console.log('generateLink error:', linkErr);
-        } else if (linkData?.action_link) {
-          await kv.set(`verification_link:${userId}:${Date.now()}`, {
-            userId,
-            email,
-            actionLink: linkData.action_link,
-            redirectTo: 'http://localhost:3001/',
-            createdAt: new Date().toISOString()
-          });
+        const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+        const token = btoa(String.fromCharCode(...tokenBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        const rawToken = new TextEncoder().encode(token);
+        const digestToken = await crypto.subtle.digest('SHA-256', rawToken);
+        const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digestToken))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        await supabase.from('auth_tokens').insert({ user_id: userId, token_hash: tokenHash, purpose: 'email_verify', expires_at: new Date(Date.now() + 24*60*60*1000).toISOString(), used_at: null });
+        const siteUrl = (Deno.env.get('SITE_URL') || '').replace(/\/$/, '') || '';
+        const link = `${siteUrl}/auth/verify-email?token=${encodeURIComponent(token)}`;
+        const t = buildVerificationEmail(name || undefined, email, link, siteUrl);
+        const sendRes = await sendEmail(email, t.subject, t.html.replace('This link will expire.', 'This link will expire in 24 hours.'), t.text);
+        if (sendRes?.success) {
+          try { await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'email_verify_send', outcome: 'success', ip, user_agent: c.req.header('user-agent') || 'unknown', details: { email, linkExpiresInHours: 24 } }); } catch (_) {}
+          try { await supabase.from('email_send_events').insert({ user_id: userId, email, provider: 'resend', status: 'sent', response_message: 'ok', response_status: 200 }); } catch (_) {}
+        } else {
+          try { await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'email_verify_send_failed', outcome: 'failure', ip, user_agent: c.req.header('user-agent') || 'unknown', details: { error: sendRes?.error || 'unknown' } }); } catch (_) {}
         }
       } catch (genErr) {
-        console.log('Failed to generate verification link:', genErr);
+        console.log('Failed to send verification email via Resend:', genErr);
       }
 
-      // Lightweight audit trail for registration
-      // (Encrypted when ENCRYPTION_KEY_BASE64 is set)
       const userAgent = c.req.header('user-agent') || 'unknown';
-      const auditPayload = {
-        userId,
-        email: emailStr,
-        ip,
-        userAgent,
-        timestamp: new Date().toISOString(),
-        action: 'register',
-      };
-      try {
-        const enc = await maybeEncryptKVValue(auditPayload);
-        await kv.set(`audit:registration:${userId}:${Date.now()}`, enc);
-      } catch (_) {}
+      try { await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'register_completed', outcome: 'success', ip, user_agent: userAgent, details: {} }); } catch (_) {}
     }
 
     // Increment registration rate limit counter for this IP
@@ -274,20 +263,46 @@ auth.post("/register", async (c) => {
       await kv.set(rlKey, { count: rlCount + 1, resetAt: now > rlResetAt ? new Date(now + rlWindowMs).toISOString() : new Date(rlResetAt).toISOString() });
     } catch (_) {}
 
-    return c.json({ 
-      success: true, 
-      message: "Registration successful",
-      userId,
-      userType
-    });
+    // Auto-authenticate: sign in to return tokens
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: emailStr, password });
+      if (!error && data?.session) {
+        const userAgent = c.req.header('user-agent') || 'unknown';
+        const rt = data.session?.refresh_token || '';
+        let rh = '';
+        if (rt) {
+          const raw = new TextEncoder().encode(rt);
+          const digest = await crypto.subtle.digest('SHA-256', raw);
+          rh = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        }
+        const deviceRaw = new TextEncoder().encode(`${userAgent}|${ip}`);
+        const deviceDigest = await crypto.subtle.digest('SHA-256', deviceRaw);
+        const deviceId = btoa(String.fromCharCode(...new Uint8Array(deviceDigest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        try {
+          await supabase.from('sessions').insert({
+            user_id: userId,
+            device_id: deviceId,
+            ip,
+            user_agent: userAgent,
+            refresh_token_hash: rh || null,
+            expires_at: data.session?.expires_at ? new Date(data.session.expires_at * 1000).toISOString() : null,
+            revoked_at: null
+          });
+        } catch (_) {}
+        return c.json({ success: true, userId, userType, accessToken: data.session?.access_token, refreshToken: data.session?.refresh_token, expiresIn: data.session?.expires_in });
+      }
+    } catch (_) {}
+    return c.json({ success: true, message: 'Registration successful', userId, userType });
   } catch (error) {
     console.log("Registration error:", error);
+    try { await supabase.from('auth_audit_log').insert({ user_id: null, action: 'register_error', outcome: 'failure', ip: getClientIp(c), user_agent: c.req.header('user-agent') || 'unknown', details: { error: error?.message || 'unknown' } }); } catch (_) {}
     return c.json({ error: `Registration failed: ${error.message}` }, 500);
   }
 });
 
 // Sign Up Endpoint (Alternative for OAuth)
 auth.post("/signup", async (c) => {
+  if (disabled) { return c.json({ error: 'Endpoint disabled' }, 410); }
   try {
     const body = await c.req.json();
     const { email, password, name, userType } = body;
@@ -319,6 +334,7 @@ auth.post("/signup", async (c) => {
 
 // Secure Login Endpoint with rate limiting and login history
 auth.post('/login', async (c) => {
+  if (disabled) { return c.json({ error: 'Endpoint disabled' }, 410); }
   try {
     if (!requireCsrf(c)) {
       return c.json({ error: 'CSRF token missing' }, 403);
@@ -354,12 +370,52 @@ auth.post('/login', async (c) => {
       return c.json({ error: 'Too many login attempts. Try again later.' }, 429);
     }
 
-    // Attempt login
+    const flag = c.get('newAuthEnabled');
+    if (flag) {
+      const { data: userRow } = await supabase.schema('auth').from('users').select('id').eq('email', emailStr).maybeSingle();
+      const userIdAuth = userRow?.id || null;
+      if (userIdAuth) {
+        const { data: lock } = await supabase.from('account_lockouts').select('locked_until').eq('user_id', userIdAuth).gt('locked_until', new Date().toISOString()).maybeSingle();
+        if (lock?.locked_until) {
+          return c.json({ error: 'Account locked. Try later.' }, 423);
+        }
+        const { data: cred } = await supabase.from('credentials').select('password_hash').eq('user_id', userIdAuth).maybeSingle();
+        if (cred?.password_hash) {
+          const { verify } = await getArgon();
+          const ok = await verify({ pass: password, encoded: cred.password_hash });
+          if (!ok) {
+            const failedCountRow = await supabase.from('login_rate_limits').select('id,count').eq('user_id', userIdAuth).eq('ip', ip).gt('window_end', new Date().toISOString()).maybeSingle();
+            const failCount = failedCountRow?.data?.count || 0;
+            if (failCount + 1 >= 10) {
+              await supabase.from('account_lockouts').upsert({ user_id: userIdAuth, ip, locked_until: new Date(Date.now() + 15*60*1000).toISOString(), reason: 'too_many_attempts' });
+            }
+            return c.json({ error: 'Invalid credentials' }, 401);
+          }
+        }
+      }
+    }
     const { data, error } = await supabase.auth.signInWithPassword({ email: emailStr, password });
     const userAgent = c.req.header('user-agent') || 'unknown';
 
     // Update rate bucket
     await kv.set(bucketKey, { count: count + 1, resetAt: now > resetAt ? new Date(now + windowMs).toISOString() : new Date(resetAt).toISOString() });
+    // Persist rate limit to DB
+    try {
+      const windowEndIso = (now > resetAt ? new Date(now + windowMs) : new Date(resetAt)).toISOString();
+      const windowStartIso = new Date(now).toISOString();
+      const { data: existingRow } = await supabase
+        .from('login_rate_limits')
+        .select('id,count')
+        .eq('user_id', data?.user?.id || null)
+        .eq('ip', ip)
+        .gt('window_end', new Date().toISOString())
+        .maybeSingle();
+      if (existingRow?.id) {
+        await supabase.from('login_rate_limits').update({ count: (existingRow.count || 0) + 1 }).eq('id', existingRow.id);
+      } else {
+        await supabase.from('login_rate_limits').insert({ user_id: data?.user?.id || null, ip, window_start: windowStartIso, window_end: windowEndIso, count: 1 });
+      }
+    } catch (_) {}
 
     if (error) {
       console.log('Login error:', error);
@@ -412,6 +468,49 @@ auth.post('/login', async (c) => {
     try {
       const enc = await maybeEncryptKVValue(successPayload);
       await kv.set(logKey, enc);
+      } catch (_) {}
+
+    try {
+      const rt = data.session?.refresh_token || '';
+      let rh = '';
+      if (rt) {
+        const raw = new TextEncoder().encode(rt);
+        const digest = await crypto.subtle.digest('SHA-256', raw);
+        rh = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      }
+      const deviceRaw = new TextEncoder().encode(`${userAgent}|${ip}`);
+      const deviceDigest = await crypto.subtle.digest('SHA-256', deviceRaw);
+      const deviceId = btoa(String.fromCharCode(...new Uint8Array(deviceDigest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      await supabase.from('sessions').insert({
+        user_id: userId,
+        device_id: deviceId,
+        ip,
+        user_agent: userAgent,
+        refresh_token_hash: rh || null,
+        expires_at: data.session?.expires_at ? new Date(data.session.expires_at * 1000).toISOString() : null,
+        revoked_at: null
+      });
+    } catch (_) {}
+
+    try {
+      const deviceRaw = new TextEncoder().encode(`${userAgent}|${ip}`);
+      const deviceDigest = await crypto.subtle.digest('SHA-256', deviceRaw);
+      const deviceIdNew = btoa(String.fromCharCode(...new Uint8Array(deviceDigest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+      const { data: seen } = await supabase.from('sessions').select('id').eq('user_id', userId).eq('device_id', deviceIdNew).maybeSingle();
+      if (!seen?.id) {
+        await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'anomaly_new_device_login', outcome: 'info', ip, user_agent: userAgent, details: { device_id: deviceIdNew } });
+      }
+    } catch (_) {}
+
+    try {
+      await supabase.from('auth_audit_log').insert({
+        user_id: userId,
+        action: 'login',
+        outcome: 'success',
+        ip,
+        user_agent: userAgent,
+        details: { method: 'password' }
+      });
     } catch (_) {}
 
     return c.json({
@@ -430,100 +529,16 @@ auth.post('/login', async (c) => {
 
 // Additional routes: send/resend email verification
 auth.post('/send-verification', async (c) => {
-  try {
-    if (!requireCsrf(c)) {
-      return c.json({ error: 'CSRF token missing' }, 403);
-    }
-    const body = await c.req.json();
-    const email = (body?.email || '').toString().trim().toLowerCase();
-    if (!email) return c.json({ error: 'Email is required' }, 400);
-
-    const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-      options: { redirect_to: 'http://localhost:3001/' }
-    });
-    if (linkErr) {
-      console.log('send-verification generateLink error:', linkErr);
-      return c.json({ error: 'Failed to send verification link' }, 500);
-    }
-
-    await kv.set(`verification_link:${email}:${Date.now()}`, {
-      email,
-      actionLink: linkData?.action_link,
-      redirectTo: 'http://localhost:3001/',
-      createdAt: new Date().toISOString()
-    });
-
-    return c.json({ success: true });
-  } catch (err: any) {
-    console.log('send-verification error:', err);
-    return c.json({ error: err?.message || 'Unknown error' }, 500);
-  }
+  return c.json({ error: 'Deprecated. Use code-based email verification.' }, 410);
 });
 
 auth.post('/resend-verification', async (c) => {
-  try {
-    if (!requireCsrf(c)) {
-      return c.json({ error: 'CSRF token missing' }, 403);
-    }
-    const body = await c.req.json();
-    const email = (body?.email || '').toString().trim().toLowerCase();
-    if (!email) return c.json({ error: 'Email is required' }, 400);
-
-    const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-      options: { redirect_to: 'http://localhost:3001/' }
-    });
-    if (linkErr) {
-      console.log('resend-verification generateLink error:', linkErr);
-      return c.json({ error: 'Failed to resend verification link' }, 500);
-    }
-
-    await kv.set(`verification_link_resend:${email}:${Date.now()}`, {
-      email,
-      actionLink: linkData?.action_link,
-      redirectTo: 'http://localhost:3001/',
-      createdAt: new Date().toISOString()
-    });
-
-    return c.json({ success: true });
-  } catch (err: any) {
-    console.log('resend-verification error:', err);
-    return c.json({ error: err?.message || 'Unknown error' }, 500);
-  }
+  return c.json({ error: 'Deprecated. Use code-based email verification.' }, 410);
 });
 
 // Signed link verification (public GET)
 auth.get('/auth/verify-link', async (c) => {
-  try {
-    const url = new URL(c.req.url);
-    const token = url.searchParams.get('token') || '';
-    if (!token) return c.json({ success: false, error: 'Missing token' }, 400);
-    const textEncoder = new TextEncoder();
-    const raw = textEncoder.encode(token);
-    const digest = await crypto.subtle.digest('SHA-256', raw);
-    const hash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-    const usedKey = `verify:used:${hash}`;
-    const used = await kv.get(usedKey);
-    if (used?.used) return c.json({ success: false, error: 'Link already used' }, 410);
-    const email = await verifyVerificationToken(token);
-    const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
-    const userId = existing?.id || null;
-    try {
-      const key = `email_verified:${email}:${Date.now()}`;
-      await kv.set(key, { email, userId, timestamp: new Date().toISOString() });
-      if (userId) {
-        const current = (await kv.get(`user:${userId}`)) || {};
-        await kv.set(`user:${userId}`, { ...current, id: userId, email, verificationStatus: 'verified', updatedAt: new Date().toISOString() });
-      }
-      await kv.set(usedKey, { used: true, at: new Date().toISOString() });
-    } catch (_) {}
-    return c.json({ success: true });
-  } catch (e: any) {
-    return c.json({ success: false, error: e?.message || 'Invalid token' }, 400);
-  }
+  return c.json({ success: false, error: 'Deprecated verification link. Use code-based email verification.' }, 410);
 });
 
 auth.post('/auth/dev/sign-token', async (c) => {
@@ -535,10 +550,305 @@ auth.post('/auth/dev/sign-token', async (c) => {
     const minutes = Number(body?.minutes || 60);
     if (!email) return c.json({ success: false, error: 'Email required' }, 400);
     const token = await (await import('../lib/token.ts')).signVerificationToken(email, minutes);
+  return c.json({ success: true, token });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+auth.post('/auth/dev/generate-email-token', async (c) => {
+  try {
+    const allow = Deno.env.get('ALLOW_TEST_SIGNING') === 'true';
+    if (!allow) return c.json({ success: false, error: 'Not allowed' }, 403);
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    if (!email) return c.json({ success: false, error: 'Email required' }, 400);
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const token = btoa(String.fromCharCode(...tokenBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const raw = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
+    const userId = existing?.id || null;
+    await supabase.from('auth_tokens').insert({ user_id: userId, token_hash: tokenHash, purpose: 'email_verify', expires_at: new Date(Date.now() + 24*60*60*1000).toISOString(), used_at: null });
     return c.json({ success: true, token });
   } catch (e: any) {
     return c.json({ success: false, error: e?.message || 'Error' }, 500);
   }
 });
 
+auth.post('/auth/dev/generate-reset-token', async (c) => {
+  try {
+    const allow = Deno.env.get('ALLOW_TEST_SIGNING') === 'true';
+    if (!allow) return c.json({ success: false, error: 'Not allowed' }, 403);
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    if (!email) return c.json({ success: false, error: 'Email required' }, 400);
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const token = btoa(String.fromCharCode(...tokenBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const raw = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
+    const userId = existing?.id || null;
+    await supabase.from('auth_tokens').insert({ user_id: userId, token_hash: tokenHash, purpose: 'password_reset', expires_at: new Date(Date.now() + 24*60*60*1000).toISOString(), used_at: null });
+    return c.json({ success: true, token });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+auth.post('/auth/email/verify/send', async (c) => {
+  try {
+    if (disabled) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
+    if (!requireCsrf(c)) { return c.json({ success: false, error: 'CSRF token missing' }, 403); }
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const name = (body?.name || '').toString();
+    if (!email) return c.json({ success: false, error: 'Email required' }, 400);
+    if (!emailRegex.test(email)) return c.json({ success: false, error: 'Invalid email format' }, 400);
+    const ip = (c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip') || 'unknown').toString();
+    const windowMs = 60 * 1000;
+    const maxRequests = 5;
+    const now = Date.now();
+    const key = `rate:verify-email:${email}:${ip}`;
+    const bucket = (await kv.get(key)) || { count: 0, resetAt: new Date(now + windowMs).toISOString() };
+    const resetAt = new Date(bucket.resetAt).getTime();
+    let count = bucket.count || 0;
+    if (now > resetAt) count = 0;
+    if (count >= maxRequests) {
+      await kv.set(key, { count, resetAt: new Date(resetAt).toISOString() });
+      const remainingMs = Math.max(0, resetAt - now);
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+      return c.json({ success: false, error: `Too many requests. Please wait ${remainingSeconds} seconds` }, 429);
+    }
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const token = btoa(String.fromCharCode(...tokenBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const raw = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
+    const userId = existing?.id || null;
+    await supabase.from('auth_tokens').insert({ user_id: userId, token_hash: tokenHash, purpose: 'email_verify', expires_at: new Date(Date.now() + 24*60*60*1000).toISOString(), used_at: null });
+    const siteUrl = (Deno.env.get('SITE_URL') || '').replace(/\/$/, '') || '';
+    const link = `${siteUrl}/auth/verify-email?token=${encodeURIComponent(token)}`;
+    const t = buildVerificationEmail(name || undefined, email, link, siteUrl);
+    const sendRes = await sendEmail(email, t.subject, t.html.replace('This link will expire.', 'This link will expire in 24 hours.'), t.text);
+    if (!sendRes.success) {
+      await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'email_verify_send_failed', outcome: 'failure', ip, user_agent: c.req.header('user-agent') || 'unknown', details: { error: sendRes.error || 'unknown' } });
+      return c.json({ success: false, error: 'Failed to send verification email' }, 502);
+    }
+    await supabase.from('auth_audit_log').insert({ user_id: userId, action: 'email_verify_send', outcome: 'success', ip, user_agent: c.req.header('user-agent') || 'unknown', details: { email, linkExpiresInHours: 24 } });
+    await supabase.from('email_send_events').insert({ user_id: userId, email, provider: 'resend', status: 'sent', response_message: 'ok', response_status: 200 });
+    await kv.set(key, { count: count + 1, resetAt: now > resetAt ? new Date(now + windowMs).toISOString() : new Date(resetAt).toISOString() });
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+auth.post('/auth/email/verify/confirm', async (c) => {
+  try {
+    if (disabled) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
+    if (!requireCsrf(c)) { return c.json({ success: false, error: 'CSRF token missing' }, 403); }
+    const body = await c.req.json().catch(() => ({}));
+    const token = (body?.token || '').toString().trim();
+    if (!token) return c.json({ success: false, error: 'Token required' }, 400);
+    const raw = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const { data: tok } = await supabase.from('auth_tokens').select('id,user_id,expires_at,used_at').eq('token_hash', tokenHash).eq('purpose', 'email_verify').maybeSingle();
+    if (!tok || tok.used_at || (tok.expires_at && new Date(tok.expires_at).getTime() < Date.now())) {
+      return c.json({ success: false, error: 'Invalid or expired token' }, 400);
+    }
+    const userId = tok.user_id || null;
+    if (userId) {
+      const { data: userRec } = await supabase.schema('auth').from('users').select('email').eq('id', userId).maybeSingle();
+      const email = userRec?.email || '';
+      const key = `email_verified:${email}:${Date.now()}`;
+      await kv.set(key, { email, userId, timestamp: new Date().toISOString() });
+      const current = (await kv.get(`user:${userId}`)) || {};
+      await kv.set(`user:${userId}`, { ...current, id: userId, email, verificationStatus: 'verified', updatedAt: new Date().toISOString() });
+      await supabase.from('auth_tokens').update({ used_at: new Date().toISOString() }).eq('id', tok.id);
+      await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).is('revoked_at', null);
+    }
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+auth.get('/auth/email/verify/confirm', async (c) => {
+  try {
+    if (disabled) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
+    const url = new URL(c.req.url);
+    const token = (url.searchParams.get('token') || '').toString().trim();
+    if (!token) return c.json({ success: false, error: 'Token required' }, 400);
+    const raw = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const { data: tok } = await supabase.from('auth_tokens').select('id,user_id,expires_at,used_at').eq('token_hash', tokenHash).eq('purpose', 'email_verify').maybeSingle();
+    if (!tok || tok.used_at || (tok.expires_at && new Date(tok.expires_at).getTime() < Date.now())) {
+      return c.json({ success: false, error: 'Invalid or expired token' }, 400);
+    }
+    const userId = tok.user_id || null;
+    if (userId) {
+      const { data: userRec } = await supabase.schema('auth').from('users').select('email').eq('id', userId).maybeSingle();
+      const email = userRec?.email || '';
+      const key = `email_verified:${email}:${Date.now()}`;
+      await kv.set(key, { email, userId, timestamp: new Date().toISOString() });
+      const current = (await kv.get(`user:${userId}`)) || {};
+      await kv.set(`user:${userId}`, { ...current, id: userId, email, verificationStatus: 'verified', updatedAt: new Date().toISOString() });
+      await supabase.from('auth_tokens').update({ used_at: new Date().toISOString() }).eq('id', tok.id);
+      await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).is('revoked_at', null);
+    }
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+auth.post('/auth/password-reset/send', async (c) => {
+  try {
+    if (disabled) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
+    if (!requireCsrf(c)) { return c.json({ success: false, error: 'CSRF token missing' }, 403); }
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    if (!email) return c.json({ success: false, error: 'Email required' }, 400);
+    const { data, error } = await supabase.auth.admin.generateLink({ type: 'recovery', email, options: { redirect_to: 'http://localhost:3001/' } });
+    if (error) return c.json({ success: false, error: 'Failed to send reset link' }, 500);
+    await kv.set(`password_reset:${email}:${Date.now()}`, { email, actionLink: data?.action_link, createdAt: new Date().toISOString() });
+    try {
+      const link = (data?.action_link || '').toString();
+      if (link) {
+        const raw = new TextEncoder().encode(link);
+        const digest = await crypto.subtle.digest('SHA-256', raw);
+        const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+        const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
+        const userId = existing?.id || null;
+        await supabase.from('auth_tokens').insert({ user_id: userId, token_hash: tokenHash, purpose: 'password_reset', expires_at: new Date(Date.now() + 24*60*60*1000).toISOString(), used_at: null });
+      }
+    } catch (_) {}
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+auth.post('/auth/password-reset/confirm', async (c) => {
+  try {
+    if (!requireCsrf(c)) { return c.json({ success: false, error: 'CSRF token missing' }, 403); }
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    const newPassword = (body?.newPassword || '').toString();
+    const token = (body?.token || '').toString();
+    if (!email || !newPassword || !token) return c.json({ success: false, error: 'Missing fields' }, 400);
+    const raw = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const tokenHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    const { data: existing } = await supabase.schema('auth').from('users').select('id').eq('email', email).maybeSingle();
+    const userId = existing?.id || null;
+    if (!userId) return c.json({ success: false, error: 'User not found' }, 404);
+    const { data: tok } = await supabase.from('auth_tokens').select('id,used_at,expires_at').eq('user_id', userId).eq('purpose', 'password_reset').eq('token_hash', tokenHash).maybeSingle();
+    if (!tok || tok.used_at || (tok.expires_at && new Date(tok.expires_at).getTime() < Date.now())) {
+      return c.json({ success: false, error: 'Invalid or expired token' }, 400);
+    }
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    let encodedHash = '';
+    try {
+      const { hash, argon2id } = await getArgon();
+      const h = await hash({ pass: newPassword, salt, type: argon2id });
+      encodedHash = h.encoded || '';
+    } catch (_) {}
+    try {
+      await supabase.auth.admin.updateUserById(userId, { password: newPassword });
+    } catch (_) {}
+    try {
+      await supabase.from('credentials').upsert({ user_id: userId, password_hash: encodedHash || `argon2id:${btoa(String.fromCharCode(...salt))}`, password_require_reset: false, password_updated_at: new Date().toISOString() });
+    } catch (_) {}
+    try {
+      await supabase.from('auth_tokens').update({ used_at: new Date().toISOString() }).eq('user_id', userId).eq('purpose', 'password_reset').eq('token_hash', tokenHash);
+    } catch (_) {}
+    try {
+      await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).is('revoked_at', null);
+    } catch (_) {}
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+auth.post('/register/step', async (c) => {
+  try {
+    if (!requireCsrf(c)) { return c.json({ success: false, error: 'CSRF token missing' }, 403); }
+    const body = await c.req.json().catch(() => ({}));
+    const step = Number(body?.step);
+    const status = (body?.status || '').toString();
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    const data = body?.data || {};
+    if (!(step >= 1 && step <= 4)) return c.json({ success: false, error: 'Invalid step' }, 400);
+    if (!['started','completed'].includes(status)) return c.json({ success: false, error: 'Invalid status' }, 400);
+    if (!email) return c.json({ success: false, error: 'Email required' }, 400);
+    await supabase.from('registration_step_events').insert({ email, step, status, data });
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
 export { auth };
+// Debug-only user count endpoint (requires header and env flag)
+auth.get('/debug/auth-user-count', async (c) => {
+  const allow = Deno.env.get('ALLOW_DEBUG_AUTH') === 'true';
+  if (!allow) return c.json({ error: 'Not allowed' }, 403);
+  if (c.req.header('X-Debug-Register') !== 'true') return c.json({ error: 'Missing debug header' }, 400);
+  try {
+    const { data, error } = await supabase.schema('auth').from('users').select('id', { count: 'exact', head: true });
+    if (error) return c.json({ error: 'List users failed', details: error.message }, 500);
+    return c.json({ success: true, userCount: data?.length ?? null });
+  } catch (e: any) {
+    return c.json({ error: 'Exception listing users', details: e?.message || 'unknown' }, 500);
+  }
+});
+auth.post('/auth/refresh', async (c) => {
+  try {
+    if (!requireCsrf(c)) { return c.json({ success: false, error: 'CSRF token missing' }, 403); }
+    const body = await c.req.json().catch(() => ({}));
+    const rt = (body?.refreshToken || '').toString();
+    if (!rt) return c.json({ success: false, error: 'Missing refresh token' }, 400);
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: rt });
+    if (error || !data?.session) return c.json({ success: false, error: 'Invalid refresh token' }, 401);
+    const userId = data.session.user?.id || null;
+    const raw = new TextEncoder().encode(rt);
+    const digest = await crypto.subtle.digest('SHA-256', raw);
+    const oldHash = btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    try {
+      await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).eq('refresh_token_hash', oldHash);
+    } catch (_) {}
+    let newHash = '';
+    try {
+      const rawNew = new TextEncoder().encode(data.session.refresh_token || '');
+      const dNew = await crypto.subtle.digest('SHA-256', rawNew);
+      newHash = btoa(String.fromCharCode(...new Uint8Array(dNew))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    } catch (_) {}
+    const ip = (c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip') || 'unknown').toString();
+    const userAgent = c.req.header('user-agent') || 'unknown';
+    const deviceRaw = new TextEncoder().encode(`${userAgent}|${ip}`);
+    const deviceDigest = await crypto.subtle.digest('SHA-256', deviceRaw);
+    const deviceId = btoa(String.fromCharCode(...new Uint8Array(deviceDigest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    try {
+      await supabase.from('sessions').insert({
+        user_id: userId,
+        device_id: deviceId,
+        ip,
+        user_agent: userAgent,
+        refresh_token_hash: newHash || null,
+        expires_at: data.session.expires_at ? new Date(data.session.expires_at * 1000).toISOString() : null,
+        revoked_at: null
+      });
+    } catch (_) {}
+    return c.json({ success: true, accessToken: data.session.access_token, refreshToken: data.session.refresh_token });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});

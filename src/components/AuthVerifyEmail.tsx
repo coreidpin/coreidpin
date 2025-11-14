@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/utils/supabase/client';
+import { api } from '@/utils/api';
+import { initAuth } from '@/utils/auth';
 
 interface VerificationState {
   loading: boolean;
@@ -24,6 +25,22 @@ export const AuthVerifyEmail: React.FC = () => {
       try {
         const code = searchParams.get('code');
         const email = searchParams.get('email');
+        const token = searchParams.get('token');
+
+        if (token) {
+          await initAuth();
+          const data = await api.verifyEmailCode('', token);
+          if (data.success) {
+            setState({
+              loading: false,
+              success: true,
+              error: null,
+              message: 'Your email has been successfully verified! ✓',
+            });
+            setTimeout(() => { navigate('/dashboard'); }, 3000);
+            return;
+          }
+        }
 
         if (!code || !email) {
           setState({
@@ -35,20 +52,8 @@ export const AuthVerifyEmail: React.FC = () => {
           return;
         }
 
-        // Call the verify-email-code function
-        const response = await fetch(
-          'https://evcqpapvcvmljgqiuzsq.functions.supabase.co/verify-email-code',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({ email, code }),
-          }
-        );
-
-        const data = await response.json();
+        await initAuth();
+        const data = await api.verifyEmailCode(email, code);
 
         if (data.success) {
           setState({
