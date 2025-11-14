@@ -4,8 +4,8 @@
  * 
  * Tests cover:
  * - /server/register endpoint (POST)
- * - /verify-email-code endpoint (POST)
- * - /send-verification-email endpoint (POST)
+ * - /server/auth/email/verify/confirm endpoint (POST)
+ * - /server/auth/email/verify/send endpoint (POST)
  * - Various success/failure scenarios
  * - Edge cases and error handling
  */
@@ -19,6 +19,7 @@ global.fetch = vi.fn();
 describe('Registration Endpoint Integration Tests', () => {
   beforeAll(() => {
     vi.clearAllMocks();
+    try { localStorage.setItem('csrfToken', 'test-csrf-token') } catch {}
   });
 
   describe('POST /server/register', () => {
@@ -204,7 +205,7 @@ describe('Registration Endpoint Integration Tests', () => {
     });
   });
 
-  describe('POST /verify-email-code', () => {
+  describe('POST /server/auth/email/verify/confirm', () => {
     it('should successfully verify valid 6-digit code', async () => {
       const mockResponse = {
         success: true,
@@ -222,10 +223,10 @@ describe('Registration Endpoint Integration Tests', () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe('Email verified successfully');
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/verify-email-code'),
+        expect.stringContaining('/server/auth/email/verify/confirm'),
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ email: 'user@example.com', code: '123456' })
+          body: JSON.stringify({ token: '123456' })
         })
       );
     });
@@ -317,7 +318,7 @@ describe('Registration Endpoint Integration Tests', () => {
     });
   });
 
-  describe('POST /send-verification-email', () => {
+  describe('POST /server/auth/email/verify/send', () => {
     it('should successfully send verification email', async () => {
       const mockResponse = {
         success: true,
@@ -335,7 +336,7 @@ describe('Registration Endpoint Integration Tests', () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe('Verification email sent');
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/send-verification-email'),
+        expect.stringContaining('/server/auth/email/verify/send'),
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ email: 'user@example.com', name: 'John Doe' })
