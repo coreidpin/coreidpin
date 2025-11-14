@@ -238,8 +238,7 @@ function ProfessionalFlow({ origin = 'modal', onComplete, onBack }: { origin?: '
         const errorMsg = regError.message || ''
         if (errorMsg.includes('already been registered') || errorMsg.includes('already exists')) {
           userAlreadyExists = true
-          if (formData.email) localStorage.setItem('registrationEmail', formData.email)
-          toast.info('Account already exists. Please verify your email to continue.', { description: "We'll send you a verification code." })
+          toast.info('Account already exists. Please check your email for verification instructions.')
         } else {
           throw regError
         }
