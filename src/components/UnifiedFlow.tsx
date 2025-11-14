@@ -376,67 +376,67 @@ function ProfessionalFlow({ origin = 'modal', onComplete, onBack }: { origin?: '
           <AnimatePresence mode="wait">
             <motion.div key={currentStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               {currentStep === 0 && (
-                <Card className="bg-surface">
+                <Card className="bg-white/5 backdrop-blur-xl border-white/10">
                   <CardHeader>
-                    <CardTitle>Basic Information</CardTitle>
-                    <CardDescription>Enter your details to create your account.</CardDescription>
+                    <CardTitle className="text-white">Basic Information</CardTitle>
+                    <CardDescription className="text-gray-300">Enter your details to create your account.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name">Full Name *</Label>
+                        <Label htmlFor="name" className="text-white">Full Name *</Label>
                         <div className="relative">
-                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="name" placeholder="John Doe" value={formData.name || ''} onChange={(e) => updateFormData('name', e.target.value)} className="pl-10" aria-invalid={!!errors.name} aria-describedby={errors.name ? 'name-error' : undefined} />
+                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input id="name" placeholder="John Doe" value={formData.name || ''} onChange={(e) => updateFormData('name', e.target.value)} className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60" aria-invalid={!!errors.name} aria-describedby={errors.name ? 'name-error' : undefined} />
                         </div>
                         {errors.name && <p id="name-error" className="text-xs text-red-600 mt-1">{errors.name}</p>}
                       </div>
                       <div>
-                        <Label htmlFor="email">Email Address *</Label>
+                        <Label htmlFor="email" className="text-white">Email Address *</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="email" type="email" placeholder="you@example.com" value={formData.email || ''} onChange={(e) => updateFormData('email', e.target.value)} className="pl-10" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input id="email" type="email" placeholder="you@example.com" value={formData.email || ''} onChange={(e) => updateFormData('email', e.target.value)} className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60" aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} />
                         </div>
                         {errors.email && <p id="email-error" className="text-xs text-red-600 mt-1">{errors.email}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="md:col-span-2">
-                        <Label htmlFor="title">Professional Title *</Label>
+                        <Label htmlFor="title" className="text-white">Professional Title *</Label>
                         <div className="relative">
-                          <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="title" placeholder="e.g., Senior Frontend Developer" value={formData.title || ''} onChange={(e) => updateFormData('title', e.target.value)} className="pl-10" aria-invalid={!!errors.title} aria-describedby={errors.title ? 'title-error' : undefined} />
+                          <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input id="title" placeholder="e.g., Senior Frontend Developer" value={formData.title || ''} onChange={(e) => updateFormData('title', e.target.value)} className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60" aria-invalid={!!errors.title} aria-describedby={errors.title ? 'title-error' : undefined} />
                         </div>
                         {errors.title && <p id="title-error" className="text-xs text-red-600 mt-1">{errors.title}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="location">Location *</Label>
+                        <Label htmlFor="location" className="text-white">Location *</Label>
                         <div className="relative">
-                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="location" placeholder="City, Country" value={formData.location || ''} onChange={(e) => updateFormData('location', e.target.value)} className="pl-10" aria-invalid={!!errors.location} aria-describedby={errors.location ? 'location-error' : undefined} />
+                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input id="location" placeholder="City, Country" value={formData.location || ''} onChange={(e) => updateFormData('location', e.target.value)} className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60" aria-invalid={!!errors.location} aria-describedby={errors.location ? 'location-error' : undefined} />
                         </div>
                         {errors.location && <p id="location-error" className="text-xs text-red-600 mt-1">{errors.location}</p>}
                       </div>
                       <div>
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input id="phone" type="tel" placeholder="e.g., +234 801 234 5678" value={formData.phone || ''} onChange={(e) => updateFormData('phone', e.target.value)} aria-invalid={!!errors.phone} aria-describedby={errors.phone ? 'phone-error' : undefined} />
+                        <Label htmlFor="phone" className="text-white">Phone Number</Label>
+                        <Input id="phone" type="tel" placeholder="e.g., +234 801 234 5678" value={formData.phone || ''} onChange={(e) => updateFormData('phone', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60" aria-invalid={!!errors.phone} aria-describedby={errors.phone ? 'phone-error' : undefined} />
                         {errors.phone && <p id="phone-error" className="text-xs text-red-600 mt-1">{errors.phone}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="password">Password *</Label>
+                        <Label htmlFor="password" className="text-white">Password *</Label>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="password" type="password" placeholder="••••••••" value={formData.password || ''} onChange={(e) => updateFormData('password', e.target.value)} className="pl-10" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input id="password" type="password" placeholder="••••••••" value={formData.password || ''} onChange={(e) => updateFormData('password', e.target.value)} className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60" />
                         </div>
                         {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
                       </div>
                       <div>
-                        <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                        <Input id="confirmPassword" type="password" placeholder="••••••••" value={formData.confirmPassword || ''} onChange={(e) => updateFormData('confirmPassword', e.target.value)} />
+                        <Label htmlFor="confirmPassword" className="text-white">Confirm Password *</Label>
+                        <Input id="confirmPassword" type="password" placeholder="••••••••" value={formData.confirmPassword || ''} onChange={(e) => updateFormData('confirmPassword', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60" />
                         {errors.confirmPassword && <p className="text-xs text-red-600 mt-1">{errors.confirmPassword}</p>}
                       </div>
                     </div>

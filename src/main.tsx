@@ -24,23 +24,5 @@ import { toast } from 'sonner';
       }).catch(() => {})
     });
   } catch {}
-  if ((import.meta as any)?.env?.PROD && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').then((registration) => {
-        registration.onupdatefound = () => {
-          const installing = registration.installing;
-          if (!installing) return;
-          installing.onstatechange = () => {
-            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
-              try {
-                toast.info('Update available', {
-                  action: { label: 'Reload', onClick: () => window.location.reload() }
-                });
-              } catch {}
-            }
-          };
-        };
-      }).catch(() => {});
-    });
-  }
+
   
