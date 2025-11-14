@@ -9,11 +9,20 @@ import { auth } from "./routes/auth.tsx";
 import { ai } from "./routes/ai.tsx";
 import { professionals } from "./routes/professionals.tsx";
 import { profile } from "./routes/profile.tsx";
+import { diagnostics } from "./routes/diagnostics.tsx";
+import { pin } from "./routes/pin.tsx";
+import { requireAuth } from "./lib/auth.ts";
 import { signVerificationToken } from "./lib/token.ts";
-// Note: PIN routes are handled within profile routes for now
+import { trackApiPerformance } from "./lib/monitoring.ts";
+// Note: PIN routes are now separate from profile routes
 
-// Validate environment before app initializes
-validateServerEnv();
+// Validate environment before app initializes (non-fatal)
+try {
+  validateServerEnv();
+} catch (e: any) {
+  console.error('ENV_VALIDATION_FAILED', e?.message || e);
+}
+const disabledAuth = Deno.env.get('DISABLE_AUTH_ENDPOINTS') === 'true';
 const app = new Hono();
 
 // Supabase client singleton
@@ -21,6 +30,36 @@ const supabase = getSupabaseClient();
 
 // Enable logger
 app.use('*', logger(console.log));
+
+// Performance monitoring middleware
+app.use('*', async (c, next) => {
+  const start = Date.now();
+  const endpoint = c.req.path;
+  const method = c.req.method;
+  
+  await next();
+  
+  const responseTime = Date.now() - start;
+  const statusCode = c.res.status;
+  
+  // Track performance for all requests
+  try {
+    // Extract user ID if available
+    let userId = undefined;
+    const authz = c.req.header('Authorization') || '';
+    if (authz.startsWith('Bearer ')) {
+      const token = authz.slice(7);
+      if (token) {
+        // We could decode the JWT to get user ID, but for now we'll skip this
+        // to avoid additional overhead
+      }
+    }
+    
+    await trackApiPerformance(endpoint, method, statusCode, responseTime, userId);
+  } catch (e) {
+    console.error('Failed to track API performance:', e);
+  }
+});
 
 // Enable CORS for all routes and methods
 app.use(
@@ -45,8 +84,10 @@ app.get("/server/health", (c) => {
   return c.json({ status: "ok" });
 });
 
-// Registration data validation endpoint
-app.post("/server/validate-registration", async (c) => {
+// Registration data validation endpoint (public) - dual path support
+// 1. /validate-registration (preferred public path)
+// 2. /server/validate-registration (legacy path kept for compatibility)
+async function handleValidateRegistration(c: any) {
   try {
     const body = await c.req.json();
     const entryPoint = body.entryPoint as 'signup' | 'get-started' | undefined;
@@ -113,24 +154,31 @@ app.post("/server/validate-registration", async (c) => {
   } catch (error: any) {
     return c.json({ valid: false, errors: ['Validation failed', error?.message] }, 400);
   }
-});
+}
+
+app.post('/validate-registration', handleValidateRegistration);
+app.post('/server/validate-registration', handleValidateRegistration);
 
 // Mount modular route groups under function slug base
+// Auth routes should be mounted before global auth middleware but after public endpoints
 app.route('/server', auth);
 app.route('/server/ai', ai);
+app.route('/server/diagnostics', diagnostics);
 app.use('/server/professionals/*', requireAuth);
 app.route('/server/professionals', professionals);
 app.route('/server/profile', profile);
-// PIN routes are handled within profile routes
+app.use('/server/pin/*', requireAuth);
+app.route('/server/pin', pin);
 
 // Route handlers for professionals and profile are provided by modular routers above.
 
-// Mount matching routes group under function slug base
+// Final catch-all auth for remaining /server routes excluding already handled public ones
 app.use('/server/*', requireAuth);
 app.route('/server', matching);
 
 export default app;
 app.post('/server/auth/session-cookie', async (c) => {
+  if (disabledAuth) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
   try {
     const body = await c.req.json().catch(() => ({}));
     const token = (body?.token || '').toString();
@@ -150,22 +198,85 @@ app.post('/server/auth/session-cookie', async (c) => {
   }
 });
 
+// Public CSRF endpoint for clients without a session
+app.get('/server/auth/csrf', async (c) => {
+  try {
+    const csrf = crypto.getRandomValues(new Uint8Array(16)).reduce((s,b)=>s+('0'+b.toString(16)).slice(-2),'');
+    const secure = true;
+    const sameSite = 'Lax';
+    const maxAge = 60 * 60;
+    c.header('Set-Cookie', `csrf_token=${csrf}; HttpOnly; Secure; SameSite=${sameSite}; Path=/; Max-Age=${maxAge}`);
+    return c.json({ success: true, csrf });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Unknown error' }, 500);
+  }
+});
+
 app.post('/server/auth/logout', async (c) => {
+  if (disabledAuth) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
   const secure = true;
   const sameSite = 'Lax';
   c.header('Set-Cookie', `sb_access_token=; HttpOnly; Secure; SameSite=${sameSite}; Path=/; Max-Age=0`);
   c.header('Set-Cookie', `csrf_token=; HttpOnly; Secure; SameSite=${sameSite}; Path=/; Max-Age=0`);
   await kv.set(`auth:state:${Date.now()}`, { event: 'logout', ts: new Date().toISOString() });
+  try {
+    const authz = c.req.header('Authorization') || '';
+    const cookie = c.req.header('Cookie') || '';
+    let token = '';
+    if (authz.startsWith('Bearer ')) token = authz.slice(7);
+    if (!token && cookie) {
+      const m = /sb_access_token=([^;]+)/.exec(cookie);
+      if (m) token = decodeURIComponent(m[1]);
+    }
+    if (token) {
+      const { data, error } = await supabase.auth.getUser(token);
+      const userId = error ? null : data?.user?.id || null;
+      if (userId) {
+        await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).is('revoked_at', null);
+      }
+    }
+  } catch {}
   return c.json({ success: true });
 });
 
 async function requireAuth(c: any, next: any) {
   try {
-    const path = new URL(c.req.url).pathname;
+    const rawPath = new URL(c.req.url).pathname;
+    // Normalize to strip Supabase functions prefix if present
+    const path = rawPath.startsWith('/functions/v1') ? rawPath.replace('/functions/v1', '') : rawPath;
+    // Canonical core path without trailing slash
+    const corePath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
+    // Explicit public guard (robust against prefix & trailing slash)
+    // Public validation endpoint bypass (both legacy and new path forms)
+    if (corePath === '/server/validate-registration' || rawPath.endsWith('/server/validate-registration') || corePath === '/validate-registration' || rawPath.endsWith('/validate-registration')) { await next(); return; }
     const method = c.req.method.toUpperCase();
     if (method === 'OPTIONS') { await next(); return; }
-    const publicPaths = ['/server/health', '/server/send-verification', '/server/resend-verification', '/server/auth/verify-link'];
-    if (publicPaths.includes(path)) { await next(); return; }
+    const publicPaths = [
+      '/server/health',
+      '/server/login',
+      '/server/register',
+      '/server/auth/session-cookie',
+      '/server/auth/csrf',
+      '/server/auth/logout',
+      '/server/auth/email/verify/send',
+      '/server/auth/email/verify/confirm',
+      '/server/auth/password-reset/send',
+      '/server/auth/password-reset/confirm',
+      '/server/auth/verify-link',
+      '/server/validate-registration',
+      '/server/send-verification',
+      '/server/resend-verification',
+      // Diagnostics endpoints (some are public for monitoring)
+      '/server/diagnostics/health',
+      '/server/diagnostics/system/health',
+      '/server/diagnostics/performance/summary',
+      '/server/diagnostics/email/deliverability',
+      '/server/diagnostics/alerts/active',
+      '/server/diagnostics/email/health'
+    ];
+    // Also allow full prefixed form used in deployment
+    const altPrefixed = publicPaths.map(p => '/functions/v1' + p);
+    if (publicPaths.includes(path) || altPrefixed.includes(rawPath)) { await next(); return; }
     const authz = c.req.header('Authorization') || '';
     const cookie = c.req.header('Cookie') || '';
     let token = '';
@@ -181,6 +292,20 @@ async function requireAuth(c: any, next: any) {
     const csrfHeader = c.req.header('X-CSRF-Token') || '';
     const mutating = method === 'POST' || method === 'PUT' || method === 'DELETE' || method === 'PATCH';
     if (mutating && (!csrfCookie || csrfCookie[1] !== csrfHeader)) return c.json({ success: false, error: 'CSRF' }, 403);
+    let userType = (data.user.user_metadata || {}).userType;
+    if (!userType) {
+      try {
+        const { data: prof } = await supabase.from('profiles').select('user_type').eq('user_id', data.user.id).maybeSingle();
+        userType = prof?.user_type || userType;
+      } catch {}
+    }
+    const canary = (c.req.header('x-canary-new-auth') || '').toString().toLowerCase() === 'true';
+    const newAuthEnabled = canary || (Deno.env.get('NEW_AUTH_ENABLED') === 'true');
+    c.set('claims', { userType });
+    c.set('newAuthEnabled', newAuthEnabled);
+    if (path.startsWith('/server/professionals') && userType !== 'employer') {
+      return c.json({ success: false, error: 'Forbidden' }, 403);
+    }
     c.set('user', data.user);
     await next();
   } catch {

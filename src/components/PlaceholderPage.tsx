@@ -13,26 +13,26 @@ interface PlaceholderPageProps {
 
 export function PlaceholderPage({ title, description, onNavigate }: PlaceholderPageProps) {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0a0b0d' }}>
       <div className="container mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-2xl mx-auto text-center"
         >
-          <Card className="p-8">
+          <Card className="p-8 bg-white/5 backdrop-blur-xl border-white/10">
             <CardContent className="p-0">
-              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Construction className="h-10 w-10 text-primary" />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: 'rgba(50, 240, 140, 0.1)' }}>
+                <Construction className="h-10 w-10" style={{ color: '#32f08c' }} />
               </div>
               
-              <Badge variant="secondary" className="mb-4">
+              <Badge className="mb-4 bg-white/10 text-white border-white/20">
                 Coming Soon
               </Badge>
               
-              <h1 className="text-3xl font-bold mb-4">{title}</h1>
+              <h1 className="text-3xl font-bold mb-4 text-white">{title}</h1>
               
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-lg text-gray-300 mb-8">
                 {description}
               </p>
               

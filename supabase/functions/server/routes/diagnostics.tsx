@@ -2,6 +2,14 @@ import { Hono } from "npm:hono";
 import { getSupabaseClient } from "../lib/supabaseClient.tsx";
 import * as kv from "../kv_store.tsx";
 import { testResendHealth } from "../lib/email.ts";
+import { 
+  getPerformanceSummary, 
+  getEmailDeliverabilitySummary, 
+  getActiveAlerts, 
+  acknowledgeAlert,
+  trackApiPerformance,
+  trackEmailEvent
+} from "../lib/monitoring.ts";
 
 const diagnostics = new Hono();
 
@@ -137,6 +145,7 @@ diagnostics.get('/email/health', async (c) => {
 });
 
 // DB partitions (approximate by months seen in pin_analytics)
+
 diagnostics.get('/db/partitions', async (c) => {
   try {
     const supabase = getSupabaseClient();
@@ -158,6 +167,142 @@ diagnostics.get('/db/partitions', async (c) => {
     }
     const list = Array.from(months.entries()).map(([month, count]) => ({ month, count }));
     return c.json({ status: 'success', partitions: list });
+  } catch (e: any) {
+    return c.json({ status: 'failure', error: { message: e?.message || 'Unknown error' } }, 500);
+  }
+});
+
+// Performance monitoring endpoints
+diagnostics.get('/performance/summary', async (c) => {
+  try {
+    const hours = Number(c.req.query('hours') || 24);
+    const summary = await getPerformanceSummary(hours);
+    return c.json({ status: 'success', summary });
+  } catch (e: any) {
+    return c.json({ status: 'failure', error: { message: e?.message || 'Unknown error' } }, 500);
+  }
+});
+
+diagnostics.get('/email/deliverability', async (c) => {
+  try {
+    const days = Number(c.req.query('days') || 7);
+    const summary = await getEmailDeliverabilitySummary(days);
+    return c.json({ status: 'success', summary });
+  } catch (e: any) {
+    return c.json({ status: 'failure', error: { message: e?.message || 'Unknown error' } }, 500);
+  }
+});
+
+diagnostics.get('/alerts/active', async (c) => {
+  try {
+    const alerts = await getActiveAlerts();
+    return c.json({ status: 'success', alerts });
+  } catch (e: any) {
+    return c.json({ status: 'failure', error: { message: e?.message || 'Unknown error' } }, 500);
+  }
+});
+
+diagnostics.post('/alerts/acknowledge', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const alertKey = (body?.alertKey || '').toString();
+    if (!alertKey) return c.json({ status: 'failure', error: { message: 'alertKey required' } }, 400);
+    
+    const success = await acknowledgeAlert(alertKey);
+    return c.json({ status: success ? 'success' : 'failure', acknowledged: success });
+  } catch (e: any) {
+    return c.json({ status: 'failure', error: { message: e?.message || 'Unknown error' } }, 500);
+  }
+});
+
+// Comprehensive system health check
+diagnostics.get('/system/health', async (c) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    // Check database connectivity
+    const dbStart = Date.now();
+    const { error: dbError } = await supabase.from('auth_audit_log').select('id').limit(1);
+    const dbResponseTime = Date.now() - dbStart;
+    
+    // Check email service health
+    const emailHealth = await testResendHealth();
+    
+    // Get recent performance metrics
+    const perfSummary = await getPerformanceSummary(1); // Last 1 hour
+    
+    // Get recent email metrics
+    const emailSummary = await getEmailDeliverabilitySummary(1); // Last 1 day
+    
+    // Get active alerts
+    const activeAlerts = await getActiveAlerts();
+    
+    // Calculate overall health score (0-100)
+    let healthScore = 100;
+    
+    // Database health (30% weight)
+    if (dbError) healthScore -= 30;
+    else if (dbResponseTime > 1000) healthScore -= 15;
+    else if (dbResponseTime > 500) healthScore -= 10;
+    
+    // Email health (25% weight)
+    if (!emailHealth.healthy) healthScore -= 25;
+    
+    // Performance health (25% weight)
+    if (perfSummary.criticalCount > 0) healthScore -= 25;
+    else if (perfSummary.warningCount > 5) healthScore -= 15;
+    else if (perfSummary.avgResponseTime > 1000) healthScore -= 10;
+    
+    // Email deliverability health (20% weight)
+    const latestEmail = emailSummary[0];
+    if (latestEmail && latestEmail.successRate < 0.95) healthScore -= 20;
+    else if (latestEmail && latestEmail.successRate < 0.98) healthScore -= 10;
+    
+    // Critical alerts penalty
+    const criticalAlerts = activeAlerts.filter((a: any) => a.severity === 'critical').length;
+    if (criticalAlerts > 0) healthScore -= (criticalAlerts * 10);
+    
+    healthScore = Math.max(0, healthScore);
+    
+    const health = {
+      score: healthScore,
+      status: healthScore >= 90 ? 'healthy' : healthScore >= 70 ? 'degraded' : 'critical',
+      components: {
+        database: {
+          healthy: !dbError,
+          responseTime: dbResponseTime,
+          status: dbError ? 'down' : dbResponseTime > 1000 ? 'slow' : 'healthy'
+        },
+        email: {
+          healthy: emailHealth.healthy,
+          status: emailHealth.healthy ? 'healthy' : 'unhealthy',
+          lastCheck: emailHealth.ts
+        },
+        performance: {
+          avgResponseTime: perfSummary.avgResponseTime,
+          p95ResponseTime: perfSummary.p95ResponseTime,
+          criticalRequests: perfSummary.criticalCount,
+          warningRequests: perfSummary.warningRequests || 0,
+          status: perfSummary.criticalCount > 0 ? 'critical' : 
+                  perfSummary.avgResponseTime > 1000 ? 'slow' : 'healthy'
+        },
+        emailDeliverability: {
+          latestMetrics: latestEmail || null,
+          status: latestEmail?.successRate >= 0.98 ? 'excellent' :
+                  latestEmail?.successRate >= 0.95 ? 'good' :
+                  latestEmail?.successRate >= 0.90 ? 'fair' : 'poor'
+        }
+      },
+      activeAlerts: {
+        total: activeAlerts.length,
+        critical: activeAlerts.filter((a: any) => a.severity === 'critical').length,
+        warning: activeAlerts.filter((a: any) => a.severity === 'warning').length,
+        info: activeAlerts.filter((a: any) => a.severity === 'info').length
+      },
+      timestamp: new Date().toISOString()
+    };
+    
+    return c.json({ status: 'success', health });
   } catch (e: any) {
     return c.json({ status: 'failure', error: { message: e?.message || 'Unknown error' } }, 500);
   }

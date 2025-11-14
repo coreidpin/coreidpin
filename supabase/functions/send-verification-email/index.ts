@@ -22,6 +22,8 @@ serve(async (req) => {
     });
   }
 
+  return json({ success: false, error_code: 'ERR_DEPRECATED', message: 'Deprecated. Use /server/auth/email/verify/send' }, 410);
+
   if (req.method !== 'POST') {
     return json({ success: false, error_code: 'ERR_METHOD', message: 'Method not allowed' }, 405);
   }
@@ -162,8 +164,9 @@ serve(async (req) => {
   if (!resendResponse.ok) {
     console.error('email_send_error', { data: resendData });
     
-    // Record failed send event
-    await supabase.from('email_send_events').insert({
+    // Attempt to record failed send event (non-blocking)
+    try {
+      await supabase.from('email_send_events').insert({
       user_id: userId,
       email: normalizedEmail,
       code: verificationCode,
@@ -171,7 +174,11 @@ serve(async (req) => {
       status: 'failed',
       response_message: String((resendData as Record<string, unknown>).message || 'Unknown error'),
       response_status: resendResponse.status,
-    }).catch((err: unknown) => console.error('failed_to_log_send_event', err));
+      });
+    } catch (auditErr: unknown) {
+      console.error('failed_to_log_send_event', auditErr);
+      // Don't block email send failure on audit log error
+    }
     
     const body: Record<string, unknown> = { success: false, error_code: 'ERR_EMAIL_SEND', message: 'Failed to send email', details: resendData };
     if (ALLOW_CODE_ECHO) body.debug_code = verificationCode;
@@ -180,8 +187,9 @@ serve(async (req) => {
 
   console.log('verification_email_sent', { user_id: userId, email: normalizedEmail });
   
-  // Record successful send event
-  await supabase.from('email_send_events').insert({
+  // Attempt to record successful send event (non-blocking)
+  try {
+    await supabase.from('email_send_events').insert({
     user_id: userId,
     email: normalizedEmail,
     code: verificationCode,
@@ -190,7 +198,11 @@ serve(async (req) => {
     response_message: 'Email queued for delivery',
     response_status: 200,
     resend_id: String((resendData as Record<string, unknown>).id || ''),
-  }).catch((err: unknown) => console.error('failed_to_log_send_event', err));
+    });
+  } catch (auditErr: unknown) {
+    console.error('failed_to_log_send_event', auditErr);
+    // Don't block successful send on audit log error
+  }
   
   const successBody: Record<string, unknown> = { success: true, message: 'Verification code sent', emailId: resendData.id };
   if (ALLOW_CODE_ECHO) successBody.debug_code = verificationCode;

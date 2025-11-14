@@ -19,6 +19,7 @@ import { ComplianceChecks } from './ComplianceChecks';
 import { ProfileViewModal } from './ProfileViewModal';
 import { PINIdentityCard, generateMockPINData } from './PINIdentityCard';
 import { PINOnboarding } from './PINOnboarding';
+import { PhoneVerification } from './PhoneVerification';
 import { api } from '../utils/api';
 import { supabase } from '../utils/supabase/client';
 import { mockJobOpportunities } from './mockSwipeData';
@@ -41,7 +42,8 @@ import {
   AlertTriangle,
   TrendingUp,
   Fingerprint,
-  Share2
+  Share2,
+  Phone
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Lock } from 'lucide-react';
@@ -49,7 +51,8 @@ import { Lock } from 'lucide-react';
 const TASKBAR_DISABLED = (import.meta.env.VITE_BETA_DISABLE_TASKBAR ?? 'true') === 'true';
 
 export function ProfessionalDashboard() {
-  const [profileCompletion, setProfileCompletion] = useState(35); // Start at 35% after basic info
+  const [profileCompletion, setProfileCompletion] = useState(0); // Will be loaded from backend
+  const [setupSteps, setSetupSteps] = useState<any>({});
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [savedProfile, setSavedProfile] = useState<any>(null);
@@ -61,6 +64,8 @@ export function ProfessionalDashboard() {
   const [pinData, setPinData] = useState<any>(null);
   const [showPINOnboarding, setShowPINOnboarding] = useState(false);
   const [currentTab, setCurrentTab] = useState('dashboard');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [userPhone, setUserPhone] = useState('');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState<'summary' | 'portfolio' | 'endorsements' | 'opportunities' | 'activity' | 'settings'>('summary');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -102,30 +107,35 @@ export function ProfessionalDashboard() {
     complianceScore: 0
   });
 
-  // Load analysis on mount
+  // Load analysis and profile completion on mount
   useEffect(() => {
-    const loadAnalysis = async () => {
+    const loadAnalysisAndCompletion = async () => {
       try {
         const userId = localStorage.getItem('userId');
         const accessToken = localStorage.getItem('accessToken');
-        
         if (userId && accessToken) {
+          // Fetch profile completion from backend
+          const profileRes = await api.getProfile(userId, accessToken);
+          if (profileRes.success && profileRes.profile) {
+            setProfileCompletion(profileRes.profile.completionPercentage || 0);
+            setSetupSteps(profileRes.profile.setup_steps || {});
+          }
+          // Fetch AI analysis
           const result = await api.getProfileAnalysis(userId, accessToken);
           if (result.success && result.analysis) {
             setAiAnalysis(result.analysis);
           }
         }
       } catch (error) {
-        console.log('No analysis found');
+        console.log('No analysis or profile completion found');
       } finally {
         setIsInitialLoading(false);
       }
     };
-
-    loadAnalysis();
+    loadAnalysisAndCompletion();
   }, []);
 
-  // Load PIN data on mount
+  // Load PIN data and phone verification status on mount
   useEffect(() => {
     const loadPINData = async () => {
       try {
@@ -134,18 +144,28 @@ export function ProfessionalDashboard() {
         
         if (userId && accessToken) {
           console.log('Loading PIN data for user:', userId);
-          const result = await api.getUserPIN(userId, accessToken);
           
+          // Load PIN data
+          const result = await api.getUserPIN(userId, accessToken);
           if (result.success && result.data) {
             console.log('PIN data loaded successfully:', result.data.pinNumber);
             setPinData(result.data);
-          } else {
-            console.log('No PIN found for user');
+          }
+          
+          // Load PIN status (includes phone verification)
+          const statusResult = await api.getPINStatus(accessToken);
+          if (statusResult.success) {
+            setPhoneVerified(statusResult.phoneVerified || false);
+          }
+          
+          // Load user profile for phone number
+          const profileResult = await api.getProfile(userId, accessToken);
+          if (profileResult.success && profileResult.profile?.phone) {
+            setUserPhone(profileResult.profile.phone);
           }
         }
       } catch (error) {
-        console.log('Failed to load PIN:', error);
-        // User doesn't have a PIN yet, that's okay
+        console.log('Failed to load PIN data:', error);
       }
     };
 
@@ -162,6 +182,9 @@ export function ProfessionalDashboard() {
       }
     } catch {}
   }, []);
+
+  // Show persistent profile completion prompt if incomplete
+  const showProfileCompletionPrompt = profileCompletion < 100;
 
   // Load name/title from Supabase metadata; prefer savedProfile title when available
   useEffect(() => {
@@ -233,6 +256,8 @@ export function ProfessionalDashboard() {
   const handleProfileSaved = (profile: any) => {
     setSavedProfile(profile);
     setProfileCompletion(profile.completionPercentage || 100);
+    setSetupSteps(profile.setup_steps || {});
+    // Optionally, update backend public.profiles setup_progress/setup_steps here if needed
   };
 
   const handlePINCreated = (newPinData: any) => {
@@ -284,6 +309,28 @@ export function ProfessionalDashboard() {
                   </Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Persistent Profile Completion Prompt */}
+        {showProfileCompletionPrompt && (
+          <Card className="bg-yellow-100/10 border-yellow-300/30 mb-4">
+            <CardContent className="p-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                <span className="text-sm text-yellow-200">
+                  Your profile is {profileCompletion}% complete. Finish setup to unlock more features!
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-yellow-300 text-yellow-300 hover:bg-yellow-100/20"
+                onClick={() => setCurrentTab('setup')}
+              >
+                Complete Profile
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -777,49 +824,87 @@ export function ProfessionalDashboard() {
                 </Card>
               </div>
             ) : (
-              <Card className="p-8 text-center bg-gradient-to-br from-[#7bb8ff]/10 via-[#bfa5ff]/10 to-[#7bb8ff]/10 border-2 border-[#bfa5ff]/20">
-                <div className="max-w-2xl mx-auto space-y-6">
-                  <div className="w-20 h-20 bg-[#bfa5ff]/10 rounded-full flex items-center justify-center mx-auto">
-                    <Fingerprint className="h-12 w-12 text-[#bfa5ff]" />
-                  </div>
-                  <div>
-                    <h2 className="text-3xl mb-3 text-white">Create Your Professional Identity Number</h2>
-                    <p className="text-lg text-white/70">
-                      Get a verified digital identity that employers trust globally. Your PIN proves your skills and experience.
+              <div className="space-y-6">
+                <Card className="p-8 text-center bg-gradient-to-br from-[#7bb8ff]/10 via-[#bfa5ff]/10 to-[#7bb8ff]/10 border-2 border-[#bfa5ff]/20">
+                  <div className="max-w-2xl mx-auto space-y-6">
+                    <div className="w-20 h-20 bg-[#bfa5ff]/10 rounded-full flex items-center justify-center mx-auto">
+                      <Fingerprint className="h-12 w-12 text-[#bfa5ff]" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl mb-3 text-white">Create Your Professional Identity Number</h2>
+                      <p className="text-lg text-white/70">
+                        Get a verified digital identity that employers trust globally. Your PIN proves your skills and experience.
+                      </p>
+                    </div>
+                    
+                    <div className="grid sm:grid-cols-3 gap-4 my-8">
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <CheckCircle className="h-8 w-8 text-[#7bb8ff] mb-2 mx-auto" />
+                        <h4 className="font-semibold mb-1 text-white">Verified</h4>
+                        <p className="text-xs text-white/70">AI-powered verification</p>
+                      </div>
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <Shield className="h-8 w-8 text-[#32f08c] mb-2 mx-auto" />
+                        <h4 className="font-semibold mb-1 text-white">Secure</h4>
+                        <p className="text-xs text-white/70">Blockchain protected</p>
+                      </div>
+                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                        <Award className="h-8 w-8 text-[#bfa5ff] mb-2 mx-auto" />
+                        <h4 className="font-semibold mb-1 text-white">Global</h4>
+                        <p className="text-xs text-white/70">Recognized worldwide</p>
+                      </div>
+                    </div>
+
+                    {phoneVerified ? (
+                      <Button 
+                        size="lg"
+                        onClick={() => setShowPINOnboarding(true)}
+                        className="bg-gradient-to-r from-[#7bb8ff] to-[#bfa5ff] hover:from-[#7bb8ff]/90 hover:to-[#bfa5ff]/90 text-white px-8 py-6 text-lg"
+                      >
+                        <Fingerprint className="h-5 w-5 mr-2" />
+                        Create My PIN — Free
+                      </Button>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
+                          <p className="text-orange-200 text-sm">
+                            📱 Phone verification required before PIN creation
+                          </p>
+                        </div>
+                        <Button 
+                          size="lg"
+                          disabled
+                          className="bg-gray-600 text-gray-300 px-8 py-6 text-lg cursor-not-allowed"
+                        >
+                          <Fingerprint className="h-5 w-5 mr-2" />
+                          Verify Phone First
+                        </Button>
+                      </div>
+                    )}
+                    
+                    <p className="text-sm text-white/70">
+                      ✨ Takes 5 minutes • Increases visibility by 10x
                     </p>
                   </div>
-                  
-                  <div className="grid sm:grid-cols-3 gap-4 my-8">
-                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                      <CheckCircle className="h-8 w-8 text-[#7bb8ff] mb-2 mx-auto" />
-                      <h4 className="font-semibold mb-1 text-white">Verified</h4>
-                      <p className="text-xs text-white/70">AI-powered verification</p>
-                    </div>
-                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                      <Shield className="h-8 w-8 text-[#32f08c] mb-2 mx-auto" />
-                      <h4 className="font-semibold mb-1 text-white">Secure</h4>
-                      <p className="text-xs text-white/70">Blockchain protected</p>
-                    </div>
-                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                      <Award className="h-8 w-8 text-[#bfa5ff] mb-2 mx-auto" />
-                      <h4 className="font-semibold mb-1 text-white">Global</h4>
-                      <p className="text-xs text-white/70">Recognized worldwide</p>
-                    </div>
-                  </div>
+                </Card>
 
-                  <Button 
-                    size="lg"
-                    onClick={() => setShowPINOnboarding(true)}
-                    className="bg-gradient-to-r from-[#7bb8ff] to-[#bfa5ff] hover:from-[#7bb8ff]/90 hover:to-[#bfa5ff]/90 text-white px-8 py-6 text-lg"
-                  >
-                    <Fingerprint className="h-5 w-5 mr-2" />
-                    Create My PIN — Free
-                  </Button>
-                  <p className="text-sm text-white/70">
-                    ✨ Takes 5 minutes • Increases visibility by 10x
-                  </p>
+                {/* Phone Verification Section */}
+                <div className="max-w-2xl mx-auto">
+                  <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
+                    <Phone className="h-5 w-5" />
+                    Phone Verification
+                  </h3>
+                  <PhoneVerification
+                    onVerificationComplete={(phone) => {
+                      setUserPhone(phone);
+                      setPhoneVerified(true);
+                      toast.success('Phone verified! You can now create your PIN.');
+                    }}
+                    initialPhone={userPhone}
+                    isVerified={phoneVerified}
+                  />
                 </div>
-              </Card>
+              </div>
             )}
           </TabsContent>
 

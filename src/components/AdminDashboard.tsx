@@ -327,11 +327,12 @@ export function AdminDashboard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full sm:w-auto">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full sm:w-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="verifications">Verifications</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -803,6 +804,26 @@ export function AdminDashboard() {
                 <p className="text-muted-foreground">
                   Platform configuration options will be available here
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Monitoring Tab */}
+        <TabsContent value="monitoring" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Monitoring</CardTitle>
+              <CardDescription>Real-time system health and performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[600px]">
+                <iframe
+                  src="/monitoring"
+                  className="w-full h-full border-0"
+                  title="System Monitoring Dashboard"
+                  sandbox="allow-same-origin allow-scripts"
+                />
               </div>
             </CardContent>
           </Card>

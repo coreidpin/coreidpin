@@ -132,7 +132,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   transition={{ delay: 0.4 }}
                   className="text-[clamp(1rem,3.5vw,1.25rem)] text-gray-300 mb-6 sm:mb-8 max-w-[90vw] sm:max-w-2xl mx-auto lg:mx-0"
                 >
-                  Own a secure, verifiable, blockchain-backed identity trusted across borders and employers.
+                  A unified identity powered by your phone number — verified through our global infrastructure and trusted across every professional ecosystem.
                 </motion.p>
 
                 {/* CTAs */}

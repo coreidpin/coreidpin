@@ -43,44 +43,44 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
 
   const employerFeatures = [
     {
-      icon: Target,
-      title: 'Smart Job Description Parsing',
-      description: 'Upload, paste, or link your JD. Our AI extracts requirements and matches qualified candidates instantly.',
+      icon: Shield,
+      title: 'Fraud-Proof Identity Checks',
+      description: 'Every professional has a verified PIN tied to their phone number. No fake profiles, no identity fraud.',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      icon: Shield,
-      title: 'AI-Verified Candidates',
-      description: 'Every profile is verified through LinkedIn, GitHub, portfolios, and social proof. No fake credentials.',
+      icon: Target,
+      title: 'Verified Profiles You Can Trust',
+      description: 'Access comprehensive professional data backed by CoreID Infrastructure Layer verification.',
       color: 'text-green-600',
       bgColor: 'bg-green-50'
     },
     {
-      icon: Heart,
-      title: 'Swipe to Match',
-      description: 'Tinder-style interface makes hiring fun. Swipe right on talent you love, match instantly.',
+      icon: Clock,
+      title: 'Instant Talent Onboarding',
+      description: 'PIN-based identity means instant access to verified career history, skills, and credentials.',
       color: 'text-pink-600',
       bgColor: 'bg-pink-50'
     },
     {
-      icon: Globe,
-      title: 'Global Compliance & EOR',
-      description: 'Hire across borders with built-in compliance, payroll, and employer-of-record services.',
+      icon: BarChart,
+      title: 'Real-Time Professional Insights',
+      description: 'Get live updates on professional achievements, role changes, and skill development.',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
-      icon: Clock,
-      title: 'Hire in Days, Not Months',
-      description: 'Average time-to-hire is 12 days. Post today, start interviewing tomorrow.',
+      icon: DollarSign,
+      title: 'Reduced Hiring Time and Cost',
+      description: 'CoreID gives companies confidence from the very first interaction, eliminating verification delays.',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
     },
     {
-      icon: DollarSign,
-      title: 'Transparent Pricing',
-      description: 'Pay per hire with full cost breakdown. No hidden fees, no surprises.',
+      icon: Globe,
+      title: 'API-Driven Integration',
+      description: 'Seamlessly integrate professional identity into your existing hiring tools and workflows.',
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50'
     }
@@ -88,44 +88,44 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
 
   const professionalFeatures = [
     {
-      icon: BadgeCheck,
-      title: 'AI Skill Verification',
-      description: 'Connect LinkedIn, GitHub, or portfolio. Get instant AI-verified skill badges that employers trust.',
+      icon: Globe,
+      title: 'Unlocks Global Opportunities',
+      description: 'Your PIN works across countries and platforms, giving you access to opportunities worldwide.',
       color: 'text-primary',
       bgColor: 'bg-primary/10'
     },
     {
-      icon: Sparkles,
-      title: 'Social + Professional Identity',
-      description: 'Build a trusted profile that combines your work history with social verification.',
+      icon: BadgeCheck,
+      title: 'Proves Identity and Skills Instantly',
+      description: 'No more lengthy verification processes. Your PIN instantly validates who you are and what you can do.',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
-      icon: Users,
-      title: 'Get Discovered by Employers',
-      description: 'Top employers swipe through profiles daily. When you match, start conversations instantly.',
+      icon: TrendingUp,
+      title: 'Tracks Experience and Achievements',
+      description: 'Your professional journey follows you everywhere. Every job, every skill, every achievement.',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      icon: TrendingUp,
-      title: 'Career Growth Tracking',
-      description: 'Track your skill development, certifications, and career milestones in one place.',
+      icon: Award,
+      title: 'Helps You Stand Out with Verified Credibility',
+      description: 'Verified credentials and trust scoring help you stand out in a crowded marketplace.',
       color: 'text-green-600',
       bgColor: 'bg-green-50'
     },
     {
-      icon: MessageSquare,
-      title: 'Direct Employer Connections',
-      description: 'No middlemen. Chat directly with hiring managers when you match.',
+      icon: Users,
+      title: 'Works Across Multiple Platforms',
+      description: 'One identity that works everywhere. No more creating multiple profiles or losing your professional history.',
       color: 'text-pink-600',
       bgColor: 'bg-pink-50'
     },
     {
-      icon: Award,
-      title: 'Shareable Credentials',
-      description: 'Download and share your verified badges on social media, email signatures, and LinkedIn.',
+      icon: Sparkles,
+      title: 'Gain Mobility, Proof, and Visibility',
+      description: 'Professionals gain complete control over their identity with portable, verified professional data.',
       color: 'text-amber-600',
       bgColor: 'bg-amber-50'
     }
@@ -244,26 +244,25 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#0a0b0d' }}>
       {/* Hero Section */}
-      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-to-br from-primary/5 via-white to-purple-500/5">
+      <section className="py-12 sm:py-16 lg:py-20 px-4" style={{ background: 'linear-gradient(135deg, rgba(191, 165, 255, 0.1) 0%, rgba(10, 11, 13, 1) 50%, rgba(123, 184, 255, 0.1) 100%)' }}>
         <div className="container mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12 sm:mb-16"
           >
-            <Badge variant="secondary" className="mb-4 px-4 py-2">
+            <Badge className="mb-4 px-4 py-2 bg-white/10 text-white border-white/20">
               <Sparkles className="h-4 w-4 mr-2" />
               Our Solutions
             </Badge>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-6 tracking-tight">
-              Everything You Need to
-              <span className="text-primary block mt-2">Hire, Get Hired, or Verify</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl mb-4 sm:mb-6 tracking-tight text-white">
+              One PIN.
+              <span className="block mt-2" style={{ color: '#32f08c' }}>Infinite Possibilities.</span>
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto px-4">
-              Whether you're an employer looking for talent, a professional seeking opportunities, 
-              or a university issuing credentials — CoreID has you covered.
+            <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto px-4">
+              CoreID's unified identity infrastructure serves professionals, employers, and platforms with a single API-driven standard that creates trust-first interactions.
             </p>
           </motion.div>
 
@@ -316,9 +315,9 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
                     <div className="p-4 sm:p-8 w-full">
-                      <h3 className="text-lg sm:text-2xl text-white mb-2">Hire Faster. Hire Smarter.</h3>
+                      <h3 className="text-lg sm:text-2xl text-white mb-2">One API That Gives You Everything</h3>
                       <p className="text-sm sm:text-base text-white/90">
-                        AI-powered matching connects you with pre-verified talent in minutes.
+                        Fraud-proof identity checks, verified profiles you can trust, instant talent onboarding, and reduced hiring time and cost.
                       </p>
                     </div>
                   </div>
@@ -329,15 +328,15 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
 
                 {/* Features */}
                 <div>
-                  <h2 className="text-2xl sm:text-3xl mb-6 sm:mb-8 text-center">Key Features for Employers</h2>
+                  <h2 className="text-2xl sm:text-3xl mb-6 sm:mb-8 text-center text-white">Key Features for Employers</h2>
                   {renderFeatures(employerFeatures)}
                 </div>
 
                 {/* CTA */}
                 <div className="text-center py-8 sm:py-12 bg-gradient-to-br from-blue-50 to-white rounded-2xl border-2 border-blue-100 px-4">
-                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Find Your Next Hire?</h3>
+                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Tap Into Unified Identity?</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
-                    Join 500+ companies hiring verified talent from Africa and beyond.
+                    Our API lets companies instantly onboard verified professionals, reduce fraud, and access trusted career data.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <Button 
@@ -378,9 +377,9 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
                     <div className="p-4 sm:p-8 w-full">
-                      <h3 className="text-lg sm:text-2xl text-white mb-2">Get Verified. Get Discovered. Get Hired.</h3>
+                      <h3 className="text-lg sm:text-2xl text-white mb-2">A Single PIN That Unlocks Everything</h3>
                       <p className="text-sm sm:text-base text-white/90">
-                        Prove your skills with AI verification and match with global employers.
+                        Unlock global opportunities, prove your identity and skills instantly, track your achievements, and gain verified credibility.
                       </p>
                     </div>
                   </div>
@@ -391,15 +390,15 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
 
                 {/* Features */}
                 <div>
-                  <h2 className="text-2xl sm:text-3xl mb-6 sm:mb-8 text-center">Key Features for Professionals</h2>
+                  <h2 className="text-2xl sm:text-3xl mb-6 sm:mb-8 text-center text-white">Key Features for Professionals</h2>
                   {renderFeatures(professionalFeatures)}
                 </div>
 
                 {/* CTA */}
                 <div className="text-center py-8 sm:py-12 bg-gradient-to-br from-primary/5 to-white rounded-2xl border-2 border-primary/20 px-4">
-                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Showcase Your Skills?</h3>
+                  <h3 className="text-xl sm:text-2xl mb-3 sm:mb-4">Ready to Build Your Verified Identity?</h3>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto">
-                    Join 10,000+ verified professionals getting matched with top employers.
+                    Professionals gain mobility, proof, and visibility — all from one identity that follows you everywhere.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <Button 
@@ -444,10 +443,10 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
             className="max-w-3xl mx-auto"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl text-white mb-4 sm:mb-6">
-              Ready to Transform How You Work?
+              Ready to Build the Future of Identity?
             </h2>
             <p className="text-base sm:text-lg text-white/90 mb-6 sm:mb-8 px-4">
-              Join thousands of employers, professionals, and universities using CoreID to build trust and create opportunities.
+              CoreID is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 

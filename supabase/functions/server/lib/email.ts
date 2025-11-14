@@ -1,4 +1,5 @@
 import * as kv from "../kv_store.tsx";
+import { trackEmailEvent } from "./monitoring.ts";
 
 export async function sendEmail(to: string, subject: string, html: string, text: string, context: Record<string, any> = {}) {
   const apiKey = Deno.env.get('RESEND_API_KEY') || ''
@@ -25,6 +26,8 @@ export async function sendEmail(to: string, subject: string, html: string, text:
       const entry = { to, subject, status: res.status, id: data?.id || null, ts: new Date().toISOString(), ...context }
       if (res.ok) {
         try { await kv.set(`email:send:success:${Date.now()}`, entry) } catch {}
+        // Track successful email send
+        await trackEmailEvent(to, 'sent', 'resend', data?.id || undefined, undefined, context.userId);
         return { success: true, id: data?.id || null }
       } else {
         lastErr = data?.error || `Email send failed (${res.status})`

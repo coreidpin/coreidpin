@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
 import { api } from '../../src/utils/api';
 import { supabase } from '../../src/utils/supabase/client';
 
@@ -510,3 +510,6 @@ describe('Phase 2: Email Verification Flow', () => {
 //   await supabase.auth.admin.deleteUser(userId);
 //   await supabase.from('email_verifications').delete().eq('email', email);
 // }
+  beforeAll(() => {
+    try { localStorage.setItem('csrfToken', 'test-csrf-token') } catch {}
+  });

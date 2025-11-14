@@ -32,10 +32,11 @@ import {
   Briefcase
 } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
+import { clearSession, initAuth } from '../utils/auth';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import RegistrationFlow from './RegistrationFlow';
+import UnifiedFlow from './UnifiedFlow';
 
 interface LoginDialogProps {
   open?: boolean;
@@ -141,9 +142,7 @@ export function LoginDialog({
     }
     try {
       setIsLoading(true);
-      const redirectTo = `${window.location.origin}`; // App listens for PASSWORD_RECOVERY and opens reset dialog
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-      if (error) throw error;
+      await api.passwordResetSend(email);
       toast.success('Password reset email sent. Check your inbox.');
     } catch (err: any) {
       setError(err.message || 'Failed to send password reset email.');
@@ -201,44 +200,72 @@ export function LoginDialog({
         const emailToUse = selectedUserType === 'employer' ? formData.contactEmail : formData.email;
         const passwordToUse = formData.password;
 
-        const { data, error } = await supabase.auth.signUp({
-          email: emailToUse,
-          password: passwordToUse,
-          options: {
-            data: selectedUserType === 'professional' ? {
-              name: formData.name,
-              userType: selectedUserType,
-              title: formData.title,
-              location: formData.location,
-              phone: formData.phone,
-            } : {
-              userType: selectedUserType,
-              companyName: formData.companyName,
-              industry: formData.industry,
-              headquarters: formData.headquarters,
-              contactEmail: formData.contactEmail,
-              phone: formData.phone,
-            },
-          },
-        });
+        const registerPayload = {
+          email: emailToUse!,
+          password: passwordToUse!,
+          name: formData.name!,
+          userType: selectedUserType,
+          title: formData.title,
+          companyName: formData.companyName,
+          role: formData.role,
+          institution: formData.institution,
+          gender: formData.gender,
+          phoneNumber: formData.phone,
+          location: formData.location,
+          yearsOfExperience: formData.yearsOfExperience,
+          currentCompany: formData.currentCompany,
+          seniority: formData.seniority,
+          topSkills: formData.topSkills,
+          highestEducation: formData.highestEducation,
+          resumeFileName: formData.resumeFileName,
+        } as const;
 
-        if (error) throw error;
-
-        if (data.user) {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            localStorage.setItem('accessToken', session.access_token);
-            localStorage.setItem('userId', data.user.id);
-            localStorage.setItem('userType', selectedUserType);
+        let result: any;
+        try {
+          result = await api.register(registerPayload as any);
+        } catch (e: any) {
+          const msg = (e?.message || '').toLowerCase();
+          const disabled = /disabled/.test(msg);
+          if (disabled) {
+            const { data, error } = await supabase.auth.signUp({
+              email: emailToUse!,
+              password: passwordToUse!,
+              options: {
+                data: selectedUserType === 'professional' ? {
+                  name: formData.name,
+                  userType: selectedUserType,
+                  title: formData.title,
+                  location: formData.location,
+                  phone: formData.phone,
+                } : {
+                  userType: selectedUserType,
+                  companyName: formData.companyName,
+                  industry: formData.industry,
+                  headquarters: formData.headquarters,
+                  contactEmail: formData.contactEmail,
+                  phone: formData.phone,
+                },
+              },
+            });
+            if (error) throw error;
+            if (data.user) {
+              toast.success('🎉 Account created successfully! Check your email for a verification code.');
+              if (onOpenChange) onOpenChange(false);
+              return;
+            }
           }
-
-          toast.success('🎉 Account created successfully!');
-          onLoginSuccess(selectedUserType, data.user);
-          if (onOpenChange) onOpenChange(false);
+          throw e;
         }
+        if (!result?.success) {
+          throw new Error(result?.error || 'Registration failed');
+        }
+
+        toast.success('🎉 Account created successfully! Check your email for a verification code.');
+        if (onOpenChange) onOpenChange(false);
       } else {
         // Route login through secure API for rate limiting & history
         try {
+          await clearSession();
           const result = await api.loginSecure({ email, password });
           const accessToken = result.accessToken;
           const refreshToken = result.refreshToken;
@@ -249,6 +276,8 @@ export function LoginDialog({
 
           // Persist session in Supabase client
           await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          try { await initAuth() } catch {}
+          try { await initAuth(); } catch {}
 
           localStorage.setItem('accessToken', accessToken);
           localStorage.setItem('userId', result.user.id);
@@ -259,6 +288,7 @@ export function LoginDialog({
             result.user.user_metadata?.userType || 'professional',
             result.user
           );
+          try { window.location.href = '/dashboard' } catch {}
           if (onOpenChange) onOpenChange(false);
         } catch (apiErr: any) {
           // Fallback to direct Supabase auth when server function is unavailable
@@ -266,13 +296,14 @@ export function LoginDialog({
           const serviceDown = /503|fetch|network|temporarily unavailable|service unavailable/.test(msg);
           const tooMany = /too many login attempts/i.test(apiErr?.message || '');
           const csrfMissing = /csrf token/i.test(apiErr?.message || '');
+          const disabled = /disabled/.test(msg);
           if (tooMany) {
             throw new Error('Too many login attempts. Please wait a few minutes and retry.');
           }
           if (csrfMissing) {
             throw new Error('Security check failed. Please refresh the page and try again.');
           }
-          if (!serviceDown) {
+          if (!serviceDown && !disabled) {
             // Re-throw non-service errors to be handled by outer catch
             throw apiErr;
           }
@@ -297,6 +328,8 @@ export function LoginDialog({
           }
 
           await supabase.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
+          try { await initAuth() } catch {}
+          try { await initAuth(); } catch {}
           localStorage.setItem('accessToken', session.access_token);
           localStorage.setItem('userId', data.user.id);
           localStorage.setItem('userType', data.user.user_metadata?.userType || 'professional');
@@ -305,6 +338,7 @@ export function LoginDialog({
             data.user.user_metadata?.userType || 'professional',
             data.user
           );
+          try { window.location.href = '/dashboard' } catch {}
           if (onOpenChange) onOpenChange(false);
         }
       }
@@ -600,7 +634,7 @@ export function LoginDialog({
               {mode === 'signup' && (
                 <div className="space-y-6">
                   {selectedUserType === 'professional' ? (
-                    <RegistrationFlow
+                    <UnifiedFlow
                       userType="professional"
                       origin="modal"
                       onComplete={(userData) => {

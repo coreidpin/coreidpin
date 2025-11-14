@@ -9,7 +9,7 @@ import { LandingPage } from './components/LandingPage';
 import { OurStoryPage } from './components/OurStoryPage';
 import { HowItWorksPage } from './components/HowItWorksPage';
 import { PlaceholderPage } from './components/PlaceholderPage';
-import UnifiedFlow from './components/UnifiedFlow';
+import UnifiedFlow from './components/UnifiedFlow.tsx';
 import { EmployerDashboard } from './components/EmployerDashboard';
 import { ProfessionalDashboard } from './components/ProfessionalDashboard';
 import { UniversityDashboard } from './components/UniversityDashboard';
@@ -617,7 +617,7 @@ export default function App() {
   if (appState === 'our-story') {
     return (
       <>
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0b0d' }}>
           <Navbar 
             currentPage="our-story"
             onNavigate={handleNavigate}
@@ -642,7 +642,7 @@ export default function App() {
   if (appState === 'how-it-works') {
     return (
       <>
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0b0d' }}>
           <Navbar 
             currentPage="how-it-works"
             onNavigate={handleNavigate}
@@ -765,7 +765,7 @@ export default function App() {
   if (['employers', 'professionals', 'universities'].includes(appState)) {
     return (
       <>
-        <div className="min-h-screen bg-white flex flex-col">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0b0d' }}>
           <Navbar 
             currentPage={appState}
             onNavigate={handleNavigate}
@@ -815,7 +815,7 @@ export default function App() {
     const pageConfig = {
       'trust-safety': {
         title: 'Trust & Safety',
-        description: 'Learn about our comprehensive security measures and compliance protocols that protect all users on the CoreID platform.'
+        description: 'Trust is the core of CoreID — it\'s in our name. We build infrastructure designed to protect users, secure data, and enable safe interactions. Your PIN belongs to you. Your data is never shared without explicit consent. You decide where your identity appears and who sees what. We use secure verification, encrypted storage, risk scoring, anomaly detection, and hashed identity attributes. CoreID is compliant with GDPR, NDPR, CCPA, and ISO security standards. Trust is not a feature — it\'s the foundation.'
       },
       'help': {
         title: 'Help Center',
@@ -835,7 +835,7 @@ export default function App() {
     
     return (
       <>
-        <div className="min-h-screen bg-background flex flex-col">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0b0d' }}>
           <Navbar 
             currentPage={appState}
             onNavigate={handleNavigate}

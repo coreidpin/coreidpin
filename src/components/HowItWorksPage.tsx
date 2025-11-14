@@ -37,27 +37,27 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
   const overviewSteps = [
     {
       icon: UserPlus,
-      title: 'Registration & Verification',
-      description: 'Users register and undergo comprehensive KYC, AML, and sanctions screening',
-      details: 'Our rigorous verification process ensures all participants meet international compliance standards'
+      title: 'Your Phone Number Becomes Your PIN',
+      description: 'No usernames. No multiple accounts. A single PIN based on your phone number authenticates your identity everywhere.',
+      details: 'We validate your PIN through secure verification protocols and bind it to your evolving professional profile.'
     },
     {
       icon: FileCheck,
-      title: 'Credential Verification',
-      description: 'Educational and professional credentials are verified through blockchain technology',
-      details: 'Tamper-proof verification with real-time validation from issuing institutions'
+      title: 'CoreID Infrastructure Layer Powers Everything',
+      description: 'The PIN connects directly to our CoreID Infrastructure Layer — a scalable identity API.',
+      details: 'CIL handles identity verification, profile enrichment, credential validation, trust scoring, consent management, and real-time updates.'
     },
     {
       icon: Search,
-      title: 'AI-Powered Matching',
-      description: 'Our AI engine matches verified talent with suitable opportunities',
-      details: 'Advanced algorithms consider skills, experience, compliance requirements, and cultural fit'
+      title: 'Professionals Build Verified Identity Once',
+      description: 'Your achievements, roles, credentials, and reputation follow you across platforms.',
+      details: 'Every job you apply for. Every company you join. Every product that integrates CoreID.'
     },
     {
       icon: Building,
-      title: 'Compliant Hiring',
-      description: 'Secure, compliant hiring process with full EOR support',
-      details: 'End-to-end compliance management including contracts, payments, and regulatory requirements'
+      title: 'Businesses Tap Into One Unified Identity Standard',
+      description: 'Our API lets companies instantly onboard verified professionals and reduce fraud.',
+      details: 'Access trusted career data, automate decision flows, and build smarter hiring tools. This creates a trust-first identity layer for everyone.'
     }
   ];
 
@@ -156,24 +156,24 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
 
   const benefits = [
     {
+      icon: Globe,
+      title: 'Global',
+      description: 'Works across countries and platforms with universal recognition'
+    },
+    {
+      icon: Users,
+      title: 'Portable',
+      description: 'Owned and controlled by the individual, follows you everywhere'
+    },
+    {
       icon: Shield,
-      title: '100% Compliant',
-      description: 'Full KYC, AML, and sanctions screening for all participants'
+      title: 'Verified',
+      description: 'Backed by secure identity and career data with blockchain protection'
     },
     {
       icon: Zap,
-      title: 'Fast Verification',
-      description: 'Credentials verified in 48-72 hours using blockchain technology'
-    },
-    {
-      icon: Globe,
-      title: 'Global Reach',
-      description: 'Connect talent across 45+ countries with international opportunities'
-    },
-    {
-      icon: Lock,
-      title: 'Secure & Private',
-      description: 'Bank-grade security with GDPR and NDPR compliance'
+      title: 'Interoperable',
+      description: 'A single standard for millions of products and platforms'
     }
   ];
 
@@ -201,7 +201,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#0a0b0d' }}>
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-12 lg:py-20">
         <motion.div
@@ -209,21 +209,20 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-4xl mx-auto"
         >
-          <Badge variant="secondary" className="mb-4">
+          <Badge className="mb-4 px-4 py-2 bg-white/10 text-white border-white/20">
             How It Works
           </Badge>
-          <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-            Simple, Secure, Compliant
+          <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-white">
+            Your Phone Number Becomes Your PIN
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-Discover how CoreID transforms the way verified African talent connects with global opportunities
-            through our comprehensive compliance-first platform.
+          <p className="text-xl text-gray-300 mb-8 leading-relaxed">
+            Discover how CoreID creates a unified professional identity layer that powers trust, verification, and opportunity across the global workforce.
           </p>
         </motion.div>
       </section>
 
       {/* Overview Process */}
-      <section className="bg-muted/50 py-16 lg:py-24">
+      <section className="py-16 lg:py-24" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -231,12 +230,11 @@ Discover how CoreID transforms the way verified African talent connects with glo
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-The CoreID Process
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
+              How CoreID Infrastructure Layer Powers Everything
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our four-step process ensures secure, compliant, and efficient connections 
-              between talent and opportunities.
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              Our PIN connects directly to the CoreID Infrastructure Layer — a scalable identity API that businesses and platforms integrate in minutes.
             </p>
           </motion.div>
 
@@ -252,25 +250,23 @@ The CoreID Process
                   className="relative"
                   onMouseEnter={() => setActiveStep(index)}
                 >
-                  <Card className={`p-6 h-full transition-all duration-300 cursor-pointer ${
-                    activeStep === index ? 'border-primary shadow-lg scale-105' : 'hover:shadow-md'
-                  }`}>
+                  <Card className={`p-6 h-full transition-all duration-300 cursor-pointer bg-white/5 backdrop-blur-xl border-white/10 ${
+                    activeStep === index ? 'shadow-lg scale-105' : 'hover:shadow-md'
+                  }`} style={activeStep === index ? { borderColor: '#32f08c' } : {}}>
                     <CardContent className="p-0 text-center">
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors ${
-                        activeStep === index ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
-                      }`}>
+                      <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors`} style={activeStep === index ? { backgroundColor: '#32f08c', color: '#0a0b0d' } : { backgroundColor: 'rgba(50, 240, 140, 0.1)', color: '#32f08c' }}>
                         <step.icon className="h-8 w-8" />
                       </div>
-                      <h3 className="font-semibold mb-2">{step.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
-                      <p className="text-xs text-muted-foreground">{step.details}</p>
+                      <h3 className="font-semibold mb-2 text-white">{step.title}</h3>
+                      <p className="text-sm text-gray-300 mb-3">{step.description}</p>
+                      <p className="text-xs text-gray-400">{step.details}</p>
                     </CardContent>
                   </Card>
                   
                   {/* Arrow for desktop */}
                   {index < overviewSteps.length - 1 && (
                     <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-                      <ArrowRight className="h-6 w-6 text-primary" />
+                      <ArrowRight className="h-6 w-6" style={{ color: '#32f08c' }} />
                     </div>
                   )}
                 </motion.div>
@@ -288,21 +284,21 @@ The CoreID Process
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-            Detailed Workflows
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
+            Solutions for Every User
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-Explore the specific journey for each user type on the CoreID platform.
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Explore how CoreID's unified identity infrastructure serves professionals, employers, and platforms.
           </p>
         </motion.div>
 
         <Tabs defaultValue="employers" className="max-w-6xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="employers" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/5 border-white/10">
+            <TabsTrigger value="employers" className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-gray-300">
               <Building className="h-4 w-4" />
               <span className="hidden sm:inline">Employers</span>
             </TabsTrigger>
-            <TabsTrigger value="professionals" className="flex items-center gap-2">
+            <TabsTrigger value="professionals" className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-gray-300">
               <UserCheck className="h-4 w-4" />
               <span className="hidden sm:inline">Professionals</span>
             </TabsTrigger>
@@ -434,7 +430,7 @@ Explore the specific journey for each user type on the CoreID platform.
       </section>
 
       {/* Benefits Section */}
-      <section className="bg-primary/5 py-16 lg:py-24">
+      <section className="py-16 lg:py-24" style={{ backgroundColor: 'rgba(191, 165, 255, 0.05)' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -442,11 +438,11 @@ Explore the specific journey for each user type on the CoreID platform.
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-Why Choose CoreID?
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
+              The Future We Are Building
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Experience the benefits of our compliance-first approach to global talent acquisition.
+            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+              CoreID is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
             </p>
           </motion.div>
 
@@ -459,11 +455,11 @@ Why Choose CoreID?
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="p-6 text-center h-full">
+                <Card className="p-6 text-center h-full bg-white/5 backdrop-blur-xl border-white/10">
                   <CardContent className="p-0">
-                    <benefit.icon className="h-12 w-12 text-primary mx-auto mb-4" />
-                    <h3 className="font-semibold mb-2">{benefit.title}</h3>
-                    <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                    <benefit.icon className="h-12 w-12 mx-auto mb-4" style={{ color: '#32f08c' }} />
+                    <h3 className="font-semibold mb-2 text-white">{benefit.title}</h3>
+                    <p className="text-sm text-gray-300">{benefit.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -480,10 +476,10 @@ Why Choose CoreID?
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
             Powered by Advanced Technology
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Our platform leverages cutting-edge technology to ensure security, compliance, and efficiency.
           </p>
         </motion.div>
@@ -497,15 +493,15 @@ Why Choose CoreID?
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="p-6 hover:shadow-lg transition-shadow">
+              <Card className="p-6 hover:shadow-lg transition-shadow bg-white/5 backdrop-blur-xl border-white/10">
                 <CardContent className="p-0">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 bg-primary/10 rounded-lg">
-                      <tech.icon className="h-6 w-6 text-primary" />
+                    <div className="p-3 rounded-lg" style={{ backgroundColor: 'rgba(50, 240, 140, 0.1)' }}>
+                      <tech.icon className="h-6 w-6" style={{ color: '#32f08c' }} />
                     </div>
                     <div>
-                      <h3 className="font-semibold mb-2">{tech.name}</h3>
-                      <p className="text-sm text-muted-foreground">{tech.description}</p>
+                      <h3 className="font-semibold mb-2 text-white">{tech.name}</h3>
+                      <p className="text-sm text-gray-300">{tech.description}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -516,7 +512,7 @@ Why Choose CoreID?
       </section>
 
       {/* CTA Section */}
-      <section className="bg-muted/50 py-16 lg:py-24">
+      <section className="py-16 lg:py-24" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)' }}>
         <div className="container mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -524,12 +520,11 @@ Why Choose CoreID?
             viewport={{ once: true }}
             className="max-w-2xl mx-auto"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-              Ready to Get Started?
+            <h2 className="text-3xl lg:text-4xl font-bold mb-6 text-white">
+              Ready to Build the Future?
             </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-Join thousands of professionals and employers already using CoreID
-              to create compliant global connections.
+            <p className="text-lg text-gray-300 mb-8">
+              The future of professional identity will not be fragmented. It will be unified, trusted, and API-driven — and CoreID is leading the way.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 

@@ -377,31 +377,61 @@ profile.post("/complete", async (c) => {
       if (typeof value === 'number') return value > 0;
       return value !== '' && value !== null && value !== undefined;
     });
-    
     const completionPercentage = Math.round((filledFields.length / allFields.length) * 100);
+
+    // Progressive setup steps
+    const setupSteps = profileData.setup_steps || {};
+    const setupProgress = typeof profileData.setup_progress === 'number' ? profileData.setup_progress : Object.values(setupSteps).filter(Boolean).length;
 
     // Save complete profile
     await kv.set(`profile-complete:${userId}`, {
       userId,
       ...profileData,
       completionPercentage,
+      setup_steps: setupSteps,
+      setup_progress: setupProgress,
       savedAt: new Date().toISOString()
     });
 
-    // Update user profile status
+    // Update user profile status in KV
     const userProfile = await kv.get(`user:${userId}`) || {};
     await kv.set(`user:${userId}`, {
       ...userProfile,
       profileComplete: true,
       completionPercentage,
+      setup_steps: setupSteps,
+      setup_progress: setupProgress,
       updatedAt: new Date().toISOString()
     });
+
+    // Update public.profiles table with setup_progress and setup_steps
+    try {
+      await supabase
+        .from('profiles')
+        .update({
+          profile_complete: true,
+          completion_percentage: completionPercentage,
+          setup_progress: setupProgress,
+          setup_steps: setupSteps
+        })
+        .eq('user_id', userId);
+    } catch (err) {
+      console.log('Failed to update public.profiles setup_progress:', err);
+    }
 
     return c.json({ 
       success: true, 
       message: "Profile saved successfully",
       completionPercentage,
-      missingFields: allFields.filter(key => !filledFields.includes(key))
+      setup_steps: setupSteps,
+      setup_progress: setupProgress,
+      missingFields: allFields.filter(key => !filledFields.includes(key)),
+      profile: {
+        ...profileData,
+        completionPercentage,
+        setup_steps: setupSteps,
+        setup_progress: setupProgress
+      }
     });
   } catch (error) {
     console.log("Save profile error:", error);

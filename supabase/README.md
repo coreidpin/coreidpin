@@ -91,5 +91,10 @@ curl -i "http://localhost:54321/functions/v1/server/health"
 - 500 errors during AI calls: Verify `OPENAI_API_KEY` is set; otherwise mock analysis is returned by the profile analyzer.
 - Route not found: Confirm router mounts in `supabase/functions/server/index.tsx` and verify the function name used in the URL.
 
+## Deprecated Function Notice
+- The standalone `send-verification-email` function is deprecated.
+- Use the consolidated route `POST /server/auth/email/verify/send` exposed by the `server` Edge Function.
+- Verification links should route to your `SITE_URL` page (`/auth/verify-email`) so the frontend can include required headers.
+
 ---
 With these steps, your Edge Function, KV store, and routes should deploy and operate correctly on Supabase.

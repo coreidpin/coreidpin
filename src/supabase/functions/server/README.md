@@ -1,4 +1,10 @@
-# nwanne Backend API
+# nwanne Backend API (Deprecated Copy)
+
+## Deprecation Notice
+
+This `src/supabase/functions/server` tree is deprecated and not used by Supabase CLI deployments.
+The source of truth for the Edge Function lives under `supabase/functions/server`.
+Please make all changes in `supabase/functions/server`.
 
 ## Structure
 

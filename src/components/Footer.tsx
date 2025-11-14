@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -127,7 +127,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-4xl md:text-5xl font-medium bg-gradient-to-r from-white via-[#bfa5ff] to-[#7bb8ff] bg-clip-text text-transparent">
+                <h2 className="text-4xl md:text-5xl font-medium text-white">
                   Your Career Passport,<br />Verified & Trusted Globally
                 </h2>
                 <p className="text-lg text-white/60 max-w-2xl mx-auto">
@@ -333,30 +333,30 @@ export function Footer({ onNavigate }: FooterProps = {}) {
         {/* Bottom Bar */}
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-white/40">
+            <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-white/60">
               <span>© 2025 swipe. All rights reserved.</span>
               <div className="flex items-center gap-6">
                 <button 
                   onClick={() => handleNavigate('privacy')} 
-                  className="hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                 >
                   Privacy
                 </button>
                 <button 
                   onClick={() => handleNavigate('terms')} 
-                  className="hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                 >
                   Terms
                 </button>
                 <button 
                   onClick={() => handleNavigate('cookies')} 
-                  className="hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                 >
                   Cookies
                 </button>
                 <button 
                   onClick={() => handleNavigate('gdpr')} 
-                  className="hover:text-white transition-colors"
+                  className="text-white/60 hover:text-white transition-colors"
                 >
                   GDPR
                 </button>

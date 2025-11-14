@@ -74,6 +74,10 @@ class APIClient {
         
         // Handle 401 Unauthorized - token might be expired
         if (res.status === 401 && attempt === 0) {
+          const isLoginEndpoint = /\/login(\?|$)/.test(url);
+          if (isLoginEndpoint) {
+            return res;
+          }
           console.log('Received 401, attempting token refresh...');
           
           // Try to refresh the token
@@ -115,7 +119,8 @@ class APIClient {
         return res;
       } catch (err: any) {
         lastError = err;
-        const isTransient = !!(err && (err.status >= 500 || err.status === 429));
+        const isNetwork = typeof err?.message === 'string' && /network|timeout/i.test(err.message);
+        const isTransient = !!(err && ((err.status >= 500 || err.status === 429) || isNetwork));
         if (!isTransient || attempt === retries) break;
         const backoffMs = Math.min(1000 * Math.pow(2, attempt), 4000);
         await new Promise((r) => setTimeout(r, backoffMs));
@@ -149,9 +154,20 @@ class APIClient {
   }
 
   async register(data: RegisterUserData) {
+    const baseHeaders = this.getHeaders(undefined, true);
+    if (!('X-CSRF-Token' in baseHeaders)) {
+      try {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
+        baseHeaders['X-CSRF-Token'] = token;
+        try { localStorage.setItem('csrfToken', token) } catch {}
+      } catch {}
+    }
+    const debug = ((import.meta as any)?.env?.DEV === true) || ((import.meta as any)?.env?.VITE_DEBUG_REGISTER === 'true');
     const response = await this.fetchWithRetry(`${BASE_URL}/register`, {
       method: 'POST',
-      headers: this.getHeaders(undefined, true),
+      headers: debug ? { ...baseHeaders, 'X-Debug-Register': 'true' } : baseHeaders,
       body: JSON.stringify(data)
     });
 
@@ -203,6 +219,15 @@ class APIClient {
 
   async loginSecure(data: LoginData) {
     const headers = this.getHeaders(undefined, true);
+    if (!('X-CSRF-Token' in headers)) {
+      try {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
+        headers['X-CSRF-Token'] = token;
+        try { localStorage.setItem('csrfToken', token) } catch {}
+      } catch {}
+    }
     console.log('Login request headers:', headers);
     console.log('Login URL:', `${BASE_URL}/login`);
     
@@ -571,48 +596,132 @@ class APIClient {
 
   // Email Verification for PIN Onboarding
   async sendVerificationEmail(email: string, name?: string) {
-    const verificationUrl = `https://${projectId}.supabase.co/functions/v1/send-verification-email`;
-    
-    // Get anon key for authentication
-    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
-    
-    const response = await fetch(verificationUrl, {
+    const headers = this.getHeaders(undefined, true);
+    if (!('X-CSRF-Token' in headers)) {
+      try {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
+        headers['X-CSRF-Token'] = token;
+        try { localStorage.setItem('csrfToken', token) } catch {}
+      } catch {}
+    }
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/email/verify/send`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${anonKey}`,
-        'apikey': anonKey
-      },
-      body: JSON.stringify({ email, name }),
+      headers,
+      body: JSON.stringify({ email, name })
     });
-    
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const msg = data?.error || 'Failed to send verification email';
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to send verification email';
       throw new Error(msg);
     }
     return data;
   }
 
   async verifyEmailCode(email: string, code: string) {
-    const verificationUrl = `https://${projectId}.supabase.co/functions/v1/verify-email-code`;
-    
-    // Get anon key for authentication
-    const anonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY ?? publicAnonKey;
-    
-    const response = await fetch(verificationUrl, {
+    const headers = this.getHeaders(undefined, true);
+    if (!('X-CSRF-Token' in headers)) {
+      try {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
+        headers['X-CSRF-Token'] = token;
+        try { localStorage.setItem('csrfToken', token) } catch {}
+      } catch {}
+    }
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/email/verify/confirm`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${anonKey}`,
-        'apikey': anonKey
-      },
-      body: JSON.stringify({ email, code }),
+      headers,
+      body: JSON.stringify({ token: code })
     });
-    
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      throw new Error(data.error || 'Invalid verification code');
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Verification failed';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async passwordResetSend(email: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/password-reset/send`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ email })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to send password reset';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async passwordResetConfirm(email: string, newPassword: string, token: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/password-reset/confirm`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ email, newPassword, token })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to confirm password reset';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // Phone Verification API Methods
+  async sendPhoneOTP(phoneNumber: string, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/send-otp`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ phone: phoneNumber })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to send OTP';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async verifyPhoneOTP(phoneNumber: string, otp: string, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/verify-phone`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ phone: phoneNumber, otp })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Invalid OTP';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async getPINStatus(accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/status`, {
+      method: 'GET',
+      headers: this.getHeaders(accessToken)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to get PIN status';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async issuePIN(accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/issue`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to issue PIN';
+      throw new Error(msg);
     }
     return data;
   }

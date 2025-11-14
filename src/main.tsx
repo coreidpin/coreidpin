@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { checkFrontendEnv } from "./utils/envCheck";
   import App from "./App.tsx";
   import "./index.css";
-  import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
   import ErrorBoundary from './components/ErrorBoundary';
 
   // Validate frontend env at startup

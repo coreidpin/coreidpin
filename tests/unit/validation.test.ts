@@ -18,6 +18,7 @@ function validateEmail(email?: string): string | null {
   if (!emailRegex.test(email)) return 'Enter a valid email address';
   const domain = email.split('@')[1];
   const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (domain.includes('..')) return 'Email domain appears invalid';
   if (!domainRegex.test(domain)) return 'Email domain appears invalid';
   return null;
 }

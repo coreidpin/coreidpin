@@ -194,7 +194,6 @@ export function ProfileCompletionForm({
     }
 
     setIsSaving(true);
-    
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) {
@@ -203,15 +202,37 @@ export function ProfileCompletionForm({
         return;
       }
 
+      // Track progressive steps
+      const setupSteps = {
+        linkedin: !!formData.linkedinUrl,
+        github: !!formData.githubUrl,
+        portfolio: !!formData.portfolioUrl,
+        resume: !!formData.resumeUrl,
+        skills: formData.skills.length > 0,
+        bio: !!formData.bio,
+        hourlyRate: !!formData.hourlyRate,
+        yearsOfExperience: !!formData.yearsOfExperience,
+        phone: !!formData.phone,
+        gender: !!formData.gender,
+        location: !!formData.location,
+        title: !!formData.title,
+        name: !!formData.name,
+      };
+      const setupProgress = Object.values(setupSteps).filter(Boolean).length;
+
       console.log('Saving profile...', { 
         name: formData.name, 
         title: formData.title,
-        completionPercentage 
+        completionPercentage,
+        setupSteps,
+        setupProgress
       });
 
       const result = await api.saveCompleteProfile({
         ...formData,
-        hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null
+        hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null,
+        setup_steps: setupSteps,
+        setup_progress: setupProgress
       }, accessToken);
 
       console.log('Save result:', result);
@@ -219,7 +240,6 @@ export function ProfileCompletionForm({
       if (result.success) {
         onProfileSaved(result.profile);
         toast.success(`Profile saved successfully! ${result.completionPercentage}% complete`);
-        
         if (result.missingFields && result.missingFields.length > 0) {
           setTimeout(() => {
             toast.info(`Optional fields remaining: ${result.missingFields.join(', ')}`);
@@ -231,7 +251,6 @@ export function ProfileCompletionForm({
     } catch (error: any) {
       console.error('Save error:', error);
       const errorMessage = error.message || 'Failed to save profile';
-      
       if (errorMessage.includes('Unauthorized')) {
         toast.error('Session expired. Please login again.');
       } else if (errorMessage.includes('Missing required fields')) {

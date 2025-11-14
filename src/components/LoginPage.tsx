@@ -5,6 +5,7 @@ import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
+import { clearSession, initAuth } from '../utils/auth';
 import { api } from '../utils/api';
 import '../styles/auth-dark.css';
 
@@ -18,6 +19,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [canResend, setCanResend] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +38,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
 
     setIsLoading(true);
+    try { await clearSession() } catch {}
     try {
       // Support demo accounts for E2E/UI verification without requiring email confirmation
       // Demo credentials: email in demo set + password 'demo123'
@@ -94,6 +97,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
       // Persist session in Supabase client and local storage
       if (!String(accessToken).startsWith('demo-token-')) {
         await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        try { await initAuth() } catch {}
       }
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('userId', result.user.id);
@@ -104,10 +108,27 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
       // Hand back to App to update navigation and redirect
       onLoginSuccess(result.user.user_metadata?.userType || 'professional', result.user);
+      try { window.location.href = '/dashboard' } catch {}
     } catch (err: any) {
-      setError(err?.message || 'Sign in failed. Please try again.');
+      const msg = err?.message || 'Sign in failed. Please try again.';
+      setError(msg);
+      setCanResend(/verify|confirm/i.test(msg));
       // Clear password but retain email
       setPassword('');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      setIsLoading(true);
+      const trimmedEmail = (email || '').trim();
+      await api.sendVerificationEmail(trimmedEmail);
+      toast.success('Verification email sent. Please check your inbox.');
+      setCanResend(false);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to send verification email');
     } finally {
       setIsLoading(false);
     }
@@ -122,9 +143,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
     try {
       setIsLoading(true);
-      const redirectTo = `${window.location.origin}`; // App listens for PASSWORD_RECOVERY and opens reset dialog
-      const { error } = await supabase.auth.resetPasswordForEmail(trimmedEmail, { redirectTo });
-      if (error) throw error;
+      await api.passwordResetSend(trimmedEmail);
       toast.success('Password reset email sent. Check your inbox.');
     } catch (err: any) {
       setError(err?.message || 'Failed to send password reset email.');
@@ -134,22 +153,28 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   return (
-    <div className="auth-page-dark min-h-screen flex items-center justify-center">
-      <div className="auth-card w-full max-w-md border rounded-2xl shadow-lg p-8">
-        <h1 className="auth-title text-2xl font-semibold mb-2">Welcome Back</h1>
-        <p className="auth-subtitle text-sm mb-6">Sign in to your account</p>
+    <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-[#0f1317] shadow-lg">
+      <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
+      <p className="text-sm mb-6 text-white/70">Sign in to your account</p>
 
-        {error && (
-          <div className="auth-error mb-4 p-3 rounded-lg border text-sm">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="mb-4 p-3 rounded-lg border border-white/20 bg-white/5 text-sm text-white">
+          {error}
+          {canResend && (
+            <div className="mt-2">
+              <Button type="button" variant="secondary" className="h-9" onClick={handleResendVerification} disabled={isLoading}>
+                Resend Verification Email
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="auth-label">Email Address</Label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-white">Email Address</Label>
             <div className="relative">
-              <Mail className="auth-icon absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
               <Input
                 id="email"
                 type="email"
@@ -157,16 +182,16 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className={`auth-input h-11 pl-10 ${error ? 'auth-input-error' : ''}`}
+                className={`h-11 pl-10 bg-transparent border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#7bb8ff] focus:border-[#7bb8ff]`}
                 aria-invalid={!!error}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="auth-label">Password</Label>
+            <Label htmlFor="password" className="text-white">Password</Label>
             <div className="relative">
-              <Lock className="auth-icon absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/80" />
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -174,13 +199,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className={`auth-input h-11 pl-10 pr-10 ${error ? 'auth-input-error' : ''}`}
+                className={`h-11 pl-10 pr-10 bg-transparent border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-[#7bb8ff] focus:border-[#7bb8ff]`}
                 aria-invalid={!!error}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="auth-icon-button absolute right-3 top-1/2 -translate-y-1/2"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -189,7 +214,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <button
                 type="button"
                 onClick={handlePasswordResetRequest}
-                className="auth-link text-sm"
+                className="text-sm text-white/70 hover:text-white"
                 aria-label="Forgot password? Request a reset email"
               >
                 Forgot your password?
@@ -199,7 +224,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
           <Button
             type="submit"
-            className="w-full h-11"
+            className="w-full h-11 bg-[#7bb8ff] text-white hover:bg-[#6aa5e6]"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -216,6 +241,5 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           </Button>
         </form>
       </div>
-    </div>
   );
 }

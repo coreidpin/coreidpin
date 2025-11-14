@@ -30,10 +30,12 @@ import {
   ChevronRight,
   Zap,
   Lock,
-  Database
+  Database,
+  Phone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PINIdentityCard, generateMockPINData } from './PINIdentityCard';
+import { PhoneVerification } from './PhoneVerification';
 import { api } from '../utils/api';
 
 interface PINOnboardingProps {
@@ -44,12 +46,14 @@ interface PINOnboardingProps {
 export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationSent, setVerificationSent] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [showPINReveal, setShowPINReveal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
+    phone: '',
     name: '',
     title: '',
     location: '',
@@ -79,32 +83,39 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
       color: '#bfa5ff'
     },
     {
+      id: 'phone',
+      title: 'Phone Verification',
+      shortTitle: 'Phone',
+      icon: Phone,
+      color: '#32f08c'
+    },
+    {
       id: 'professional',
       title: 'Professional Info',
       shortTitle: 'Profile',
       icon: Briefcase,
-      color: '#32f08c'
+      color: '#7bb8ff'
     },
     {
       id: 'connect',
       title: 'Connect Accounts',
       shortTitle: 'Connect',
       icon: Link,
-      color: '#7bb8ff'
+      color: '#bfa5ff'
     },
     {
       id: 'verify',
       title: 'Verification',
       shortTitle: 'Verify',
       icon: Brain,
-      color: '#bfa5ff'
+      color: '#32f08c'
     },
     {
       id: 'complete',
       title: 'PIN Generated',
       shortTitle: 'Complete',
       icon: Sparkles,
-      color: '#32f08c'
+      color: '#7bb8ff'
     }
   ];
 
@@ -549,6 +560,33 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
           </div>
         );
 
+      case 'phone':
+        return (
+          <div className="space-y-8 py-8">
+            <div className="text-center mb-8">
+              <div 
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ backgroundColor: 'rgba(50, 240, 140, 0.1)' }}
+              >
+                <Phone className="h-8 w-8" style={{ color: '#32f08c' }} />
+              </div>
+              <h2 className="text-3xl mb-2">Verify Your Phone Number</h2>
+              <p className="text-gray-600">Required for PIN issuance and security</p>
+            </div>
+
+            <div className="max-w-2xl mx-auto">
+              <PhoneVerification
+                onVerificationComplete={(phone) => {
+                  setFormData({ ...formData, phone });
+                  setPhoneVerified(true);
+                }}
+                initialPhone={formData.phone}
+                isVerified={phoneVerified}
+              />
+            </div>
+          </div>
+        );
+
       case 'professional':
         return (
           <div className="space-y-8 py-8">
@@ -951,6 +989,8 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
         return true;
       case 'identity':
         return emailVerified;
+      case 'phone':
+        return phoneVerified;
       case 'professional':
         return formData.name && formData.title && formData.location && formData.category;
       case 'connect':
