@@ -5,15 +5,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Logo } from './Logo';
 import { AnnouncementBanner } from './AnnouncementBanner';
 import { 
-  Shield, 
   Menu, 
-  X, 
   ChevronDown,
   Building,
   UserCheck,
-  GraduationCap,
   BookOpen,
-  Settings,
   HelpCircle,
   Phone,
   LogIn
@@ -39,6 +35,7 @@ export function Navbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const isLight = currentPage === 'landing';
+  const isProd = import.meta.env.PROD;
 
   const navigationItems = [
     {
@@ -74,6 +71,7 @@ export function Navbar({
   };
 
   const handleLogin = (type: 'employer' | 'professional' | 'university') => {
+    if (isProd) return;
     onLogin?.(type);
     setIsMobileMenuOpen(false);
   };
@@ -152,7 +150,7 @@ export function Navbar({
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-18">
           {/* Logo */}
-          <Logo size="md" isLight={isLight} onClick={() => handleNavigate('landing')} />
+          <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('landing')} />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
@@ -181,7 +179,8 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => onNavigate('login')}
+                  disabled={isProd}
+                  onClick={() => { if (isProd) return; onNavigate('login'); }}
                   className="hover:bg-primary/10 transition-colors"
                 >
                   Login
@@ -190,6 +189,7 @@ export function Navbar({
                 <Button 
                   variant="default" 
                   size="sm"
+                  disabled={isProd}
                   onClick={() => handleLogin('professional')}
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
@@ -222,14 +222,14 @@ export function Navbar({
           {/* Mobile Menu Button */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm" className="lg:hidden flex-shrink-0">
-                <Menu className="h-5 w-5" />
-              </Button>
+                <Button variant="ghost" size="sm" className="lg:hidden flex-shrink-0">
+                  <Menu className="h-5 w-5" />
+                </Button>
             </SheetTrigger>
             <SheetContent side="right" className={isLight ? "w-[85vw] max-w-[350px] p-0 bg-white text-black" : "w-[85vw] max-w-[350px] p-0 bg-[var(--brand-bg)] text-[var(--brand-fg)]"}>
               <SheetHeader className={isLight ? "px-6 py-4 border-b border-black/10" : "px-6 py-4 border-b border-surface"}>
                 <SheetTitle className="flex items-center gap-2 text-left">
-                  <Logo size="sm" isLight={isLight} />
+                  <Logo size="sm" isLight={isLight} showText={false} />
                 </SheetTitle>
                 <SheetDescription className={isLight ? "text-left text-black/70" : "text-left text-[var(--brand-fg)]/70"}>
                   Navigate through swipe platform sections and features
@@ -270,7 +270,9 @@ export function Navbar({
                       <Button 
                         variant="outline" 
                         className="w-full justify-start h-11 px-4"
+                        disabled={isProd}
                         onClick={() => {
+                          if (isProd) return;
                           setIsMobileMenuOpen(false);
                           onNavigate('login');
                         }}
@@ -285,6 +287,7 @@ export function Navbar({
                           <Button 
                             variant="default" 
                             className="w-full justify-start h-12 px-4 bg-primary"
+                            disabled={isProd}
                             onClick={() => handleLogin('professional')}
                           >
                             <UserCheck className="h-5 w-5 mr-3" />
@@ -296,6 +299,7 @@ export function Navbar({
                         <Button 
                           variant="ghost" 
                           className="w-full justify-start h-12 px-4"
+                          disabled={isProd}
                           onClick={() => handleLogin('employer')}
                         >
                           <Building className="h-5 w-5 mr-3 text-blue-600" />
