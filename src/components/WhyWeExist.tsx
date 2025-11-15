@@ -1,8 +1,5 @@
 import { motion } from 'motion/react';
 import { Shield, Zap, CheckCircle, Users } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
 
 const problems = [
   {
@@ -184,7 +181,6 @@ export function WhyWeExist() {
                       className="bg-gradient-to-br from-[#32f08c]/20 to-[#7bb8ff]/20 backdrop-blur-md border border-[#32f08c]/40 rounded-2xl p-6 text-center"
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
-                      transition={{ delay: 1.2, duration: 0.5, type: 'spring' }}
                       viewport={{ once: true }}
                       animate={{
                         boxShadow: [
@@ -193,7 +189,10 @@ export function WhyWeExist() {
                           '0 0 20px rgba(50, 240, 140, 0.3)',
                         ],
                       }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={{
+                        scale: { delay: 1.2, duration: 0.5, type: 'spring' },
+                        boxShadow: { duration: 2, repeat: Infinity },
+                      }}
                     >
                       <CheckCircle className="w-8 h-8 text-[#32f08c] mx-auto mb-2" />
                       <div className="text-sm text-white/60 mb-2">Verified PIN</div>

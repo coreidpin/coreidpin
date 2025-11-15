@@ -134,10 +134,10 @@ export function SolutionPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-3xl text-center mb-4 text-gray-900">
+          <h3 className="text-3xl text-center mb-4 text-gray-900 mt-2 md:mt-4">
             How Businesses Plug In
           </h3>
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto mt-2 md:mt-4">
             Simple, powerful APIs for seamless integration
           </p>
           

@@ -58,7 +58,6 @@ import { defineConfig, loadEnv } from 'vite';
         target: 'esnext',
         outDir: 'build',
         rollupOptions: {
-            external: ['react-router-dom'],
           output: {
             manualChunks(id) {
               if (id.includes('node_modules/recharts')) return 'recharts';
