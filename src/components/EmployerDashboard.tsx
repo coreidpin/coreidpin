@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -16,6 +16,8 @@ import { JDParserAndMatcher } from './JDParserAndMatcher';
 import { ProfileViewModal } from './ProfileViewModal';
 import { PINIdentityCard, generateMockPINData } from './PINIdentityCard';
 import { mockTalentProfiles } from './mockSwipeData';
+import VerificationBanner from './VerificationBanner';
+import { supabase } from '../utils/supabase/client';
 import { 
   Users, 
   Shield, 
@@ -54,6 +56,8 @@ export function EmployerDashboard() {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [userEmail, setUserEmail] = useState('');
 
   const handleViewProfile = (profileId: string) => {
     const profile = mockTalentProfiles.find(p => p.id === profileId);
@@ -62,6 +66,43 @@ export function EmployerDashboard() {
       setShowProfileModal(true);
     }
   };
+
+  // Check email verification status
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserEmail(user.email || '');
+          const isVerified = user.email_confirmed_at || localStorage.getItem('emailVerified') === 'true';
+          const isTempSession = localStorage.getItem('tempSession') === 'true';
+          setEmailVerified(!!isVerified && !isTempSession);
+        }
+      } catch (err) {
+        console.error('Error checking verification status:', err);
+      }
+    };
+    
+    checkVerificationStatus();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        const isVerified = session.user.email_confirmed_at || localStorage.getItem('emailVerified') === 'true';
+        const isTempSession = localStorage.getItem('tempSession') === 'true';
+        setEmailVerified(!!isVerified && !isTempSession);
+        if (isVerified && !isTempSession) {
+          sessionStorage.removeItem('verificationModalDismissed');
+          localStorage.setItem('emailVerified', 'true');
+          localStorage.removeItem('tempSession');
+        } else {
+          localStorage.setItem('emailVerified', 'false');
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Mock company data
   const companyProfile = {
@@ -100,6 +141,16 @@ export function EmployerDashboard() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Email Verification Modal */}
+      {!emailVerified && userEmail && (
+        <VerificationBanner 
+          userEmail={userEmail} 
+          onDismiss={() => {
+            console.log('Verification modal dismissed temporarily');
+          }}
+        />
+      )}
+      
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Hero Section */}
         <motion.div

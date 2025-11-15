@@ -191,7 +191,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                 <div>
                   <Logo size="lg" showText={true} />
                   <p className="text-white/60 leading-relaxed mt-4">
-                    The world's first Professional Identity Network. Swipe, verify, match, and hire verified talent with blockchain-secured credentials.
+                    A single PIN that travels with you: across companies, continents, onboarding flows, verification systems, and digital experiences — one identity, infinite access.
                   </p>
                 </div>
 
@@ -334,7 +334,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-white/60">
-              <span>© 2025 swipe. All rights reserved.</span>
+              <span>© {new Date().getFullYear()} CoreID. All rights reserved.</span>
               <div className="flex items-center gap-6">
                 <button 
                   onClick={() => handleNavigate('privacy')} 

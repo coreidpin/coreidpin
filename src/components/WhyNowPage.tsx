@@ -33,7 +33,7 @@ const whyNowPoints = [
 
 export function WhyNowPage() {
   return (
-    <section id="why-now" className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-[#0a0b0d] via-[#151620] to-[#0a0b0d]">
+    <section className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-[#0a0b0d] via-[#151620] to-[#0a0b0d]">
       {/* Background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-full h-full">
@@ -71,7 +71,7 @@ export function WhyNowPage() {
         </motion.div>
 
         {/* Why Now Grid */}
-        <div className="grid md:grid-cols-2 gap-8 mb-24">
+        <div className="grid md:grid-cols-2 gap-8 mt-8 md:mt-12 mb-24">
           {whyNowPoints.map((point, index) => {
             const Icon = point.icon;
             return (
@@ -114,11 +114,11 @@ export function WhyNowPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-4xl text-center mb-16 text-white">
+          <h3 className="text-4xl text-center mb-16 text-white mt-8 md:mt-10">
             Real Use Cases
           </h3>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-12 mt-8 md:mt-12">
             {/* Use Case 1 - Professional Onboarding */}
             <motion.div
               className="relative"
@@ -127,7 +127,7 @@ export function WhyNowPage() {
               transition={{ duration: 0.8, delay: 0.4 }}
               viewport={{ once: true }}
             >
-              <div className="relative p-8 rounded-3xl bg-gradient-to-br from-[#bfa5ff]/10 to-[#7bb8ff]/10 backdrop-blur-sm border border-[#bfa5ff]/20">
+              <div className="relative p-8 rounded-3xl bg-[#adacff] backdrop-blur-sm border border-[#adacff]/20 mt-4 md:mt-6">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-[#bfa5ff]/20 flex items-center justify-center">
                     <CheckCircle className="w-6 h-6 text-[#bfa5ff]" />
@@ -197,7 +197,7 @@ export function WhyNowPage() {
               transition={{ duration: 0.8, delay: 0.5 }}
               viewport={{ once: true }}
             >
-              <div className="relative p-8 rounded-3xl bg-gradient-to-br from-[#32f08c]/10 to-[#7bb8ff]/10 backdrop-blur-sm border border-[#32f08c]/20">
+              <div className="relative p-8 rounded-3xl bg-gradient-to-br from-[#32f08c]/10 to-[#7bb8ff]/10 backdrop-blur-sm border border-[#32f08c]/20 mt-4 md:mt-6">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-[#32f08c]/20 flex items-center justify-center">
                     <Cpu className="w-6 h-6 text-[#32f08c]" />

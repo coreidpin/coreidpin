@@ -33,7 +33,7 @@ const problems = [
 
 export function WhyWeExist() {
   return (
-    <section id="why-we-exist" className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-[#0a0b0d] via-[#1a1b2d] to-[#0a0b0d]">
+    <section className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-[#0a0b0d] via-[#1a1b2d] to-[#0a0b0d]">
       {/* Animated background grid */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -46,6 +46,7 @@ export function WhyWeExist() {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left side - Content */}
           <motion.div
+            className="-mt-2 md:-mt-4"
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -120,17 +121,17 @@ export function WhyWeExist() {
           >
             <div className="relative">
               {/* Main visual container */}
-              <div className="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-[#bfa5ff]/20 to-[#7bb8ff]/20 backdrop-blur-sm border border-white/10 p-12">
+              <div className="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-[#bfa5ff]/20 to-[#7bb8ff]/20 backdrop-blur-sm border border-white/10 p-12 pt-8 md:pt-10">
                 {/* Phone number transformation visual */}
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  whileInView={{ scale: 1, opacity: 1 }}
+                  initial={{ scale: 0.75, opacity: 0 }}
+                  whileInView={{ scale: 0.9, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.8 }}
                   viewport={{ once: true }}
                 >
                   {/* Phone number */}
-                  <div className="absolute left-12 top-1/2 -translate-y-1/2">
+                  <div className="absolute left-12 top-[58%] -translate-y-1/2">
                     <motion.div
                       className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center"
                       animate={{
@@ -178,7 +179,7 @@ export function WhyWeExist() {
                   </motion.div>
 
                   {/* Verified PIN */}
-                  <div className="absolute right-12 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-10 top-[58%] -translate-y-1/2">
                     <motion.div
                       className="bg-gradient-to-br from-[#32f08c]/20 to-[#7bb8ff]/20 backdrop-blur-md border border-[#32f08c]/40 rounded-2xl p-6 text-center"
                       initial={{ scale: 0 }}

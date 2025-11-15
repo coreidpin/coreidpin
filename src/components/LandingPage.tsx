@@ -67,7 +67,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
   const mockPINData = generateMockPINData();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#0a0b0d' }}>
       <Navbar 
         currentPage="landing"
         onNavigate={handleNavigate}
@@ -121,7 +121,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-6 text-white leading-tight"
                 >
                   Your Global<br />
-                  <span className="bg-gradient-to-r from-[#bfa5ff] via-[#7bb8ff] to-[#32f08c] bg-clip-text text-transparent">
+                  <span className="text-white">
                     Professional Identity
                   </span>
                   <br />Number
@@ -135,7 +135,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   transition={{ delay: 0.4 }}
                   className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
                 >
-                  A unified identity powered by your phone number — verified through our global infrastructure and trusted across every professional ecosystem.
+                  The Global Identity Layer for the Future of Work
                 </motion.p>
 
                 {/* CTAs */}
@@ -152,13 +152,13 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                     style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
                   >
                     <Fingerprint className="h-5 w-5 mr-2" />
-                    {isAuthenticated ? 'Dashboard' : 'Get Your PIN'}
+                    {isAuthenticated ? 'Dashboard' : 'Join waitlist'}
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 border-white/20 text-white hover:bg-white/10 hover:scale-105 transition-all duration-200"
+                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 border-white/20 text-black hover:text-black hover:bg-white/10 hover:scale-105 transition-all duration-200"
                   >
                     <Play className="h-5 w-5 mr-2" />
                     See How It Works
@@ -264,17 +264,17 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       {/* Why We Exist - Problem Statement */}
       <WhyWeExist />
 
-      {/* Mission Page - What PIN Means for Everyone */}
       <MissionPage />
 
       {/* Solution Page - Technical Implementation */}
       <SolutionPage />
 
+
       {/* Why Now Page - Market Timing */}
       <WhyNowPage />
 
-      {/* WHAT IS PIN - Light Section */}
-      <section className="py-24 px-4 bg-white">
+      {/* WHAT IS PIN - Dark Section */}
+      <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -286,10 +286,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               <Fingerprint className="h-4 w-4 mr-2" />
               What is PIN?
             </Badge>
-            <h2 className="text-4xl sm:text-5xl mb-6 text-gray-900">
+            <h2 className="text-4xl sm:text-5xl mb-6 text-white">
               A Passport for Your Career
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-white/70 max-w-3xl mx-auto">
               PIN transforms your professional experience into a globally recognized, verified digital identity
             </p>
           </motion.div>
@@ -333,15 +333,15 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
               >
-                <Card className={`p-6 h-full border-2 hover:shadow-2xl transition-all duration-300 bg-gradient-to-br ${feature.gradient}`}>
+                <Card className="p-6 h-full bg-white/5 backdrop-blur-xl border-white/10 hover:shadow-2xl transition-all duration-300">
                   <div 
                     className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
                     style={{ backgroundColor: `${feature.color}20` }}
                   >
                     <feature.icon className="h-7 w-7" style={{ color: feature.color }} />
                   </div>
-                  <h3 className="text-lg mb-2 text-gray-900">{feature.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-lg mb-2 text-white">{feature.title}</h3>
+                  <p className="text-sm text-white/70 leading-relaxed">{feature.description}</p>
                 </Card>
               </motion.div>
             ))}
@@ -521,8 +521,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         </div>
       </section>
 
-      {/* GLOBAL EMPLOYER TRUST - Light Section with Map */}
-      <section className="py-24 px-4 bg-white">
+      {/* GLOBAL EMPLOYER TRUST - Dark Section with Map */}
+      <section className="py-24 px-4" style={{ backgroundColor: '#ffffff' }}>
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -530,10 +530,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl mb-6 text-gray-900">
+            <h2 className="text-4xl sm:text-5xl mb-6 text-black">
               Trusted by Global Employers
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-black max-w-3xl mx-auto">
               Leading companies worldwide use PIN to discover and hire verified talent
             </p>
           </motion.div>
@@ -569,7 +569,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   rel="noopener noreferrer"
                   aria-label={`${company.name} website`}
                   title={`Visit ${company.name}`}
-                  className="p-6 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-lg transition-all w-full flex items-center justify-center"
+                  className="p-6 bg-white/5 backdrop-blur-xl border border-[#bfa5ff] rounded-xl hover:shadow-lg transition-all w-full flex items-center justify-center"
                 >
                   <img
                     src={company.logo}
@@ -607,15 +607,15 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="p-6 text-center border-2 hover:shadow-xl transition-all">
+                <Card className="p-6 text-center bg-white/5 backdrop-blur-xl border-white/10 hover:shadow-xl transition-all">
                   <div 
                     className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center"
                     style={{ backgroundColor: `${stat.color}20` }}
                   >
                     <stat.icon className="h-6 w-6" style={{ color: stat.color }} />
                   </div>
-                  <div className="text-4xl font-bold mb-2 text-gray-900">{stat.number}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <div className="text-4xl font-bold mb-2 text-black">{stat.number}</div>
+                  <div className="text-sm text-black">{stat.label}</div>
                 </Card>
               </motion.div>
             ))}
@@ -661,7 +661,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   "Apply to unlimited jobs",
                   "Community support"
                 ],
-                cta: "Get Started",
+                cta: "Coming soon",
                 highlighted: false
               },
               {
@@ -677,7 +677,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   "Direct employer messaging",
                   "Priority support"
                 ],
-                cta: "Start Free Trial",
+                cta: "Coming soon",
                 highlighted: true
               },
               {
@@ -693,7 +693,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   "Dedicated success manager",
                   "Custom integrations"
                 ],
-                cta: "Contact Sales",
+                cta: "Coming soon",
                 highlighted: false
               }
             ].map((plan, index) => (

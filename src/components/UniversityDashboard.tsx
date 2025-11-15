@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { AIRecommendationsEngine, AIInsights } from './AIRecommendationsEngine';
+import VerificationBanner from './VerificationBanner';
+import { supabase } from '../utils/supabase/client';
 import { 
   GraduationCap, 
   CheckCircle, 
@@ -32,6 +34,8 @@ import {
 
 export function UniversityDashboard() {
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [emailVerified, setEmailVerified] = useState(true);
+  const [userEmail, setUserEmail] = useState('');
 
   // Mock data
   const universityInfo = {
@@ -152,8 +156,54 @@ export function UniversityDashboard() {
     }
   };
 
+  // Check email verification status
+  useEffect(() => {
+    const checkVerificationStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserEmail(user.email || '');
+          const isVerified = user.email_confirmed_at || localStorage.getItem('emailVerified') === 'true';
+          const isTempSession = localStorage.getItem('tempSession') === 'true';
+          setEmailVerified(!!isVerified && !isTempSession);
+        }
+      } catch (err) {
+        console.error('Error checking verification status:', err);
+      }
+    };
+    
+    checkVerificationStatus();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        const isVerified = session.user.email_confirmed_at || localStorage.getItem('emailVerified') === 'true';
+        const isTempSession = localStorage.getItem('tempSession') === 'true';
+        setEmailVerified(!!isVerified && !isTempSession);
+        if (isVerified && !isTempSession) {
+          sessionStorage.removeItem('verificationModalDismissed');
+          localStorage.setItem('emailVerified', 'true');
+          localStorage.removeItem('tempSession');
+        } else {
+          localStorage.setItem('emailVerified', 'false');
+        }
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <div className="space-y-6">
+      {/* Email Verification Modal */}
+      {!emailVerified && userEmail && (
+        <VerificationBanner 
+          userEmail={userEmail} 
+          onDismiss={() => {
+            console.log('Verification modal dismissed temporarily');
+          }}
+        />
+      )}
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>

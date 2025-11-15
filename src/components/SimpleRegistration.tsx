@@ -103,17 +103,14 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
     setIsEmailChecking(true)
     setEmailAvailable(null)
     try {
-      const response = await fetch('http://localhost:3001/api/check-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setEmailAvailable(data.available)
-      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single()
+      
+      setEmailAvailable(!data && !error)
     } catch {
-      // API not available yet, skip email checking
       setEmailAvailable(null)
     } finally {
       setIsEmailChecking(false)
@@ -149,43 +146,110 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
     
     setIsLoading(true)
     try {
-      // Register with new secure endpoint
-      const response = await fetch('http://localhost:3001/api/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            title: formData.title,
+            phone: formData.phone,
+            location: formData.location,
+            userType: 'professional'
+          }
+        }
+      })
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          setErrors({ email: 'Email already exists' })
+        } else {
+          throw error
+        }
+        return
+      }
+
+      // Production-grade data synchronization with retry logic
+      if (data.user) {
+        const profileData = {
+          id: data.user.id,
           email: formData.email,
-          password: formData.password,
           name: formData.name,
           title: formData.title,
           phone: formData.phone,
-          location: formData.location
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        if (result.details) {
-          const newErrors: Record<string, string> = {}
-          result.details.forEach((error: any) => {
-            newErrors[error.path[0]] = error.message
-          })
-          setErrors(newErrors)
-          return
+          location: formData.location,
+          user_type: 'professional',
+          email_verified: false,
+          verification_sent_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        // Retry logic for critical data sync
+        let syncRetries = 3;
+        let syncSuccess = false;
+        
+        while (syncRetries > 0 && !syncSuccess) {
+          try {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .upsert(profileData, { onConflict: 'id' });
+            
+            if (profileError) throw profileError;
+            syncSuccess = true;
+            
+            // Cache profile data locally for offline access
+            localStorage.setItem(`profile_${data.user.id}`, JSON.stringify(profileData));
+            
+          } catch (syncErr) {
+            syncRetries--;
+            if (syncRetries === 0) {
+              // Critical: Store for background sync
+              const pendingSync = JSON.parse(localStorage.getItem('pendingProfileSync') || '[]');
+              pendingSync.push({ ...profileData, retryCount: 0 });
+              localStorage.setItem('pendingProfileSync', JSON.stringify(pendingSync));
+              
+              console.error('Profile sync failed, queued for background retry:', syncErr);
+            } else {
+              await new Promise(resolve => setTimeout(resolve, 1000 * (4 - syncRetries))); // Exponential delay
+            }
+          }
         }
-        throw new Error(result.error || 'Registration failed')
+
+        // Non-blocking verification event logging
+        const logVerification = async () => {
+          try {
+            await supabase.from('verification_logs').insert({
+              user_id: data.user.id,
+              event_type: 'verification_sent',
+              email: formData.email,
+              timestamp: new Date().toISOString(),
+              user_agent: navigator.userAgent.substring(0, 255),
+              registration_source: 'web_app'
+            });
+          } catch (logErr) {
+            // Queue for background retry
+            const logQueue = JSON.parse(localStorage.getItem('logRetryQueue') || '[]');
+            logQueue.push({
+              type: 'verification_sent',
+              userId: data.user.id,
+              email: formData.email,
+              timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('logRetryQueue', JSON.stringify(logQueue.slice(-20))); // Keep last 20
+          }
+        };
+        
+        logVerification();
       }
 
       localStorage.setItem('pendingVerification', JSON.stringify({
         email: formData.email,
         name: formData.name,
-        userId: result.userId
+        userId: data.user?.id
       }))
 
-      toast.success('Registration successful! Please check your email.')
+      toast.success('Registration successful! Please check your email for verification.')
       onComplete?.()
       
     } catch (err: any) {
