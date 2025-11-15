@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Button } from "./uii/button";
-import { Card, CardContent } from "./uii/card";
-import { Badge } from "./uii/badge";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
