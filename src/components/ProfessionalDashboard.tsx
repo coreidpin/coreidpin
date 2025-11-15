@@ -11,7 +11,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ProfileCompletionForm } from './ProfileCompletionForm';
-import SetupTab from './SetupTab';
 import { AIAnalysisModal } from './AIAnalysisModal';
 import { AIBadge, getExperienceLevelFromAnalysis } from './AIBadge';
 import { SwipeInterface } from './SwipeInterface';
@@ -20,7 +19,6 @@ import { ComplianceChecks } from './ComplianceChecks';
 import { ProfileViewModal } from './ProfileViewModal';
 import { PINIdentityCard, generateMockPINData } from './PINIdentityCard';
 import { PINOnboarding } from './PINOnboarding';
-import { PhoneVerification } from './PhoneVerification';
 import { api } from '../utils/api';
 import { supabase } from '../utils/supabase/client';
 import { mockJobOpportunities } from './mockSwipeData';
@@ -44,7 +42,9 @@ import {
   TrendingUp,
   Fingerprint,
   Share2,
-  Phone
+  Globe,
+  Building,
+  ShieldCheck
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Lock } from 'lucide-react';
@@ -65,8 +65,6 @@ export function ProfessionalDashboard() {
   const [pinData, setPinData] = useState<any>(null);
   const [showPINOnboarding, setShowPINOnboarding] = useState(false);
   const [currentTab, setCurrentTab] = useState('dashboard');
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [userPhone, setUserPhone] = useState('');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [activeSection, setActiveSection] = useState<'summary' | 'portfolio' | 'endorsements' | 'opportunities' | 'activity' | 'settings'>('summary');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -136,7 +134,7 @@ export function ProfessionalDashboard() {
     loadAnalysisAndCompletion();
   }, []);
 
-  // Load PIN data and phone verification status on mount
+  // Load PIN data on mount
   useEffect(() => {
     const loadPINData = async () => {
       try {
@@ -145,28 +143,18 @@ export function ProfessionalDashboard() {
         
         if (userId && accessToken) {
           console.log('Loading PIN data for user:', userId);
-          
-          // Load PIN data
           const result = await api.getUserPIN(userId, accessToken);
+          
           if (result.success && result.data) {
             console.log('PIN data loaded successfully:', result.data.pinNumber);
             setPinData(result.data);
-          }
-          
-          // Load PIN status (includes phone verification)
-          const statusResult = await api.getPINStatus(accessToken);
-          if (statusResult.success) {
-            setPhoneVerified(statusResult.phoneVerified || false);
-          }
-          
-          // Load user profile for phone number
-          const profileResult = await api.getProfile(userId, accessToken);
-          if (profileResult.success && profileResult.profile?.phone) {
-            setUserPhone(profileResult.profile.phone);
+          } else {
+            console.log('No PIN found for user');
           }
         }
       } catch (error) {
-        console.log('Failed to load PIN data:', error);
+        console.log('Failed to load PIN:', error);
+        // User doesn't have a PIN yet, that's okay
       }
     };
 
@@ -729,7 +717,6 @@ export function ProfessionalDashboard() {
                 <TabsTrigger value="setup" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Sparkles className="h-4 w-4" />
                   <span className="hidden sm:inline">Setup</span>
-                  {profileCompletion < 100 && <Badge variant="secondary" className="ml-auto hidden lg:inline-flex bg-yellow-100 text-yellow-800">!</Badge>}
                 </TabsTrigger>
                 <TabsTrigger value="verify" className="gap-2 flex-shrink-0 snap-start min-w-[120px] sm:min-w-[140px] px-3 py-2 sm:px-4 sm:py-2 rounded-full">
                   <Shield className="h-4 w-4" />
@@ -802,111 +789,147 @@ export function ProfessionalDashboard() {
                   </Card>
                 </div>
 
-                {/* PIN Stats */}
-                <Card className="p-6 bg-white/5 border-white/10">
-                  <h3 className="text-lg font-semibold mb-4 text-white">PIN Performance</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-[#7bb8ff]/10 rounded-lg border border-[#7bb8ff]/20">
-                      <div className="text-2xl text-[#7bb8ff]">247</div>
-                      <div className="text-sm text-white/70">PIN Views</div>
+                <Card className="relative p-8 bg-[#0a0b0d] rounded-3xl border-white/10 overflow-hidden">
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(191,165,255,0.08)' }} />
+                    <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(50,240,140,0.08)' }} />
+                  </div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-8">
+                      <h3 className="text-xl font-semibold text-white">Identity Control Panel</h3>
+                      <Badge className="bg-white/10 text-white border-white/20">Live</Badge>
                     </div>
-                    <div className="text-center p-4 bg-[#32f08c]/10 rounded-lg border border-[#32f08c]/20">
-                      <div className="text-2xl text-[#32f08c]">{pinData.trustScore}%</div>
-                      <div className="text-sm text-white/70">Trust Score</div>
-                    </div>
-                    <div className="text-center p-4 bg-[#bfa5ff]/10 rounded-lg border border-[#bfa5ff]/20">
-                      <div className="text-2xl text-[#bfa5ff]">{pinData.endorsements}</div>
-                      <div className="text-sm text-white/70">Endorsements</div>
-                    </div>
-                    <div className="text-center p-4 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                      <div className="text-2xl text-orange-400">12</div>
-                      <div className="text-sm text-white/70">Employer Contacts</div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      <motion.div whileHover={{ y: -4 }} className="group relative rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 transition-all">
+                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ boxShadow: '0 0 24px rgba(50,240,140,0.25)' }} />
+                        <div className="relative flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <Fingerprint className="h-6 w-6" style={{ color: '#32f08c' }} />
+                            <span className="text-white/70 text-xs">PIN</span>
+                          </div>
+                          <BadgeCheck className="h-5 w-5" style={{ color: '#32f08c' }} />
+                        </div>
+                        <div className="font-mono text-2xl sm:text-3xl tracking-wider text-white">{pinData?.pinNumber ?? 'PIN-XXX-XXXX'}</div>
+                        <div className="text-xs text-white/50 mt-2">Verified</div>
+                      </motion.div>
+
+                      <motion.div whileHover={{ y: -4 }} className="group relative rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 transition-all">
+                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ boxShadow: '0 0 24px rgba(123,184,255,0.25)' }} />
+                        <div className="relative flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <Globe className="h-6 w-6" style={{ color: '#7bb8ff' }} />
+                            <span className="text-white/70 text-xs">Countries Verified</span>
+                          </div>
+                        </div>
+                        <div className="text-3xl font-extrabold text-white">{(pinData as any)?.verificationCountries?.length ?? 0}</div>
+                        <div className="text-xs text-white/50 mt-2">Global Reach</div>
+                      </motion.div>
+
+                      <motion.div whileHover={{ y: -4 }} className="group relative rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 transition-all">
+                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ boxShadow: '0 0 24px rgba(191,165,255,0.25)' }} />
+                        <div className="relative flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <Building className="h-6 w-6" style={{ color: '#bfa5ff' }} />
+                            <span className="text-white/70 text-xs">Companies Connected</span>
+                          </div>
+                        </div>
+                        <div className="text-3xl font-extrabold text-white">{(pinData as any)?.linkedCompanies?.length ?? 0}</div>
+                        <div className="text-xs text-white/50 mt-2">Hiring Access</div>
+                      </motion.div>
+
+                      <motion.div whileHover={{ y: -4 }} className="group relative rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 transition-all">
+                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ boxShadow: '0 0 24px rgba(50,240,140,0.25)' }} />
+                        <div className="relative flex items-center gap-3 mb-4">
+                          <ShieldCheck className="h-6 w-6" style={{ color: '#32f08c' }} />
+                          <span className="text-white/70 text-xs">Passed Verifications</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs" style={{ backgroundColor: 'rgba(50,240,140,0.12)', color: '#32f08c', border: '1px solid rgba(50,240,140,0.3)' }}>
+                            <CheckCircle className="h-3 w-3" /> KYC
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs" style={{ backgroundColor: 'rgba(123,184,255,0.12)', color: '#7bb8ff', border: '1px solid rgba(123,184,255,0.3)' }}>
+                            <CheckCircle className="h-3 w-3" /> Skills
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs" style={{ backgroundColor: 'rgba(191,165,255,0.12)', color: '#bfa5ff', border: '1px solid rgba(191,165,255,0.3)' }}>
+                            <CheckCircle className="h-3 w-3" /> Identity
+                          </span>
+                        </div>
+                      </motion.div>
+
+                      <motion.div whileHover={{ y: -4 }} className="group relative rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 transition-all">
+                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ boxShadow: '0 0 24px rgba(123,184,255,0.25)' }} />
+                        <div className="relative flex items-center justify-between mb-4">
+                          <span className="text-white/70 text-xs">Profile Trust Score</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <svg width="72" height="72" viewBox="0 0 36 36" className="-rotate-90">
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
+                            <circle cx="18" cy="18" r="16" fill="none" stroke="#7bb8ff" strokeWidth="2.8" strokeDasharray={100} strokeDashoffset={100 - (pinData?.trustScore ?? 0)} strokeLinecap="round" />
+                          </svg>
+                          <div>
+                            <div className="text-3xl font-extrabold text-white">{pinData?.trustScore ?? 0}%</div>
+                            <div className="text-xs text-white/50">Neon-secured</div>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      <motion.div whileHover={{ y: -4 }} className="group relative rounded-2xl p-6 bg-white/5 backdrop-blur-sm border border-white/10 transition-all">
+                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ boxShadow: '0 0 24px rgba(50,240,140,0.25)' }} />
+                        <div className="relative flex items-center justify-between mb-3">
+                          <span className="text-white/70 text-xs">Profile Completion</span>
+                          <span className="text-xs" style={{ color: '#32f08c' }}>{profileCompletion}%</span>
+                        </div>
+                        <Progress value={profileCompletion} className="h-2 bg-white/10" />
+                        <div className="text-xs text-white/50 mt-2">Complete to unlock features</div>
+                      </motion.div>
                     </div>
                   </div>
                 </Card>
               </div>
             ) : (
-              <div className="space-y-6">
-                <Card className="p-8 text-center bg-gradient-to-br from-[#7bb8ff]/10 via-[#bfa5ff]/10 to-[#7bb8ff]/10 border-2 border-[#bfa5ff]/20">
-                  <div className="max-w-2xl mx-auto space-y-6">
-                    <div className="w-20 h-20 bg-[#bfa5ff]/10 rounded-full flex items-center justify-center mx-auto">
-                      <Fingerprint className="h-12 w-12 text-[#bfa5ff]" />
-                    </div>
-                    <div>
-                      <h2 className="text-3xl mb-3 text-white">Create Your Professional Identity Number</h2>
-                      <p className="text-lg text-white/70">
-                        Get a verified digital identity that employers trust globally. Your PIN proves your skills and experience.
-                      </p>
-                    </div>
-                    
-                    <div className="grid sm:grid-cols-3 gap-4 my-8">
-                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                        <CheckCircle className="h-8 w-8 text-[#7bb8ff] mb-2 mx-auto" />
-                        <h4 className="font-semibold mb-1 text-white">Verified</h4>
-                        <p className="text-xs text-white/70">AI-powered verification</p>
-                      </div>
-                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                        <Shield className="h-8 w-8 text-[#32f08c] mb-2 mx-auto" />
-                        <h4 className="font-semibold mb-1 text-white">Secure</h4>
-                        <p className="text-xs text-white/70">Blockchain protected</p>
-                      </div>
-                      <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                        <Award className="h-8 w-8 text-[#bfa5ff] mb-2 mx-auto" />
-                        <h4 className="font-semibold mb-1 text-white">Global</h4>
-                        <p className="text-xs text-white/70">Recognized worldwide</p>
-                      </div>
-                    </div>
-
-                    {phoneVerified ? (
-                      <Button 
-                        size="lg"
-                        onClick={() => setShowPINOnboarding(true)}
-                        className="bg-gradient-to-r from-[#7bb8ff] to-[#bfa5ff] hover:from-[#7bb8ff]/90 hover:to-[#bfa5ff]/90 text-white px-8 py-6 text-lg"
-                      >
-                        <Fingerprint className="h-5 w-5 mr-2" />
-                        Create My PIN — Free
-                      </Button>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="p-4 bg-orange-500/10 rounded-lg border border-orange-500/30">
-                          <p className="text-orange-200 text-sm">
-                            📱 Phone verification required before PIN creation
-                          </p>
-                        </div>
-                        <Button 
-                          size="lg"
-                          disabled
-                          className="bg-gray-600 text-gray-300 px-8 py-6 text-lg cursor-not-allowed"
-                        >
-                          <Fingerprint className="h-5 w-5 mr-2" />
-                          Verify Phone First
-                        </Button>
-                      </div>
-                    )}
-                    
-                    <p className="text-sm text-white/70">
-                      ✨ Takes 5 minutes • Increases visibility by 10x
+              <Card className="p-8 text-center bg-gradient-to-br from-[#7bb8ff]/10 via-[#bfa5ff]/10 to-[#7bb8ff]/10 border-2 border-[#bfa5ff]/20">
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <div className="w-20 h-20 bg-[#bfa5ff]/10 rounded-full flex items-center justify-center mx-auto">
+                    <Fingerprint className="h-12 w-12 text-[#bfa5ff]" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl mb-3 text-white">Create Your Professional Identity Number</h2>
+                    <p className="text-lg text-white/70">
+                      Get a verified digital identity that employers trust globally. Your PIN proves your skills and experience.
                     </p>
                   </div>
-                </Card>
+                  
+                  <div className="grid sm:grid-cols-3 gap-4 my-8">
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <CheckCircle className="h-8 w-8 text-[#7bb8ff] mb-2 mx-auto" />
+                      <h4 className="font-semibold mb-1 text-white">Verified</h4>
+                      <p className="text-xs text-white/70">AI-powered verification</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <Shield className="h-8 w-8 text-[#32f08c] mb-2 mx-auto" />
+                      <h4 className="font-semibold mb-1 text-white">Secure</h4>
+                      <p className="text-xs text-white/70">Blockchain protected</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <Award className="h-8 w-8 text-[#bfa5ff] mb-2 mx-auto" />
+                      <h4 className="font-semibold mb-1 text-white">Global</h4>
+                      <p className="text-xs text-white/70">Recognized worldwide</p>
+                    </div>
+                  </div>
 
-                {/* Phone Verification Section */}
-                <div className="max-w-2xl mx-auto">
-                  <h3 className="text-xl font-semibold mb-4 text-white flex items-center gap-2">
-                    <Phone className="h-5 w-5" />
-                    Phone Verification
-                  </h3>
-                  <PhoneVerification
-                    onVerificationComplete={(phone) => {
-                      setUserPhone(phone);
-                      setPhoneVerified(true);
-                      toast.success('Phone verified! You can now create your PIN.');
-                    }}
-                    initialPhone={userPhone}
-                    isVerified={phoneVerified}
-                  />
+                  <Button 
+                    size="lg"
+                    onClick={() => setShowPINOnboarding(true)}
+                    className="bg-gradient-to-r from-[#7bb8ff] to-[#bfa5ff] hover:from-[#7bb8ff]/90 hover:to-[#bfa5ff]/90 text-white px-8 py-6 text-lg"
+                  >
+                    <Fingerprint className="h-5 w-5 mr-2" />
+                    Create My PIN — Free
+                  </Button>
+                  <p className="text-sm text-white/70">
+                    ✨ Takes 5 minutes • Increases visibility by 10x
+                  </p>
                 </div>
-              </div>
+              </Card>
             )}
           </TabsContent>
 
@@ -994,9 +1017,18 @@ export function ProfessionalDashboard() {
             />
           </TabsContent>
 
-          {/* Setup Tab - Profile Completion */}
+          {/* Setup Tab - Profile Completion with LinkedIn/GitHub */}
           <TabsContent value="setup" className="space-y-6">
-            <SetupTab />
+            <div className="mb-6">
+              <h2 className="text-2xl mb-2">Connect Your Professional Profiles</h2>
+              <p className="text-muted-foreground">
+                Add your LinkedIn, GitHub, or portfolio for AI-powered verification and skill analysis. This helps employers discover your verified skills and increases your match quality.
+              </p>
+            </div>
+            <ProfileCompletionForm
+              onAnalysisComplete={handleAnalysisComplete}
+              onProfileSaved={handleProfileSaved}
+            />
           </TabsContent>
 
           {/* Verify Tab - Compliance & Documentation */}

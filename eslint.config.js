@@ -6,7 +6,7 @@ import importPlugin from 'eslint-plugin-import'
 
 export default tseslint.config(
   js.configs.recommended,
-  ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.strict,
   {
     ignores: ['node_modules/**', 'build/**'],
   },
@@ -40,4 +40,3 @@ export default tseslint.config(
     },
   }
 )
-

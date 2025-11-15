@@ -72,43 +72,14 @@ class APIClient {
       try {
         const res = await fetch(url, options);
         
-        // Handle 401 Unauthorized - token might be expired
-        if (res.status === 401 && attempt === 0) {
+        // Handle 401 Unauthorized - just return the response for login endpoints
+        if (res.status === 401) {
           const isLoginEndpoint = /\/login(\?|$)/.test(url);
           if (isLoginEndpoint) {
             return res;
           }
-          console.log('Received 401, attempting token refresh...');
-          
-          // Try to refresh the token
-          const refreshedSession = await refreshTokenIfNeeded();
-          
-          if (refreshedSession) {
-            // Update authorization header with new token
-            const updatedOptions = {
-              ...options,
-              headers: {
-                ...options.headers,
-                'Authorization': `Bearer ${refreshedSession.accessToken}`,
-              },
-            };
-            
-            // Retry the request with refreshed token
-            attempt++;
-            const retryRes = await fetch(url, updatedOptions);
-            
-            // If still 401 after refresh, session is truly invalid
-            if (retryRes.status === 401) {
-              await handleSessionExpiry('invalid');
-              throw new Error('Session expired. Please log in again.');
-            }
-            
-            return retryRes;
-          } else {
-            // Refresh failed, session expired
-            await handleSessionExpiry('token_expired');
-            throw new Error('Session expired. Please log in again.');
-          }
+          // For other endpoints, just return the 401 response
+          return res;
         }
         
         // Handle transient errors (500, 429)
@@ -737,6 +708,58 @@ class APIClient {
       throw new Error(msg);
     }
     return data;
+  }
+
+  // Project Management API Methods
+  async getProjects(accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/projects`, {
+      method: 'GET',
+      headers: this.getHeaders(accessToken)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get projects');
+    }
+    return response.json();
+  }
+
+  async createProject(projectData: any, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/projects`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify(projectData)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create project');
+    }
+    return response.json();
+  }
+
+  // Endorsement API Methods
+  async getEndorsements(userId: string, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/endorsements/${userId}`, {
+      method: 'GET',
+      headers: this.getHeaders(accessToken)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get endorsements');
+    }
+    return response.json();
+  }
+
+  async createEndorsement(endorsementData: any, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/endorsements`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify(endorsementData)
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create endorsement');
+    }
+    return response.json();
   }
 }
 

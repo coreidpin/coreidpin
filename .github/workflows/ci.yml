@@ -116,10 +116,36 @@ jobs:
           name: coverage-report
           path: coverage/
       
-      - name: Check coverage thresholds
+      - name: Enforce coverage thresholds
         run: |
-          echo "Checking coverage thresholds (90% minimum)..."
+          echo "Enforcing 90% minimum coverage requirement..."
           npm run test:coverage -- --run
+          
+          # Fail if coverage is below 90%
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const coverage = require('./coverage/coverage-summary.json');
+              const { lines, functions, branches, statements } = coverage.total;
+              const threshold = 90;
+              
+              console.log('Coverage Report:');
+              console.log('Lines:', lines.pct + '%');
+              console.log('Functions:', functions.pct + '%');
+              console.log('Branches:', branches.pct + '%');
+              console.log('Statements:', statements.pct + '%');
+              
+              if (lines.pct < threshold || functions.pct < threshold || 
+                  branches.pct < threshold || statements.pct < threshold) {
+                console.error('❌ Coverage below 90% threshold!');
+                process.exit(1);
+              }
+              
+              console.log('✅ Coverage meets 90% requirement');
+            "
+          else
+            echo "❌ Coverage report not found!"
+            exit 1
+          fi
       
       - name: Comment coverage on PR
         if: github.event_name == 'pull_request'
@@ -227,25 +253,40 @@ jobs:
           name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
 
-  # Deployment gate - only runs if all tests pass
-  deployment-gate:
-    name: Deployment Gate
+  # Production deployment gate - strict requirements
+  production-gate:
+    name: Production Deployment Gate
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, integration-tests, coverage, build, e2e-tests]
+    needs: [lint-and-typecheck, unit-tests, integration-tests, coverage, build, e2e-tests, security-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: All tests passed
+      - uses: actions/checkout@v4
+      
+      - name: Validate deployment readiness
         run: |
+          echo "🔍 Validating production readiness..."
           echo "✅ All tests passed successfully!"
           echo "✅ Coverage meets 90% threshold"
           echo "✅ Build completed without errors"
           echo "✅ E2E tests passed on all browsers"
-          echo "🚀 Ready for deployment"
+          echo "✅ Security scan completed"
+          echo "🚀 Ready for production deployment"
       
-      - name: Trigger deployment
+      - name: Deploy to staging
         run: |
-          echo "Deployment would be triggered here"
-          # Uncomment to trigger Vercel deployment
+          echo "Deploying to staging environment..."
+          # Add staging deployment logic here
+      
+      - name: Run smoke tests on staging
+        run: |
+          echo "Running smoke tests on staging..."
+          # Add staging smoke tests here
+      
+      - name: Deploy to production
+        if: success()
+        run: |
+          echo "Deploying to production..."
+          # Uncomment when ready for production
           # curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
 
   # Optional: Security scanning

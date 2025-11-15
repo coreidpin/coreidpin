@@ -20,7 +20,7 @@ const apiFeatures = [
 
 export function SolutionPage() {
   return (
-    <section id="solution" className="relative py-24 md:py-32 overflow-hidden bg-background">
+    <section className="relative py-24 md:py-32 overflow-hidden bg-white">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -43,7 +43,7 @@ export function SolutionPage() {
           viewport={{ once: true }}
         >
           <motion.span
-            className="inline-block text-[#32f08c] tracking-[0.2em] text-sm mb-6"
+            className="inline-block text-green-500 tracking-[0.2em] text-sm mb-6"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -52,14 +52,14 @@ export function SolutionPage() {
             THE SOLUTION
           </motion.span>
           
-          <h2 className="text-6xl md:text-7xl mb-8 text-foreground">
+          <h2 className="text-6xl md:text-7xl mb-8 text-gray-900">
             Our Solution —<br />
-            <span className="bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] bg-clip-text text-transparent">
+            <span className="text-black">
               Phone Number as PIN
             </span>
           </h2>
           
-          <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
             PIN turns every verified phone number into a universal professional identity, 
             secured by encryption + optional blockchain proofs.
           </p>
@@ -67,21 +67,21 @@ export function SolutionPage() {
 
         {/* Process Flow */}
         <motion.div
-          className="mb-24"
+          className="mb-20"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-3xl text-center mb-12 text-foreground">
+          <h3 className="text-3xl text-center mb-16 text-gray-900">
             How It Works
           </h3>
           
-          <div className="relative">
+          <div className="relative max-w-5xl mx-auto">
             {/* Connection line */}
             <div className="absolute top-16 left-0 right-0 h-0.5 bg-gradient-to-r from-[#bfa5ff] via-[#32f08c] to-[#7bb8ff] hidden lg:block" />
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((step, index) => {
                 const Icon = step.icon;
                 return (
@@ -96,7 +96,7 @@ export function SolutionPage() {
                     <div className="text-center">
                       {/* Icon container */}
                       <motion.div
-                        className="relative mx-auto w-32 h-32 mb-6 rounded-2xl flex items-center justify-center bg-card shadow-xl"
+                        className="relative mx-auto w-40 h-40 sm:w-44 sm:h-44 mb-6 rounded-2xl flex items-center justify-center bg-white shadow-xl border border-gray-200"
                         style={{ 
                           boxShadow: `0 10px 40px ${step.color}30`,
                         }}
@@ -105,17 +105,17 @@ export function SolutionPage() {
                       >
                         {/* Number badge */}
                         <div
-                          className="absolute -top-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center text-white"
+                          className="absolute -top-3 -right-3 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white"
                           style={{ backgroundColor: step.color }}
                         >
                           {index + 1}
                         </div>
                         
-                        <Icon className="w-12 h-12" style={{ color: step.color }} />
+                        <Icon className="w-14 h-14 sm:w-16 sm:h-16" style={{ color: step.color }} />
                       </motion.div>
                       
                       {/* Label */}
-                      <p className="text-sm text-muted-foreground leading-relaxed max-w-[200px] mx-auto">
+                      <p className="text-sm text-gray-600 leading-relaxed max-w-[200px] mx-auto">
                         {step.label}
                       </p>
                     </div>
@@ -128,19 +128,20 @@ export function SolutionPage() {
 
         {/* API Integration */}
         <motion.div
+          className="mt-40 lg:mt-52 mb-20"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-3xl text-center mb-4 text-foreground">
+          <h3 className="text-3xl text-center mb-4 text-gray-900 mt-2 md:mt-4">
             How Businesses Plug In
           </h3>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto mt-2 md:mt-4">
             Simple, powerful APIs for seamless integration
           </p>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
             {apiFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -153,16 +154,16 @@ export function SolutionPage() {
                   viewport={{ once: true }}
                   whileHover={{ y: -5 }}
                 >
-                  <Card className="relative p-6 rounded-2xl transition-all duration-300 hover:border-[#bfa5ff] hover:shadow-2xl">
+                  <Card className="relative p-6 rounded-2xl bg-gray-50 border border-gray-200 transition-all duration-300 hover:border-[#bfa5ff] hover:shadow-2xl">
                     {/* Hover glow */}
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#bfa5ff]/0 to-[#7bb8ff]/0 group-hover:from-[#bfa5ff]/5 group-hover:to-[#7bb8ff]/5 transition-all duration-300" />
                     
                     <div className="relative">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#bfa5ff]/10 to-[#7bb8ff]/10 flex items-center justify-center mb-4 group-hover:from-[#bfa5ff]/20 group-hover:to-[#7bb8ff]/20 transition-all">
-                        <Icon className="w-6 h-6 text-muted-foreground" />
+                        <Icon className="w-6 h-6 text-gray-700" />
                       </div>
-                      <div className="text-sm mb-1 text-card-foreground">{feature.label}</div>
-                      <div className="text-xs text-muted-foreground">{feature.description}</div>
+                      <div className="text-sm mb-1 text-gray-900">{feature.label}</div>
+                      <div className="text-xs text-gray-600">{feature.description}</div>
                     </div>
                   </Card>
                 </motion.div>
@@ -189,7 +190,7 @@ export function SolutionPage() {
             </div>
             
             {/* Code */}
-            <div className="p-6 overflow-x-auto">
+            <div className="p-6 overflow-x-auto" style={{ backgroundColor: '#0a0b0d' }}>
               <pre className="text-sm text-white/80">
                 <code>
                   <span className="text-[#bfa5ff]">POST</span> <span className="text-white">/api/v1/pin/create</span>

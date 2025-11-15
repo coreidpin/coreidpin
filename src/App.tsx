@@ -40,6 +40,7 @@ import PasswordResetDialog from './components/PasswordResetDialog';
 import { PublicPINPage } from './components/PublicPINPage';
 import LoginPage from './components/LoginPage';
 import { AuthVerifyEmail } from './components/AuthVerifyEmail';
+import EmailVerificationCallback from './components/EmailVerificationCallback';
 import MonitoringPage from './pages/Monitoring';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university';
@@ -71,13 +72,23 @@ export default function App() {
     }
 
     // Basic path-based routing on initial load
-    // Support both lowercase and capitalized 'Registeration' per requirement
     const normalized = path.toLowerCase();
     if (normalized === '/login') {
       setAppState('login');
     } else if (normalized === '/dashboard') {
-      setAppState('dashboard');
+      // Check if user is authenticated for dashboard access
+      const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+      if (isAuth) {
+        setAppState('dashboard');
+        setIsAuthenticated(true);
+        const userType = localStorage.getItem('userType') || 'professional';
+        setCurrentView(userType as UserType);
+      } else {
+        setAppState('login');
+      }
     } else if (normalized.startsWith('/auth/verify-email')) {
+      setAppState('verify-email');
+    } else if (normalized.startsWith('/auth/callback')) {
       setAppState('verify-email');
     } else if (normalized === '/registeration' || normalized === '/registration' || normalized === '/get-started') {
       try {
@@ -99,11 +110,11 @@ export default function App() {
       }
     } catch {}
 
-    initAuth();
-    onAuthChange((authed) => {
-      setIsAuthenticated(authed);
-      if (authed) setAppState('dashboard');
-    });
+    // Skip initAuth to avoid 401 errors
+    // onAuthChange((authed) => {
+    //   setIsAuthenticated(authed);
+    //   if (authed) setAppState('dashboard');
+    // });
     const checkSession = async () => {
       // Check for OAuth callback
       const { data: { session } } = await supabase.auth.getSession();
@@ -149,35 +160,28 @@ export default function App() {
           setShowWelcomeToast(true);
         }
       } else {
-        // No Supabase session - check if localStorage has stale data
-        const accessToken = localStorage.getItem('accessToken');
+        // Simple localStorage-based authentication check
+        const isAuth = localStorage.getItem('isAuthenticated') === 'true';
         const userId = localStorage.getItem('userId');
         const userType = localStorage.getItem('userType');
 
-        if (accessToken && userId && userType) {
-          // Validate the token with Supabase
-          const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-          
-          if (user && !error) {
-            // Valid session - restore it
-            setIsAuthenticated(true);
-            setCurrentView(userType as UserType);
-            setUserData(user);
+        if (isAuth && userId && userType) {
+          setIsAuthenticated(true);
+          setCurrentView(userType as UserType);
+          if (path.toLowerCase() === '/dashboard') {
             setAppState('dashboard');
-          } else {
-            // Invalid/expired token - clear localStorage
-            console.log('Invalid session, clearing localStorage');
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('userType');
-            setIsAuthenticated(false);
-            setAppState('landing');
           }
         }
       }
     };
 
     checkSession();
+
+    // Simple activity tracking without timeout
+    const updateActivity = () => {
+      localStorage.setItem('lastActivity', Date.now().toString());
+    };
+    updateActivity();
 
     // Initialize session management (Phase 3)
     let cleanupAutoRefresh: (() => void) | null = null;
@@ -252,6 +256,7 @@ export default function App() {
     return () => {
       if (cleanupAutoRefresh) cleanupAutoRefresh();
       if (cleanupCrossTab) cleanupCrossTab();
+      // Cleanup handled by other listeners
       
       const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
       const handleActivity = () => updateActivity();
@@ -322,14 +327,10 @@ export default function App() {
         localStorage.setItem('userId', session.user.id);
         localStorage.setItem('userType', userType);
 
-        // If email is confirmed, sync verification status to server profile (KV store)
-        try {
-          if (session.user.email_confirmed_at) {
-            await api.updateProfile(session.user.id, session.access_token, { verificationStatus: 'verified' });
-            toast.success('Email verified');
-          }
-        } catch (syncErr) {
-          console.warn('Failed to sync verification status:', syncErr);
+        // Update verification status locally
+        if (session.user.email_confirmed_at) {
+          localStorage.setItem('emailVerified', 'true');
+          localStorage.removeItem('tempSession');
         }
       } else if (event === 'PASSWORD_RECOVERY') {
         // Supabase redirects after reset email; show dialog to set new password
@@ -469,20 +470,21 @@ export default function App() {
       });
     }
     
-    // Store legacy session data (for backwards compatibility)
+    // Store session data
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userType', userType);
     if (user?.id) {
       localStorage.setItem('userId', user.id);
     }
     
-    // Always redirect to dashboard on successful login per requirements
-    toast.success('You have successfully logged in');
+    // Immediate redirect to dashboard
     setAppState('dashboard');
     setShowWelcomeToast(true);
-    try {
-      const url = new URL(window.location.href);
-      url.pathname = '/dashboard';
-      window.history.pushState(null, '', url.toString());
-    } catch {}
+    
+    // Use replace to avoid back button issues
+    setTimeout(() => {
+      window.location.replace('/dashboard');
+    }, 100);
   };
 
   const handleOnboardingComplete = async () => {
@@ -533,9 +535,15 @@ export default function App() {
       const { clearSessionState } = await import('./utils/session');
       clearSessionState();
       
-      // Clear legacy localStorage items
+      // Clear all authentication data
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminSession');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('emailVerified');
+      localStorage.removeItem('tempSession');
       
       // Reset state
       setIsAuthenticated(false);
@@ -552,6 +560,12 @@ export default function App() {
       clearSessionState();
       localStorage.removeItem('isAdmin');
       localStorage.removeItem('adminSession');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('emailVerified');
+      localStorage.removeItem('tempSession');
       
       setIsAuthenticated(false);
       setUserData(null);
@@ -582,6 +596,15 @@ export default function App() {
 
   // Email Verification Page - Handles verification token from email link
   if (appState === 'verify-email') {
+    const path = window.location.pathname;
+    if (path.includes('/auth/callback')) {
+      return (
+        <>
+          <EmailVerificationCallback />
+          <Toaster position="top-right" />
+        </>
+      );
+    }
     return (
       <>
         <AuthVerifyEmail />
@@ -943,6 +966,18 @@ export default function App() {
         <Toaster position="top-right" />
       </>
     );
+  }
+
+  // Protected dashboard - check authentication
+  if (appState === 'dashboard' && (!isAuthenticated || localStorage.getItem('isAuthenticated') !== 'true')) {
+    setAppState('login');
+    toast.error('Please log in to access the dashboard.');
+    return null;
+  }
+  
+  if (appState === 'dashboard' && !currentView) {
+    const userType = localStorage.getItem('userType') || 'professional';
+    setCurrentView(userType as UserType);
   }
 
   return (

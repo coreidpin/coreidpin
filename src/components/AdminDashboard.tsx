@@ -816,14 +816,15 @@ export function AdminDashboard() {
               <CardTitle>System Monitoring</CardTitle>
               <CardDescription>Real-time system health and performance metrics</CardDescription>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[600px]">
-                <iframe
-                  src="/monitoring"
-                  className="w-full h-full border-0"
-                  title="System Monitoring Dashboard"
-                  sandbox="allow-same-origin allow-scripts"
-                />
+            <CardContent>
+              <div className="text-center py-8">
+                <Activity className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  View comprehensive system monitoring dashboard
+                </p>
+                <Button onClick={navigateToMonitoring}>
+                  Open Monitoring Dashboard
+                </Button>
               </div>
             </CardContent>
           </Card>

@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Button } from "./uii/button";
-import { Card, CardContent } from "./uii/card";
-import { Badge } from "./uii/badge";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
@@ -11,16 +11,10 @@ import {
   CheckCircle,
   Globe,
   Shield,
-  Award,
   ArrowRight,
   Star,
-  BadgeCheck,
-  Eye,
-  FileText,
   Brain,
   Sparkles,
-  Target,
-  TrendingUp,
   Fingerprint,
   ShieldCheck,
   Database,
@@ -32,19 +26,15 @@ import {
   ChevronRight,
   Play,
   Link as LinkIcon,
-  Lock,
-  Github,
-  Linkedin,
-  Code,
   Briefcase,
   CheckCheck
 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
 import TrustBanner from "./TrustBanner";
 import { MissionPage } from "./MissionPage";
 import { SolutionPage } from "./SolutionPage";
 import { WhyNowPage } from "./WhyNowPage";
 import { WhyWeExist } from "./WhyWeExist";
+import { WaitlistForm } from "./WaitlistForm";
 import "../styles/hero-mobile.css";
 
 interface LandingPageProps {
@@ -57,6 +47,8 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, userType }: LandingPageProps) {
+  const [showWaitlist, setShowWaitlist] = React.useState(false);
+  
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
@@ -67,7 +59,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
   const mockPINData = generateMockPINData();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#0a0b0d' }}>
       <Navbar 
         currentPage="landing"
         onNavigate={handleNavigate}
@@ -121,7 +113,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-6 text-white leading-tight"
                 >
                   Your Global<br />
-                  <span className="bg-gradient-to-r from-[#bfa5ff] via-[#7bb8ff] to-[#32f08c] bg-clip-text text-transparent">
+                  <span className="text-white">
                     Professional Identity
                   </span>
                   <br />Number
@@ -135,7 +127,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   transition={{ delay: 0.4 }}
                   className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
                 >
-                  A unified identity powered by your phone number — verified through our global infrastructure and trusted across every professional ecosystem.
+                  The Global Identity Layer for the Future of Work
                 </motion.p>
 
                 {/* CTAs */}
@@ -147,22 +139,23 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 >
                   <Button
                     size="lg"
-                    onClick={() => (isAuthenticated ? handleNavigate('dashboard') : onLogin("professional"))}
+                    onClick={() => (isAuthenticated ? handleNavigate('dashboard') : setShowWaitlist(true))}
                     className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200"
                     style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
                   >
                     <Fingerprint className="h-5 w-5 mr-2" />
-                    {isAuthenticated ? 'Dashboard' : 'Get Your PIN'}
+                    {isAuthenticated ? 'Dashboard' : 'Join waitlist'}
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 border-white/20 text-white hover:bg-white/10 hover:scale-105 transition-all duration-200"
-                  >
-                    <Play className="h-5 w-5 mr-2" />
-                    See How It Works
-                  </Button>
+                <Button
+                  size="lg"
+                  onClick={() => handleNavigate('how-it-works')}
+                  variant="outline"
+                  className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 bg-white text-black border-white/20 hover:bg-white hover:text-black hover:scale-105 transition-all duration-200"
+                >
+                  <Play className="h-5 w-5 mr-2" />
+                  See How It Works
+                </Button>
                 </motion.div>
 
                 {/* Social proof */}
@@ -264,17 +257,17 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       {/* Why We Exist - Problem Statement */}
       <WhyWeExist />
 
-      {/* Mission Page - What PIN Means for Everyone */}
       <MissionPage />
 
       {/* Solution Page - Technical Implementation */}
       <SolutionPage />
 
+
       {/* Why Now Page - Market Timing */}
       <WhyNowPage />
 
-      {/* WHAT IS PIN - Light Section */}
-      <section className="py-24 px-4 bg-white">
+      {/* WHAT IS PIN - Dark Section */}
+      <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -286,10 +279,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               <Fingerprint className="h-4 w-4 mr-2" />
               What is PIN?
             </Badge>
-            <h2 className="text-4xl sm:text-5xl mb-6 text-gray-900">
+            <h2 className="text-4xl sm:text-5xl mb-6 text-white">
               A Passport for Your Career
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-white/70 max-w-3xl mx-auto">
               PIN transforms your professional experience into a globally recognized, verified digital identity
             </p>
           </motion.div>
@@ -333,15 +326,15 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -8, scale: 1.02 }}
               >
-                <Card className={`p-6 h-full border-2 hover:shadow-2xl transition-all duration-300 bg-gradient-to-br ${feature.gradient}`}>
+                <Card className="p-6 h-full bg-white/5 backdrop-blur-xl border-white/10 hover:shadow-2xl transition-all duration-300">
                   <div 
                     className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
                     style={{ backgroundColor: `${feature.color}20` }}
                   >
                     <feature.icon className="h-7 w-7" style={{ color: feature.color }} />
                   </div>
-                  <h3 className="text-lg mb-2 text-gray-900">{feature.title}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-lg mb-2 text-white">{feature.title}</h3>
+                  <p className="text-sm text-white/70 leading-relaxed">{feature.description}</p>
                 </Card>
               </motion.div>
             ))}
@@ -521,8 +514,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         </div>
       </section>
 
-      {/* GLOBAL EMPLOYER TRUST - Light Section with Map */}
-      <section className="py-24 px-4 bg-white">
+      {/* GLOBAL EMPLOYER TRUST - Dark Section with Map */}
+      <section className="py-24 px-4" style={{ backgroundColor: '#ffffff' }}>
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -530,10 +523,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl mb-6 text-gray-900">
+            <h2 className="text-4xl sm:text-5xl mb-6 text-black">
               Trusted by Global Employers
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-black max-w-3xl mx-auto">
               Leading companies worldwide use PIN to discover and hire verified talent
             </p>
           </motion.div>
@@ -547,7 +540,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
               { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com', url: 'https://stripe.com' },
               { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
-              { name: 'Google', logo: 'https://logo.clearbit.com/google.com', url: 'https://www.google.com' },
+              { name: 'Google', logo: '/logos/icons8-google-logo-96.png', url: 'https://www.google.com' },
+              { name: 'LinkedIn', logo: '/logos/LI-Logo.png', url: 'https://www.linkedin.com' },
               { name: 'Meta', logo: 'https://logo.clearbit.com/meta.com', url: 'https://www.meta.com' },
               { name: 'Shopify', logo: 'https://logo.clearbit.com/shopify.com', url: 'https://www.shopify.com' },
               { name: 'Airbnb', logo: 'https://logo.clearbit.com/airbnb.com', url: 'https://www.airbnb.com' },
@@ -569,7 +563,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   rel="noopener noreferrer"
                   aria-label={`${company.name} website`}
                   title={`Visit ${company.name}`}
-                  className="p-6 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-lg transition-all w-full flex items-center justify-center"
+                  className="p-6 bg-white/5 backdrop-blur-xl border border-[#bfa5ff] rounded-xl hover:shadow-lg transition-all w-full flex items-center justify-center"
                 >
                   <img
                     src={company.logo}
@@ -607,15 +601,15 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="p-6 text-center border-2 hover:shadow-xl transition-all">
+                <Card className="p-6 text-center bg-white/5 backdrop-blur-xl border-white/10 hover:shadow-xl transition-all">
                   <div 
                     className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center"
                     style={{ backgroundColor: `${stat.color}20` }}
                   >
                     <stat.icon className="h-6 w-6" style={{ color: stat.color }} />
                   </div>
-                  <div className="text-4xl font-bold mb-2 text-gray-900">{stat.number}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
+                  <div className="text-4xl font-bold mb-2 text-black">{stat.number}</div>
+                  <div className="text-sm text-black">{stat.label}</div>
                 </Card>
               </motion.div>
             ))}
@@ -650,50 +644,59 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Basic",
+                name: "Starter",
                 price: "Free",
-                period: "forever",
-                description: "Perfect for getting started",
+                period: "Forever",
+                description: "For individuals establishing a trusted, portable identity",
                 features: [
-                  "Create your PIN",
-                  "Basic verification",
-                  "Profile page",
-                  "Apply to unlimited jobs",
+                  "Create & activate your PIN",
+                  "Basic phone-number verification",
+                  "Identity profile link",
+                  "PIN sign-in across supported apps",
+                  "Entry-level analytics (usage history, last verification)",
                   "Community support"
                 ],
-                cta: "Get Started",
+                comingSoon: "Multi-service PIN sync",
+                cta: "Coming soon",
                 highlighted: false
               },
               {
                 name: "Professional",
                 price: "$9",
                 period: "per month",
-                description: "For serious career builders",
+                description: "For professionals who want deeper trust, visibility, and control",
                 features: [
-                  "Everything in Basic",
-                  "Priority verification",
-                  "Advanced analytics",
-                  "Featured profile",
-                  "Direct employer messaging",
-                  "Priority support"
+                  "Everything in Starter, plus:",
+                  "Priority verification engine",
+                  "Full analytics dashboard",
+                  "PIN usage insights",
+                  "Verification triggers",
+                  "Service interactions",
+                  "Monthly activity report",
+                  "Trusted ID badge for businesses",
+                  "Employer & platform visibility",
+                  "Instant PIN support"
                 ],
-                cta: "Start Free Trial",
+                comingSoon: "Verified service connections & cross-app privileges",
+                cta: "Coming soon",
                 highlighted: true
               },
               {
-                name: "Enterprise",
-                price: "Custom",
-                period: "contact us",
-                description: "For teams and organizations",
+                name: "Business",
+                price: "$20",
+                period: "per month (per team / integration)",
+                description: "For companies integrating PIN authentication & verification",
                 features: [
-                  "Everything in Professional",
-                  "Team management",
-                  "Custom branding",
-                  "API access",
-                  "Dedicated success manager",
-                  "Custom integrations"
+                  "Everything in Professional, plus:",
+                  "Phone-number-based identity verification API",
+                  "PIN authentication for onboarding & login",
+                  "Activity webhooks (sign-ins, triggers, checks)",
+                  "Team dashboard",
+                  "Service-level analytics",
+                  "Priority integration support"
                 ],
-                cta: "Contact Sales",
+                comingSoon: "Risk scoring API & fraud detection",
+                cta: "Coming soon",
                 highlighted: false
               }
             ].map((plan, index) => (
@@ -730,11 +733,19 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                       </li>
                     ))}
                   </ul>
+                  {plan.comingSoon && (
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2">
+                        <Badge className="px-2 py-1 bg-white/5 text-gray-300 border-white/10">Coming Soon</Badge>
+                        <span className="text-xs text-gray-400">{plan.comingSoon}</span>
+                      </div>
+                    </div>
+                  )}
                   <Button
                     className="w-full"
                     variant={plan.highlighted ? "default" : "outline"}
                     style={plan.highlighted ? { backgroundColor: '#32f08c', color: '#0a0b0d' } : {}}
-                    onClick={() => onLogin("professional")}
+                    onClick={() => setShowWaitlist(true)}
                   >
                     {plan.cta}
                   </Button>
@@ -762,7 +773,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                onClick={() => onLogin("professional")}
+                onClick={() => setShowWaitlist(true)}
                 className="text-lg px-8 py-6 bg-white hover:bg-gray-100"
                 style={{ color: '#0a0b0d' }}
               >
@@ -786,6 +797,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       </section>
 
       <Footer onNavigate={handleNavigate} />
+      
+      {showWaitlist && (
+        <WaitlistForm onClose={() => setShowWaitlist(false)} />
+      )}
     </div>
   );
 }
