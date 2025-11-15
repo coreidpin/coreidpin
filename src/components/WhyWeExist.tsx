@@ -30,7 +30,7 @@ const problems = [
 
 export function WhyWeExist() {
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-[#0a0b0d] via-[#1a1b2d] to-[#0a0b0d]">
+    <section className="relative py-24 md:py-32 overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
       {/* Animated background grid */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -110,7 +110,7 @@ export function WhyWeExist() {
 
           {/* Right side - Illustration */}
           <motion.div
-            className="relative"
+            className="relative mt-8 lg:mt-0 lg:ml-16 xl:ml-24"
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -118,19 +118,19 @@ export function WhyWeExist() {
           >
             <div className="relative">
               {/* Main visual container */}
-              <div className="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-[#bfa5ff]/20 to-[#7bb8ff]/20 backdrop-blur-sm border border-white/10 p-12 pt-8 md:pt-10">
+              <div className="relative aspect-square rounded-3xl overflow-hidden backdrop-blur-sm border border-white/10 p-12 pt-12 md:pt-16" style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))' }}>
                 {/* Phone number transformation visual */}
                 <motion.div
-                  className="absolute inset-0 flex items-center justify-center"
+                  className="flex flex-col sm:flex-row items-center justify-center gap-6 px-4 mx-auto lg:absolute lg:inset-0 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:place-items-center"
                   initial={{ scale: 0.75, opacity: 0 }}
                   whileInView={{ scale: 0.9, opacity: 1 }}
                   transition={{ delay: 0.5, duration: 0.8 }}
                   viewport={{ once: true }}
                 >
                   {/* Phone number */}
-                  <div className="absolute left-12 top-[58%] -translate-y-1/2">
+                  <div className="relative">
                     <motion.div
-                      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center"
+                      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64"
                       animate={{
                         boxShadow: [
                           '0 0 20px rgba(191, 165, 255, 0.3)',
@@ -145,9 +145,9 @@ export function WhyWeExist() {
                     </motion.div>
                   </div>
 
-                  {/* Arrow */}
+                  {/* Arrow (inline, centered between cards) */}
                   <motion.div
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                    className="hidden lg:block my-auto"
                     initial={{ x: -50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.8, duration: 0.6 }}
@@ -176,9 +176,10 @@ export function WhyWeExist() {
                   </motion.div>
 
                   {/* Verified PIN */}
-                  <div className="absolute right-10 top-[58%] -translate-y-1/2">
+                  <div className="relative">
                     <motion.div
-                      className="bg-gradient-to-br from-[#32f08c]/20 to-[#7bb8ff]/20 backdrop-blur-md border border-[#32f08c]/40 rounded-2xl p-6 text-center"
+                      className="backdrop-blur-md rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64"
+                      style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))', borderColor: 'rgba(143, 208, 202, 0.4)', borderStyle: 'solid', borderWidth: '1px' }}
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
                       viewport={{ once: true }}
@@ -194,7 +195,7 @@ export function WhyWeExist() {
                         boxShadow: { duration: 2, repeat: Infinity },
                       }}
                     >
-                      <CheckCircle className="w-8 h-8 text-[#32f08c] mx-auto mb-2" />
+                      <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#8fd0ca' }} />
                       <div className="text-sm text-white/60 mb-2">Verified PIN</div>
                       <div className="text-xl text-white">PIN-234-812345</div>
                     </motion.div>
@@ -205,10 +206,11 @@ export function WhyWeExist() {
                 {[...Array(8)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="absolute w-px h-16 bg-gradient-to-b from-transparent via-[#32f08c]/50 to-transparent"
+                    className="absolute w-px h-16"
                     style={{
                       left: `${20 + i * 10}%`,
                       top: '20%',
+                      backgroundImage: 'linear-gradient(to bottom, rgba(143, 208, 202, 0), rgba(143, 208, 202, 0.5), rgba(143, 208, 202, 0))',
                     }}
                     animate={{
                       opacity: [0, 1, 0],
@@ -224,8 +226,8 @@ export function WhyWeExist() {
               </div>
 
               {/* Corner accents */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 border-t-2 border-r-2 border-[#bfa5ff] rounded-tr-3xl" />
-              <div className="absolute -bottom-4 -left-4 w-24 h-24 border-b-2 border-l-2 border-[#32f08c] rounded-bl-3xl" />
+              <div className="absolute -top-4 -right-4 w-24 h-24 border-t-2 border-r-2 rounded-tr-3xl" style={{ borderColor: '#8fd0ca' }} />
+              <div className="absolute -bottom-4 -left-4 w-24 h-24 border-b-2 border-l-2 rounded-bl-3xl" style={{ borderColor: '#8fd0ca' }} />
             </div>
           </motion.div>
         </div>

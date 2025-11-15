@@ -1,8 +1,5 @@
 import { motion } from 'motion/react';
 import { Globe, TrendingUp, Scale, Cpu, CheckCircle, ArrowRight } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
 
 const whyNowPoints = [
   {
@@ -33,12 +30,12 @@ const whyNowPoints = [
 
 export function WhyNowPage() {
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-[#0a0b0d] via-[#151620] to-[#0a0b0d]">
+    <section className="relative py-24 md:py-32 overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
       {/* Background elements */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-0 w-full h-full">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-[#bfa5ff]/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[#32f08c]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: 'rgba(143, 208, 202, 0.1)' }} />
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: 'rgba(143, 208, 202, 0.1)', animationDelay: '1s' }} />
         </div>
       </div>
 
@@ -52,7 +49,8 @@ export function WhyNowPage() {
           viewport={{ once: true }}
         >
           <motion.span
-            className="inline-block text-[#32f08c] tracking-[0.2em] text-sm mb-6"
+            className="inline-block tracking-[0.2em] text-sm mb-6"
+            style={{ color: '#8fd0ca' }}
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -114,7 +112,7 @@ export function WhyNowPage() {
           transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-4xl text-center mb-16 text-white mt-8 md:mt-10">
+          <h3 className="text-4xl text-center mb-16 text-white mt-12 md:mt-16">
             Real Use Cases
           </h3>
 
@@ -127,9 +125,9 @@ export function WhyNowPage() {
               transition={{ duration: 0.8, delay: 0.4 }}
               viewport={{ once: true }}
             >
-              <div className="relative p-8 rounded-3xl bg-[#adacff] backdrop-blur-sm border border-[#adacff]/20 mt-4 md:mt-6">
+              <div className="relative p-8 rounded-3xl backdrop-blur-sm border mt-4 md:mt-6" style={{ backgroundColor: '#64748b', borderColor: 'rgba(143, 208, 202, 0.2)' }}>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-[#bfa5ff]/20 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
                     <CheckCircle className="w-6 h-6 text-[#bfa5ff]" />
                   </div>
                   <h4 className="text-2xl text-white">Professional Onboarding</h4>
@@ -137,12 +135,12 @@ export function WhyNowPage() {
 
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-[#bfa5ff]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-sm text-[#bfa5ff]">1</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                      <span className="text-sm" style={{ color: '#212535' }}>1</span>
                     </div>
                     <div>
                       <p className="text-white/80 mb-2">User enters phone number</p>
-                      <div className="inline-block px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-[#bfa5ff]">
+                      <div className="inline-block px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm" style={{ color: '#8fd0ca' }}>
                         +234 812 345 6789
                       </div>
                     </div>
@@ -153,8 +151,8 @@ export function WhyNowPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-[#32f08c]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-sm text-[#32f08c]">2</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                      <span className="text-sm" style={{ color: '#8fd0ca' }}>2</span>
                     </div>
                     <div>
                       <p className="text-white/80 mb-2">OTP verification sent</p>
@@ -169,15 +167,15 @@ export function WhyNowPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-[#7bb8ff]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-sm text-[#7bb8ff]">3</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                      <span className="text-sm" style={{ color: '#8fd0ca' }}>3</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-white/80 mb-3">PIN generated & profile created</p>
-                      <div className="p-4 rounded-lg bg-[#32f08c]/10 border border-[#32f08c]/30">
+                      <div className="p-4 rounded-lg border" style={{ backgroundColor: 'rgba(143, 208, 202, 0.1)', borderColor: 'rgba(143, 208, 202, 0.3)' }}>
                         <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="w-5 h-5 text-[#32f08c]" />
-                          <span className="text-[#32f08c]">Verified</span>
+                          <CheckCircle className="w-5 h-5" style={{ color: '#8fd0ca' }} />
+                          <span style={{ color: '#8fd0ca' }}>Verified</span>
                         </div>
                         <div className="text-sm text-white/60">
                           PIN-234-8123456789
@@ -197,22 +195,22 @@ export function WhyNowPage() {
               transition={{ duration: 0.8, delay: 0.5 }}
               viewport={{ once: true }}
             >
-              <div className="relative p-8 rounded-3xl bg-gradient-to-br from-[#32f08c]/10 to-[#7bb8ff]/10 backdrop-blur-sm border border-[#32f08c]/20 mt-4 md:mt-6">
+              <div className="relative p-8 rounded-3xl backdrop-blur-sm border mt-4 md:mt-6" style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))', borderColor: 'rgba(143, 208, 202, 0.2)' }}>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-[#32f08c]/20 flex items-center justify-center">
-                    <Cpu className="w-6 h-6 text-[#32f08c]" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                    <Cpu className="w-6 h-6" style={{ color: '#8fd0ca' }} />
                   </div>
                   <h4 className="text-2xl text-white">Business Integration</h4>
                 </div>
 
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-[#bfa5ff]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-sm text-[#bfa5ff]">1</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                      <span className="text-sm" style={{ color: '#8fd0ca' }}>1</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-white/80 mb-2">Opay calls PIN API</p>
-                      <div className="p-3 rounded-lg bg-[#0a0b0d]/50 border border-white/10">
+                      <div className="p-3 rounded-lg border" style={{ backgroundColor: 'rgba(10, 11, 13, 0.5)', borderColor: 'rgba(143, 208, 202, 0.3)' }}>
                         <code className="text-xs text-white/70">
                           POST /api/v1/pin/create
                         </code>
@@ -225,8 +223,8 @@ export function WhyNowPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-[#32f08c]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-sm text-[#32f08c]">2</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                      <span className="text-sm" style={{ color: '#8fd0ca' }}>2</span>
                     </div>
                     <div>
                       <p className="text-white/80 mb-2">Customer phone verified</p>
@@ -241,12 +239,12 @@ export function WhyNowPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-[#7bb8ff]/20 flex items-center justify-center flex-shrink-0 mt-1">
-                      <span className="text-sm text-[#7bb8ff]">3</span>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }}>
+                      <span className="text-sm" style={{ color: '#8fd0ca' }}>3</span>
                     </div>
                     <div className="flex-1">
                       <p className="text-white/80 mb-3">API response & webhook fired</p>
-                      <div className="p-4 rounded-lg bg-[#0a0b0d]/50 border border-[#32f08c]/30">
+                      <div className="p-4 rounded-lg border" style={{ backgroundColor: 'rgba(10, 11, 13, 0.5)', borderColor: 'rgba(143, 208, 202, 0.3)' }}>
                         <pre className="text-xs text-white/70 overflow-x-auto">
 {`{
   "pin": "PIN-234-8035551212",
@@ -258,9 +256,9 @@ export function WhyNowPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-[#32f08c]/10 border border-[#32f08c]/30 text-center">
-                    <CheckCircle className="w-6 h-6 text-[#32f08c] mx-auto mb-2" />
-                    <p className="text-sm text-[#32f08c]">Instant KYC Complete</p>
+                  <div className="p-4 rounded-lg border text-center" style={{ backgroundColor: 'rgba(143, 208, 202, 0.1)', borderColor: 'rgba(143, 208, 202, 0.3)' }}>
+                    <CheckCircle className="w-6 h-6 mx-auto mb-2" style={{ color: '#8fd0ca' }} />
+                    <p className="text-sm" style={{ color: '#8fd0ca' }}>Instant KYC Complete</p>
                   </div>
                 </div>
               </div>

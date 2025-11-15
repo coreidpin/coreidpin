@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
+import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Navbar } from "./Navbar";
@@ -11,16 +11,10 @@ import {
   CheckCircle,
   Globe,
   Shield,
-  Award,
   ArrowRight,
   Star,
-  BadgeCheck,
-  Eye,
-  FileText,
   Brain,
   Sparkles,
-  Target,
-  TrendingUp,
   Fingerprint,
   ShieldCheck,
   Database,
@@ -32,19 +26,15 @@ import {
   ChevronRight,
   Play,
   Link as LinkIcon,
-  Lock,
-  Github,
-  Linkedin,
-  Code,
   Briefcase,
   CheckCheck
 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
 import TrustBanner from "./TrustBanner";
 import { MissionPage } from "./MissionPage";
 import { SolutionPage } from "./SolutionPage";
 import { WhyNowPage } from "./WhyNowPage";
 import { WhyWeExist } from "./WhyWeExist";
+import { WaitlistForm } from "./WaitlistForm";
 import "../styles/hero-mobile.css";
 
 interface LandingPageProps {
@@ -57,6 +47,8 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, userType }: LandingPageProps) {
+  const [showWaitlist, setShowWaitlist] = React.useState(false);
+  
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
@@ -147,7 +139,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 >
                   <Button
                     size="lg"
-                    onClick={() => (isAuthenticated ? handleNavigate('dashboard') : onLogin("professional"))}
+                    onClick={() => (isAuthenticated ? handleNavigate('dashboard') : setShowWaitlist(true))}
                     className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200"
                     style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
                   >
@@ -155,14 +147,15 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                     {isAuthenticated ? 'Dashboard' : 'Join waitlist'}
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 border-white/20 text-black hover:text-black hover:bg-white/10 hover:scale-105 transition-all duration-200"
-                  >
-                    <Play className="h-5 w-5 mr-2" />
-                    See How It Works
-                  </Button>
+                <Button
+                  size="lg"
+                  onClick={() => handleNavigate('how-it-works')}
+                  variant="outline"
+                  className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 bg-white text-black border-white/20 hover:bg-white hover:text-black hover:scale-105 transition-all duration-200"
+                >
+                  <Play className="h-5 w-5 mr-2" />
+                  See How It Works
+                </Button>
                 </motion.div>
 
                 {/* Social proof */}
@@ -547,7 +540,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
               { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com', url: 'https://stripe.com' },
               { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
-              { name: 'Google', logo: 'https://logo.clearbit.com/google.com', url: 'https://www.google.com' },
+              { name: 'Google', logo: '/logos/icons8-google-logo-96.png', url: 'https://www.google.com' },
+              { name: 'LinkedIn', logo: '/logos/LI-Logo.png', url: 'https://www.linkedin.com' },
               { name: 'Meta', logo: 'https://logo.clearbit.com/meta.com', url: 'https://www.meta.com' },
               { name: 'Shopify', logo: 'https://logo.clearbit.com/shopify.com', url: 'https://www.shopify.com' },
               { name: 'Airbnb', logo: 'https://logo.clearbit.com/airbnb.com', url: 'https://www.airbnb.com' },
@@ -650,17 +644,19 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Basic",
+                name: "Starter",
                 price: "Free",
-                period: "forever",
-                description: "Perfect for getting started",
+                period: "Forever",
+                description: "For individuals establishing a trusted, portable identity",
                 features: [
-                  "Create your PIN",
-                  "Basic verification",
-                  "Profile page",
-                  "Apply to unlimited jobs",
+                  "Create & activate your PIN",
+                  "Basic phone-number verification",
+                  "Identity profile link",
+                  "PIN sign-in across supported apps",
+                  "Entry-level analytics (usage history, last verification)",
                   "Community support"
                 ],
+                comingSoon: "Multi-service PIN sync",
                 cta: "Coming soon",
                 highlighted: false
               },
@@ -668,31 +664,38 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 name: "Professional",
                 price: "$9",
                 period: "per month",
-                description: "For serious career builders",
+                description: "For professionals who want deeper trust, visibility, and control",
                 features: [
-                  "Everything in Basic",
-                  "Priority verification",
-                  "Advanced analytics",
-                  "Featured profile",
-                  "Direct employer messaging",
-                  "Priority support"
+                  "Everything in Starter, plus:",
+                  "Priority verification engine",
+                  "Full analytics dashboard",
+                  "PIN usage insights",
+                  "Verification triggers",
+                  "Service interactions",
+                  "Monthly activity report",
+                  "Trusted ID badge for businesses",
+                  "Employer & platform visibility",
+                  "Instant PIN support"
                 ],
+                comingSoon: "Verified service connections & cross-app privileges",
                 cta: "Coming soon",
                 highlighted: true
               },
               {
-                name: "Enterprise",
-                price: "Custom",
-                period: "contact us",
-                description: "For teams and organizations",
+                name: "Business",
+                price: "$20",
+                period: "per month (per team / integration)",
+                description: "For companies integrating PIN authentication & verification",
                 features: [
-                  "Everything in Professional",
-                  "Team management",
-                  "Custom branding",
-                  "API access",
-                  "Dedicated success manager",
-                  "Custom integrations"
+                  "Everything in Professional, plus:",
+                  "Phone-number-based identity verification API",
+                  "PIN authentication for onboarding & login",
+                  "Activity webhooks (sign-ins, triggers, checks)",
+                  "Team dashboard",
+                  "Service-level analytics",
+                  "Priority integration support"
                 ],
+                comingSoon: "Risk scoring API & fraud detection",
                 cta: "Coming soon",
                 highlighted: false
               }
@@ -730,11 +733,19 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                       </li>
                     ))}
                   </ul>
+                  {plan.comingSoon && (
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2">
+                        <Badge className="px-2 py-1 bg-white/5 text-gray-300 border-white/10">Coming Soon</Badge>
+                        <span className="text-xs text-gray-400">{plan.comingSoon}</span>
+                      </div>
+                    </div>
+                  )}
                   <Button
                     className="w-full"
                     variant={plan.highlighted ? "default" : "outline"}
                     style={plan.highlighted ? { backgroundColor: '#32f08c', color: '#0a0b0d' } : {}}
-                    onClick={() => onLogin("professional")}
+                    onClick={() => setShowWaitlist(true)}
                   >
                     {plan.cta}
                   </Button>
@@ -762,7 +773,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                onClick={() => onLogin("professional")}
+                onClick={() => setShowWaitlist(true)}
                 className="text-lg px-8 py-6 bg-white hover:bg-gray-100"
                 style={{ color: '#0a0b0d' }}
               >
@@ -786,6 +797,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       </section>
 
       <Footer onNavigate={handleNavigate} />
+      
+      {showWaitlist && (
+        <WaitlistForm onClose={() => setShowWaitlist(false)} />
+      )}
     </div>
   );
 }

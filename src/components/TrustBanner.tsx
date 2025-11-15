@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Shield, Users, Building, GraduationCap, Globe, Fingerprint, ShieldCheck } from 'lucide-react';
+import { Shield, Building, Globe, Fingerprint, ShieldCheck } from 'lucide-react';
 
 type Metric = {
   label: string;
   value: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   color: string;
 };
 
@@ -24,7 +24,7 @@ const defaultMetrics: Metric[] = [
 ];
 
 export function TrustBanner({
-  title = 'Global Professional Identity Network',
+  title = 'What you see on your dashboard',
   description = 'Unlock a trusted, universal identity layer powered by PIN — enabling professionals, employers, and platforms to verify and connect instantly across borders.',
   metrics = defaultMetrics,
   className = '',
