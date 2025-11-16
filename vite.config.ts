@@ -71,6 +71,8 @@ import { defineConfig, loadEnv } from 'vite';
       server: {
         port: 3000,
         open: true,
+        hmr: false,
+        ws: false,
         proxy: {
           '/functions/v1': {
             target: supabaseUrl,

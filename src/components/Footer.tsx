@@ -191,7 +191,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                 <div>
                   <Logo size="lg" showText={true} />
                   <p className="text-white/60 leading-relaxed mt-4">
-                    A single PIN that travels with you: across companies, continents, onboarding flows, verification systems, and digital experiences — one identity, infinite access.
+                    Our vision is to create the world’s most trusted infrastructure for professional identity—an intelligent verification layer that powers careers, businesses, and global talent mobility. We aim to eliminate doubt, fraud, and friction from hiring by giving every individual a secure, An identity that proves who they are and what they can do, instantly
                   </p>
                 </div>
 

@@ -27,7 +27,10 @@ import {
   Play,
   Link as LinkIcon,
   Briefcase,
-  CheckCheck
+  CheckCheck,
+  Twitter,
+  Linkedin,
+  Instagram
 } from "lucide-react";
 import TrustBanner from "./TrustBanner";
 import { MissionPage } from "./MissionPage";
@@ -489,10 +492,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 whileHover={{ y: -8 }}
               >
                 <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-6 h-full hover:bg-white/10 transition-all duration-300">
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    ))}
+                  <div className="flex gap-2 mb-4">
+                    <Twitter className="h-5 w-5" style={{ color: '#7bb8ff' }} />
+                    <Linkedin className="h-5 w-5" style={{ color: '#bfa5ff' }} />
+                    <Instagram className="h-5 w-5" style={{ color: '#32f08c' }} />
                   </div>
                   <p className="text-gray-300 mb-6 italic leading-relaxed">
                     "{testimonial.quote}"
@@ -534,8 +537,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           {/* Company logos (prefers local brand assets; falls back to icons) */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-16">
             {[
-              { name: 'Paystack', logo: '/logos/Paystack_idSL4BuSLF_1.png', url: 'https://paystack.com' },
-              { name: 'Microsoft', logo: '/logos/Microsoft_Logo_512px.png', url: 'https://www.microsoft.com' },
+              { name: 'Paystack', logo: 'https://logo.clearbit.com/paystack.com', url: 'https://paystack.com' },
+              { name: 'Microsoft', logo: 'https://logo.clearbit.com/microsoft.com', url: 'https://www.microsoft.com' },
               { name: 'AWS', logo: '/logos/Amazon Web Services_idS5TK0MYh_1.png', url: 'https://aws.amazon.com' },
               { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
               { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com', url: 'https://stripe.com' },

@@ -45,14 +45,12 @@ export function TrustBanner({
           style={{ backgroundColor: 'rgba(191,165,255,0.08)' }}
           animate={reducedMotion ? undefined : { opacity: [0.25, 0.45, 0.25], scale: [1, 1.1, 1] }}
           transition={reducedMotion ? undefined : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         />
         <motion.div
           className="absolute -bottom-16 -right-16 w-72 h-72 rounded-full blur-xl"
           style={{ backgroundColor: 'rgba(50,240,140,0.08)' }}
           animate={reducedMotion ? undefined : { opacity: [0.2, 0.4, 0.2], scale: [1.1, 1, 1.1] }}
           transition={reducedMotion ? undefined : { duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-          style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         />
       </div>
 

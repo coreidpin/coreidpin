@@ -80,7 +80,6 @@
       "scripts": {
             "dev": "vite",
             "build": "vite build",
-
             "typecheck": "tsc -p tsconfig.json --noEmit",
             "preview": "vite preview --strictPort",
             "test": "vitest",

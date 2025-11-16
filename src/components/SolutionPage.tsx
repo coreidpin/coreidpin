@@ -131,7 +131,7 @@ export function SolutionPage() {
 
         {/* API Integration */}
         <motion.div
-          className="mt-40 lg:mt-52 mb-20"
+          className="mt-40 lg:mt-48 mb-32"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
@@ -144,7 +144,7 @@ export function SolutionPage() {
             Simple, powerful APIs for seamless integration
           </p>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto mt-2 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto mt-2 mb-20">
             {apiFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -175,9 +175,12 @@ export function SolutionPage() {
           </div>
         </motion.div>
 
+        {/* Spacer */}
+        <div className="h-32"></div>
+
         {/* Code snippet preview */}
         <motion.div
-          className="mt-80 sm:mt-96 md:mt-[32rem] max-w-3xl mx-auto"
+          className="mt-64 pt-32 max-w-3xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}

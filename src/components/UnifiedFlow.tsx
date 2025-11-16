@@ -812,13 +812,13 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Building className="h-10 w-10 text-white" />
+        <div className="w-20 h-20 bg-gradient-to-br from-[var(--brand-secondary)] to-[var(--brand-accent)] rounded-full flex items-center justify-center mx-auto mb-4">
+          <Building className="h-10 w-10 text-black" />
         </div>
         <h1 className="text-3xl mb-2">Welcome to swipe! 🚀</h1>
         <p className="text-muted-foreground">Start hiring verified talent in minutes</p>
       </div>
-      <Card className="bg-surface">
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle>Company Information</CardTitle>
           <CardDescription>Quick setup to get you started. You can add more details later in your dashboard.</CardDescription>
@@ -833,8 +833,8 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
                 </Button>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                <div className="relative flex justify-center text-xs uppercase"><span className="bg-surface px-2 text-muted-foreground">Or fill manually</span></div>
+                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
+                <div className="relative flex justify-center text-xs uppercase"><span className="px-3 py-1 rounded-full bg-black/40 border border-white/10 text-white/70">Or fill manually</span></div>
               </div>
             </div>
           )}
@@ -842,12 +842,12 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="company-name">Company Name *</Label>
-                <Input id="company-name" placeholder="Your Company Ltd." value={formData.companyName || ''} onChange={(e) => updateFormData('companyName', e.target.value)} />
+                <Input id="company-name" placeholder="Your Company Ltd." value={formData.companyName || ''} onChange={(e) => updateFormData('companyName', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60 focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]" />
               </div>
               <div>
                 <Label htmlFor="industry">Industry *</Label>
                 <Select value={formData.industry || ''} onValueChange={(value) => updateFormData('industry', value)}>
-                  <SelectTrigger><SelectValue placeholder="Select industry..." /></SelectTrigger>
+                  <SelectTrigger className="bg-transparent border-white/20 text-white focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]"><SelectValue placeholder="Select industry..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="technology">Technology</SelectItem>
                     <SelectItem value="finance">Finance</SelectItem>
@@ -862,27 +862,27 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="location">Headquarters Location *</Label>
-                <Input id="location" placeholder="City, Country" value={formData.headquarters || ''} onChange={(e) => updateFormData('headquarters', e.target.value)} />
+                <Input id="location" placeholder="City, Country" value={formData.headquarters || ''} onChange={(e) => updateFormData('headquarters', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60 focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]" />
               </div>
               <div>
                 <Label htmlFor="contact-email">Contact Email *</Label>
-                <Input id="contact-email" type="email" placeholder="hr@yourcompany.com" value={formData.contactEmail || ''} onChange={(e) => updateFormData('contactEmail', e.target.value)} />
+                <Input id="contact-email" type="email" placeholder="hr@yourcompany.com" value={formData.contactEmail || ''} onChange={(e) => updateFormData('contactEmail', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60 focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]" />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="password">Password *</Label>
-                <Input id="password" type="password" placeholder="••••••••" value={formData.password || ''} onChange={(e) => updateFormData('password', e.target.value)} />
+                <Input id="password" type="password" placeholder="••••••••" value={formData.password || ''} onChange={(e) => updateFormData('password', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60 focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]" />
                 <p className="text-xs text-muted-foreground mt-1">Must be at least 6 characters</p>
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                <Input id="confirmPassword" type="password" placeholder="••••••••" value={formData.confirmPassword || ''} onChange={(e) => updateFormData('confirmPassword', e.target.value)} />
+                <Input id="confirmPassword" type="password" placeholder="••••••••" value={formData.confirmPassword || ''} onChange={(e) => updateFormData('confirmPassword', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60 focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]" />
               </div>
             </div>
             <div>
               <Label htmlFor="phone">Phone Number (optional)</Label>
-              <Input id="phone" type="tel" placeholder="e.g., +234 801 234 5678" value={formData.phone || ''} onChange={(e) => updateFormData('phone', e.target.value)} />
+              <Input id="phone" type="tel" placeholder="e.g., +234 801 234 5678" value={formData.phone || ''} onChange={(e) => updateFormData('phone', e.target.value)} className="bg-transparent border-white/20 text-white placeholder-white/60 focus-visible:border-[var(--brand-primary)] focus-visible:ring-[var(--brand-primary)]/30 focus-visible:ring-[3px]" />
             </div>
           </div>
         </CardContent>

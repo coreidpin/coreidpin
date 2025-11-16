@@ -40,7 +40,7 @@ export function WhyWeExist() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-24 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-[1fr_1.2fr] gap-16 xl:gap-20 items-center">
           {/* Left side - Content */}
           <motion.div
             className="-mt-2 md:-mt-4"
@@ -110,7 +110,7 @@ export function WhyWeExist() {
 
           {/* Right side - Illustration */}
           <motion.div
-            className="relative mt-8 lg:mt-0 lg:ml-16 xl:ml-24"
+            className="relative mt-8 lg:mt-0"
             initial={{ opacity: 0, x: 50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -118,12 +118,12 @@ export function WhyWeExist() {
           >
             <div className="relative">
               {/* Main visual container */}
-              <div className="relative aspect-square rounded-3xl overflow-hidden backdrop-blur-sm border border-white/10 p-12 pt-12 md:pt-16" style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))' }}>
+              <div className="relative aspect-square rounded-3xl overflow-hidden backdrop-blur-sm border border-white/10 p-8 flex items-center justify-center" style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))' }}>
                 {/* Phone number transformation visual */}
                 <motion.div
-                  className="flex flex-col sm:flex-row items-center justify-center gap-6 px-4 mx-auto lg:absolute lg:inset-0 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:place-items-center"
-                  initial={{ scale: 0.75, opacity: 0 }}
-                  whileInView={{ scale: 0.9, opacity: 1 }}
+                  className="flex flex-col sm:flex-row items-center justify-center gap-6 px-4 w-full"
+                  initial={{ scale: 0.75, opacity: 0, y: 12 }}
+                  whileInView={{ scale: 0.9, opacity: 1, y: 24 }}
                   transition={{ delay: 0.5, duration: 0.8 }}
                   viewport={{ once: true }}
                 >
@@ -147,7 +147,7 @@ export function WhyWeExist() {
 
                   {/* Arrow (inline, centered between cards) */}
                   <motion.div
-                    className="hidden lg:block my-auto"
+                    className="hidden sm:block my-auto"
                     initial={{ x: -50, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.8, duration: 0.6 }}

@@ -79,28 +79,28 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
 
   const team = [
     {
-      name: 'Dr. Adebayo Ogundimu',
-      role: 'Co-Founder & CEO',
-      background: 'Former McKinsey Partner, Harvard MBA',
-      expertise: 'Global Strategy & Compliance'
+      name: 'Akinrodolu Oluwaseun',
+      role: 'Founder and CEO',
+      background: 'Former 3mtt, Thrive agric',
+      expertise: 'Product and AI expert'
     },
     {
-      name: 'Kemi Adeyemi',
-      role: 'Co-Founder & CTO',
-      background: 'Former Google Engineer, MIT Computer Science',
-      expertise: 'Blockchain & Verification Systems'
+      name: 'OLUWASEUN AIYEJOTO ALABI',
+      role: 'Chief Business Intelligence Officer',
+      background: 'Former COO, Credlanche/Sixth Element Analytics.',
+      expertise: 'Business Intelligence & Analytics'
     },
     {
-      name: 'Prof. Chika Ezeilo',
-      role: 'Chief Academic Officer',
-      background: 'Former Registrar, University of Nigeria',
-      expertise: 'Educational Standards & Accreditation'
+      name: 'Oware Michael Paul',
+      role: 'Chief Operations Officer',
+      background: 'Former PM/CIO, Max Protocol',
+      expertise: 'Operations & Strategy'
     },
     {
-      name: 'Samuel Okafor',
-      role: 'Head of Compliance',
-      background: 'Former CBN Regulatory Specialist',
-      expertise: 'Financial Compliance & Risk Management'
+      name: 'Adeola Josephine Balogun',
+      role: 'Chief Marketing Officer',
+      background: 'Former CMO, Dallas Group',
+      expertise: 'Brand & Growth Strategy'
     }
   ];
 

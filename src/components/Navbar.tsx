@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { Logo } from './Logo';
@@ -33,6 +34,7 @@ export function Navbar({
   isAuthenticated = false,
   userType 
 }: NavbarProps) {
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
@@ -66,31 +68,31 @@ export function Navbar({
     {
       label: 'About',
       items: [
-        { label: 'Our Story', href: 'our-story' },
-        { label: 'How It Works', href: 'how-it-works' },
-        { label: 'Trust & Safety', href: 'trust-safety' }
+        { label: 'Our Story', href: '/our-story' },
+        { label: 'How It Works', href: '/how-it-works' },
+        { label: 'Trust & Safety', href: '/trust-safety' }
       ]
     },
     {
       label: 'Solutions',
       items: [
-        { label: 'For Employers', href: 'employers', icon: Building },
-        { label: 'For Professionals', href: 'professionals', icon: UserCheck },
-        // { label: 'For Universities', href: 'universities', icon: GraduationCap }
+        { label: 'For Employers', href: '/employers', icon: Building },
+        { label: 'For Professionals', href: '/professionals', icon: UserCheck },
+        // { label: 'For Universities', href: '/universities', icon: GraduationCap }
       ]
     },
     {
       label: 'Resources',
       items: [
-        { label: 'Help Center', href: 'help', icon: HelpCircle },
-        { label: 'Contact', href: 'contact', icon: Phone },
-        { label: 'Documentation', href: 'docs', icon: BookOpen }
+        { label: 'Help Center', href: '/help', icon: HelpCircle },
+        { label: 'Contact', href: '/contact', icon: Phone },
+        { label: 'Documentation', href: '/docs', icon: BookOpen }
       ]
     }
   ];
 
   const handleNavigate = (href: string) => {
-    onNavigate(href);
+    navigate(href);
     setIsMobileMenuOpen(false);
     setActiveDropdown(null);
   };
@@ -177,7 +179,7 @@ export function Navbar({
           </DialogHeader>
           <div>
             <button
-              onClick={() => onNavigate('cookies')}
+              onClick={() => navigate('/cookies')}
               className="underline underline-offset-4 mb-4"
               style={{ color: '#2F4F2F' }}
             >
@@ -205,7 +207,7 @@ export function Navbar({
           </div>
           <div className="pt-3 text-center">
             <button
-              onClick={() => onNavigate('cookies')}
+              onClick={() => navigate('/cookies')}
               className="underline underline-offset-4"
               style={{ color: '#2F4F2F' }}
             >
@@ -222,7 +224,7 @@ export function Navbar({
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-18">
           {/* Logo */}
-          <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('landing')} />
+          <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
@@ -252,17 +254,18 @@ export function Navbar({
                   variant="ghost" 
                   size="sm"
                   disabled={isProd}
-                  onClick={() => { if (isProd) return; onNavigate('login'); }}
-                  className="hover:bg-primary/10 transition-colors"
+                  onClick={() => { if (isProd) return; navigate('/login'); }}
+                  className={isLight ? "text-white hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
                 >
                   Login
                 </Button>
                 <div className="w-px h-6 bg-border"></div>
                 <Button 
-                  variant="default" 
+                  variant={isLight ? "ghost" : "default"}
                   size="sm"
                   disabled={isProd}
                   onClick={() => handleLogin('professional')}
+                  className={isLight ? "text-white hover:bg-white/10 transition-colors" : ""}
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
                   <span className="hidden xl:inline">Get Started</span>
@@ -274,7 +277,7 @@ export function Navbar({
                 <Button 
                   variant="default" 
                   size="sm"
-                  onClick={() => handleNavigate('dashboard')}
+                  onClick={() => navigate('/dashboard')}
                 >
                   <Building className="h-4 w-4 mr-2" />
                   Dashboard
@@ -350,7 +353,7 @@ export function Navbar({
                         onClick={() => {
                           if (isProd) return;
                           setIsMobileMenuOpen(false);
-                          onNavigate('login');
+                          navigate('/login');
                         }}
                       >
                         <LogIn className="h-4 w-4 mr-3" />
