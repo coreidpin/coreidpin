@@ -361,7 +361,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               How PIN Works
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Get verified and start matching with global opportunities in minutes
+              Get verified and start connecting with trusted opportunities in minutes
             </p>
           </motion.div>
 
@@ -371,35 +371,35 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 step: "01",
                 icon: Users,
                 title: "Create Your Profile",
-                description: "Sign up and add your basic professional information",
+                description: "Add your basic professional or business information to get started.",
                 color: "#7bb8ff"
               },
               {
                 step: "02",
                 icon: LinkIcon,
-                title: "Connect Accounts",
-                description: "Link LinkedIn, GitHub, portfolio, or upload resume",
+                title: "Connect Your Systems",
+                description: "Securely link the tools you already use — HR systems, project tools, or professional accounts.",
                 color: "#bfa5ff"
               },
               {
                 step: "03",
                 icon: Brain,
-                title: "AI Analyzes",
-                description: "Our AI verifies your skills and experience automatically",
+                title: "AI Reviews & Verifies",
+                description: "Our System checks your experience, activities, and contributions to validate your professional identity automatically.",
                 color: "#32f08c"
               },
               {
                 step: "04",
                 icon: ShieldCheck,
-                title: "Blockchain Records",
-                description: "Your verified identity is secured on the blockchain",
+                title: "Secure Blockchain Record",
+                description: "Your verified identity is stored safely on the blockchain for authenticity and tamper-proof trust.",
                 color: "#7bb8ff"
               },
               {
                 step: "05",
                 icon: Share2,
-                title: "Share Globally",
-                description: "Use your PIN to apply for jobs worldwide instantly",
+                title: "Share & Use Globally",
+                description: "Use your PIN for seamless verification with employers, partners, or clients worldwide.",
                 color: "#bfa5ff"
               }
             ].map((step, index) => (
@@ -456,27 +456,27 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Sarah Chen",
-                role: "Senior Developer",
-                company: "TechCorp",
-                avatar: "sarah-chen",
-                quote: "PIN helped me land my dream remote job in under a week. The verification process gave employers instant confidence in my skills.",
+                name: "Ijeoma A.",
+                role: "Product Manager",
+                company: "",
+                avatar: "ijeoma-a",
+                quote: "I no longer fill forms over and over. My PIN handles sign-ins, verification and access across every platform I use. It feels like a digital passport for my career.",
                 rating: 5
               },
               {
-                name: "David Okonkwo",
-                role: "Product Designer",
-                company: "DesignHub",
-                avatar: "david-okonkwo",
-                quote: "As a Nigerian professional, PIN opened doors to global opportunities I never thought possible. True game-changer.",
+                name: "CTO",
+                role: "CTO",
+                company: "CloudWorks",
+                avatar: "cloudworks-cto",
+                quote: "The PIN infrastructure solved our identity fragmentation problem. Finally, one ID that works across products, regions, and audits.",
                 rating: 5
               },
               {
-                name: "Maria Garcia",
-                role: "Data Scientist",
-                company: "DataFlow",
-                avatar: "maria-garcia",
-                quote: "The blockchain verification means I don't have to prove myself repeatedly. One PIN, unlimited opportunities.",
+                name: "HR Compliance Officer",
+                role: "HR Compliance Officer",
+                company: "GlobalTalent Africa",
+                avatar: "globaltalent-africa-hr",
+                quote: "PIN aligned perfectly with our compliance needs — KYC, AML, and identity assurance without slowing down hiring.",
                 rating: 5
               }
             ].map((testimonial, index) => (
@@ -504,7 +504,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                     </Avatar>
                     <div>
                       <div className="text-white">{testimonial.name}</div>
-                      <div className="text-sm text-gray-400">{testimonial.role} at {testimonial.company}</div>
+                      <div className="text-sm text-gray-400">{testimonial.company ? `${testimonial.role} at ${testimonial.company}` : testimonial.role}</div>
                     </div>
                   </div>
                 </Card>
@@ -742,7 +742,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                     </div>
                   )}
                   <Button
-                    className="w-full"
+                    className="w-full text-white hover:text-white"
                     variant={plan.highlighted ? "default" : "outline"}
                     style={plan.highlighted ? { backgroundColor: '#32f08c', color: '#0a0b0d' } : {}}
                     onClick={() => setShowWaitlist(true)}

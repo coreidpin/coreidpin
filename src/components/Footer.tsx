@@ -248,8 +248,8 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                     <div className="p-2 rounded-lg bg-surface group-hover:bg-[#bfa5ff]/20 transition-colors">
                       <Mail className="h-4 w-4 text-[#bfa5ff]" />
                     </div>
-                    <a href="mailto:support@swipe.work" className="text-white/60 hover:text-white transition-colors">
-                      support@swipe.work
+                    <a href="mailto:support@usepin.xyz" className="text-white/60 hover:text-white transition-colors">
+                      support@usepin.xyz
                     </a>
                   </div>
                   <div className="flex items-center gap-3 text-sm group cursor-pointer">
@@ -257,7 +257,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                       <Phone className="h-4 w-4 text-[#32f08c]" />
                     </div>
                     <a href="tel:+2348008556226" className="text-white/60 hover:text-white transition-colors">
-                      +234 (0) 800-SWIPE
+                      +234 (0) 800-coreID
                     </a>
                   </div>
                   <div className="flex items-center gap-3 text-sm group cursor-pointer">

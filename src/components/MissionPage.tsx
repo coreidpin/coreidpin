@@ -113,7 +113,7 @@ export function MissionPage() {
                   <div 
                     className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     style={{
-                      background: 'white',
+                      backgroundColor: '#64748b',
                       padding: '1px',
                       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
                       WebkitMaskComposite: 'xor',

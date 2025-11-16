@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { Logo } from './Logo';
 import { AnnouncementBanner } from './AnnouncementBanner';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { 
   Menu, 
   ChevronDown,
@@ -34,8 +35,32 @@ export function Navbar({
 }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [showCookieConsent, setShowCookieConsent] = useState(false);
   const isLight = currentPage === 'landing';
   const isProd = import.meta.env.PROD;
+
+  useEffect(() => {
+    try {
+      const existing = localStorage.getItem('cookieConsent');
+      if (!existing) setShowCookieConsent(true);
+    } catch {}
+  }, []);
+
+  const acceptAllCookies = () => {
+    try {
+      localStorage.setItem('cookieConsent', 'all');
+      document.cookie = `cookie_consent=all; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    } catch {}
+    setShowCookieConsent(false);
+  };
+
+  const rejectAllCookies = () => {
+    try {
+      localStorage.setItem('cookieConsent', 'none');
+      document.cookie = `cookie_consent=none; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+    } catch {}
+    setShowCookieConsent(false);
+  };
 
   const navigationItems = [
     {
@@ -142,6 +167,53 @@ export function Navbar({
         type="promotional"
         dismissible={true}
       />
+      <Dialog open={showCookieConsent} onOpenChange={setShowCookieConsent}>
+        <DialogContent className="bg-white text-black rounded-3xl border-0 shadow-2xl p-8 max-w-lg">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-3xl font-semibold">Choose your cookies</DialogTitle>
+            <DialogDescription className="text-base text-black/70">
+              To provide the best experiences, we may use technologies like cookies to store and/or access device information. Consenting will allow us to process data such as browsing behavior on this site. Not consenting may adversely affect certain features and functions.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <button
+              onClick={() => onNavigate('cookies')}
+              className="underline underline-offset-4 mb-4"
+              style={{ color: '#2F4F2F' }}
+            >
+              Learn more and manage
+            </button>
+          </div>
+          <div className="space-y-3">
+            <Button
+              size="lg"
+              onClick={acceptAllCookies}
+              className="w-full rounded-full h-12 text-base shadow-sm"
+              style={{ backgroundColor: '#2F4F2F', color: '#ffffff' }}
+            >
+              Accept all
+            </Button>
+            <Button
+              size="lg"
+              variant="ghost"
+              onClick={rejectAllCookies}
+              className="w-full rounded-full h-12 text-base"
+              style={{ border: '2px solid #2F4F2F', color: '#2F4F2F', background: 'transparent' }}
+            >
+              Reject all
+            </Button>
+          </div>
+          <div className="pt-3 text-center">
+            <button
+              onClick={() => onNavigate('cookies')}
+              className="underline underline-offset-4"
+              style={{ color: '#2F4F2F' }}
+            >
+              View Cookies Policy
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

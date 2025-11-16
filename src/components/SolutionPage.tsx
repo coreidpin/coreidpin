@@ -144,7 +144,7 @@ export function SolutionPage() {
             Simple, powerful APIs for seamless integration
           </p>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto -mt-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto mt-2 mb-10">
             {apiFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -177,7 +177,7 @@ export function SolutionPage() {
 
         {/* Code snippet preview */}
         <motion.div
-          className="mt-64 sm:mt-72 md:mt-96 max-w-3xl mx-auto"
+          className="mt-80 sm:mt-96 md:mt-[32rem] max-w-3xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
