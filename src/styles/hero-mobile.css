@@ -31,6 +31,17 @@
   }
 }
 
+/* Mobile optimizations for glow overlays in WhyWeExist cards */
+@media (max-width: 768px) {
+  .group .absolute.inset-0.rounded-2xl.blur-xl {
+    filter: blur(clamp(6px, 2vw, 12px));
+    will-change: opacity, filter;
+  }
+  .group:active .absolute.inset-0.rounded-2xl.blur-xl {
+    opacity: 0.25;
+  }
+}
+
 /* Mobile-first adjustments: base for narrow screens */
 @media (max-width: 430px) {
   .hero-mobile {

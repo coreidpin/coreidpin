@@ -52,7 +52,7 @@ export function MissionPage() {
   const [showWaitlist, setShowWaitlist] = useState(false);
 
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
+    <section className="relative py-24 md:py-32 overflow-hidden sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: '#0a0b0d' }}>
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -86,7 +86,7 @@ export function MissionPage() {
             OUR VISION
           </motion.span>
           
-          <h2 className="text-6xl md:text-7xl mb-8 text-white">
+          <h2 className="text-4xl sm:text-5xl md:text-7xl mb-8 text-white leading-snug md:leading-tight break-words">
             What PIN Means<br />
             <span style={{ color: '#8fd0ca' }}>
               for Everyone
@@ -173,7 +173,7 @@ export function MissionPage() {
             <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }} />
             <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }} />
             
-            <div className="relative text-center max-w-4xl mx-auto mt-6 rounded-2xl p-8" style={{ backgroundColor: '#29273d' }}>
+            <div className="relative text-center max-w-4xl mx-auto mt-6 rounded-2xl p-8 sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: '#29273d' }}>
               <motion.div
                 className="inline-block mb-6"
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -185,7 +185,7 @@ export function MissionPage() {
               </motion.div>
               
               <motion.h3
-                className="text-4xl md:text-5xl mb-6 text-white leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl mb-6 text-white leading-snug md:leading-tight break-words"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
@@ -196,7 +196,7 @@ export function MissionPage() {
               </motion.h3>
 
               <motion.p
-                className="text-xl text-white/60 leading-relaxed mb-8"
+                className="text-base sm:text-lg md:text-xl text-white/60 leading-relaxed md:leading-relaxed mb-8 px-2 sm:px-0"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
@@ -316,19 +316,21 @@ export function MissionPage() {
           <div className="relative p-8 rounded-3xl overflow-hidden flex flex-col justify-center mt-2 md:mt-4" style={{ backgroundColor: '#28263b' }}>
             {/* Decorative glow */}
             
-            <div className="relative text-center">
-              <h4 className="text-3xl mb-4 text-white">Ready to Build?</h4>
-              <p className="text-white/60 mb-8 leading-relaxed">
-                Join the future of professional identity infrastructure
-              </p>
+          <div className="relative text-center">
+            <h4 className="text-3xl sm:text-4xl mb-4 text-white leading-snug mx-auto max-w-[22ch]">
+              Ready to Build?
+            </h4>
+            <p className="text-white/60 mb-8 leading-relaxed mx-auto max-w-[38ch] sm:max-w-[56ch] px-2 sm:px-0">
+              Join the future of professional identity infrastructure
+            </p>
               
               <motion.button
-                className="group relative px-8 py-4 md:px-10 md:py-5 overflow-hidden rounded-full text-white transition-all duration-300 hover:shadow-2xl hover:shadow-[#8fd0ca]/50"
+                className="group relative px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 overflow-hidden rounded-full text-white transition-all duration-300 hover:shadow-2xl hover:shadow-[#8fd0ca]/50"
                 style={{ backgroundColor: '#8fd0ca' }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <span className="relative z-10 flex items-center gap-3 text-base md:text-lg">
+                <span className="relative z-10 flex items-center gap-3 text-sm sm:text-base md:text-lg whitespace-nowrap">
                   Explore the PIN API
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
@@ -340,12 +342,10 @@ export function MissionPage() {
                 />
               </motion.button>
 
-              <div className="mt-8 flex items-center justify-center gap-8 text-sm text-white/40">
-                <div>5 min integration</div>
-                <div className="w-1 h-1 rounded-full bg-white/40" />
-                <div>Free sandbox</div>
-                <div className="w-1 h-1 rounded-full bg-white/40" />
-                <div>24/7 support</div>
+              <div className="mt-8 mx-auto w-full max-w-[28rem] flex items-center justify-between text-sm text-white/40 px-4">
+                <div className="text-center">5 min integration</div>
+                <div className="text-center">Free sandbox</div>
+                <div className="text-center">24/7 support</div>
               </div>
             </div>
           </div>

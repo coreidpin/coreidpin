@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Shield, Building, Globe, Fingerprint, ShieldCheck } from 'lucide-react';
+import { Building, Globe, Fingerprint, ShieldCheck } from 'lucide-react';
 
 type Metric = {
   label: string;
@@ -49,7 +49,6 @@ export function TrustBanner({
       <div className="relative container mx-auto px-4 pt-12 pb-16">
         <div className="text-center space-y-4 mt-4 md:mt-6">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <Shield className="h-6 w-6" style={{ color: '#7bb8ff' }} />
             <h3 className="text-2xl sm:text-3xl font-semibold text-white">{title}</h3>
           </div>
           <p className="max-w-3xl mx-auto text-sm sm:text-base text-white/70">

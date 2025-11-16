@@ -259,7 +259,7 @@ export function PINIdentityCard({
           {/* Holographic effect overlay */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-400/10 to-transparent opacity-50"></div>
           
-          <div className="relative p-8 space-y-6">
+          <div className="relative p-8 space-y-6" style={{ backgroundColor: '#212535' }}>
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">

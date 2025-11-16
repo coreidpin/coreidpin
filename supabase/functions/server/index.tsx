@@ -84,6 +84,35 @@ app.get("/server/health", (c) => {
   return c.json({ status: "ok" });
 });
 
+// Public waitlist submission endpoint
+app.post('/server/waitlist', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const email = (body?.email || '').toString().trim().toLowerCase();
+    const fullName = (body?.fullName || body?.name || '').toString().trim();
+    // Minimal validation: require email format, name optional
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+      return c.json({ error: 'Valid email is required' }, 400);
+    }
+    const ip = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown';
+    const userAgent = c.req.header('user-agent') || 'unknown';
+    const submission = {
+      ...body,
+      email,
+      fullName,
+      ip,
+      userAgent,
+      submittedAt: new Date().toISOString()
+    };
+    const key = `waitlist:${email}:${Date.now()}`;
+    await kv.set(key, submission);
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ success: false, error: e?.message || 'Failed to submit' }, 500);
+  }
+});
+
 // Registration data validation endpoint (public) - dual path support
 // 1. /validate-registration (preferred public path)
 // 2. /server/validate-registration (legacy path kept for compatibility)
@@ -253,6 +282,7 @@ async function requireAuth(c: any, next: any) {
     if (method === 'OPTIONS') { await next(); return; }
     const publicPaths = [
       '/server/health',
+      '/server/waitlist',
       '/server/login',
       '/server/register',
       '/server/auth/session-cookie',

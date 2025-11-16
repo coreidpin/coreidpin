@@ -48,28 +48,36 @@ export function AnnouncementBanner({
         transition={{ duration: 0.3 }}
         className={`border-b ${typeStyles[type]}`}
       >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-4 py-2.5 min-h-[48px]">
-            <div className="flex items-center gap-3 justify-center min-w-0">
+        <div className="container mx-auto px-2 sm:px-4">
+          <div className="relative flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 py-2 sm:py-2.5 min-h-[44px] sm:min-h-[48px]">
+            <div className="flex items-center gap-2 sm:gap-3 justify-center min-w-0">
               <Icon className="h-4 w-4 flex-shrink-0" />
-              <p className="text-sm font-medium text-center">
+              <p className="text-xs sm:text-sm md:text-base font-medium text-center">
                 {message}
               </p>
               {link && (
                 <a
                   href={link.href}
-                  className="text-sm font-semibold underline underline-offset-4 hover:no-underline flex-shrink-0"
+                  className="hidden sm:inline text-sm font-semibold underline underline-offset-4 hover:no-underline flex-shrink-0"
                 >
                   {link.text}
                 </a>
               )}
             </div>
+            {link && (
+              <a
+                href={link.href}
+                className="sm:hidden text-xs font-semibold underline underline-offset-4 hover:no-underline"
+              >
+                {link.text}
+              </a>
+            )}
             {dismissible && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsVisible(false)}
-                className="h-6 w-6 p-0 hover:bg-transparent flex-shrink-0 absolute right-4"
+                className="h-6 w-6 p-0 hover:bg-transparent flex-shrink-0 mt-1 sm:mt-0 sm:absolute sm:right-4 sm:top-1/2 sm:-translate-y-1/2"
               >
                 <X className="h-4 w-4" />
                 <span className="sr-only">Dismiss announcement</span>

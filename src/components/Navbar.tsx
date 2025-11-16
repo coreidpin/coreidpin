@@ -138,7 +138,7 @@ export function Navbar({
   return (
     <>
       <AnnouncementBanner 
-        message="🎉 New: Swipe. Verify. Match. Hire. Join the world's first social network for verified talent!"
+        message="We are launching soon, Join our beta forum to learn more"
         type="promotional"
         dismissible={true}
       />
@@ -222,7 +222,11 @@ export function Navbar({
           {/* Mobile Menu Button */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden flex-shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="lg:hidden flex-shrink-0 bg-white text-black hover:bg-white hover:text-black"
+                >
                   <Menu className="h-5 w-5" />
                 </Button>
             </SheetTrigger>

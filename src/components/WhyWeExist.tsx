@@ -69,7 +69,7 @@ export function WhyWeExist() {
             </p>
 
             {/* Problem cards */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {problems.map((problem, index) => {
                 const Icon = problem.icon;
                 return (

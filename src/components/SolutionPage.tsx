@@ -30,8 +30,8 @@ export function SolutionPage() {
       </div>
 
       {/* Gradient orbs */}
-      <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-[#bfa5ff]/10 blur-3xl" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-[#32f08c]/10 blur-3xl" />
+      <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(191, 165, 255, 0.1)' }} />
+      <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(50, 240, 140, 0.1)' }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-24 w-full">
         {/* Header */}
@@ -79,7 +79,10 @@ export function SolutionPage() {
           
           <div className="relative max-w-5xl mx-auto">
             {/* Connection line */}
-            <div className="absolute top-16 left-0 right-0 h-0.5 bg-gradient-to-r from-[#bfa5ff] via-[#32f08c] to-[#7bb8ff] hidden lg:block" />
+            <div
+              className="absolute top-16 left-0 right-0"
+              style={{ height: '2px', background: 'linear-gradient(to right, #bfa5ff, #32f08c, #7bb8ff)' }}
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((step, index) => {
@@ -141,7 +144,7 @@ export function SolutionPage() {
             Simple, powerful APIs for seamless integration
           </p>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-4xl mx-auto -mt-2">
             {apiFeatures.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -154,12 +157,12 @@ export function SolutionPage() {
                   viewport={{ once: true }}
                   whileHover={{ y: -5 }}
                 >
-                  <Card className="relative p-6 rounded-2xl bg-gray-50 border border-gray-200 transition-all duration-300 hover:border-[#bfa5ff] hover:shadow-2xl">
+                  <Card className="relative p-6 rounded-2xl bg-gray-50 border border-gray-200 transition-all duration-300 hover:shadow-2xl" style={{ borderColor: 'var(--brand-accent)' }}>
                     {/* Hover glow */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#bfa5ff]/0 to-[#7bb8ff]/0 group-hover:from-[#bfa5ff]/5 group-hover:to-[#7bb8ff]/5 transition-all duration-300" />
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ backgroundImage: 'linear-gradient(135deg, rgba(191,165,255,0.05), rgba(123,184,255,0.05))' }} />
                     
                     <div className="relative">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#bfa5ff]/10 to-[#7bb8ff]/10 flex items-center justify-center mb-4 group-hover:from-[#bfa5ff]/20 group-hover:to-[#7bb8ff]/20 transition-all">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-opacity opacity-70 group-hover:opacity-100" style={{ backgroundImage: 'linear-gradient(135deg, rgba(191,165,255,0.1), rgba(123,184,255,0.1))' }}>
                         <Icon className="w-6 h-6 text-gray-700" />
                       </div>
                       <div className="text-sm mb-1 text-gray-900">{feature.label}</div>
@@ -174,37 +177,57 @@ export function SolutionPage() {
 
         {/* Code snippet preview */}
         <motion.div
-          className="mt-20 max-w-3xl mx-auto"
+          className="mt-64 sm:mt-72 md:mt-96 max-w-3xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           viewport={{ once: true }}
         >
-          <div className="relative rounded-2xl overflow-hidden bg-[#0a0b0d] shadow-2xl">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ backgroundColor: '#0a0b0d' }}>
             {/* Terminal header */}
-            <div className="flex items-center gap-2 px-6 py-4 bg-[#1a1b2d] border-b border-white/10">
-              <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
-              <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-              <div className="w-3 h-3 rounded-full bg-[#28ca42]" />
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-white/10" style={{ backgroundColor: '#1a1b2d' }}>
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff5f57' }} />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ffbd2e' }} />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#28ca42' }} />
               <span className="ml-4 text-sm text-white/50">API Example</span>
             </div>
             
             {/* Code */}
-            <div className="p-6 overflow-x-auto" style={{ backgroundColor: '#0a0b0d' }}>
+          <div className="p-6 overflow-x-auto" style={{ backgroundColor: '#0a0b0d' }}>
               <pre className="text-sm text-white/80">
                 <code>
-                  <span className="text-[#bfa5ff]">POST</span> <span className="text-white">/api/v1/pin/create</span>
+                  <span style={{ color: 'var(--brand-accent)' }}>POST</span> <span className="text-white">/api/v1/pin/create</span>
                   {'\n\n'}
                   <span className="text-white/50">{'{'}</span>
-                  {'\n  '}<span className="text-[#32f08c]">"phone"</span>: <span className="text-[#7bb8ff]">"+234 803 555 1212"</span>,
-                  {'\n  '}<span className="text-[#32f08c]">"partner_token"</span>: <span className="text-[#7bb8ff]">"pk_live_..."</span>
+                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                    "phone"
+                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                    "+234 803 555 1212"
+                  </span>,
+                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                    "partner_token"
+                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                    "pk_live_..."
+                  </span>
                   {'\n'}<span className="text-white/50">{'}'}</span>
                   {'\n\n'}
                   <span className="text-white/50">// Response</span>
                   {'\n'}<span className="text-white/50">{'{'}</span>
-                  {'\n  '}<span className="text-[#32f08c]">"pin"</span>: <span className="text-[#7bb8ff]">"PIN-234-8035551212"</span>,
-                  {'\n  '}<span className="text-[#32f08c]">"status"</span>: <span className="text-[#7bb8ff]">"verified"</span>,
-                  {'\n  '}<span className="text-[#32f08c]">"trust_score"</span>: <span className="text-[#7bb8ff]">0.92</span>
+                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                    "pin"
+                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                    "PIN-234-8035551212"
+                  </span>,
+                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                    "status"
+                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                    "verified"
+                  </span>,
+                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                    "trust_score"
+                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                    0.92
+                  </span>
                   {'\n'}<span className="text-white/50">{'}'}</span>
                 </code>
               </pre>

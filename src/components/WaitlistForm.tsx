@@ -57,19 +57,28 @@ export function WaitlistForm({ onClose }: WaitlistFormProps) {
 
   useEffect(() => {
     const el = contentRef.current;
-    const update = () => {
+    let rafId = 0;
+    let scheduled = false;
+    const measure = () => {
+      scheduled = false;
       if (!el) return;
       const can = el.scrollHeight > el.clientHeight;
       const top = el.scrollTop <= 0;
       const bottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
       setScroll({ canScroll: can, atTop: top, atBottom: bottom });
     };
-    update();
-    el?.addEventListener('scroll', update);
-    const ro = new ResizeObserver(update);
+    const schedule = () => {
+      if (scheduled) return;
+      scheduled = true;
+      rafId = requestAnimationFrame(measure);
+    };
+    schedule();
+    el?.addEventListener('scroll', schedule, { passive: true });
+    const ro = new ResizeObserver(schedule);
     if (el) ro.observe(el);
     return () => {
-      el?.removeEventListener('scroll', update);
+      el?.removeEventListener('scroll', schedule);
+      cancelAnimationFrame(rafId);
       ro.disconnect();
     };
   }, [step]);
@@ -92,8 +101,8 @@ export function WaitlistForm({ onClose }: WaitlistFormProps) {
         willingToProvideFeedback: formData.willingToProvideFeedback,
       });
       setShowSuccess(true);
-    } catch {
-      toast.error('Failed to join waitlist');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to join waitlist');
     } finally {
       setIsSubmitting(false);
     }
