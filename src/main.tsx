@@ -5,6 +5,7 @@ import { checkFrontendEnv } from "./utils/envCheck";
   import "./index.css";
 import { toast } from 'sonner';
   import ErrorBoundary from './components/ErrorBoundary';
+import { inject } from "@vercel/analytics";
 
   // Validate frontend env at startup
   checkFrontendEnv();
