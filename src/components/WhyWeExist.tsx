@@ -122,15 +122,15 @@ export function WhyWeExist() {
                 {/* Phone number transformation visual */}
                 <motion.div
                   className="flex flex-col sm:flex-row items-center justify-center gap-6 px-4 w-full"
-                  initial={{ scale: 0.75, opacity: 0, y: 12 }}
-                  whileInView={{ scale: 0.9, opacity: 1, y: 24 }}
+                  initial={{ scale: 0.75, opacity: 0, y: 6 }}
+                  whileInView={{ scale: 0.9, opacity: 1, y: 12 }}
                   transition={{ delay: 0.5, duration: 0.8 }}
                   viewport={{ once: true }}
                 >
                   {/* Phone number */}
                   <div className="relative">
                     <motion.div
-                      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64"
+                      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64 flex flex-col items-center gap-2"
                       animate={{
                         boxShadow: [
                           '0 0 20px rgba(191, 165, 255, 0.3)',
@@ -140,8 +140,8 @@ export function WhyWeExist() {
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <div className="text-sm text-white/60 mb-2">Phone Number</div>
-                      <div className="text-2xl text-white">+234 812 345 6789</div>
+                      <div className="text-sm text-white/60">Phone Number</div>
+                      <div className="text-2xl text-white font-mono tracking-wider">+234 812 345 6789</div>
                     </motion.div>
                   </div>
 
@@ -178,7 +178,7 @@ export function WhyWeExist() {
                   {/* Verified PIN */}
                   <div className="relative">
                     <motion.div
-                      className="backdrop-blur-md rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64"
+                      className="backdrop-blur-md rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64 flex flex-col items-center gap-2"
                       style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))', borderColor: 'rgba(143, 208, 202, 0.4)', borderStyle: 'solid', borderWidth: '1px' }}
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
