@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Building, Globe, Fingerprint, ShieldCheck } from 'lucide-react';
 
@@ -29,20 +29,30 @@ export function TrustBanner({
   metrics = defaultMetrics,
   className = '',
 }: TrustBannerProps) {
+  const [reducedMotion, setReducedMotion] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = (e: MediaQueryList | MediaQueryListEvent) => setReducedMotion('matches' in e ? e.matches : mq.matches);
+    update(mq);
+    mq.addEventListener?.('change', update as any);
+    return () => mq.removeEventListener?.('change', update as any);
+  }, []);
   return (
     <div className={`relative border-t border-white/10 mt-4 md:mt-6 ${className}`} style={{ backgroundColor: '#0a0b0d' }}>
       <div className="absolute inset-0 pointer-events-none">
         <motion.div
-          className="absolute -top-12 -left-12 w-64 h-64 rounded-full blur-3xl"
+          className="absolute -top-12 -left-12 w-64 h-64 rounded-full blur-xl"
           style={{ backgroundColor: 'rgba(191,165,255,0.08)' }}
-          animate={{ opacity: [0.25, 0.45, 0.25], scale: [1, 1.1, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          animate={reducedMotion ? undefined : { opacity: [0.25, 0.45, 0.25], scale: [1, 1.1, 1] }}
+          transition={reducedMotion ? undefined : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         />
         <motion.div
-          className="absolute -bottom-16 -right-16 w-72 h-72 rounded-full blur-3xl"
+          className="absolute -bottom-16 -right-16 w-72 h-72 rounded-full blur-xl"
           style={{ backgroundColor: 'rgba(50,240,140,0.08)' }}
-          animate={{ opacity: [0.2, 0.4, 0.2], scale: [1.1, 1, 1.1] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          animate={reducedMotion ? undefined : { opacity: [0.2, 0.4, 0.2], scale: [1.1, 1, 1.1] }}
+          transition={reducedMotion ? undefined : { duration: 9, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          style={{ willChange: 'transform, opacity', transform: 'translateZ(0)' }}
         />
       </div>
 

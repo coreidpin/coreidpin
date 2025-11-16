@@ -80,9 +80,7 @@
       "scripts": {
             "dev": "vite",
             "build": "vite build",
-            "lint": "eslint . --ext .ts,.tsx",
-            "lint:fix": "eslint . --ext .ts,.tsx --fix",
-            "format": "prettier --write .",
+
             "typecheck": "tsc -p tsconfig.json --noEmit",
             "preview": "vite preview --strictPort",
             "test": "vitest",
