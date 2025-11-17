@@ -224,8 +224,15 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         }
       }
       
-      // Generate new verification token with 24-hour expiration
-      await api.sendVerificationEmail(trimmedEmail);
+      // Use Supabase's native email verification
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: trimmedEmail
+      });
+      
+      if (error) {
+        throw error;
+      }
       
       // Update rate limiting
       const currentRateLimit = localStorage.getItem(rateLimitKey);

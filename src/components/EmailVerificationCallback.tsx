@@ -11,22 +11,69 @@ export default function EmailVerificationCallback() {
   useEffect(() => {
     const handleVerification = async () => {
       try {
-        // Get token from URL parameters
+        console.log('Starting email verification process...');
+        console.log('Current URL:', window.location.href);
+        console.log('URL search params:', window.location.search);
+        console.log('URL hash:', window.location.hash);
+        
+        // Handle Supabase email confirmation callback
+        const { data, error } = await supabase.auth.getSession();
+        
+        console.log('Supabase session data:', data);
+        console.log('Supabase session error:', error);
+        
+        if (data.session?.user) {
+          console.log('User found in session:', data.session.user.email);
+          console.log('Email confirmed at:', data.session.user.email_confirmed_at);
+          
+          // Update verification status in profiles table
+          try {
+            await supabase
+              .from('profiles')
+              .update({ 
+                email_verified: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', data.session.user.id);
+            console.log('Profile updated successfully');
+          } catch (profileError) {
+            console.warn('Failed to update profile:', profileError);
+          }
+
+          // Update local storage
+          localStorage.setItem('emailVerified', 'true');
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userType', data.session.user.user_metadata?.userType || 'professional');
+          localStorage.setItem('userId', data.session.user.id);
+          localStorage.setItem('accessToken', data.session.access_token);
+          
+          setStatus('success');
+          setMessage('Email verified successfully!');
+          toast.success('Email verified! You now have full access.');
+          
+          // Redirect to dashboard after 2 seconds
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
+          return;
+        }
+        
+        // Check for custom token in URL (fallback for API-based verification)
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.slice(1));
         
         const token = urlParams.get('token') || hashParams.get('token') || 
                      urlParams.get('access_token') || hashParams.get('access_token');
         
-        console.log('Verification token found:', token ? 'Yes' : 'No');
-        console.log('URL search:', window.location.search);
-        console.log('URL hash:', window.location.hash);
+        console.log('Custom token found:', token ? 'Yes' : 'No');
         
         if (token) {
+          console.log('Attempting to verify custom token...');
           // Use the API method to verify the token
           const result = await api.verifyLinkToken(token);
           
           if (result.success && result.user) {
+            console.log('Custom token verification successful');
             // Update verification status
             localStorage.setItem('emailVerified', 'true');
             localStorage.setItem('isAuthenticated', 'true');
@@ -41,38 +88,16 @@ export default function EmailVerificationCallback() {
             setTimeout(() => {
               window.location.href = '/dashboard';
             }, 2000);
+            return;
           } else {
             throw new Error(result.error || 'Token verification failed');
           }
-        } else {
-          // Fallback: check if there's an active session from Supabase auth
-          const { data, error } = await supabase.auth.getSession();
-          
-          if (error) throw error;
-          
-          if (data.session?.user) {
-            // Update verification status in profiles table
-            await supabase
-              .from('profiles')
-              .update({ 
-                email_verified: true,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', data.session.user.id);
-
-            localStorage.setItem('emailVerified', 'true');
-            setStatus('success');
-            setMessage('Email verified successfully!');
-            toast.success('Email verified! You now have full access.');
-            
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => {
-              window.location.href = '/dashboard';
-            }, 2000);
-          } else {
-            throw new Error('No verification token or active session found');
-          }
         }
+        
+        // If no session and no token, this might be an error state
+        console.log('No session or token found');
+        throw new Error('No verification session or token found. Please try clicking the verification link again.');
+        
       } catch (error: any) {
         console.error('Verification error:', error);
         setStatus('error');
@@ -115,10 +140,20 @@ export default function EmailVerificationCallback() {
                   try {
                     const email = localStorage.getItem('registrationEmail') || prompt('Enter your email to resend verification:');
                     if (email) {
-                      await api.sendVerificationEmail(email);
-                      toast.success('Verification email sent!');
+                      // Use Supabase's resend confirmation
+                      const { error } = await supabase.auth.resend({
+                        type: 'signup',
+                        email: email
+                      });
+                      
+                      if (error) {
+                        throw error;
+                      }
+                      
+                      toast.success('Verification email sent! Check your inbox.');
                     }
                   } catch (err: any) {
+                    console.error('Resend error:', err);
                     toast.error(err.message || 'Failed to send email');
                   }
                 }}
