@@ -22,101 +22,91 @@ export const AuthVerifyEmail: React.FC = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        // Check for token parameter (new format)
+        // Check for token parameter and treat it as a code
         const token = searchParams.get('token');
+        let email = searchParams.get('email') || localStorage.getItem('registrationEmail');
         
-        if (token) {
-          console.log('Token found:', token);
-          // Use the API client to verify the token
+        // If no email found, prompt user for it
+        if (token && !email) {
+          email = prompt('Please enter your email address to complete verification:');
+          if (email) {
+            localStorage.setItem('registrationEmail', email);
+          }
+        }
+        
+        if (token && email) {
+          console.log('Token found, using as verification code');
+          // Use the API client for code-based verification
           const { api } = await import('@/utils/api');
-          const result = await api.verifyLinkToken(token);
+          const result = await api.verifyEmailCode(email, token);
           
-          if (result.success && result.user) {
+          if (result.success) {
             // Update local storage
             localStorage.setItem('emailVerified', 'true');
             localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
-            localStorage.setItem('userId', result.user.id);
+            localStorage.setItem('userType', 'professional'); // Default, will be updated on login
             
+            setState({
+              loading: false,
+              success: true,
+              error: null,
+              message: 'Your email has been successfully verified! You can now sign in.',
+            });
+            
+            // Redirect to login after 3 seconds
+            setTimeout(() => {
+              navigate('/login');
+            }, 3000);
+            return;
+          } else {
+            throw new Error(result.error || 'Code verification failed');
+          }
+        }
+        
+        // Fallback to code/email format
+        const code = searchParams.get('code');
+        const fallbackEmail = searchParams.get('email');
+
+        if (!code && !token) {
+          setState({
+            loading: false,
+            success: false,
+            error: 'Missing verification code or token',
+            message: 'Invalid verification link. Please request a new verification email.',
+          });
+          return;
+        }
+        
+        if (code && fallbackEmail) {
+          // Use API for code verification
+          const { api } = await import('@/utils/api');
+          const result = await api.verifyEmailCode(fallbackEmail, code);
+          
+          if (result.success) {
+            localStorage.setItem('emailVerified', 'true');
             setState({
               loading: false,
               success: true,
               error: null,
               message: 'Your email has been successfully verified! ✓',
             });
-            
-            // Redirect to dashboard after 3 seconds
-            setTimeout(() => {
-              navigate('/dashboard');
-            }, 3000);
+            setTimeout(() => navigate('/login'), 3000);
             return;
           } else {
-            throw new Error(result.error || 'Token verification failed');
+            throw new Error(result.error || 'Code verification failed');
           }
         }
         
-        // Fallback to old code/email format
-        const code = searchParams.get('code');
-        const email = searchParams.get('email');
+        // If we reach here, something is wrong
+        setState({
+          loading: false,
+          success: false,
+          error: 'Invalid parameters',
+          message: 'Invalid verification link format.',
+        });
+        return;
 
-        if (!code || !email) {
-          setState({
-            loading: false,
-            success: false,
-            error: 'Missing verification token, code, or email',
-            message: 'Invalid verification link. Please request a new verification email.',
-          });
-          return;
-        }
 
-        // Call the verify-email-code function (legacy)
-        const response = await fetch(
-          'https://evcqpapvcvmljgqiuzsq.functions.supabase.co/verify-email-code',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            },
-            body: JSON.stringify({ email, code }),
-          }
-        );
-
-        const data = await response.json();
-
-        if (data.success) {
-          setState({
-            loading: false,
-            success: true,
-            error: null,
-            message: 'Your email has been successfully verified! ✓',
-          });
-
-          // Redirect to dashboard after 3 seconds
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 3000);
-        } else {
-          // Handle specific error codes
-          let errorMessage = data.message || 'Verification failed';
-
-          const errorCodeMessages: Record<string, string> = {
-            ERR_INVALID_CODE: 'Invalid verification code. Please check your email and try again.',
-            ERR_CODE_EXPIRED: 'Verification code has expired. Please request a new one.',
-            ERR_CODE_USED: 'This verification code has already been used.',
-            ERR_ALREADY_VERIFIED: 'Your email is already verified.',
-            ERR_NOT_FOUND: 'User account not found.',
-          };
-
-          errorMessage = errorCodeMessages[data.error_code] || errorMessage;
-
-          setState({
-            loading: false,
-            success: false,
-            error: data.error_code,
-            message: errorMessage,
-          });
-        }
       } catch (err) {
         console.error('Verification error:', err);
         setState({

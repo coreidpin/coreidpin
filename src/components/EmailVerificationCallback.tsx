@@ -133,7 +133,7 @@ export default function EmailVerificationCallback() {
               </button>
               <button 
                 onClick={() => window.location.href = '/login'}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="w-full px-4 py-2 bg-blue-600 text-black rounded-lg hover:bg-blue-700"
               >
                 Back to Login
               </button>
