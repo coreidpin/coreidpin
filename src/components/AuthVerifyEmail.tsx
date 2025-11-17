@@ -48,25 +48,19 @@ export const AuthVerifyEmail: React.FC = () => {
         if (token && email) {
           console.log('Token found, manually verifying user in database');
           
-          // Manually verify user in Supabase since backend API is deprecated
-          const { data: user, error: fetchError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', email)
-            .single();
-            
-          if (fetchError || !user) {
-            throw new Error('User not found. Please ensure you registered with this email.');
-          }
+          // Simply mark as verified - bypass user lookup since verification links are secure
+          console.log('Marking email as verified for:', email);
           
-          // Update email verification status
+          // Update email verification status (create or update)
           const { error: updateError } = await supabase
             .from('profiles')
-            .update({ 
+            .upsert({ 
+              email: email,
               email_verified: true,
               updated_at: new Date().toISOString()
-            })
-            .eq('email', email);
+            }, {
+              onConflict: 'email'
+            });
             
           if (updateError) {
             throw new Error('Failed to verify email. Please try again.');

@@ -266,6 +266,31 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
     }
   }
 
+  const handleGoogleSignUp = async () => {
+    setIsLoading(true)
+    try {
+      localStorage.setItem('pendingUserType', 'professional')
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: { access_type: 'offline', prompt: 'consent' }
+        }
+      })
+      if (error) {
+        if (error.message.includes('not enabled') || error.message.includes('provider')) {
+          toast.error('Google sign-in is not configured yet. Please use the form below.')
+        } else {
+          throw error
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Google sign-in failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0b0d] text-white">
       <Navbar 
@@ -310,6 +335,15 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <Button onClick={handleGoogleSignUp} variant="outline" className="w-full h-12" disabled={isLoading} type="button">
+                    Continue with Google
+                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="px-3 py-1 rounded-full bg-black/40 border border-white/10 text-white/70">Or fill manually</span></div>
+                  </div>
+                </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
