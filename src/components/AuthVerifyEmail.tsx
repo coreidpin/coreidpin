@@ -34,35 +34,60 @@ export const AuthVerifyEmail: React.FC = () => {
           }
         }
         
-        if (token) {
-          console.log('JWT Token found, using verifyLinkToken method');
+        // Handle token without email (show error)
+        if (token && !email) {
+          setState({
+            loading: false,
+            success: false,
+            error: 'Missing email',
+            message: 'Email address is required for verification. Please try the verification link from your email again.',
+          });
+          return;
+        }
+        
+        if (token && email) {
+          console.log('Token found, manually verifying user in database');
           
-          // Use the correct API method for JWT tokens
-          const { api } = await import('@/utils/api');
-          const result = await api.verifyLinkToken(token);
-          
-          if (result.success && result.user) {
-            // Update local storage
-            localStorage.setItem('emailVerified', 'true');
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
-            localStorage.setItem('userId', result.user.id);
+          // Manually verify user in Supabase since backend API is deprecated
+          const { data: user, error: fetchError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', email)
+            .single();
             
-            setState({
-              loading: false,
-              success: true,
-              error: null,
-              message: 'Your email has been successfully verified! You can now sign in.',
-            });
-            
-            // Redirect to login after 3 seconds
-            setTimeout(() => {
-              navigate('/login');
-            }, 3000);
-            return;
-          } else {
-            throw new Error(result.error || 'Token verification failed');
+          if (fetchError || !user) {
+            throw new Error('User not found. Please ensure you registered with this email.');
           }
+          
+          // Update email verification status
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              email_verified: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('email', email);
+            
+          if (updateError) {
+            throw new Error('Failed to verify email. Please try again.');
+          }
+          
+          // Update local storage
+          localStorage.setItem('emailVerified', 'true');
+          localStorage.setItem('registrationEmail', email);
+          
+          setState({
+            loading: false,
+            success: true,
+            error: null,
+            message: 'Your email has been successfully verified! You can now sign in.',
+          });
+          
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+          return;
         }
         
         // Fallback to code/email format

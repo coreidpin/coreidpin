@@ -15,6 +15,34 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const defaultOnLoginSuccess = () => {
     window.location.href = '/dashboard';
   };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+      if (error) {
+        if (error.message.includes('not enabled') || error.message.includes('provider')) {
+          setError('Google sign-in is not configured yet. Please use email/password to continue.');
+        } else {
+          setError(error.message);
+        }
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Google sign-in failed. Please try again.');
+      setIsLoading(false);
+    }
+  };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -347,6 +375,17 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
           </div>
         </div>
       )}
+
+      <div className="mb-4">
+        <Button
+          type="button"
+          className="w-full h-11 bg-white text-black hover:bg-white/90"
+          disabled={isLoading}
+          onClick={handleGoogleSignIn}
+        >
+          Continue with Google
+        </Button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
