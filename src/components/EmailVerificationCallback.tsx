@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase/client';
+import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
@@ -10,45 +11,73 @@ export default function EmailVerificationCallback() {
   useEffect(() => {
     const handleVerification = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // Get token from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
         
-        if (error) throw error;
+        const token = urlParams.get('token') || hashParams.get('token') || 
+                     urlParams.get('access_token') || hashParams.get('access_token');
         
-        if (data.session?.user) {
-          // Update verification status in profiles table
-          await supabase
-            .from('profiles')
-            .update({ 
-              email_verified: true,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', data.session.user.id);
-
-          // Log verification success
-          await supabase.from('verification_logs').insert({
-            user_id: data.session.user.id,
-            event_type: 'email_verified',
-            email: data.session.user.email || '',
-            timestamp: new Date().toISOString(),
-            verified_status: true
-          });
-
-          localStorage.setItem('emailVerified', 'true');
-          setStatus('success');
-          setMessage('Email verified successfully!');
-          toast.success('Email verified! You now have full access.');
+        console.log('Verification token found:', token ? 'Yes' : 'No');
+        console.log('URL search:', window.location.search);
+        console.log('URL hash:', window.location.hash);
+        
+        if (token) {
+          // Use the API method to verify the token
+          const result = await api.verifyLinkToken(token);
           
-          // Redirect to dashboard after 2 seconds
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 2000);
+          if (result.success && result.user) {
+            // Update verification status
+            localStorage.setItem('emailVerified', 'true');
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
+            localStorage.setItem('userId', result.user.id);
+            
+            setStatus('success');
+            setMessage('Email verified successfully!');
+            toast.success('Email verified! You now have full access.');
+            
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 2000);
+          } else {
+            throw new Error(result.error || 'Token verification failed');
+          }
         } else {
-          throw new Error('No active session found');
+          // Fallback: check if there's an active session from Supabase auth
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) throw error;
+          
+          if (data.session?.user) {
+            // Update verification status in profiles table
+            await supabase
+              .from('profiles')
+              .update({ 
+                email_verified: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', data.session.user.id);
+
+            localStorage.setItem('emailVerified', 'true');
+            setStatus('success');
+            setMessage('Email verified successfully!');
+            toast.success('Email verified! You now have full access.');
+            
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => {
+              window.location.href = '/dashboard';
+            }, 2000);
+          } else {
+            throw new Error('No verification token or active session found');
+          }
         }
       } catch (error: any) {
+        console.error('Verification error:', error);
         setStatus('error');
         setMessage(error.message || 'Verification failed');
-        toast.error('Email verification failed');
+        toast.error('Email verification failed: ' + (error.message || 'Unknown error'));
       }
     };
 
@@ -79,13 +108,31 @@ export default function EmailVerificationCallback() {
           <>
             <XCircle className="h-12 w-12 mx-auto mb-4 text-red-400" />
             <h1 className="text-xl font-semibold text-white mb-2">Verification Failed</h1>
-            <p className="text-white/70">{message}</p>
-            <button 
-              onClick={() => window.location.href = '/login'}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Back to Login
-            </button>
+            <p className="text-white/70 mb-4">{message}</p>
+            <div className="space-y-2">
+              <button 
+                onClick={async () => {
+                  try {
+                    const email = localStorage.getItem('registrationEmail') || prompt('Enter your email to resend verification:');
+                    if (email) {
+                      await api.sendVerificationEmail(email);
+                      toast.success('Verification email sent!');
+                    }
+                  } catch (err: any) {
+                    toast.error(err.message || 'Failed to send email');
+                  }
+                }}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 mb-2"
+              >
+                Request New Code
+              </button>
+              <button 
+                onClick={() => window.location.href = '/login'}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Back to Login
+              </button>
+            </div>
           </>
         )}
       </div>

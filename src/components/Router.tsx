@@ -175,6 +175,8 @@ export const AppRouter: React.FC<RouterProps> = ({
         {/* Email Verification Routes */}
         <Route path="/auth/verify-email" element={<AuthVerifyEmail />} />
         <Route path="/auth/callback" element={<EmailVerificationCallback />} />
+        <Route path="/verify-email" element={<EmailVerificationCallback />} />
+        <Route path="/email-verification" element={<EmailVerificationCallback />} />
 
         {/* Public Routes */}
         <Route 
