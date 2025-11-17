@@ -22,6 +22,40 @@ export const AuthVerifyEmail: React.FC = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
+        // Check for token parameter (new format)
+        const token = searchParams.get('token');
+        
+        if (token) {
+          console.log('Token found:', token);
+          // Use the API client to verify the token
+          const { api } = await import('@/utils/api');
+          const result = await api.verifyLinkToken(token);
+          
+          if (result.success && result.user) {
+            // Update local storage
+            localStorage.setItem('emailVerified', 'true');
+            localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
+            localStorage.setItem('userId', result.user.id);
+            
+            setState({
+              loading: false,
+              success: true,
+              error: null,
+              message: 'Your email has been successfully verified! ✓',
+            });
+            
+            // Redirect to dashboard after 3 seconds
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 3000);
+            return;
+          } else {
+            throw new Error(result.error || 'Token verification failed');
+          }
+        }
+        
+        // Fallback to old code/email format
         const code = searchParams.get('code');
         const email = searchParams.get('email');
 
@@ -29,13 +63,13 @@ export const AuthVerifyEmail: React.FC = () => {
           setState({
             loading: false,
             success: false,
-            error: 'Missing verification code or email',
-            message: '',
+            error: 'Missing verification token, code, or email',
+            message: 'Invalid verification link. Please request a new verification email.',
           });
           return;
         }
 
-        // Call the verify-email-code function
+        // Call the verify-email-code function (legacy)
         const response = await fetch(
           'https://evcqpapvcvmljgqiuzsq.functions.supabase.co/verify-email-code',
           {

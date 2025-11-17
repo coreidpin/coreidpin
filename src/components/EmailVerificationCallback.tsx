@@ -16,49 +16,7 @@ export default function EmailVerificationCallback() {
         console.log('URL search params:', window.location.search);
         console.log('URL hash:', window.location.hash);
         
-        // Handle Supabase email confirmation callback
-        const { data, error } = await supabase.auth.getSession();
-        
-        console.log('Supabase session data:', data);
-        console.log('Supabase session error:', error);
-        
-        if (data.session?.user) {
-          console.log('User found in session:', data.session.user.email);
-          console.log('Email confirmed at:', data.session.user.email_confirmed_at);
-          
-          // Update verification status in profiles table
-          try {
-            await supabase
-              .from('profiles')
-              .update({ 
-                email_verified: true,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', data.session.user.id);
-            console.log('Profile updated successfully');
-          } catch (profileError) {
-            console.warn('Failed to update profile:', profileError);
-          }
-
-          // Update local storage
-          localStorage.setItem('emailVerified', 'true');
-          localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('userType', data.session.user.user_metadata?.userType || 'professional');
-          localStorage.setItem('userId', data.session.user.id);
-          localStorage.setItem('accessToken', data.session.access_token);
-          
-          setStatus('success');
-          setMessage('Email verified successfully!');
-          toast.success('Email verified! You now have full access.');
-          
-          // Redirect to dashboard after 2 seconds
-          setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 2000);
-          return;
-        }
-        
-        // Check for custom token in URL (fallback for API-based verification)
+        // Check for custom token in URL (primary method for Resend API verification)
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.slice(1));
         
@@ -94,9 +52,29 @@ export default function EmailVerificationCallback() {
           }
         }
         
-        // If no session and no token, this might be an error state
-        console.log('No session or token found');
-        throw new Error('No verification session or token found. Please try clicking the verification link again.');
+        // Check for Supabase session as fallback
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (data.session?.user && data.session.user.email_confirmed_at) {
+          console.log('Fallback: User found in Supabase session');
+          localStorage.setItem('emailVerified', 'true');
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userType', data.session.user.user_metadata?.userType || 'professional');
+          localStorage.setItem('userId', data.session.user.id);
+          localStorage.setItem('accessToken', data.session.access_token);
+          
+          setStatus('success');
+          setMessage('Email verified successfully!');
+          toast.success('Email verified! You now have full access.');
+          
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 2000);
+          return;
+        }
+        
+        console.log('No token or verified session found');
+        throw new Error('No verification token found. Please try clicking the verification link again or request a new verification email.');
         
       } catch (error: any) {
         console.error('Verification error:', error);
@@ -140,16 +118,8 @@ export default function EmailVerificationCallback() {
                   try {
                     const email = localStorage.getItem('registrationEmail') || prompt('Enter your email to resend verification:');
                     if (email) {
-                      // Use Supabase's resend confirmation
-                      const { error } = await supabase.auth.resend({
-                        type: 'signup',
-                        email: email
-                      });
-                      
-                      if (error) {
-                        throw error;
-                      }
-                      
+                      // Use Resend API for verification email
+                      await api.sendVerificationEmail(email);
                       toast.success('Verification email sent! Check your inbox.');
                     }
                   } catch (err: any) {
