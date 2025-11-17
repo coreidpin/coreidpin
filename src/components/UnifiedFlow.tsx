@@ -827,7 +827,7 @@ function EmployerBasicInfo({ formData, updateFormData, isLoading, setIsLoading }
           {showGoogleAuth && (
             <div className="space-y-4">
               <div className="text-center">
-                <Button onClick={handleGoogleSignIn} variant="outline" className="w-full h-12" disabled={isLoading} type="button">
+                <Button onClick={handleGoogleSignIn} variant="outline" className="w-full h-12 bg-white text-black hover:bg-white/90" disabled={isLoading} type="button">
                   {isLoading ? (<Loader2 className="h-5 w-5 mr-2 animate-spin" />) : (<Chrome className="h-5 w-5 mr-2" />)}
                   Continue with Google
                 </Button>

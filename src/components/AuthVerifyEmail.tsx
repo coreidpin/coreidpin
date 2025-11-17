@@ -16,116 +16,63 @@ export const AuthVerifyEmail: React.FC = () => {
     loading: true,
     success: false,
     error: null,
-    message: 'Verifying your email...',
+    message: 'Signing you in...',
   });
 
   useEffect(() => {
-    const verifyEmail = async () => {
+    const handleMagicLink = async () => {
       try {
-        // Check for token parameter and treat it as a code
-        const token = searchParams.get('token');
-        let email = searchParams.get('email') || localStorage.getItem('registrationEmail');
+        console.log('Handling magic link callback...');
         
-        // If no email found, prompt user for it
-        if (token && !email) {
-          email = prompt('Please enter your email address to complete verification:');
-          if (email) {
-            localStorage.setItem('registrationEmail', email);
-          }
+        // Get the current session (Supabase automatically handles magic link)
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
         }
         
-        // Handle token without email (show error)
-        if (token && !email) {
-          setState({
-            loading: false,
-            success: false,
-            error: 'Missing email',
-            message: 'Email address is required for verification. Please try the verification link from your email again.',
-          });
-          return;
-        }
-        
-        if (token && email) {
-          console.log('Token found, manually verifying user in database');
-          
-          // Simply mark as verified - bypass user lookup since verification links are secure
-          console.log('Marking email as verified for:', email);
-          
-          // Update email verification status (create or update)
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .upsert({ 
-              email: email,
-              email_verified: true,
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'email'
-            });
-            
-          if (updateError) {
-            throw new Error('Failed to verify email. Please try again.');
-          }
+        if (session?.user) {
+          console.log('Magic link successful, user authenticated:', session.user.email);
           
           // Update local storage
           localStorage.setItem('emailVerified', 'true');
-          localStorage.setItem('registrationEmail', email);
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userType', session.user.user_metadata?.userType || 'professional');
+          localStorage.setItem('userId', session.user.id);
+          localStorage.setItem('accessToken', session.access_token);
           
           setState({
             loading: false,
             success: true,
             error: null,
-            message: 'Your email has been successfully verified! You can now sign in.',
+            message: 'Successfully signed in! Welcome back.',
           });
           
-          // Redirect to login after 3 seconds
+          // Redirect to dashboard after 2 seconds
           setTimeout(() => {
-            navigate('/login');
-          }, 3000);
+            navigate('/dashboard');
+          }, 2000);
           return;
         }
         
-        // Fallback to code/email format
-        const code = searchParams.get('code');
-        const fallbackEmail = searchParams.get('email');
-
-        if (!code && !token) {
-          setState({
-            loading: false,
-            success: false,
-            error: 'Missing verification code or token',
-            message: 'Invalid verification link. Please request a new verification email.',
-          });
-          return;
+        // No session found, might be an invalid or expired link
+        console.log('No session found, checking URL parameters...');
+        
+        // Check if there are any error parameters
+        const error_code = searchParams.get('error_code');
+        const error_description = searchParams.get('error_description');
+        
+        if (error_code || error_description) {
+          throw new Error(error_description || 'Magic link authentication failed');
         }
         
-        if (code && fallbackEmail) {
-          // Use API for code verification
-          const { api } = await import('@/utils/api');
-          const result = await api.verifyEmailCode(fallbackEmail, code);
-          
-          if (result.success) {
-            localStorage.setItem('emailVerified', 'true');
-            setState({
-              loading: false,
-              success: true,
-              error: null,
-              message: 'Your email has been successfully verified! ✓',
-            });
-            setTimeout(() => navigate('/login'), 3000);
-            return;
-          } else {
-            throw new Error(result.error || 'Code verification failed');
-          }
-        }
-        
-        // If we reach here, something is wrong
+        // If no session and no error, the link might be expired or invalid
         setState({
           loading: false,
           success: false,
-          error: 'Invalid parameters',
-          message: 'Invalid verification link format.',
+          error: 'Invalid link',
+          message: 'This magic link is invalid or has expired. Please request a new one.',
         });
-        return;
 
 
       } catch (err) {
@@ -139,7 +86,7 @@ export const AuthVerifyEmail: React.FC = () => {
       }
     };
 
-    verifyEmail();
+    handleMagicLink();
   }, [searchParams, navigate]);
 
   return (
@@ -166,7 +113,7 @@ export const AuthVerifyEmail: React.FC = () => {
                 </div>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Verifying Email
+                Signing You In
               </h1>
               <p className="text-gray-600">{state.message}</p>
             </>
@@ -227,7 +174,7 @@ export const AuthVerifyEmail: React.FC = () => {
                 </div>
               </div>
               <h1 className="text-2xl font-bold text-red-600 mb-2">
-                Verification Failed
+                Sign In Failed
               </h1>
               <p className="text-gray-600 mb-6">{state.message}</p>
               <div className="space-y-2">
@@ -235,7 +182,7 @@ export const AuthVerifyEmail: React.FC = () => {
                   onClick={() => navigate('/auth/resend-verification')}
                   className="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition"
                 >
-                  Request New Code
+                  Send New Magic Link
                 </button>
                 <button
                   onClick={() => navigate('/auth/login')}

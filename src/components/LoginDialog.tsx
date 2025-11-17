@@ -612,7 +612,7 @@ export function LoginDialog({
                     variant="outline"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
-                    className="w-full h-12 text-base border-2"
+                    className="w-full h-12 text-base bg-white text-black hover:bg-white/90"
                   >
                     <Chrome className="h-5 w-5 mr-2" />
                     Continue with Google

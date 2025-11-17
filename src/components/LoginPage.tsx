@@ -252,8 +252,17 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         }
       }
       
-      // Generate new verification token with 24-hour expiration using Resend API
-      await api.sendVerificationEmail(trimmedEmail);
+      // Send magic link using Supabase (instant verification + login)
+      const { error } = await supabase.auth.signInWithOtp({
+        email: trimmedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
       
       // Update rate limiting
       const currentRateLimit = localStorage.getItem(rateLimitKey);
@@ -285,8 +294,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
       logResend();
       
       toast.success(
-        `Verification email sent! Check your inbox and spam folder. ` +
-        `The link expires in 24 hours. ${newCount >= 3 ? 'This was your final attempt for the next hour.' : `${3 - newCount} attempts remaining.`}`
+        `Magic link sent! Check your inbox and click the link to sign in instantly. ` +
+        `${newCount >= 3 ? 'This was your final attempt for the next hour.' : `${3 - newCount} attempts remaining.`}`
       );
       
       if (newCount >= 3) {
