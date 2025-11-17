@@ -28,7 +28,6 @@ interface HeroWithAnimationProps {
 export function HeroWithAnimation({ onLogin }: HeroWithAnimationProps) {
   const [activeScene, setActiveScene] = useState<'problem' | 'solution'>('solution');
   const [isMuted, setIsMuted] = useState(true);
-  const isProd = import.meta.env.PROD;
 
   const problemScenes = [
     {
@@ -159,8 +158,7 @@ export function HeroWithAnimation({ onLogin }: HeroWithAnimationProps) {
             >
               <Button
                 size="lg"
-                disabled={isProd}
-                onClick={() => { if (isProd) return; onLogin("employer"); }}
+                onClick={() => { onLogin("employer"); }}
                 className="flex items-center justify-center gap-2 text-sm sm:text-base px-6 py-5 sm:py-6 w-full sm:w-auto hover:scale-105 transition-transform"
               >
                 <Building className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -170,8 +168,7 @@ export function HeroWithAnimation({ onLogin }: HeroWithAnimationProps) {
               <Button
                 size="lg"
                 variant="outline"
-                disabled={isProd}
-                onClick={() => { if (isProd) return; onLogin("professional"); }}
+                onClick={() => { onLogin("professional"); }}
                 className="flex items-center justify-center gap-2 text-sm sm:text-base px-6 py-5 sm:py-6 w-full sm:w-auto hover:scale-105 transition-transform"
               >
                 <Users className="h-4 w-4 sm:h-5 sm:w-5" />

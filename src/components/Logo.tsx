@@ -27,17 +27,24 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
       className={`flex items-center gap-2 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={handleClick}
     >
-      {/* Modern "C" Logo Badge */}
-      <motion.div 
-        className={`${sizes[size].icon} relative flex items-center justify-center bg-gradient-to-br from-[var(--brand-primary)] to-emerald-500 rounded-lg shadow-lg`}
+      <motion.img
+        src="/logos/CoreID.svg"
+        alt="CoreID logo"
+        className={`${sizes[size].icon} object-contain bg-white rounded-lg`}
         whileHover={{ scale: 1.05, rotate: 5 }}
-        transition={{ duration: 0.3, type: "spring" }}
-      >
-        <span className={`font-bold ${size === 'sm' ? 'text-base' : size === 'md' ? 'text-xl' : 'text-3xl'} ${isLight ? 'text-[var(--brand-primary-contrast)]' : 'text-white'}`}>
-          C
-        </span>
-      </motion.div>
-      
+        transition={{ duration: 0.3, type: 'spring' }}
+        loading="eager"
+        decoding="async"
+        draggable="false"
+        onError={(e) => {
+          const el = e.currentTarget as HTMLImageElement;
+          if (el.src.endsWith('/logos/CoreID.svg')) {
+            el.src = '/logos/CoreID.png';
+          } else if (!el.src.endsWith('/logos/coreid-icon.svg')) {
+            el.src = '/logos/coreid-icon.svg';
+          }
+        }}
+      />
       {showText && (
         <motion.span 
           className={`font-bold ${sizes[size].text} ${isLight ? 'text-black' : 'text-[var(--brand-fg)]'}`}
@@ -45,7 +52,7 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          <span className="text-[var(--brand-primary)]">C</span>oreID
+          CoreID
         </motion.span>
       )}
     </div>

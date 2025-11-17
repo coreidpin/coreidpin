@@ -98,7 +98,6 @@ export function Navbar({
   };
 
   const handleLogin = (type: 'employer' | 'professional' | 'university') => {
-    if (isProd) return;
     onLogin?.(type);
     setIsMobileMenuOpen(false);
   };
@@ -253,8 +252,7 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  disabled={isProd}
-                  onClick={() => { if (isProd) return; navigate('/login'); }}
+                  onClick={() => { navigate('/login'); }}
                   className={isLight ? "text-white hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
                 >
                   Login
@@ -263,7 +261,6 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
-                  disabled={isProd}
                   onClick={() => handleLogin('professional')}
                   className={isLight ? "text-white hover:bg-white/10 transition-colors" : ""}
                 >
@@ -349,9 +346,7 @@ export function Navbar({
                       <Button 
                         variant="outline" 
                         className="w-full justify-start h-11 px-4"
-                        disabled={isProd}
                         onClick={() => {
-                          if (isProd) return;
                           setIsMobileMenuOpen(false);
                           navigate('/login');
                         }}
@@ -366,7 +361,6 @@ export function Navbar({
                           <Button 
                             variant="default" 
                             className="w-full justify-start h-12 px-4 bg-primary"
-                            disabled={isProd}
                             onClick={() => handleLogin('professional')}
                           >
                             <UserCheck className="h-5 w-5 mr-3" />
@@ -378,7 +372,6 @@ export function Navbar({
                         <Button 
                           variant="ghost" 
                           className="w-full justify-start h-12 px-4"
-                          disabled={isProd}
                           onClick={() => handleLogin('employer')}
                         >
                           <Building className="h-5 w-5 mr-3 text-blue-600" />

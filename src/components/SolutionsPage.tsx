@@ -31,7 +31,6 @@ interface SolutionsPageProps {
 
 export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
   const [activeTab, setActiveTab] = useState<'employers' | 'professionals' | 'universities'>('employers');
-  const isProd = import.meta.env.PROD;
   const showUniversities = false;
 
   const employerFeatures = [
@@ -397,8 +396,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <Button 
                       size="lg" 
-                      disabled={isProd}
-                      onClick={() => { if (isProd) return; onLogin('professional'); }}
+                      onClick={() => { onLogin('professional'); }}
                       className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6"
                     >
                       <UserCheck className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
@@ -446,8 +444,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 
                 size="lg" 
-                disabled={isProd}
-                onClick={() => { if (isProd) return; onLogin('professional'); }}
+                onClick={() => { onLogin('professional'); }}
                 className="w-full sm:w-auto px-6 sm:px-8 py-5 sm:py-6 bg-black hover:bg-black/90 text-white"
               >
                 Get Started Free
