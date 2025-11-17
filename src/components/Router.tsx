@@ -24,7 +24,7 @@ import { PublicPINPage } from './PublicPINPage';
 import { AuthVerifyEmail } from './AuthVerifyEmail';
 import EmailVerificationCallback from './EmailVerificationCallback';
 import LoginPage from './LoginPage';
-import UnifiedFlow from './UnifiedFlow';
+
 import MonitoringPage from '../pages/Monitoring';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
@@ -162,13 +162,13 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/get-started" 
           element={
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-              <UnifiedFlow 
-                userType={userType as 'employer' | 'professional' | 'university'}
-                onComplete={onOnboardingComplete}
-                onBack={() => window.history.back()}
+            <Layout currentPage="get-started" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <PlaceholderPage 
+                title="Get Started"
+                description="Registration flow coming soon."
+                onNavigate={() => {}}
               />
-            </motion.div>
+            </Layout>
           } 
         />
 
