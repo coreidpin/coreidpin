@@ -22,24 +22,28 @@ export const AuthVerifyEmail: React.FC = () => {
   useEffect(() => {
     const handleMagicLink = async () => {
       try {
-        console.log('Handling magic link callback...');
+        console.log('Handling Resend magic link...');
         
-        // Get the current session (Supabase automatically handles magic link)
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Check for token from Resend email
+        const token = searchParams.get('token');
+        let email = searchParams.get('email') || localStorage.getItem('registrationEmail');
         
-        if (error) {
-          throw error;
-        }
-        
-        if (session?.user) {
-          console.log('Magic link successful, user authenticated:', session.user.email);
+        if (token) {
+          // Prompt for email if not found
+          if (!email) {
+            email = prompt('Please enter your email address:');
+            if (!email) {
+              throw new Error('Email is required for magic link authentication');
+            }
+          }
           
-          // Update local storage
+          console.log('Magic link token found, auto-authenticating user');
+          
+          // Mark as verified and authenticated (magic link = instant login)
           localStorage.setItem('emailVerified', 'true');
           localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('userType', session.user.user_metadata?.userType || 'professional');
-          localStorage.setItem('userId', session.user.id);
-          localStorage.setItem('accessToken', session.access_token);
+          localStorage.setItem('userType', 'professional'); // Default
+          localStorage.setItem('registrationEmail', email);
           
           setState({
             loading: false,
@@ -48,25 +52,16 @@ export const AuthVerifyEmail: React.FC = () => {
             message: 'Successfully signed in! Welcome back.',
           });
           
-          // Redirect to dashboard after 2 seconds
+          // Redirect to dashboard after 1 second
           setTimeout(() => {
             navigate('/dashboard');
-          }, 2000);
+          }, 1000);
           return;
         }
+
+        // No token found, invalid magic link
+        console.log('No token found in URL');
         
-        // No session found, might be an invalid or expired link
-        console.log('No session found, checking URL parameters...');
-        
-        // Check if there are any error parameters
-        const error_code = searchParams.get('error_code');
-        const error_description = searchParams.get('error_description');
-        
-        if (error_code || error_description) {
-          throw new Error(error_description || 'Magic link authentication failed');
-        }
-        
-        // If no session and no error, the link might be expired or invalid
         setState({
           loading: false,
           success: false,
@@ -74,14 +69,13 @@ export const AuthVerifyEmail: React.FC = () => {
           message: 'This magic link is invalid or has expired. Please request a new one.',
         });
 
-
       } catch (err) {
-        console.error('Verification error:', err);
+        console.error('Magic link error:', err);
         setState({
           loading: false,
           success: false,
           error: 'NETWORK_ERROR',
-          message: 'Network error during verification. Please try again.',
+          message: 'Sign in failed. Please try again.',
         });
       }
     };
@@ -179,13 +173,13 @@ export const AuthVerifyEmail: React.FC = () => {
               <p className="text-gray-600 mb-6">{state.message}</p>
               <div className="space-y-2">
                 <button
-                  onClick={() => navigate('/auth/resend-verification')}
+                  onClick={() => navigate('/login')}
                   className="w-full bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 transition"
                 >
                   Send New Magic Link
                 </button>
                 <button
-                  onClick={() => navigate('/auth/login')}
+                  onClick={() => navigate('/login')}
                   className="w-full border-2 border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition"
                 >
                   Back to Login

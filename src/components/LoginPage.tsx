@@ -252,17 +252,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         }
       }
       
-      // Send magic link using Supabase (instant verification + login)
-      const { error } = await supabase.auth.signInWithOtp({
-        email: trimmedEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
+      // Send magic link using Resend API
+      await api.sendVerificationEmail(trimmedEmail);
       
       // Update rate limiting
       const currentRateLimit = localStorage.getItem(rateLimitKey);
@@ -294,7 +285,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
       logResend();
       
       toast.success(
-        `Magic link sent! Check your inbox and click the link to sign in instantly. ` +
+        `Magic link sent via Resend! Check your inbox and click the link to sign in instantly. ` +
         `${newCount >= 3 ? 'This was your final attempt for the next hour.' : `${3 - newCount} attempts remaining.`}`
       );
       

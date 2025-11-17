@@ -336,7 +336,7 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
-                  <Button onClick={handleGoogleSignUp} variant="outline" className="w-full h-12" disabled={isLoading} type="button">
+                  <Button onClick={handleGoogleSignUp} variant="outline" className="w-full h-12 bg-white text-black hover:bg-white/90" disabled={isLoading} type="button">
                     Continue with Google
                   </Button>
                   <div className="relative">
