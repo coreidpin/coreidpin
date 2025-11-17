@@ -3,7 +3,7 @@
   "editor.formatOnPaste": false,
   "editor.formatOnType": false,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": false
+    "source.fixAll.eslint": "never"
   },
   "prettier.enable": false,
   "eslint.autoFixOnSave": false

@@ -2,6 +2,12 @@
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
   "outputDirectory": "build",
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/manifest.webmanifest",
