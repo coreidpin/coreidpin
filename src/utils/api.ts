@@ -177,9 +177,20 @@ class APIClient {
   }
 
   async verifyLinkToken(token: string) {
+    const headers = this.getHeaders(undefined, true);
+    if (!('X-CSRF-Token' in headers)) {
+      try {
+        const bytes = new Uint8Array(16);
+        crypto.getRandomValues(bytes);
+        const csrfToken = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
+        headers['X-CSRF-Token'] = csrfToken;
+        try { localStorage.setItem('csrfToken', csrfToken) } catch {}
+      } catch {}
+    }
+    
     const response = await this.fetchWithRetry(`${BASE_URL}/auth/verify-link?token=${encodeURIComponent(token)}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      headers
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.success) {
