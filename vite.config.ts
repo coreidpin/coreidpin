@@ -8,7 +8,7 @@ import { defineConfig, loadEnv } from 'vite';
 
     return {
       root: process.cwd(),
-      plugins: [react()],
+      plugins: [react({ fastRefresh: false })],
       resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
         alias: {

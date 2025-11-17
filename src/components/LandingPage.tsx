@@ -75,9 +75,9 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       <section className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
         {/* Animated gradient overlay */}
         <div className="absolute inset-0 opacity-20 sm:opacity-30">
-          <div className="absolute top-0 left-1/4 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-purple-500/20 rounded-full blur-md sm:blur-3xl sm:animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute bottom-0 right-1/4 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-blue-500/20 rounded-full blur-md sm:blur-3xl sm:animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-emerald-500/10 rounded-full blur-md sm:blur-3xl sm:animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
+          <div className="absolute top-0 left-1/4 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-purple-500/20 rounded-full blur-xl sm:blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute bottom-0 right-1/4 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-blue-500/20 rounded-full blur-xl sm:blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-emerald-500/10 rounded-full blur-xl sm:blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
         </div>
 
         {/* Grid pattern overlay */}

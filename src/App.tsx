@@ -6,6 +6,7 @@ import { LoginDialog } from './components/LoginDialog';
 import { AdminLoginDialog } from './components/AdminLoginDialog';
 import { WelcomeToast } from './components/WelcomeToast';
 import PasswordResetDialog from './components/PasswordResetDialog';
+import { VerificationSuccessModal } from './components/VerificationSuccessModal.tsx';
 import { supabase } from './utils/supabase/client';
 import { isAuthenticated as authIsAuthed } from './utils/auth';
 import { api } from './utils/api';
@@ -29,6 +30,7 @@ export default function App() {
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [passwordRecoveryEmail, setPasswordRecoveryEmail] = useState<string | null>(null);
+  const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
 
   // Check for existing session on mount and handle OAuth callback
   useEffect(() => {
@@ -98,19 +100,6 @@ export default function App() {
         setIsAuthenticated(true);
         setCurrentView(userType as UserType);
         if (session) setUserData(session.user);
-        
-        // Check if user has completed onboarding
-        const hasCompletedOnboarding = session?.user?.user_metadata?.hasCompletedOnboarding;
-        
-        if (!hasCompletedOnboarding) {
-          // First time OAuth user - go to onboarding
-          setAppState('onboarding');
-          toast.success('Welcome! Let\'s complete your profile.');
-        } else {
-          // Returning user - go to dashboard
-          setAppState('dashboard');
-          setShowWelcomeToast(true);
-        }
       } else {
         // Simple localStorage-based authentication check
         const isAuth = localStorage.getItem('isAuthenticated') === 'true';
@@ -120,9 +109,6 @@ export default function App() {
         if (isAuth && userId && userType) {
           setIsAuthenticated(true);
           setCurrentView(userType as UserType);
-          if (path.toLowerCase() === '/dashboard') {
-            setAppState('dashboard');
-          }
         }
       }
     };
@@ -147,7 +133,6 @@ export default function App() {
         console.log('Session restored from localStorage');
         setIsAuthenticated(true);
         setCurrentView(restoredSession.userType as UserType);
-        setAppState('dashboard');
         
         // Setup auto-refresh interval (30 minutes)
         cleanupAutoRefresh = setupAutoRefresh();
@@ -158,7 +143,7 @@ export default function App() {
             // Session cleared in another tab
             console.log('Session cleared in another tab');
             setIsAuthenticated(false);
-            setAppState('landing');
+            setCurrentView('landing');
             setUserData(null);
           } else {
             // Session updated in another tab
@@ -188,10 +173,47 @@ export default function App() {
         if (token) {
           (async () => {
             try {
-              await api.verifyLinkToken(token);
-              toast.success('Email verified');
+              const result = await api.verifyLinkToken(token);
+              if (result.success) {
+                // Show verification success modal
+                setShowVerificationSuccess(true);
+                
+                // Auto-authenticate user after successful verification
+                if (result.user) {
+                  setIsAuthenticated(true);
+                  setCurrentView(result.user.user_metadata?.userType || 'professional');
+                  setUserData(result.user);
+                  
+                  // Store session data
+                  localStorage.setItem('isAuthenticated', 'true');
+                  localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
+                  localStorage.setItem('userId', result.user.id);
+                  localStorage.setItem('emailVerified', 'true');
+                  
+                  // Log verification event
+                  try {
+                    await supabase.from('verification_logs').insert({
+                      user_id: result.user.id,
+                      event_type: 'email_verified',
+                      email: result.user.email,
+                      timestamp: new Date().toISOString(),
+                      user_agent: navigator.userAgent.substring(0, 255),
+                      session_id: localStorage.getItem('csrfToken')
+                    });
+                  } catch (logErr) {
+                    console.warn('Verification logging failed:', logErr);
+                  }
+                }
+              }
             } catch (e: any) {
-              toast.error(e?.message || 'Link verification failed');
+              const errorMsg = e?.message || 'Link verification failed';
+              if (errorMsg.includes('expired')) {
+                toast.error('Verification link has expired. Please request a new one.');
+              } else if (errorMsg.includes('invalid')) {
+                toast.error('Invalid verification link. Please check your email for the correct link.');
+              } else {
+                toast.error(errorMsg);
+              }
             } finally {
               try {
                 const url = new URL(window.location.href);
@@ -294,7 +316,6 @@ export default function App() {
         localStorage.removeItem('userType');
         setIsAuthenticated(false);
         setUserData(null);
-        setAppState('landing');
         setCurrentView('landing');
       }
     });
@@ -365,10 +386,7 @@ export default function App() {
     // Immediate redirect to dashboard
     setShowWelcomeToast(true);
     
-    // Use replace to avoid back button issues
-    setTimeout(() => {
-      window.location.replace('/dashboard');
-    }, 100);
+    // Let Router handle navigation - no redirect
   };
 
   const handleOnboardingComplete = async () => {
@@ -509,6 +527,17 @@ export default function App() {
           onDismiss={() => setShowWelcomeToast(false)}
         />
       )}
+      
+      {/* Verification Success Modal */}
+      <VerificationSuccessModal
+        open={showVerificationSuccess}
+        onClose={() => {
+          setShowVerificationSuccess(false);
+          // Navigate to dashboard after closing modal
+          window.location.href = '/dashboard';
+        }}
+        userType={currentView as 'employer' | 'professional' | 'university'}
+      />
     </>
   );
 }

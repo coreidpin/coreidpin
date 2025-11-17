@@ -3,12 +3,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, AlertTriangle } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
-import { clearSession, initAuth } from '../utils/auth';
 import { api } from '../utils/api';
-
-import '../styles/auth-dark.css';
 
 interface LoginPageProps {
   onLoginSuccess?: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
@@ -26,6 +23,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const [canResend, setCanResend] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [resendAttempts, setResendAttempts] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,23 +76,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
           });
           
           if (error) {
-            // If it's just email confirmation, create temp session
+            // Check if it's an email verification issue
             if (/confirm|verification|verify/i.test(error.message)) {
-              const mockUser = {
-                id: `unverified_${Date.now()}`,
-                email: trimmedEmail,
-                email_confirmed_at: null,
-                user_metadata: { userType: 'professional' }
-              };
-              
-              result = {
-                accessToken: `temp_token_${Date.now()}`,
-                refreshToken: `temp_refresh_${Date.now()}`,
-                user: mockUser,
-              };
-              
-              localStorage.setItem('emailVerified', 'false');
-              localStorage.setItem('tempSession', 'true');
+              // Terminate login and show verification requirement
+              setError('Your email address requires verification before you can access your account');
+              setCanResend(true);
+              localStorage.setItem('registrationEmail', trimmedEmail);
+              return;
             } else {
               const sanitized = /invalid|credential/i.test(error.message)
                 ? 'Invalid email or password'
@@ -102,7 +90,16 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
               throw new Error(sanitized);
             }
           } else {
-            // Successful Supabase login
+            // Check email verification status from user data
+            if (!data?.user?.email_confirmed_at) {
+              // Email not verified - terminate login
+              setError('Your email address requires verification before you can access your account');
+              setCanResend(true);
+              localStorage.setItem('registrationEmail', trimmedEmail);
+              return;
+            }
+            
+            // Successful Supabase login with verified email
             result = {
               accessToken: data?.session?.access_token,
               refreshToken: data?.session?.refresh_token,
@@ -186,8 +183,12 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
       const emailVerified = localStorage.getItem('emailVerified') === 'true';
       toast.success(emailVerified ? 'Login successful!' : 'Login successful - Please verify your email');
       
-      // Force immediate redirect
-      window.location.href = '/dashboard';
+      // Call success callback instead of direct redirect
+      if (onLoginSuccess) {
+        onLoginSuccess(result.user.user_metadata?.userType || 'professional', result.user);
+      } else {
+        defaultOnLoginSuccess();
+      }
     } catch (err: any) {
       const msg = err?.message || 'Sign in failed. Please try again.';
       setError(msg);
@@ -204,44 +205,29 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
       setIsLoading(true);
       const trimmedEmail = (email || '').trim();
       
-      // Production-grade rate limiting with exponential backoff
+      // Enhanced rate limiting - max 3 attempts per hour
       const rateLimitKey = `rate_limit_${trimmedEmail}`;
       const rateLimitData = localStorage.getItem(rateLimitKey);
       
       if (rateLimitData) {
         const { count, lastAttempt } = JSON.parse(rateLimitData);
         const timeSinceLastAttempt = Date.now() - lastAttempt;
-        const backoffTime = Math.min(300000, Math.pow(2, count) * 30000); // Max 5 minutes
+        const oneHour = 60 * 60 * 1000;
         
-        if (timeSinceLastAttempt < backoffTime) {
-          const waitMinutes = Math.ceil((backoffTime - timeSinceLastAttempt) / 60000);
-          toast.error(`Please wait ${waitMinutes} minute(s) before requesting another verification email.`);
+        // Reset count if more than 1 hour has passed
+        if (timeSinceLastAttempt >= oneHour) {
+          localStorage.removeItem(rateLimitKey);
+        } else if (count >= 3) {
+          const waitMinutes = Math.ceil((oneHour - timeSinceLastAttempt) / 60000);
+          toast.error(`Rate limit exceeded. Please wait ${waitMinutes} minutes before requesting another verification email.`);
           return;
         }
       }
       
-      // Server-side rate limiting check as backup
-      try {
-        const { data: recentAttempts } = await supabase
-          .from('verification_logs')
-          .select('timestamp')
-          .eq('email', trimmedEmail)
-          .eq('event_type', 'verification_resent')
-          .gte('timestamp', new Date(Date.now() - 15 * 60 * 1000).toISOString())
-          .limit(10);
-        
-        if (recentAttempts && recentAttempts.length >= 5) {
-          toast.error('Too many verification attempts. Please wait 15 minutes.');
-          return;
-        }
-      } catch (rateErr) {
-        // Continue with client-side rate limiting only
-        console.warn('Server-side rate limiting unavailable, using client-side only');
-      }
-
+      // Generate new verification token with 24-hour expiration
       await api.sendVerificationEmail(trimmedEmail);
       
-      // Update client-side rate limiting
+      // Update rate limiting
       const currentRateLimit = localStorage.getItem(rateLimitKey);
       const newCount = currentRateLimit ? JSON.parse(currentRateLimit).count + 1 : 1;
       localStorage.setItem(rateLimitKey, JSON.stringify({
@@ -249,43 +235,48 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         lastAttempt: Date.now()
       }));
       
-      // Production logging with retry queue
+      setResendAttempts(newCount);
+      
+      // Enhanced logging for security auditing
       const logResend = async () => {
         try {
-          const userId = localStorage.getItem('userId');
-          if (userId) {
-            await supabase.from('verification_logs').insert({
-              user_id: userId,
-              event_type: 'verification_resent',
-              email: trimmedEmail,
-              timestamp: new Date().toISOString(),
-              user_agent: navigator.userAgent.substring(0, 255),
-              attempt_count: newCount
-            });
-          }
-        } catch (logErr) {
-          // Queue for background retry
-          const retryQueue = JSON.parse(localStorage.getItem('logRetryQueue') || '[]');
-          retryQueue.push({
-            type: 'verification_resent',
+          await supabase.from('verification_logs').insert({
             email: trimmedEmail,
+            event_type: 'verification_resent',
             timestamp: new Date().toISOString(),
-            userId: localStorage.getItem('userId')
+            user_agent: navigator.userAgent.substring(0, 255),
+            ip_address: 'client_side',
+            attempt_count: newCount,
+            session_id: localStorage.getItem('csrfToken')
           });
-          localStorage.setItem('logRetryQueue', JSON.stringify(retryQueue.slice(-10))); // Keep last 10
+        } catch (logErr) {
+          console.warn('Verification logging failed:', logErr);
         }
       };
       
       logResend();
       
-      toast.success('Verification email sent! Check your inbox and spam folder.');
-      setCanResend(false);
+      toast.success(
+        `Verification email sent! Check your inbox and spam folder. ` +
+        `The link expires in 24 hours. ${newCount >= 3 ? 'This was your final attempt for the next hour.' : `${3 - newCount} attempts remaining.`}`
+      );
       
-      // Dynamic cooldown based on attempt count
-      const cooldownTime = Math.min(300000, Math.pow(2, newCount - 1) * 60000);
-      setTimeout(() => setCanResend(true), cooldownTime);
+      if (newCount >= 3) {
+        setCanResend(false);
+      }
+      
     } catch (e: any) {
-      toast.error(e?.message || 'Failed to send verification email');
+      const errorMsg = e?.message || 'Failed to send verification email';
+      
+      if (errorMsg.includes('rate limit') || errorMsg.includes('Too many')) {
+        toast.error('Rate limit exceeded. Please wait before requesting another verification email.');
+      } else if (errorMsg.includes('expired')) {
+        toast.error('Previous verification token expired. A new verification email has been sent.');
+      } else if (errorMsg.includes('invalid')) {
+        toast.error('Invalid verification attempt. Please contact support if this issue persists.');
+      } else {
+        toast.error(`${errorMsg}. Please contact support if this issue persists.`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -315,15 +306,45 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
       <p className="text-sm mb-6 text-white/70">Sign in to your account</p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg border border-white/20 bg-white/5 text-sm text-white">
-          {error}
-          {canResend && (
-            <div className="mt-2">
-              <Button type="button" variant="secondary" className="h-9" onClick={handleResendVerification} disabled={isLoading}>
-                Resend Verification Email
-              </Button>
+        <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50/10 text-sm text-white">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="text-amber-100">{error}</div>
+              {canResend && (
+                <div className="mt-3 space-y-2">
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    className="w-full h-9 bg-amber-600 hover:bg-amber-700 text-white border-0" 
+                    onClick={handleResendVerification} 
+                    disabled={isLoading || resendAttempts >= 3}
+                  >
+                    {resendAttempts >= 3 ? 'Rate Limited' : 'Resend Verification Email'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    className="w-full h-9 text-white/70 hover:text-white" 
+                    onClick={() => {
+                      setEmail('');
+                      setError('');
+                      setCanResend(false);
+                      setResendAttempts(0);
+                      localStorage.removeItem('registrationEmail');
+                    }}
+                  >
+                    Change Email Address
+                  </Button>
+                  {resendAttempts > 0 && (
+                    <p className="text-xs text-amber-200 text-center">
+                      {resendAttempts}/3 verification emails sent this hour
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 

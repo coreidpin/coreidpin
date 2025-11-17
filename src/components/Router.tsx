@@ -7,6 +7,7 @@ const PublicPINPageWrapper: React.FC = () => {
   return <PublicPINPage pinNumber={pinNumber || ''} onNavigate={() => {}} />;
 };
 import { LandingPage } from './LandingPage';
+import { TestLanding } from './TestLanding';
 import { OurStoryPage } from './OurStoryPage';
 import { HowItWorksPage } from './HowItWorksPage';
 import { SolutionsPage } from './SolutionsPage';
@@ -123,6 +124,19 @@ export const AppRouter: React.FC<RouterProps> = ({
         {/* Landing Page - Root */}
         <Route 
           path="/" 
+          element={
+            <LandingPage 
+              onLogin={onLogin}
+              onNavigate={() => {}}
+              isAuthenticated={isAuthenticated}
+              userType={userType}
+            />
+          } 
+        />
+        
+        {/* Fallback for landing */}
+        <Route 
+          index
           element={
             <LandingPage 
               onLogin={onLogin}
