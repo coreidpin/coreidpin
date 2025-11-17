@@ -34,17 +34,19 @@ export const AuthVerifyEmail: React.FC = () => {
           }
         }
         
-        if (token && email) {
-          console.log('Token found, using as verification code');
-          // Use the API client for code-based verification
-          const { api } = await import('@/utils/api');
-          const result = await api.verifyEmailCode(email, token);
+        if (token) {
+          console.log('JWT Token found, using verifyLinkToken method');
           
-          if (result.success) {
+          // Use the correct API method for JWT tokens
+          const { api } = await import('@/utils/api');
+          const result = await api.verifyLinkToken(token);
+          
+          if (result.success && result.user) {
             // Update local storage
             localStorage.setItem('emailVerified', 'true');
             localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userType', 'professional'); // Default, will be updated on login
+            localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
+            localStorage.setItem('userId', result.user.id);
             
             setState({
               loading: false,
@@ -59,7 +61,7 @@ export const AuthVerifyEmail: React.FC = () => {
             }, 3000);
             return;
           } else {
-            throw new Error(result.error || 'Code verification failed');
+            throw new Error(result.error || 'Token verification failed');
           }
         }
         
