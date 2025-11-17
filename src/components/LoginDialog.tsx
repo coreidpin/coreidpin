@@ -36,7 +36,7 @@ import { clearSession, initAuth } from '../utils/auth';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import UnifiedFlow from './UnifiedFlow';
+
 
 interface LoginDialogProps {
   open?: boolean;
@@ -634,15 +634,12 @@ export function LoginDialog({
               {mode === 'signup' && (
                 <div className="space-y-6">
                   {selectedUserType === 'professional' ? (
-                    <UnifiedFlow
-                      userType="professional"
-                      origin="modal"
-                      onComplete={(userData) => {
-                        onLoginSuccess('professional', userData);
-                        onOpenChange?.(false);
-                      }}
-                      onBack={() => setMode('select')}
-                    />
+                    <div className="text-center p-8">
+                      <p className="text-muted-foreground mb-4">Professional registration coming soon.</p>
+                      <Button onClick={() => setMode('select')} variant="outline">
+                        Back to Selection
+                      </Button>
+                    </div>
                   ) : (
                     <form onSubmit={handleEmailSignIn} className="space-y-4">
                       {selectedUserType === 'employer' && (
