@@ -183,6 +183,21 @@ export const AppRouter: React.FC<RouterProps> = ({
           } 
         />
         
+        {/* Explicit landing route */}
+        <Route 
+          path="/landing" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <LandingPage 
+                onLogin={onLogin}
+                onNavigate={() => {}}
+                isAuthenticated={isAuthenticated}
+                userType={userType}
+              />
+            </Suspense>
+          } 
+        />
+        
         {/* Fallback for landing */}
         <Route 
           index
@@ -456,21 +471,8 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={<Suspense fallback={<LoadingSpinner />}><PublicPINPageWrapper /></Suspense>} 
         />
 
-        {/* 404 Route */}
-        <Route 
-          path="*" 
-          element={
-            <Layout currentPage="404" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <PlaceholderPage 
-                  title="Page Not Found"
-                  description="The page you're looking for doesn't exist."
-                  onNavigate={() => {}}
-                />
-              </Suspense>
-            </Layout>
-          } 
-        />
+        {/* 404 fallback to product */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster position="top-right" />
     </BrowserRouter>
