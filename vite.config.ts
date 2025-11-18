@@ -7,10 +7,10 @@ import { defineConfig, loadEnv } from 'vite';
     const supabaseUrl = env.VITE_SUPABASE_URL || 'https://evcqpapvcvmljgqiuzsq.supabase.co';
 
     return {
-      root: process.cwd(),
-      plugins: [react({ fastRefresh: false })],
+      plugins: [react()],
       resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
+        dedupe: ['react', 'react-dom'],
         alias: {
           'vaul@1.1.2': 'vaul',
           'sonner@2.0.3': 'sonner',
@@ -54,6 +54,9 @@ import { defineConfig, loadEnv } from 'vite';
           '@': path.resolve(__dirname, './src'),
         },
       },
+      optimizeDeps: {
+        include: ['react', 'react-dom'],
+      },
       build: {
         target: 'esnext',
         outDir: 'build',
@@ -79,8 +82,6 @@ import { defineConfig, loadEnv } from 'vite';
         port: 3000,
         strictPort: true,
         open: true,
-        hmr: false,
-        ws: false,
         proxy: {
           '/functions/v1': {
             target: supabaseUrl,

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Analytics } from "@vercel/analytics/next";
 import { toast } from 'sonner';
 import { AppRouter } from './components/Router';
 import { LoginDialog } from './components/LoginDialog';

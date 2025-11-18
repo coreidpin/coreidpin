@@ -168,8 +168,8 @@ export const AppRouter: React.FC<RouterProps> = ({
   return (
     <BrowserRouter>
       <Routes>
-        {/* Landing Page - Root */}
-        <Route 
+        {/* Home - use Solutions as default */}
+          <Route 
           path="/" 
           element={
             <Suspense fallback={<LoadingSpinner />}>
