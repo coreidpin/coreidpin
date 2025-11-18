@@ -27,7 +27,6 @@ const SimpleRegistration = lazy(() => import('./SimpleRegistration'));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
-import { Toaster } from './ui/sonner';
 import { motion } from 'motion/react';
 
 const LoadingSpinner: React.FC = () => (
@@ -474,7 +473,6 @@ export const AppRouter: React.FC<RouterProps> = ({
         {/* 404 fallback to product */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <Toaster position="top-right" />
     </BrowserRouter>
   );
 };
