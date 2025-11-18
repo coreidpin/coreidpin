@@ -103,14 +103,20 @@ export default function VerificationBanner({ userEmail, onDismiss }: Verificatio
         const userId = localStorage.getItem('userId');
         if (userId) {
           // Non-blocking analytics
-          supabase.from('verification_logs').insert({
-            user_id: userId,
-            event_type: 'verification_resent_modal',
-            email: userEmail,
-            timestamp: new Date().toISOString(),
-            attempt_count: attemptCount,
-            user_agent: navigator.userAgent.substring(0, 255)
-          }).then(() => {}).catch(() => {}); // Fire and forget
+          try {
+            await (supabase as any)
+              .from('verification_logs')
+              .insert([
+                {
+                  user_id: userId,
+                  event_type: 'verification_resent_modal',
+                  email: userEmail,
+                  timestamp: new Date().toISOString(),
+                  attempt_count: attemptCount,
+                  user_agent: navigator.userAgent.substring(0, 255)
+                }
+              ] as any);
+          } catch {}
         }
       } catch {}
       

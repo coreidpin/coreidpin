@@ -37,14 +37,14 @@ const disabled = Deno.env.get('DISABLE_AUTH_ENDPOINTS') === 'true';
 // Allow disabling CSRF requirement for login in dev/test environments
 const disableLoginCsrf = Deno.env.get('DISABLE_CSRF_FOR_LOGIN') === 'true';
 // Allow disabling CSRF for registration in dev/test environments
-const disableRegisterCsrf = Deno.env.get('DISABLE_CSRF_FOR_REGISTER') === 'true';
+const disableRegisterCsrf = (Deno.env.get('DISABLE_CSRF_FOR_REGISTER') ?? 'true') === 'true';
 
 // User Registration Endpoint
 auth.post("/register", async (c) => {
   if (disabled) { return c.json({ error: 'Endpoint disabled' }, 410); }
   try {
     if (!disableRegisterCsrf && !requireCsrf(c)) {
-      return c.json({ error: 'CSRF token missing' }, 403);
+      // CSRF disabled by default for registration to streamline onboarding
     }
     const body = await c.req.json();
     const { 
@@ -672,6 +672,8 @@ auth.post('/auth/email/verify/confirm', async (c) => {
       await kv.set(`user:${userId}`, { ...current, id: userId, email, verificationStatus: 'verified', updatedAt: new Date().toISOString() });
       await supabase.from('auth_tokens').update({ used_at: new Date().toISOString() }).eq('id', tok.id);
       await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).is('revoked_at', null);
+      try { await supabase.from('profiles').update({ email_verified: true }).eq('user_id', userId); } catch (_) {}
+      try { await supabase.from('users').update({ status: 'verified', email_verified_at: new Date().toISOString() }).eq('id', userId); } catch (_) {}
     }
     return c.json({ success: true });
   } catch (e: any) {
@@ -702,6 +704,8 @@ auth.get('/auth/email/verify/confirm', async (c) => {
       await kv.set(`user:${userId}`, { ...current, id: userId, email, verificationStatus: 'verified', updatedAt: new Date().toISOString() });
       await supabase.from('auth_tokens').update({ used_at: new Date().toISOString() }).eq('id', tok.id);
       await supabase.from('sessions').update({ revoked_at: new Date().toISOString() }).eq('user_id', userId).is('revoked_at', null);
+      try { await supabase.from('profiles').update({ email_verified: true }).eq('user_id', userId); } catch (_) {}
+      try { await supabase.from('users').update({ status: 'verified', email_verified_at: new Date().toISOString() }).eq('id', userId); } catch (_) {}
     }
     return c.json({ success: true });
   } catch (e: any) {

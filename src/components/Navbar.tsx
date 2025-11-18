@@ -252,7 +252,8 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => { navigate('/login'); }}
+                  disabled={isProd}
+                  onClick={() => { if (isProd) return; navigate('/login'); }}
                   className={isLight ? "text-white hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
                 >
                   Login
@@ -261,7 +262,8 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
-                  onClick={() => handleLogin('professional')}
+                  disabled={isProd}
+                  onClick={() => { if (isProd) return; handleLogin('professional'); }}
                   className={isLight ? "text-white hover:bg-white/10 transition-colors" : ""}
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
@@ -346,7 +348,9 @@ export function Navbar({
                       <Button 
                         variant="outline" 
                         className="w-full justify-start h-11 px-4"
+                        disabled={isProd}
                         onClick={() => {
+                          if (isProd) return;
                           setIsMobileMenuOpen(false);
                           navigate('/login');
                         }}
@@ -361,7 +365,8 @@ export function Navbar({
                           <Button 
                             variant="default" 
                             className="w-full justify-start h-12 px-4 bg-primary"
-                            onClick={() => handleLogin('professional')}
+                            disabled={isProd}
+                            onClick={() => { if (isProd) return; handleLogin('professional'); }}
                           >
                             <UserCheck className="h-5 w-5 mr-3" />
                             <div className="text-left">
@@ -372,7 +377,8 @@ export function Navbar({
                         <Button 
                           variant="ghost" 
                           className="w-full justify-start h-12 px-4"
-                          onClick={() => handleLogin('employer')}
+                          disabled={isProd}
+                          onClick={() => { if (isProd) return; handleLogin('employer'); }}
                         >
                           <Building className="h-5 w-5 mr-3 text-blue-600" />
                           <div className="text-left">

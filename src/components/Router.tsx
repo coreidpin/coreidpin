@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 
 // Wrapper for PublicPINPage to handle URL parameters
@@ -6,30 +6,75 @@ const PublicPINPageWrapper: React.FC = () => {
   const { pinNumber } = useParams<{ pinNumber: string }>();
   return <PublicPINPage pinNumber={pinNumber || ''} onNavigate={() => {}} />;
 };
-import { LandingPage } from './LandingPage';
-import { TestLanding } from './TestLanding';
-import { OurStoryPage } from './OurStoryPage';
-import { HowItWorksPage } from './HowItWorksPage';
-import { SolutionsPage } from './SolutionsPage';
-import { PlaceholderPage } from './PlaceholderPage';
-import { TermsOfService } from './TermsOfService';
-import { PrivacyPolicy } from './PrivacyPolicy';
-import { CookiesPolicy } from './CookiesPolicy';
-import { GDPRCompliance } from './GDPRCompliance';
-import { EmployerDashboard } from './EmployerDashboard';
-import { ProfessionalDashboard } from './ProfessionalDashboard';
-import { UniversityDashboard } from './UniversityDashboard';
-import { AdminDashboard } from './AdminDashboard';
-import { PublicPINPage } from './PublicPINPage';
-import { AuthVerifyEmail } from './AuthVerifyEmail';
-import EmailVerificationCallback from './EmailVerificationCallback';
-import LoginPage from './LoginPage';
-
-import MonitoringPage from '../pages/Monitoring';
+const LandingPage = lazy(() => import('./LandingPage').then(m => ({ default: m.LandingPage })));
+const OurStoryPage = lazy(() => import('./OurStoryPage').then(m => ({ default: m.OurStoryPage })));
+const HowItWorksPage = lazy(() => import('./HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
+const SolutionsPage = lazy(() => import('./SolutionsPage').then(m => ({ default: m.SolutionsPage })));
+const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ default: m.PlaceholderPage })));
+const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
+const PrivacyPolicy = lazy(() => import('./PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const CookiesPolicy = lazy(() => import('./CookiesPolicy').then(m => ({ default: m.CookiesPolicy })));
+const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ default: m.GDPRCompliance })));
+const EmployerDashboard = lazy(() => import('./EmployerDashboard').then(m => ({ default: m.EmployerDashboard })));
+const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
+const UniversityDashboard = lazy(() => import('./UniversityDashboard').then(m => ({ default: m.UniversityDashboard })));
+const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const PublicPINPage = lazy(() => import('./PublicPINPage').then(m => ({ default: m.PublicPINPage })));
+const AuthVerifyEmail = lazy(() => import('./AuthVerifyEmail').then(m => ({ default: m.AuthVerifyEmail })));
+const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
+const LoginPage = lazy(() => import('./LoginPage'));
+const SimpleRegistration = lazy(() => import('./SimpleRegistration'));
+const MonitoringPage = lazy(() => import('../pages/Monitoring'));
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { Toaster } from './ui/sonner';
 import { motion } from 'motion/react';
+
+const LoadingSpinner: React.FC = () => (
+  <div className="flex items-center justify-center py-16">
+    <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+  </div>
+);
+
+const DashboardSkeleton: React.FC = () => (
+  <div className="space-y-6">
+    <div className="flex items-center justify-between">
+      <div className="h-8 w-48 bg-white/10 rounded-md animate-pulse" />
+      <div className="h-10 w-32 bg-white/10 rounded-md animate-pulse" />
+    </div>
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="bg-white/10 rounded-xl border border-white/10">
+          <div className="p-4">
+            <div className="h-6 w-16 bg-white/10 rounded-md animate-pulse mb-2" />
+            <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="grid lg:grid-cols-2 gap-8">
+      <div className="bg-white/10 rounded-xl border border-white/10">
+        <div className="p-6 space-y-4">
+          <div className="h-6 w-40 bg-white/10 rounded-md animate-pulse" />
+          <div className="h-24 w-full bg-white/10 rounded-md animate-pulse" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
+            <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
+          </div>
+        </div>
+      </div>
+      <div className="bg-white/10 rounded-xl border border-white/10">
+        <div className="p-6">
+          <div className="h-6 w-48 bg-white/10 rounded-md animate-pulse mb-4" />
+          <div className="h-32 w-full bg-white/10 rounded-md animate-pulse" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 interface RouterProps {
   isAuthenticated: boolean;
@@ -118,6 +163,8 @@ export const AppRouter: React.FC<RouterProps> = ({
   onLogout,
   onOnboardingComplete
 }) => {
+  void userData;
+  void onOnboardingComplete;
   return (
     <BrowserRouter>
       <Routes>
@@ -125,12 +172,14 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/" 
           element={
-            <LandingPage 
-              onLogin={onLogin}
-              onNavigate={() => {}}
-              isAuthenticated={isAuthenticated}
-              userType={userType}
-            />
+            <Suspense fallback={<LoadingSpinner />}>
+              <LandingPage 
+                onLogin={onLogin}
+                onNavigate={() => {}}
+                isAuthenticated={isAuthenticated}
+                userType={userType}
+              />
+            </Suspense>
           } 
         />
         
@@ -138,12 +187,14 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           index
           element={
-            <LandingPage 
-              onLogin={onLogin}
-              onNavigate={() => {}}
-              isAuthenticated={isAuthenticated}
-              userType={userType}
-            />
+            <Suspense fallback={<LoadingSpinner />}>
+              <LandingPage 
+                onLogin={onLogin}
+                onNavigate={() => {}}
+                isAuthenticated={isAuthenticated}
+                userType={userType}
+              />
+            </Suspense>
           } 
         />
 
@@ -152,9 +203,11 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/login" 
           element={
             <Layout currentPage="login" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <div className="flex items-center justify-center py-16">
-                <LoginPage onLoginSuccess={onLoginSuccess} />
-              </div>
+              <Suspense fallback={<LoadingSpinner />}>
+                <div className="flex items-center justify-center py-16">
+                  <LoginPage onLoginSuccess={onLoginSuccess} />
+                </div>
+              </Suspense>
             </Layout>
           } 
         />
@@ -163,27 +216,29 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/get-started" 
           element={
             <Layout currentPage="get-started" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <PlaceholderPage 
-                title="Get Started"
-                description="Registration flow coming soon."
-                onNavigate={() => {}}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <div className="flex items-center justify-center py-8">
+                  <SimpleRegistration onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
+                </div>
+              </Suspense>
             </Layout>
           } 
         />
 
         {/* Email Verification Routes */}
-        <Route path="/auth/verify-email" element={<AuthVerifyEmail />} />
-        <Route path="/auth/callback" element={<EmailVerificationCallback />} />
-        <Route path="/verify-email" element={<EmailVerificationCallback />} />
-        <Route path="/email-verification" element={<EmailVerificationCallback />} />
+        <Route path="/auth/verify-email" element={<Suspense fallback={<LoadingSpinner />}><AuthVerifyEmail /></Suspense>} />
+        <Route path="/auth/callback" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
+        <Route path="/verify-email" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
+        <Route path="/email-verification" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
 
         {/* Public Routes */}
         <Route 
           path="/our-story" 
           element={
             <Layout currentPage="our-story" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <OurStoryPage onNavigate={() => {}} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <OurStoryPage onNavigate={() => {}} />
+              </Suspense>
             </Layout>
           } 
         />
@@ -192,7 +247,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/how-it-works" 
           element={
             <Layout currentPage="how-it-works" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <HowItWorksPage onNavigate={() => {}} onLogin={onLogin} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <HowItWorksPage onNavigate={() => {}} onLogin={onLogin} />
+              </Suspense>
             </Layout>
           } 
         />
@@ -201,7 +258,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/solutions" 
           element={
             <Layout currentPage="solutions" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              </Suspense>
             </Layout>
           } 
         />
@@ -210,7 +269,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/employers" 
           element={
             <Layout currentPage="employers" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              </Suspense>
             </Layout>
           } 
         />
@@ -219,7 +280,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/professionals" 
           element={
             <Layout currentPage="professionals" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              </Suspense>
             </Layout>
           } 
         />
@@ -230,7 +293,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <div className="min-h-screen bg-background flex flex-col">
               <Navbar currentPage="terms" onNavigate={() => {}} onLogin={onLogin} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
-              <TermsOfService />
+              <Suspense fallback={<LoadingSpinner />}>
+                <TermsOfService />
+              </Suspense>
               <Footer onNavigate={() => {}} />
             </div>
           } 
@@ -241,7 +306,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <div className="min-h-screen bg-background flex flex-col">
               <Navbar currentPage="privacy" onNavigate={() => {}} onLogin={onLogin} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
-              <PrivacyPolicy />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PrivacyPolicy />
+              </Suspense>
               <Footer onNavigate={() => {}} />
             </div>
           } 
@@ -252,7 +319,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <div className="min-h-screen bg-background flex flex-col">
               <Navbar currentPage="cookies" onNavigate={() => {}} onLogin={onLogin} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
-              <CookiesPolicy />
+              <Suspense fallback={<LoadingSpinner />}>
+                <CookiesPolicy />
+              </Suspense>
               <Footer onNavigate={() => {}} />
             </div>
           } 
@@ -263,7 +332,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <div className="min-h-screen bg-background flex flex-col">
               <Navbar currentPage="gdpr" onNavigate={() => {}} onLogin={onLogin} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
-              <GDPRCompliance />
+              <Suspense fallback={<LoadingSpinner />}>
+                <GDPRCompliance />
+              </Suspense>
               <Footer onNavigate={() => {}} />
             </div>
           } 
@@ -274,11 +345,13 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/trust-safety" 
           element={
             <Layout currentPage="trust-safety" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <PlaceholderPage 
-                title="Trust & Safety"
-                description="Trust is the core of CoreID — it's in our name. We build infrastructure designed to protect users, secure data, and enable safe interactions."
-                onNavigate={() => {}}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlaceholderPage 
+                  title="Trust & Safety"
+                  description="Trust is the core of CoreID — it's in our name. We build infrastructure designed to protect users, secure data, and enable safe interactions."
+                  onNavigate={() => {}}
+                />
+              </Suspense>
             </Layout>
           } 
         />
@@ -287,11 +360,13 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/help" 
           element={
             <Layout currentPage="help" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <PlaceholderPage 
-                title="Help Center"
-                description="Find answers to common questions and get support for using the CoreID platform."
-                onNavigate={() => {}}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlaceholderPage 
+                  title="Help Center"
+                  description="Find answers to common questions and get support for using the CoreID platform."
+                  onNavigate={() => {}}
+                />
+              </Suspense>
             </Layout>
           } 
         />
@@ -300,11 +375,13 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/contact" 
           element={
             <Layout currentPage="contact" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <PlaceholderPage 
-                title="Contact Us"
-                description="Get in touch with our team for partnerships, support, or general inquiries."
-                onNavigate={() => {}}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlaceholderPage 
+                  title="Contact Us"
+                  description="Get in touch with our team for partnerships, support, or general inquiries."
+                  onNavigate={() => {}}
+                />
+              </Suspense>
             </Layout>
           } 
         />
@@ -313,11 +390,13 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/docs" 
           element={
             <Layout currentPage="docs" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <PlaceholderPage 
-                title="Documentation"
-                description="Access technical documentation, API references, and integration guides for developers."
-                onNavigate={() => {}}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlaceholderPage 
+                  title="Documentation"
+                  description="Access technical documentation, API references, and integration guides for developers."
+                  onNavigate={() => {}}
+                />
+              </Suspense>
             </Layout>
           } 
         />
@@ -328,9 +407,11 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <DashboardLayout isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
-                {userType === 'employer' && <EmployerDashboard />}
-                {userType === 'professional' && <ProfessionalDashboard />}
-                {userType === 'university' && <UniversityDashboard />}
+                <Suspense fallback={<DashboardSkeleton />}>
+                  {userType === 'employer' && <EmployerDashboard />}
+                  {userType === 'professional' && <ProfessionalDashboard />}
+                  {userType === 'university' && <UniversityDashboard />}
+                </Suspense>
               </DashboardLayout>
             </ProtectedRoute>
           } 
@@ -344,7 +425,9 @@ export const AppRouter: React.FC<RouterProps> = ({
               <div className="min-h-screen bg-background flex flex-col">
                 <Navbar currentPage="admin" onNavigate={() => {}} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
                 <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
-                  <AdminDashboard />
+                  <Suspense fallback={<DashboardSkeleton />}>
+                    <AdminDashboard />
+                  </Suspense>
                 </main>
                 <Footer onNavigate={() => {}} />
               </div>
@@ -358,7 +441,9 @@ export const AppRouter: React.FC<RouterProps> = ({
             <div className="min-h-screen bg-background flex flex-col">
               <Navbar currentPage="monitoring" onNavigate={() => {}} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
               <main className="flex-1">
-                <MonitoringPage />
+                <Suspense fallback={<LoadingSpinner />}>
+                  <MonitoringPage />
+                </Suspense>
               </main>
               <Footer onNavigate={() => {}} />
             </div>
@@ -368,7 +453,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         {/* Public PIN Routes */}
         <Route 
           path="/pin/:pinNumber" 
-          element={<PublicPINPageWrapper />} 
+          element={<Suspense fallback={<LoadingSpinner />}><PublicPINPageWrapper /></Suspense>} 
         />
 
         {/* 404 Route */}
@@ -376,11 +461,13 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="*" 
           element={
             <Layout currentPage="404" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <PlaceholderPage 
-                title="Page Not Found"
-                description="The page you're looking for doesn't exist."
-                onNavigate={() => {}}
-              />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PlaceholderPage 
+                  title="Page Not Found"
+                  description="The page you're looking for doesn't exist."
+                  onNavigate={() => {}}
+                />
+              </Suspense>
             </Layout>
           } 
         />

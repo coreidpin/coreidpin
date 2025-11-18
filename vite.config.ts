@@ -60,6 +60,13 @@ import { defineConfig, loadEnv } from 'vite';
         rollupOptions: {
           output: {
             manualChunks(id) {
+              if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) return 'react';
+              if (id.includes('node_modules/react-router-dom')) return 'router';
+              if (id.includes('node_modules/motion')) return 'motion';
+              if (id.includes('node_modules/lucide-react')) return 'icons';
+              if (id.includes('node_modules/sonner')) return 'toast';
+              if (id.includes('node_modules/@radix-ui/')) return 'radix';
+              if (id.includes('node_modules/embla-carousel-react')) return 'carousel';
               if (id.includes('node_modules/recharts')) return 'recharts';
               if (id.includes('node_modules/@jsr/supabase__supabase-js')) return 'supabase';
               if (id.includes('/src/components/ui/')) return 'ui';
@@ -70,6 +77,7 @@ import { defineConfig, loadEnv } from 'vite';
       },
       server: {
         port: 3000,
+        strictPort: true,
         open: true,
         hmr: false,
         ws: false,
@@ -80,6 +88,10 @@ import { defineConfig, loadEnv } from 'vite';
             secure: true,
           },
         },
+      },
+      preview: {
+        port: 3000,
+        strictPort: true,
       },
     };
   });

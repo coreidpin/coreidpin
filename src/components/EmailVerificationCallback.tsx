@@ -30,13 +30,19 @@ export default function EmailVerificationCallback() {
           // Use the API method to verify the token
           const result = await api.verifyLinkToken(token);
           
-          if (result.success && result.user) {
+          if (result.success) {
             console.log('Custom token verification successful');
             // Update verification status
             localStorage.setItem('emailVerified', 'true');
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userType', result.user.user_metadata?.userType || 'professional');
-            localStorage.setItem('userId', result.user.id);
+            try {
+              const { data } = await supabase.auth.getSession();
+              if (data.session?.user) {
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('userType', data.session.user.user_metadata?.userType || 'professional');
+                localStorage.setItem('userId', data.session.user.id);
+                localStorage.setItem('accessToken', data.session.access_token || '');
+              }
+            } catch {}
             
             setStatus('success');
             setMessage('Email verified successfully!');

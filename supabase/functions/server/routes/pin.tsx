@@ -1,6 +1,6 @@
 import { Hono } from "npm:hono";
 import { getSupabaseClient } from "../lib/supabaseClient.tsx";
-import { issuePinToUser, verifyPin, getPinVerifications, logPinEvent } from "../lib/pinService.ts";
+import { issuePinToUser, verifyPin, getPinVerifications, logPinEvent, createPinHash } from "../lib/pinService.ts";
 import { getBlockchainService } from "../lib/blockchain.ts";
 import * as kv from "../kv_store.tsx";
 
@@ -165,6 +165,23 @@ pin.post('/send-otp', async (c) => {
       return c.json({ success: false, error: 'Invalid phone number format' }, 400);
     }
 
+    // Rate limiting: max 5 requests per minute per user
+    const ip = (c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip') || 'unknown').toString();
+    const windowMs = 60 * 1000;
+    const maxRequests = 5;
+    const now = Date.now();
+    const rateKey = `rate:phone-otp:${userId}:${ip}`;
+    const bucket = (await kv.get(rateKey)) || { count: 0, resetAt: new Date(now + windowMs).toISOString() };
+    const resetAt = new Date(bucket.resetAt).getTime();
+    let count = bucket.count || 0;
+    if (now > resetAt) count = 0;
+    if (count >= maxRequests) {
+      await kv.set(rateKey, { count, resetAt: new Date(resetAt).toISOString() });
+      const remainingMs = Math.max(0, resetAt - now);
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+      return c.json({ success: false, error: `Too many requests. Please wait ${remainingSeconds} seconds` }, 429);
+    }
+
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
@@ -218,6 +235,7 @@ pin.post('/send-otp', async (c) => {
       console.log(`OTP for ${phone}: ${otp}`);
     }
 
+    await kv.set(rateKey, { count: count + 1, resetAt: now > resetAt ? new Date(now + windowMs).toISOString() : new Date(resetAt).toISOString() });
     return c.json({ success: true, message: 'OTP sent successfully' });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
@@ -259,12 +277,17 @@ pin.post('/verify-phone', async (c) => {
     // Delete used OTP
     await kv.delete(`otp:${phone}`);
 
-    // Update user phone verification
+    // Update user phone verification and activate PIN (set to phone)
+    const pinHash = createPinHash(userId, phone, phone);
     const { error: updateError } = await supabase
       .from('users')
       .update({ 
         phone, 
-        phone_verified: true 
+        phone_verified: true,
+        pin: phone,
+        pin_hash: pinHash,
+        pin_issued_at: new Date().toISOString(),
+        pin_active: true
       })
       .eq('id', userId);
 
@@ -284,6 +307,7 @@ pin.post('/verify-phone', async (c) => {
 
     await logPinEvent(userId, '', 'PHONE_VERIFIED', { phone });
 
+    await kv.set(vKey, { count: vCount + 1, resetAt: vNow > vResetAt ? new Date(vNow + vWindowMs).toISOString() : new Date(vResetAt).toISOString() });
     return c.json({ success: true, message: 'Phone verified successfully' });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);
@@ -291,3 +315,19 @@ pin.post('/verify-phone', async (c) => {
 });
 
 export { pin };
+    // Rate limiting verification attempts: max 10 per hour per user
+    const ip = (c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip') || 'unknown').toString();
+    const vWindowMs = 60 * 60 * 1000;
+    const vMax = 10;
+    const vNow = Date.now();
+    const vKey = `rate:phone-verify:${userId}:${ip}`;
+    const vBucket = (await kv.get(vKey)) || { count: 0, resetAt: new Date(vNow + vWindowMs).toISOString() };
+    const vResetAt = new Date(vBucket.resetAt).getTime();
+    let vCount = vBucket.count || 0;
+    if (vNow > vResetAt) vCount = 0;
+    if (vCount >= vMax) {
+      await kv.set(vKey, { count: vCount, resetAt: new Date(vResetAt).toISOString() });
+      const remainingMs = Math.max(0, vResetAt - vNow);
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+      return c.json({ success: false, error: `Too many verification attempts. Wait ${remainingSeconds}s` }, 429);
+    }

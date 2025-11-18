@@ -146,111 +146,30 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
     
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const result = await api.register({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            title: formData.title,
-            phone: formData.phone,
-            location: formData.location,
-            userType: 'professional'
-          }
-        }
+        name: formData.name,
+        userType: 'professional',
+        title: formData.title,
+        phoneNumber: formData.phone,
+        location: formData.location
       })
 
-      if (error) {
-        if (error.message.includes('already registered')) {
-          setErrors({ email: 'Email already exists' })
-        } else {
-          throw error
-        }
-        return
+      const accessToken = result.accessToken
+      const refreshToken = result.refreshToken
+      if (accessToken && refreshToken) {
+        try {
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          await api.setSessionCookie(accessToken)
+        } catch {}
       }
 
-      // Production-grade data synchronization with retry logic
-      if (data.user) {
-        const profileData = {
-          id: data.user.id,
-          email: formData.email,
-          name: formData.name,
-          title: formData.title,
-          phone: formData.phone,
-          location: formData.location,
-          user_type: 'professional',
-          email_verified: false,
-          verification_sent_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        // Retry logic for critical data sync
-        let syncRetries = 3;
-        let syncSuccess = false;
-        
-        while (syncRetries > 0 && !syncSuccess) {
-          try {
-            const { error: profileError } = await supabase
-              .from('profiles')
-              .upsert(profileData, { onConflict: 'id' });
-            
-            if (profileError) throw profileError;
-            syncSuccess = true;
-            
-            // Cache profile data locally for offline access
-            localStorage.setItem(`profile_${data.user.id}`, JSON.stringify(profileData));
-            
-          } catch (syncErr) {
-            syncRetries--;
-            if (syncRetries === 0) {
-              // Critical: Store for background sync
-              const pendingSync = JSON.parse(localStorage.getItem('pendingProfileSync') || '[]');
-              pendingSync.push({ ...profileData, retryCount: 0 });
-              localStorage.setItem('pendingProfileSync', JSON.stringify(pendingSync));
-              
-              console.error('Profile sync failed, queued for background retry:', syncErr);
-            } else {
-              await new Promise(resolve => setTimeout(resolve, 1000 * (4 - syncRetries))); // Exponential delay
-            }
-          }
-        }
-
-        // Non-blocking verification event logging
-        const logVerification = async () => {
-          try {
-            await supabase.from('verification_logs').insert({
-              user_id: data.user.id,
-              event_type: 'verification_sent',
-              email: formData.email,
-              timestamp: new Date().toISOString(),
-              user_agent: navigator.userAgent.substring(0, 255),
-              registration_source: 'web_app'
-            });
-          } catch (logErr) {
-            // Queue for background retry
-            const logQueue = JSON.parse(localStorage.getItem('logRetryQueue') || '[]');
-            logQueue.push({
-              type: 'verification_sent',
-              userId: data.user.id,
-              email: formData.email,
-              timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('logRetryQueue', JSON.stringify(logQueue.slice(-20))); // Keep last 20
-          }
-        };
-        
-        logVerification();
-      }
-
-      localStorage.setItem('pendingVerification', JSON.stringify({
-        email: formData.email,
-        name: formData.name,
-        userId: data.user?.id
-      }))
-
-      toast.success('Registration successful! Please check your email for verification.')
-      onComplete?.()
+      localStorage.setItem('promptEmailVerification', 'true')
+      localStorage.setItem('registrationEmail', formData.email)
+      localStorage.setItem('userType', 'professional')
+      toast.success('Registration successful! Verify your email from the link we sent.')
+      window.location.href = '/dashboard'
       
     } catch (err: any) {
       const message = err.message || 'Registration failed'

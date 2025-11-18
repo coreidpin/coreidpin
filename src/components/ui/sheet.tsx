@@ -6,39 +6,27 @@ import { XIcon } from "lucide-react";
 
 import { cn } from "./utils";
 
-const Sheet = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Root>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Root ref={ref} data-slot="sheet" {...props} />;
-});
+function Sheet(props: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  return <SheetPrimitive.Root data-slot="sheet" {...props} />;
+}
 
 Sheet.displayName = "Sheet";
 
-const SheetTrigger = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Trigger>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Trigger ref={ref} data-slot="sheet-trigger" {...props} />;
-});
+function SheetTrigger(props: React.ComponentProps<typeof SheetPrimitive.Trigger>) {
+  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
+}
 
 SheetTrigger.displayName = "SheetTrigger";
 
-const SheetClose = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Close>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Close>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Close ref={ref} data-slot="sheet-close" {...props} />;
-});
+function SheetClose(props: React.ComponentProps<typeof SheetPrimitive.Close>) {
+  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
+}
 
 SheetClose.displayName = "SheetClose";
 
-const SheetPortal = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Portal>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Portal>
->(({ ...props }, ref) => {
-  return <SheetPrimitive.Portal ref={ref} data-slot="sheet-portal" {...props} />;
-});
+function SheetPortal(props: React.ComponentProps<typeof SheetPrimitive.Portal>) {
+  return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />;
+}
 
 SheetPortal.displayName = "SheetPortal";
 

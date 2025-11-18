@@ -126,15 +126,6 @@ class APIClient {
 
   async register(data: RegisterUserData) {
     const baseHeaders = this.getHeaders(undefined, true);
-    if (!('X-CSRF-Token' in baseHeaders)) {
-      try {
-        const bytes = new Uint8Array(16);
-        crypto.getRandomValues(bytes);
-        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
-        baseHeaders['X-CSRF-Token'] = token;
-        try { localStorage.setItem('csrfToken', token) } catch {}
-      } catch {}
-    }
     const debug = ((import.meta as any)?.env?.DEV === true) || ((import.meta as any)?.env?.VITE_DEBUG_REGISTER === 'true');
     const response = await this.fetchWithRetry(`${BASE_URL}/register`, {
       method: 'POST',
@@ -148,6 +139,23 @@ class APIClient {
     }
 
     return response.json();
+  }
+
+  async setSessionCookie(accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/session-cookie`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: accessToken })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      return { success: false };
+    }
+    const csrf = data?.csrf;
+    if (csrf) {
+      try { localStorage.setItem('csrfToken', csrf); } catch {}
+    }
+    return { success: true, csrf };
   }
 
   async sendVerificationLink(email: string) {
@@ -177,20 +185,9 @@ class APIClient {
   }
 
   async verifyLinkToken(token: string) {
-    const headers = this.getHeaders(undefined, true);
-    if (!('X-CSRF-Token' in headers)) {
-      try {
-        const bytes = new Uint8Array(16);
-        crypto.getRandomValues(bytes);
-        const csrfToken = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
-        headers['X-CSRF-Token'] = csrfToken;
-        try { localStorage.setItem('csrfToken', csrfToken) } catch {}
-      } catch {}
-    }
-    
-    const response = await this.fetchWithRetry(`${BASE_URL}/auth/verify-link?token=${encodeURIComponent(token)}`, {
+    const response = await this.fetchWithRetry(`${BASE_URL}/auth/email/verify/confirm?token=${encodeURIComponent(token)}`, {
       method: 'GET',
-      headers
+      headers: this.getHeaders(undefined, true)
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.success) {
@@ -580,13 +577,9 @@ class APIClient {
   async sendVerificationEmail(email: string, name?: string) {
     const headers = this.getHeaders(undefined, true);
     if (!('X-CSRF-Token' in headers)) {
-      try {
-        const bytes = new Uint8Array(16);
-        crypto.getRandomValues(bytes);
-        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
-        headers['X-CSRF-Token'] = token;
-        try { localStorage.setItem('csrfToken', token) } catch {}
-      } catch {}
+      await this.ensurePublicCsrf();
+      const refreshed = this.getHeaders(undefined, true);
+      Object.assign(headers, refreshed);
     }
     const response = await this.fetchWithRetry(`${BASE_URL}/auth/email/verify/send`, {
       method: 'POST',
@@ -604,13 +597,9 @@ class APIClient {
   async verifyEmailCode(email: string, code: string) {
     const headers = this.getHeaders(undefined, true);
     if (!('X-CSRF-Token' in headers)) {
-      try {
-        const bytes = new Uint8Array(16);
-        crypto.getRandomValues(bytes);
-        const token = Array.from(bytes).map(b => ('0' + b.toString(16)).slice(-2)).join('');
-        headers['X-CSRF-Token'] = token;
-        try { localStorage.setItem('csrfToken', token) } catch {}
-      } catch {}
+      await this.ensurePublicCsrf();
+      const refreshed = this.getHeaders(undefined, true);
+      Object.assign(headers, refreshed);
     }
     const response = await this.fetchWithRetry(`${BASE_URL}/auth/email/verify/confirm`, {
       method: 'POST',
@@ -623,6 +612,20 @@ class APIClient {
       throw new Error(msg);
     }
     return data;
+  }
+
+  async ensurePublicCsrf() {
+    try {
+      const res = await this.fetchWithRetry(`${BASE_URL}/auth/csrf`, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+      const data = await res.json().catch(() => ({}));
+      const csrf = data?.csrf;
+      if (csrf) {
+        try { localStorage.setItem('csrfToken', csrf); } catch {}
+      }
+      return csrf;
+    } catch {
+      return null;
+    }
   }
 
   async passwordResetSend(email: string) {
