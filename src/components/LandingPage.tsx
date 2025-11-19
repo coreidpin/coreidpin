@@ -57,8 +57,6 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
     }
   };
 
-  
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       <Navbar 
@@ -71,8 +69,6 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
 
       {/* HERO SECTION - Modern Light */}
       <section className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-slate-50">
-        
-
         <div className="container mx-auto px-4 py-12 sm:py-20 relative z-10">
           <div className="max-w-7xl mx-auto">
             {/* Hero Content */}
@@ -108,7 +104,6 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   Your Phone Number. Your Global Identity.
                 </motion.h1>
 
-
                 {/* Subheadline */}
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -137,16 +132,16 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                     {isAuthenticated ? 'Dashboard' : 'Join the Waitlist'}
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                <Button
-                  size="lg"
-                  onClick={() => handleNavigate('how-it-works')}
-                  variant="outline"
-                  className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 hover:scale-105 transition-all duration-200"
-                  style={{ borderColor: '#BFA5FF', color: '#0A0B0D' }}
-                >
-                  <Play className="h-5 w-5 mr-2" />
-                  See How It Works
-                </Button>
+                  <Button
+                    size="lg"
+                    onClick={() => handleNavigate('how-it-works')}
+                    variant="outline"
+                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 hover:scale-105 transition-all duration-200"
+                    style={{ borderColor: '#BFA5FF', color: '#0A0B0D' }}
+                  >
+                    <Play className="h-5 w-5 mr-2" />
+                    See How It Works
+                  </Button>
                 </motion.div>
 
                 {/* Social proof */}
@@ -178,32 +173,80 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 transition={{ delay: 0.4, duration: 0.8 }}
                 className="relative max-w-[min(90vw,520px)] mx-auto"
               >
-                <div className="relative rounded-3xl bg-white shadow-2xl border border-slate-200 p-8">
+                {/* Floating particles */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1 h-1 bg-blue-400/40 rounded-full"
+                      initial={{ 
+                        x: Math.random() * 400,
+                        y: Math.random() * 400,
+                        scale: 0
+                      }}
+                      animate={{
+                        x: Math.random() * 400,
+                        y: Math.random() * 400,
+                        scale: [0, 1, 0]
+                      }}
+                      transition={{
+                        duration: 4 + Math.random() * 2,
+                        repeat: Infinity,
+                        delay: i * 0.3
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <motion.div 
+                  className="relative rounded-3xl bg-white shadow-2xl border border-slate-200 p-8 cursor-pointer"
+                  whileHover={{ 
+                    scale: 1.02,
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  {/* Pulse effect on hover */}
+                  <motion.div
+                    className="absolute inset-0 rounded-3xl border-2 border-blue-400/50"
+                    initial={{ scale: 1, opacity: 0 }}
+                    whileHover={{ scale: 1.1, opacity: [0, 1, 0] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
                   <div className="absolute inset-0 rounded-3xl pointer-events-none bg-[radial-gradient(circle_at_20%_30%,#e2e8f0_0,transparent_40%),radial-gradient(circle_at_80%_70%,#f1f5f9_0,transparent_40%)]" />
                   <div className="relative">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <motion.div 
+                      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                      whileHover={{ y: -2 }}
+                    >
                       <div className="text-sm mb-2" style={{ color: '#0A0B0D' }}>Core-ID PIN</div>
-                      <div className="text-2xl font-semibold tracking-wide" style={{ color: '#0A0B0D' }}>PIN-234-812345</div>
+                      <motion.div 
+                        className="text-2xl font-semibold tracking-wide" 
+                        style={{ color: '#0A0B0D' }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        PIN-234-812345
+                      </motion.div>
                       <div className="mt-4 relative">
                         <div className="brand-gradient-overlay" />
                         <div className="grid grid-cols-3 gap-3 relative">
-                        <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                          <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
-                          <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
-                        </div>
-                        <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                          <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
-                          <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
-                        </div>
-                        <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                          <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
-                          <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
-                        </div>
+                          <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                            <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
+                            <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
+                          </div>
+                          <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                            <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
+                            <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
+                          </div>
+                          <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                            <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
+                            <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </div>
           </div>
@@ -232,7 +275,6 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
 
       {/* Solution Page - Technical Implementation */}
       <SolutionPage />
-
 
       {/* Why Now Page - Market Timing */}
       <WhyNowPage />
@@ -405,7 +447,6 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           </div>
         </div>
       </section>
-
 
       {/* TESTIMONIALS - Dark Section */}
       <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>

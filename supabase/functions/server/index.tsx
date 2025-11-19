@@ -296,6 +296,11 @@ async function requireAuth(c: any, next: any) {
       '/server/validate-registration',
       '/server/send-verification',
       '/server/resend-verification',
+      '/server/api/register/start',
+      '/server/api/register/verify-otp',
+      '/server/registration/send-otp',
+      '/server/registration/verify-otp',
+      '/server/registration/status',
       // Diagnostics endpoints (some are public for monitoring)
       '/server/diagnostics/health',
       '/server/diagnostics/system/health',

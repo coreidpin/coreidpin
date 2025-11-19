@@ -105,7 +105,7 @@ export function Navbar({
   const DesktopDropdown = ({ item }: { item: typeof navigationItems[0] }) => (
     <div className="relative group">
       <button
-        className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 rounded-md hover:bg-accent/50"
+        className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-accent/50"
         onMouseEnter={() => setActiveDropdown(item.label)}
         onMouseLeave={() => setActiveDropdown(null)}
       >
@@ -125,7 +125,7 @@ export function Navbar({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full -left-4 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl z-50 overflow-hidden"
+            className="absolute top-full -left-4 mt-2 w-64 bg-card border border-border shadow-xl z-50 overflow-hidden"
             onMouseEnter={() => setActiveDropdown(item.label)}
             onMouseLeave={() => setActiveDropdown(null)}
           >
@@ -143,7 +143,7 @@ export function Navbar({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => handleNavigate(subItem.href)}
-                    className="flex items-center gap-3 w-full px-3 py-3 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-primary/5 rounded-lg transition-all duration-200 group/item"
+                    className="flex items-center gap-3 w-full px-3 py-3 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-primary/5 transition-all duration-200 group/item"
                   >
                     {subItem.icon && (
                       <subItem.icon className="h-4 w-4 text-primary group-hover/item:text-primary" />

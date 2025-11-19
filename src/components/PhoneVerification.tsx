@@ -16,6 +16,8 @@ import {
 import { toast } from 'sonner';
 import { OTPModal } from './OTPModal';
 import { api } from '../utils/api';
+import { CountryCodeSelect } from './ui/country-code-select';
+import { getDefaultCountry, isCountrySupported, getCountryByCode } from '../utils/countryCodes';
 
 interface PhoneVerificationProps {
   onVerificationComplete: (phoneNumber: string) => void;
@@ -23,25 +25,15 @@ interface PhoneVerificationProps {
   isVerified?: boolean;
 }
 
-const COUNTRY_CODES = [
-  { code: '+1', country: 'US', flag: '🇺🇸' },
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-  { code: '+234', country: 'NG', flag: '🇳🇬' },
-  { code: '+91', country: 'IN', flag: '🇮🇳' },
-  { code: '+86', country: 'CN', flag: '🇨🇳' },
-  { code: '+49', country: 'DE', flag: '🇩🇪' },
-  { code: '+33', country: 'FR', flag: '🇫🇷' },
-  { code: '+81', country: 'JP', flag: '🇯🇵' },
-  { code: '+61', country: 'AU', flag: '🇦🇺' },
-  { code: '+27', country: 'ZA', flag: '🇿🇦' }
-];
+
 
 export function PhoneVerification({ 
   onVerificationComplete, 
   initialPhone = '', 
   isVerified = false 
 }: PhoneVerificationProps) {
-  const [countryCode, setCountryCode] = useState('+234');
+  const [countryCode, setCountryCode] = useState(getDefaultCountry().code);
+  const [countryError, setCountryError] = useState('');
   const [phoneNumber, setPhoneNumber] = useState(initialPhone);
   const [isLoading, setIsLoading] = useState(false);
   const [showOTPModal, setShowOTPModal] = useState(false);
@@ -99,8 +91,15 @@ export function PhoneVerification({
 
   const handleSendOTP = async () => {
     const fullPhone = countryCode + phoneNumber.replace(/\D/g, '');
-    const validationError = validatePhoneNumber(phoneNumber);
     
+    // Check country support
+    if (!isCountrySupported(countryCode)) {
+      const country = getCountryByCode(countryCode);
+      setCountryError(`We're coming to ${country?.name || 'your country'} soon! Currently only supporting Nigeria.`);
+      return;
+    }
+    
+    const validationError = validatePhoneNumber(phoneNumber);
     if (validationError) {
       setError(validationError);
       return;
@@ -183,18 +182,17 @@ export function PhoneVerification({
 
               <div className="space-y-3">
                 <div className="flex gap-2">
-                  {/* Country Code Selector */}
-                  <select
+                  <CountryCodeSelect
                     value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-24 h-11 px-2 rounded-md border border-input bg-background text-sm"
-                  >
-                    {COUNTRY_CODES.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {country.flag} {country.code}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(code) => {
+                      setCountryCode(code);
+                      setError('');
+                      setCountryError('');
+                    }}
+                    onUnsupportedSelect={(country) => {
+                      setCountryError(`We're coming to ${country.name} soon! Currently only supporting Nigeria.`);
+                    }}
+                  />
 
                   {/* Phone Number Input */}
                   <div className="flex-1">
@@ -221,11 +219,22 @@ export function PhoneVerification({
                     {error}
                   </motion.div>
                 )}
+                
+                {countryError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 text-sm text-orange-600"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    {countryError}
+                  </motion.div>
+                )}
 
                 <Button
                   onClick={handleSendOTP}
-                  disabled={!phoneNumber || isLoading}
-                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!phoneNumber || isLoading || !isCountrySupported(countryCode)}
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
                 >
                   {isLoading ? (
                     <>

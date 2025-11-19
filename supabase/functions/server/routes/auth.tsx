@@ -11,6 +11,7 @@ import { maybeEncryptKVValue } from "../lib/crypto.tsx";
 import { verifyVerificationToken } from "../lib/token.ts";
 import { sendEmail } from "../lib/email.ts";
 import { buildVerificationEmail } from "../templates/verification.ts";
+import { sendSMS } from "../lib/sms.ts";
 
 const auth = new Hono();
 
@@ -797,6 +798,390 @@ auth.post('/register/step', async (c) => {
     return c.json({ success: true });
   } catch (e: any) {
     return c.json({ success: false, error: e?.message || 'Error' }, 500);
+  }
+});
+
+// Phone Registration Start Endpoint
+auth.post('/api/register/start', async (c) => {
+  if (disabled) { return c.json({ error: 'Endpoint disabled' }, 410); }
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const { full_name, phone, email, idempotency_key } = body;
+    const ip = getClientIp(c);
+    
+    // Validation
+    if (!full_name?.trim()) return c.json({ error: 'Full name is required' }, 400);
+    if (!phone?.trim()) return c.json({ error: 'Phone number is required for SMS verification' }, 400);
+    
+    const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+      return c.json({ error: 'Invalid phone number format' }, 400);
+    }
+    
+    // Rate limiting
+    const rlKey = `rate:phone-reg:${ip}`;
+    const windowMs = 60 * 60 * 1000; // 1 hour
+    const maxAttempts = 10;
+    const now = Date.now();
+    const rl = (await kv.get(rlKey)) || { count: 0, resetAt: new Date(now + windowMs).toISOString() };
+    const resetAt = new Date(rl.resetAt).getTime();
+    let count = rl.count || 0;
+    if (now > resetAt) count = 0;
+    if (count >= maxAttempts) {
+      return c.json({ error: 'Too many registration attempts. Try again later.' }, 429);
+    }
+    
+    // Generate OTP and registration token
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const regTokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const regToken = btoa(String.fromCharCode(...regTokenBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    
+    // Store registration data temporarily
+    const regData = {
+      full_name: full_name.trim(),
+      phone: phone.trim(),
+      email: email?.trim() || null,
+      otp,
+      ip,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+      verified: false
+    };
+    
+    await kv.set(`phone_reg:${regToken}`, regData);
+    
+    // Send SMS OTP
+    const smsResult = await sendSMS(phone, `Your CoreID verification code: ${otp}`);
+    if (!smsResult.success) {
+      return c.json({ error: 'Failed to send SMS. Please try email registration instead.' }, 502);
+    }
+    
+    // Update rate limit
+    await kv.set(rlKey, { count: count + 1, resetAt: now > resetAt ? new Date(now + windowMs).toISOString() : new Date(resetAt).toISOString() });
+    
+    return c.json({ 
+      success: true, 
+      reg_token: regToken,
+      otp_expires_in: 600 // 10 minutes
+    });
+  } catch (error: any) {
+    console.error('Phone registration start error:', error);
+    return c.json({ error: 'Registration failed' }, 500);
+  }
+});
+
+// Registration Phone Verification Endpoints (separate from PIN phone verification)
+auth.post('/registration/send-otp', async (c) => {
+  if (disabled) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const { phone, name, email } = body;
+    const ip = getClientIp(c);
+    
+    // Validation
+    if (!phone?.trim()) return c.json({ success: false, error: 'Phone number is required' }, 400);
+    if (!name?.trim()) return c.json({ success: false, error: 'Name is required' }, 400);
+    
+    const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+      return c.json({ success: false, error: 'Invalid phone number format' }, 400);
+    }
+    
+    // Rate limiting per phone number
+    const rlKey = `rate:reg-phone:${phone}`;
+    const windowMs = 60 * 60 * 1000; // 1 hour
+    const maxAttempts = 5;
+    const now = Date.now();
+    const rl = (await kv.get(rlKey)) || { count: 0, resetAt: new Date(now + windowMs).toISOString() };
+    const resetAt = new Date(rl.resetAt).getTime();
+    let count = rl.count || 0;
+    if (now > resetAt) count = 0;
+    if (count >= maxAttempts) {
+      return c.json({ success: false, error: 'Too many OTP requests for this phone number' }, 429);
+    }
+    
+    // Generate OTP and registration token
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const regTokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const regToken = btoa(String.fromCharCode(...regTokenBytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    
+    // Store registration verification data
+    const verificationData = {
+      phone: phone.trim(),
+      name: name.trim(),
+      email: email?.trim() || null,
+      otp,
+      ip,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 minutes
+      verified: false,
+      type: 'registration_verification'
+    };
+    
+    await kv.set(`reg_verify:${regToken}`, verificationData);
+    
+    // Send SMS OTP
+    const smsResult = await sendSMS(phone, `Your CoreID registration code: ${otp}. Valid for 10 minutes.`);
+    if (!smsResult.success) {
+      return c.json({ success: false, error: 'Failed to send SMS verification code' }, 502);
+    }
+    
+    // Update rate limit
+    await kv.set(rlKey, { count: count + 1, resetAt: now > resetAt ? new Date(now + windowMs).toISOString() : new Date(resetAt).toISOString() });
+    
+    // Audit log
+    try {
+      await supabase.from('auth_audit_log').insert({
+        user_id: null,
+        action: 'registration_otp_sent',
+        outcome: 'success',
+        ip,
+        user_agent: c.req.header('user-agent') || 'unknown',
+        details: { phone, name }
+      });
+    } catch (_) {}
+    
+    return c.json({ 
+      success: true, 
+      reg_token: regToken,
+      expires_in: 600 // 10 minutes
+    });
+  } catch (error: any) {
+    console.error('Registration OTP send error:', error);
+    return c.json({ success: false, error: 'Failed to send verification code' }, 500);
+  }
+});
+
+auth.post('/registration/verify-otp', async (c) => {
+  if (disabled) { return c.json({ success: false, error: 'Endpoint disabled' }, 410); }
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const { phone, otp, reg_token } = body;
+    const ip = getClientIp(c);
+    
+    if (!reg_token) return c.json({ success: false, error: 'Registration token required' }, 400);
+    if (!otp) return c.json({ success: false, error: 'OTP required' }, 400);
+    if (!phone) return c.json({ success: false, error: 'Phone number required' }, 400);
+    
+    // Get verification data
+    const verificationData = await kv.get(`reg_verify:${reg_token}`);
+    if (!verificationData) {
+      return c.json({ success: false, error: 'Invalid or expired verification token' }, 400);
+    }
+    
+    // Check expiration
+    if (new Date() > new Date(verificationData.expires_at)) {
+      await kv.delete(`reg_verify:${reg_token}`);
+      return c.json({ success: false, error: 'Verification code expired' }, 400);
+    }
+    
+    // Verify phone number matches
+    if (verificationData.phone !== phone.trim()) {
+      return c.json({ success: false, error: 'Phone number mismatch' }, 400);
+    }
+    
+    // Verify OTP
+    if (verificationData.otp !== otp.trim()) {
+      return c.json({ success: false, error: 'Invalid verification code' }, 400);
+    }
+    
+    // Check if already verified
+    if (verificationData.verified) {
+      return c.json({ success: false, error: 'Verification code already used' }, 400);
+    }
+    
+    // Mark as verified
+    await kv.set(`reg_verify:${reg_token}`, { 
+      ...verificationData, 
+      verified: true, 
+      verified_at: new Date().toISOString() 
+    });
+    
+    // Store verified phone for registration completion
+    const verifiedKey = `phone_verified:${phone}:${Date.now()}`;
+    await kv.set(verifiedKey, {
+      phone,
+      name: verificationData.name,
+      email: verificationData.email,
+      reg_token,
+      verified_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes to complete registration
+    });
+    
+    // Audit log
+    try {
+      await supabase.from('auth_audit_log').insert({
+        user_id: null,
+        action: 'registration_phone_verified',
+        outcome: 'success',
+        ip,
+        user_agent: c.req.header('user-agent') || 'unknown',
+        details: { phone, name: verificationData.name }
+      });
+    } catch (_) {}
+    
+    return c.json({ 
+      success: true,
+      phone_verified: true,
+      reg_token
+    });
+  } catch (error: any) {
+    console.error('Registration OTP verify error:', error);
+    return c.json({ success: false, error: 'Verification failed' }, 500);
+  }
+});
+
+auth.get('/registration/status', async (c) => {
+  try {
+    const url = new URL(c.req.url);
+    const token = url.searchParams.get('token');
+    
+    if (!token) return c.json({ success: false, status: 'unknown' }, 400);
+    
+    const verificationData = await kv.get(`reg_verify:${token}`);
+    if (!verificationData) {
+      return c.json({ success: false, status: 'not_found' });
+    }
+    
+    const isExpired = new Date() > new Date(verificationData.expires_at);
+    const status = isExpired ? 'expired' : (verificationData.verified ? 'verified' : 'pending');
+    
+    return c.json({ 
+      success: true, 
+      status,
+      phone: verificationData.phone,
+      name: verificationData.name,
+      expires_at: verificationData.expires_at
+    });
+  } catch (error: any) {
+    return c.json({ success: false, status: 'error' }, 500);
+  }
+});
+
+// Phone Registration OTP Verification Endpoint
+auth.post('/api/register/verify-otp', async (c) => {
+  if (disabled) { return c.json({ error: 'Endpoint disabled' }, 410); }
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const { reg_token, otp } = body;
+    const ip = getClientIp(c);
+    
+    if (!reg_token) return c.json({ error: 'Registration token required' }, 400);
+    if (!otp) return c.json({ error: 'OTP required' }, 400);
+    
+    // Get registration data
+    const regData = await kv.get(`phone_reg:${reg_token}`);
+    if (!regData) {
+      return c.json({ error: 'Invalid or expired registration token' }, 400);
+    }
+    
+    // Check expiration
+    if (new Date() > new Date(regData.expires_at)) {
+      await kv.delete(`phone_reg:${reg_token}`);
+      return c.json({ error: 'Registration session expired' }, 400);
+    }
+    
+    // Verify OTP
+    if (regData.otp !== otp.trim()) {
+      return c.json({ error: 'Invalid OTP' }, 400);
+    }
+    
+    // Check if already verified
+    if (regData.verified) {
+      return c.json({ error: 'OTP already used' }, 400);
+    }
+    
+    // Check if this is a verified phone registration
+    const phoneVerified = await kv.get(`phone_verified:${regData.phone}:*`);
+    
+    // Create Supabase Auth user
+    const tempPassword = crypto.randomUUID();
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      phone: regData.phone,
+      password: tempPassword,
+      user_metadata: {
+        name: regData.full_name,
+        userType: 'professional',
+        phoneVerified: true,
+        registrationMethod: 'phone'
+      },
+      phone_confirm: true
+    });
+    
+    if (authError || !authData.user) {
+      return c.json({ error: 'Failed to create user account' }, 500);
+    }
+    
+    const userId = authData.user.id;
+    
+    // Generate PIN
+    const pinChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const generatePinSegment = (length: number) => {
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += pinChars.charAt(Math.floor(Math.random() * pinChars.length));
+      }
+      return result;
+    };
+    const pin = `${generatePinSegment(3)}-${generatePinSegment(3)}-${generatePinSegment(6)}`;
+    
+    // Create user profile in KV store
+    const profileValue = {
+      id: userId,
+      name: regData.full_name,
+      phone: regData.phone,
+      email: regData.email,
+      userType: 'professional',
+      pin,
+      createdAt: new Date().toISOString(),
+      verificationStatus: 'verified',
+      phoneVerified: true
+    };
+    
+    await kv.set(`user:${userId}`, profileValue);
+    await kv.set(`pin:${pin}`, { userId, createdAt: new Date().toISOString() });
+    
+    // Create session tokens
+    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+      type: 'magiclink',
+      email: regData.email || `${userId}@phone.coreid.com`,
+      options: { redirect_to: '/dashboard' }
+    });
+    
+    let accessToken = null;
+    let refreshToken = null;
+    
+    if (!sessionError && sessionData) {
+      // Extract tokens from the magic link response
+      accessToken = sessionData.properties?.access_token;
+      refreshToken = sessionData.properties?.refresh_token;
+    }
+    
+    // Mark registration as verified and clean up
+    await kv.set(`phone_reg:${reg_token}`, { ...regData, verified: true });
+    
+    // Audit log
+    try {
+      await supabase.from('auth_audit_log').insert({
+        user_id: userId,
+        action: 'phone_registration_completed',
+        outcome: 'success',
+        ip,
+        user_agent: c.req.header('user-agent') || 'unknown',
+        details: { phone: regData.phone, pin }
+      });
+    } catch (_) {}
+    
+    return c.json({ 
+      success: true,
+      pin,
+      user_id: userId,
+      accessToken,
+      refreshToken
+    });
+  } catch (error: any) {
+    console.error('Phone registration verify error:', error);
+    return c.json({ error: 'Verification failed' }, 500);
   }
 });
 

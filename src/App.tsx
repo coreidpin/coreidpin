@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { AppRouter } from './components/Router';
-import { LoginDialog } from './components/LoginDialog';
+
 import { AdminLoginDialog } from './components/AdminLoginDialog';
 import { WelcomeToast } from './components/WelcomeToast';
 import PasswordResetDialog from './components/PasswordResetDialog';
@@ -33,13 +33,22 @@ export default function App() {
 
   // Check for existing session on mount and handle OAuth callback
   useEffect(() => {
-    // Check authentication state
+    // Check authentication state with all required tokens
     const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+    const hasToken = !!localStorage.getItem('accessToken');
+    const hasUserId = !!localStorage.getItem('userId');
     const userType = localStorage.getItem('userType') || 'professional';
     
-    if (isAuth) {
+    if (isAuth && hasToken && hasUserId) {
       setIsAuthenticated(true);
       setCurrentView(userType as UserType);
+    } else if (isAuth && (!hasToken || !hasUserId)) {
+      // Clear incomplete auth state
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userType');
     }
     
     // Handle get-started route
@@ -363,7 +372,7 @@ export default function App() {
     setUserData(user);
     setShowLoginDialog(false);
     
-    // Get the current Supabase session to persist (Phase 3)
+    // Get the current Supabase session to persist
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       saveSessionState({
@@ -373,6 +382,11 @@ export default function App() {
         userType: userType,
         expiresAt: Date.now() + (session.expires_in || 3600) * 1000
       });
+      
+      // Store all required auth data
+      localStorage.setItem('accessToken', session.access_token);
+      localStorage.setItem('refreshToken', session.refresh_token);
+      localStorage.setItem('userId', session.user.id);
     }
     
     // Store session data
@@ -382,10 +396,10 @@ export default function App() {
       localStorage.setItem('userId', user.id);
     }
     
-    // Immediate redirect to dashboard
     setShowWelcomeToast(true);
     
-    // Let Router handle navigation - no redirect
+    // Navigate to dashboard
+    window.location.href = '/dashboard';
   };
 
   const handleOnboardingComplete = async () => {
@@ -498,11 +512,7 @@ export default function App() {
       />
       
       {/* Global Dialogs */}
-      <LoginDialog
-        open={showLoginDialog}
-        onOpenChange={setShowLoginDialog}
-        onLoginSuccess={handleLoginSuccess}
-      />
+
       
       <AdminLoginDialog
         open={showAdminLoginDialog}

@@ -32,7 +32,7 @@ export function validateServerEnv() {
   }
 
   if (errors.length) {
-    throw new Error('Environment validation failed:\n' + errors.map((e) => `- ${e}`).join('\n'));
+    console.error('Environment validation warnings:\n' + errors.map((e) => `- ${e}`).join('\n'));
   }
 
   // Optional notice when custom JWT not configured

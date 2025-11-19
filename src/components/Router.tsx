@@ -125,33 +125,84 @@ const Layout: React.FC<{
   </div>
 );
 
-// Dashboard Layout
-const DashboardLayout: React.FC<{
+// Dashboard Authentication Wrapper
+const DashboardAuthWrapper: React.FC<{
   children: React.ReactNode;
   isAuthenticated: boolean;
   userType: string;
   onLogout: () => void;
-}> = ({ children, isAuthenticated, userType, onLogout }) => (
-  <div className="min-h-screen bg-background flex flex-col">
-    <Navbar 
-      currentPage="dashboard"
-      onNavigate={() => {}}
-      onLogout={onLogout}
-      isAuthenticated={isAuthenticated}
-      userType={userType}
-    />
-    <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        {children}
-      </motion.div>
-    </main>
-    <Footer onNavigate={() => {}} />
-  </div>
-);
+}> = ({ children, isAuthenticated, userType, onLogout }) => {
+  const [authChecked, setAuthChecked] = React.useState(false);
+  const [isValidAuth, setIsValidAuth] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const hasToken = !!localStorage.getItem('accessToken');
+        const isAuthFlag = localStorage.getItem('isAuthenticated') === 'true';
+        const hasUserId = !!localStorage.getItem('userId');
+        
+        const isValid = isAuthenticated && hasToken && isAuthFlag && hasUserId;
+        
+        if (!isValid) {
+          console.error('Dashboard auth failed:', { isAuthenticated, hasToken, isAuthFlag, hasUserId });
+          localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userId');
+          window.location.href = '/login';
+          return;
+        }
+        
+        setIsValidAuth(true);
+      } catch (error) {
+        console.error('Auth check error:', error);
+        window.location.href = '/login';
+      } finally {
+        setAuthChecked(true);
+      }
+    };
+
+    checkAuth();
+  }, [isAuthenticated]);
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
+          <p className="text-muted-foreground">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isValidAuth) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navbar 
+        currentPage="dashboard"
+        onNavigate={() => {}}
+        onLogout={onLogout}
+        isAuthenticated={isAuthenticated}
+        userType={userType}
+      />
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          {children}
+        </motion.div>
+      </main>
+      <Footer onNavigate={() => {}} />
+    </div>
+  );
+};
 
 export const AppRouter: React.FC<RouterProps> = ({
   isAuthenticated,
@@ -419,15 +470,13 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/dashboard" 
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <DashboardLayout isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
-                <Suspense fallback={<DashboardSkeleton />}>
-                  {userType === 'employer' && <EmployerDashboard />}
-                  {userType === 'professional' && <ProfessionalDashboard />}
-                  {userType === 'university' && <UniversityDashboard />}
-                </Suspense>
-              </DashboardLayout>
-            </ProtectedRoute>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                {userType === 'employer' && <EmployerDashboard />}
+                {userType === 'professional' && <ProfessionalDashboard />}
+                {userType === 'university' && <UniversityDashboard />}
+              </Suspense>
+            </DashboardAuthWrapper>
           } 
         />
 

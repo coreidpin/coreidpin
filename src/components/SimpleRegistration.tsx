@@ -15,6 +15,10 @@ import { Footer } from './Footer'
 import { Logo } from './Logo'
 import '../styles/auth-dark.css'
 import { Sparkles, ArrowLeft, ArrowRight, Loader2, Users, Mail, Briefcase, MapPin, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield, HelpCircle } from 'lucide-react'
+import { RegistrationPhoneVerification } from './RegistrationPhoneVerification'
+import { RegistrationStateManager } from '../utils/registrationState'
+import { CountryCodeSelect } from './ui/country-code-select'
+import { getDefaultCountry, isCountrySupported, getCountryByCode } from '../utils/countryCodes'
 
 type SimpleRegistrationProps = {
   onComplete?: () => void
@@ -94,7 +98,12 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
     return /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{6}$/.test(v)
   }
   const sanitizedPin = (raw: string) => normalizePin(raw).replace(/[^A-Z0-9-]/g, '')
-  const [stage, setStage] = useState<'basic' | 'otp' | 'success'>('basic')
+  const [stage, setStage] = useState<'basic' | 'phone-verification' | 'email-form' | 'success'>('basic')
+  const [phoneVerified, setPhoneVerified] = useState(false)
+  const [verifiedPhone, setVerifiedPhone] = useState('')
+  const [registrationToken, setRegistrationToken] = useState('')
+  const [countryCode, setCountryCode] = useState(getDefaultCountry().code)
+  const [countryError, setCountryError] = useState('')
   const [regToken, setRegToken] = useState<string>('')
   const [otp, setOtp] = useState('')
   const [otpError, setOtpError] = useState('')
@@ -138,44 +147,81 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
     const newErrors: Record<string, string> = {}
     const name = (formData.name || '').trim()
     const email = (formData.email || '').trim()
-    const phone = normalizePhoneLocal((formData.phone || '').trim())
+    const phone = (formData.phone || '').trim()
+    
     if (!name) newErrors.name = 'Full name is required'
-    if (email) {
+    
+    // Check country support for phone registration
+    if (phone && !isCountrySupported(countryCode)) {
+      setCountryError("We're coming to your country soon! Currently only supporting Nigeria.")
+      return
+    }
+    
+    // Primary: Phone registration
+    if (phone) {
+      const fullPhone = countryCode + phone.replace(/\D/g, '')
+      const phoneErr = validatePhone(fullPhone)
+      if (phoneErr) newErrors.phone = phoneErr
+    } else if (email) {
+      // Fallback: Email registration
       const emailErr = validateEmail(email)
       if (emailErr) newErrors.email = emailErr
+    } else {
+      newErrors.phone = 'Phone number or email is required'
     }
-    if (!phone) newErrors.phone = 'Phone number is required'
-    else {
-      const phoneErr = validatePhone(phone)
-      if (phoneErr) newErrors.phone = phoneErr
-    }
+    
     setErrors(newErrors)
+    setCountryError('')
     if (Object.keys(newErrors).length > 0) return
+    
+    setIsLoading(true)
     try {
-      localStorage.setItem('preName', name)
-      localStorage.setItem('preEmail', email)
-      localStorage.setItem('prePhone', phone)
-      const idem = `idem_${Date.now()}`
-      const start = await api.registerStart({ full_name: name, phone, email, idempotency_key: idem })
-      const token = start?.reg_token || ''
-      setRegToken(token)
-      try { localStorage.setItem('registration_token', token) } catch {}
-      setOtpExpiresIn(start?.otp_expires_in || 600)
-      setResendCooldown(resendDefault)
-      setResendCount(0)
-      setStage('otp')
-      toast.success('OTP sent')
-    } catch {}
+      // Save registration state
+      const fullPhone = phone ? countryCode + phone.replace(/\D/g, '') : ''
+      RegistrationStateManager.save({
+        step: 'basic',
+        name,
+        email,
+        phone: fullPhone
+      })
+      
+      if (phone) {
+        // Primary: Phone-based registration using dedicated component
+        setFormData(prev => ({ ...prev, phone: fullPhone }))
+        setStage('phone-verification')
+      } else {
+        // Fallback: Email-based registration - show password form
+        setStage('email-form')
+      }
+    } catch (err: any) {
+      const message = err.message || 'Registration failed'
+      toast.error(message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
     try {
-      const token = localStorage.getItem('registration_token') || ''
-      const phone = localStorage.getItem('prePhone') || ''
-      if (token && phone) {
-        setRegToken(token)
-        setStage('otp')
-        setResendCooldown(resendDefault)
+      // Check for existing registration session
+      const state = RegistrationStateManager.get()
+      
+      if (state.step === 'phone_verified' && state.phone && state.regToken) {
+        setPhoneVerified(true)
+        setVerifiedPhone(state.phone)
+        setRegistrationToken(state.regToken)
+        setFormData(prev => ({
+          ...prev,
+          name: state.name || prev.name,
+          email: state.email || prev.email,
+          phone: state.phone || prev.phone
+        }))
+        setStage('success')
+      } else if (RegistrationStateManager.canResumeRegistration()) {
+        // Resume from where user left off
+        if (state.name) setFormData(prev => ({ ...prev, name: state.name! }))
+        if (state.email) setFormData(prev => ({ ...prev, email: state.email! }))
+        if (state.phone) setFormData(prev => ({ ...prev, phone: state.phone! }))
       }
     } catch {}
   }, [])
@@ -213,98 +259,53 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
     }
   }
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {}
-    
-    if (!formData.name.trim()) newErrors.name = 'Full name is required'
-    if (!formData.title.trim()) newErrors.title = 'Professional title is required'
-    
-    const emailErr = validateEmail(formData.email)
-    if (emailErr) newErrors.email = emailErr
-    else if (emailAvailable === false) newErrors.email = 'Email already exists'
-    
-    const phoneErr = validatePhone(formData.phone)
-    if (phoneErr) newErrors.phone = phoneErr
-    
-    const passErr = validatePassword(formData.password)
-    if (passErr) newErrors.password = passErr
-    
-    if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password'
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!validate()) return
-    if (pinInput && !pinVerified) {
-      setPinError('Verify your PIN before proceeding')
-      return
-    }
-    
-    setIsLoading(true)
+  const handleCompleteRegistration = async (phone: string, token: string) => {
     try {
+      setIsLoading(true)
+      
+      // Complete registration with verified phone
       const result = await api.register({
-        email: formData.email,
-        password: formData.password,
+        email: formData.email || `${Date.now()}@phone.coreid.com`,
+        password: crypto.randomUUID(),
         name: formData.name,
         userType: 'professional',
+        phoneNumber: phone,
         title: formData.title,
-        phoneNumber: formData.phone,
         location: formData.location
       })
-
-      const accessToken = result.accessToken
-      const refreshToken = result.refreshToken
-      if (accessToken && refreshToken) {
-        try {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-          await api.setSessionCookie(accessToken)
-        } catch {}
-      }
-
-      localStorage.setItem('promptEmailVerification', 'true')
-      localStorage.setItem('registrationEmail', formData.email)
-      localStorage.setItem('userType', 'professional')
-      toast.success('Registration successful! Verify your email from the link we sent.')
-      window.location.href = '/dashboard'
       
-    } catch (err: any) {
-      const message = err.message || 'Registration failed'
-      if (message.includes('already exists')) {
-        setErrors({ email: 'Email already exists' })
-      } else if (message.includes('rate limit')) {
-        toast.error('Too many attempts. Please wait before trying again.')
-      } else {
-        toast.error(message)
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSignUp = async () => {
-    setIsLoading(true)
-    try {
-      localStorage.setItem('pendingUserType', 'professional')
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-          queryParams: { access_type: 'offline', prompt: 'consent' }
+      // Store session data immediately
+      if (result.accessToken) {
+        localStorage.setItem('accessToken', result.accessToken)
+        localStorage.setItem('refreshToken', result.refreshToken || '')
+        localStorage.setItem('userType', 'professional')
+        localStorage.setItem('isAuthenticated', 'true')
+        localStorage.setItem('userId', result.user?.id || '')
+        
+        // Set Supabase session
+        if (result.refreshToken) {
+          await supabase.auth.setSession({
+            access_token: result.accessToken,
+            refresh_token: result.refreshToken
+          })
         }
-      })
-      if (error) {
-        if (error.message.includes('not enabled') || error.message.includes('provider')) {
-          toast.error('Google sign-in is not configured yet. Please use the form below.')
-        } else {
-          throw error
-        }
+        
+        // Initialize auth context
+        await initAuth()
+        
+        // Set session cookie for server-side auth
+        await api.setSessionCookie(result.accessToken)
       }
+      
+      // Mark registration as completed and clear state
+      RegistrationStateManager.markCompleted()
+      
+      setStage('success')
+      toast.success('Welcome to CoreID!')
     } catch (err: any) {
-      toast.error(err.message || 'Google sign-in failed. Please try again.')
+      console.error('Registration completion failed:', err)
+      toast.error(err.message || 'Registration completion failed')
+      setStage('phone-verification')
     } finally {
       setIsLoading(false)
     }
@@ -351,8 +352,8 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <Card className="mb-6 bg-white/5 backdrop-blur-xl border-white/10 lg:col-span-12 card-fixed mx-auto">
               <CardHeader>
-                <CardTitle className="text-white">PIN Verification</CardTitle>
-                <CardDescription className="text-gray-300">This PIN is generated after completing professional dashboard verification.</CardDescription>
+                <CardTitle className="text-white">Quick Registration</CardTitle>
+                <CardDescription className="text-gray-300">Get your CoreID PIN instantly with phone verification, or use email as backup.</CardDescription>
               </CardHeader>
               <CardContent className="card-content-scroll">
                 <div className="space-y-4">
@@ -375,7 +376,39 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
                         {errors.name && <p id="quick-name-error" className="text-xs text-red-600 mt-1">{errors.name}</p>}
                       </div>
                       <div>
-                        <Label htmlFor="quick-email" className="text-white">Email (optional)</Label>
+                        <Label htmlFor="quick-phone" className="text-white">Phone Number (Recommended)</Label>
+                        <div className="flex gap-2">
+                          <CountryCodeSelect
+                            value={countryCode}
+                            onChange={(code) => {
+                              setCountryCode(code)
+                              setCountryError('')
+                            }}
+                            onUnsupportedSelect={(country) => {
+                              setCountryError(`We're coming to ${country.name} soon! Currently only supporting Nigeria.`)
+                            }}
+                            className="bg-transparent border-white/20 text-white"
+                          />
+                          <Input
+                            id="quick-phone"
+                            type="tel"
+                            placeholder={countryCode === '+234' ? '803 123 4567' : 'Phone number'}
+                            value={formData.phone}
+                            onChange={(e) => {
+                              updateField('phone', e.target.value)
+                              setCountryError('')
+                            }}
+                            className="flex-1 bg-transparent border-white/20 text-white placeholder-white/60"
+                            aria-invalid={!!(errors.phone || countryError)}
+                            aria-describedby={errors.phone ? 'quick-phone-error' : countryError ? 'country-error' : undefined}
+                          />
+                        </div>
+                        {errors.phone && <p id="quick-phone-error" className="text-xs text-red-600 mt-1">{errors.phone}</p>}
+                        {countryError && <p id="country-error" className="text-xs text-orange-600 mt-1">{countryError}</p>}
+                      </div>
+                      <div className="text-center text-white/60 text-xs">OR</div>
+                      <div>
+                        <Label htmlFor="quick-email" className="text-white">Email (Alternative)</Label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
                           <Input
@@ -391,95 +424,244 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
                         </div>
                         {errors.email && <p id="quick-email-error" className="text-xs text-red-600 mt-1">{errors.email}</p>}
                       </div>
-                      <div>
-                        <Label htmlFor="quick-phone" className="text-white">Phone Number *</Label>
-                        <Input
-                          id="quick-phone"
-                          type="tel"
-                          placeholder="e.g., +234 801 234 5678"
-                          value={formData.phone}
-                          onChange={(e) => updateField('phone', e.target.value)}
-                          className="bg-transparent border-white/20 text-white placeholder-white/60"
-                          aria-invalid={!!errors.phone}
-                          aria-describedby={errors.phone ? 'quick-phone-error' : undefined}
-                        />
-                        {errors.phone && <p id="quick-phone-error" className="text-xs text-red-600 mt-1">{errors.phone}</p>}
-                      </div>
                       <Button
                         type="button"
                         className="w-full h-11 bg-white text-black hover:bg-white/90"
                         onClick={handleQuickContinue}
+                        disabled={isLoading}
                       >
-                        Continue
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Preparing verification...
+                          </>
+                        ) : (
+                          'Continue'
+                        )}
                       </Button>
                     </div>
                   )}
-                  {stage === 'otp' && (
-                    <div className="space-y-3">
-                      <div className="text-white/80 text-sm">Enter the 6-digit code sent to {formData.phone}</div>
-                      <div className="text-white/60 text-xs">Code expires in {otpExpiresIn}s</div>
-                      <div className="text-white/60 text-xs">To: {maskPhone(formData.phone)}</div>
-                      <Input
-                        id="otp"
-                        inputMode="numeric"
-                        maxLength={6}
-                        placeholder="123456"
-                        value={otp}
-                        onChange={(e) => { setOtp(e.target.value.replace(/[^0-9]/g, '')); if (otpError) setOtpError('') }}
-                        onPaste={(e) => { const t = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0,6); setOtp(t); e.preventDefault(); }}
-                        className="bg-transparent border-white/20 text-white placeholder-white/60"
-                        aria-invalid={!!otpError}
-                        aria-describedby={otpError ? 'otp-error' : undefined}
-                      />
-                      {otpError && <p id="otp-error" className="text-xs text-red-600">{otpError}</p>}
-                      <div className="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          className="h-10"
-                          onClick={async () => {
-                            if (!regToken || otp.length < 4) { setOtpError('Enter valid OTP'); return }
-                            try {
-                              setIsLoading(true)
-                              const res = await api.registerVerifyOtp({ reg_token: regToken, otp })
-                              const pinAssigned = res?.pin || ''
-                              try {
-                                localStorage.setItem('pin', pinAssigned)
-                                localStorage.setItem('isAuthenticated', 'true')
-                                localStorage.setItem('userType', 'professional')
-                                if (requireEmailVerification && formData.email) localStorage.setItem('requireEmailVerification', 'true')
-                              } catch {}
-                              try { toast.success('Welcome — PIN created') } catch {}
-                              setStage('success')
-                              setTimeout(() => { window.location.href = '/dashboard' }, 500)
-                            } catch (e: any) {
-                              setOtpError(e?.message || 'OTP verification failed')
-                            } finally {
-                              setIsLoading(false)
-                            }
-                          }}
-                        >Verify OTP</Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={resendCooldown > 0 || resendCount >= maxResends}
-                          onClick={async () => {
-                            try {
-                              const start = await api.registerStart({ full_name: formData.name, phone: formData.phone, email: formData.email, idempotency_key: `idem_${Date.now()}` })
-                              setRegToken(start?.reg_token || regToken)
-                              try { localStorage.setItem('registration_token', start?.reg_token || regToken) } catch {}
-                              setOtpExpiresIn(start?.otp_expires_in || 600)
-                              setResendCooldown(resendDefault)
-                              setResendCount(prev => prev + 1)
-                              toast.success('OTP resent')
-                            } catch {}
-                          }}
-                        >{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : (resendCount >= maxResends ? 'Resend limit reached' : 'Resend OTP')}</Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => { setStage('basic'); setOtp(''); setOtpError('') }}
-                        >Change phone</Button>
+                  {stage === 'email-form' && (
+                    <div className="space-y-4">
+                      <div className="text-white/80 text-sm mb-4">
+                        Complete registration with email and password
                       </div>
+                      
+                      <div>
+                        <Label htmlFor="reg-password" className="text-white">Password *</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input
+                            id="reg-password"
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Enter password"
+                            value={formData.password}
+                            onChange={(e) => updateField('password', e.target.value)}
+                            className="pl-10 pr-10 bg-transparent border-white/20 text-white placeholder-white/60"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
+                        
+                        {/* Password Strength Indicator */}
+                        {formData.password && (
+                          <div className="mt-2">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-white/60">Password strength</span>
+                              <span className={`${
+                                passwordStrength.score >= 75 ? 'text-green-400' :
+                                passwordStrength.score >= 50 ? 'text-yellow-400' : 'text-red-400'
+                              }`}>
+                                {passwordStrength.score >= 75 ? 'Strong' :
+                                 passwordStrength.score >= 50 ? 'Medium' : 'Weak'}
+                              </span>
+                            </div>
+                            <Progress value={passwordStrength.score} className="h-1" />
+                            {passwordStrength.feedback.length > 0 && (
+                              <p className="text-xs text-white/60 mt-1">
+                                Missing: {passwordStrength.feedback.join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="reg-confirm-password" className="text-white">Confirm Password *</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input
+                            id="reg-confirm-password"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            placeholder="Confirm password"
+                            value={formData.confirmPassword}
+                            onChange={(e) => updateField('confirmPassword', e.target.value)}
+                            className="pl-10 pr-10 bg-transparent border-white/20 text-white placeholder-white/60"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
+                          >
+                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        {errors.confirmPassword && <p className="text-xs text-red-600 mt-1">{errors.confirmPassword}</p>}
+                      </div>
+                      
+                      <Button
+                        type="button"
+                        className="w-full h-11 bg-white text-black hover:bg-white/90"
+                        onClick={async () => {
+                          const newErrors: Record<string, string> = {}
+                          
+                          const passErr = validatePassword(formData.password)
+                          if (passErr) newErrors.password = passErr
+                          
+                          if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password'
+                          if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
+                          
+                          setErrors(newErrors)
+                          if (Object.keys(newErrors).length > 0) return
+                          
+                          try {
+                            setIsLoading(true)
+                            
+                            // Validate required fields before sending
+                            if (!formData.email || !formData.name) {
+                              toast.error('Missing required information. Please go back and fill out all fields.')
+                              setStage('basic')
+                              return
+                            }
+                            
+                            // Use Edge Function for registration
+                            const result = await api.register({
+                              email: formData.email.trim(),
+                              password: formData.password,
+                              name: formData.name.trim(),
+                              userType: 'professional'
+                            })
+                            
+                            if (result.accessToken) {
+                              localStorage.setItem('accessToken', result.accessToken)
+                              localStorage.setItem('refreshToken', result.refreshToken || '')
+                              localStorage.setItem('userType', 'professional')
+                              localStorage.setItem('isAuthenticated', 'true')
+                              localStorage.setItem('userId', result.user?.id || '')
+                              localStorage.setItem('registrationEmail', formData.email)
+                              
+                              // Set Supabase session
+                              if (result.refreshToken) {
+                                await supabase.auth.setSession({
+                                  access_token: result.accessToken,
+                                  refresh_token: result.refreshToken
+                                })
+                              }
+                              
+                              // Initialize auth
+                              await initAuth()
+                              
+                              // Clear registration state
+                              RegistrationStateManager.markCompleted()
+                              
+                              toast.success('Account created successfully! Welcome to CoreID.')
+                              window.location.href = '/dashboard'
+                            }
+                          } catch (err: any) {
+                            console.error('Email registration failed:', err)
+                            const message = err.message || 'Registration failed'
+                            if (message.includes('already exists')) {
+                              setErrors({ email: 'Email already exists' })
+                            } else {
+                              toast.error(message)
+                            }
+                          } finally {
+                            setIsLoading(false)
+                          }
+                        }}
+                        disabled={isLoading || !formData.password || !formData.confirmPassword}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Creating Account...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Create Account
+                          </>
+                        )}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setStage('basic')}
+                        className="w-full text-white/60 hover:text-white"
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Back to Basic Info
+                      </Button>
+                    </div>
+                  )}
+                  {stage === 'phone-verification' && (
+                    <RegistrationPhoneVerification
+                      name={formData.name}
+                      email={formData.email}
+                      onVerificationComplete={async (phone, token) => {
+                        console.log('Phone verification completed:', { phone, token })
+                        setPhoneVerified(true)
+                        setVerifiedPhone(phone)
+                        setRegistrationToken(token)
+                        await handleCompleteRegistration(phone, token)
+                      }}
+                      onBack={() => setStage('basic')}
+                      onFallbackToEmail={() => setStage('email-form')}
+                    />
+                  )}
+                  {stage === 'success' && phoneVerified && (
+                    <div className="text-center space-y-4">
+                      <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">Registration Complete!</h3>
+                        <p className="text-white/80">Your CoreID PIN has been created</p>
+                        <p className="text-white/60 text-sm">Phone: {verifiedPhone}</p>
+                      </div>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            // Verify authentication state before navigation
+                            const isAuth = localStorage.getItem('isAuthenticated') === 'true'
+                            const hasToken = localStorage.getItem('accessToken')
+                            
+                            if (!isAuth || !hasToken) {
+                              toast.error('Authentication failed. Please try logging in.')
+                              window.location.href = '/login'
+                              return
+                            }
+                            
+                            // Ensure auth is properly initialized
+                            await initAuth()
+                            
+                            // Navigate to dashboard
+                            window.location.href = '/dashboard'
+                          } catch (error) {
+                            console.error('Dashboard navigation failed:', error)
+                            toast.error('Navigation failed. Redirecting to login.')
+                            window.location.href = '/login'
+                          }
+                        }}
+                        className="w-full h-11 bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Go to Dashboard
+                      </Button>
                     </div>
                   )}
                 </div>

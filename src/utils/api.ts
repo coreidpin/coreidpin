@@ -742,6 +742,47 @@ class APIClient {
     }
   }
 
+  // Registration Phone Verification API Methods (separate from PIN phone verification)
+  async sendRegistrationOTP(phoneNumber: string, name: string, email?: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/registration/send-otp`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ phone: phoneNumber, name, email })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Failed to send registration OTP';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async verifyRegistrationOTP(phoneNumber: string, otp: string, regToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/registration/verify-otp`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ phone: phoneNumber, otp, reg_token: regToken })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.success) {
+      const msg = data?.message || data?.error || 'Invalid registration OTP';
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  async getRegistrationStatus(regToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/registration/status?token=${encodeURIComponent(regToken)}`, {
+      method: 'GET',
+      headers: this.getHeaders(undefined, true)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false, status: 'unknown' };
+    }
+    return data;
+  }
+
   async issuePIN(accessToken: string) {
     const response = await this.fetchWithRetry(`${BASE_URL}/pin/issue`, {
       method: 'POST',

@@ -29,6 +29,23 @@ function generateCSRFToken(): string {
 }
 
 export async function initAuth() {
+  // Check for stored auth tokens first
+  const storedToken = localStorage.getItem('accessToken')
+  const storedRefresh = localStorage.getItem('refreshToken')
+  const isAuthenticatedFlag = localStorage.getItem('isAuthenticated') === 'true'
+  
+  if (storedToken && storedRefresh && isAuthenticatedFlag) {
+    // Set session in Supabase client
+    try {
+      await supabase.auth.setSession({
+        access_token: storedToken,
+        refresh_token: storedRefresh
+      })
+    } catch (error) {
+      console.warn('Failed to restore session:', error)
+    }
+  }
+  
   const { data: { session } } = await supabase.auth.getSession()
   cachedSession = session || null
   
