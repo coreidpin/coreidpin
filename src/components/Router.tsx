@@ -232,7 +232,7 @@ export const AppRouter: React.FC<RouterProps> = ({
             <Layout currentPage="get-started" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
               <Suspense fallback={<LoadingSpinner />}>
                 <div className="flex items-center justify-center py-8">
-                  <SimpleRegistration onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
+                  <SimpleRegistration showChrome={false} onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
                 </div>
               </Suspense>
             </Layout>

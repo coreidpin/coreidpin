@@ -442,7 +442,7 @@ export function ProfessionalDashboard() {
                     <Button 
                       onClick={() => window.location.href = '/identity-management'}
                       variant="outline" 
-                      className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white"
+                      className={`h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white ${highlightManage ? 'ring-2 ring-[#32f08c] shadow-[0_0_20px_#32f08c40]' : ''}`}
                     >
                       <Fingerprint className="h-5 w-5 text-[#bfa5ff]" />
                       <span className="text-xs text-white">Manage Identity</span>
@@ -589,3 +589,4 @@ export function ProfessionalDashboard() {
     </div>
   );
 }
+  const highlightManage = !userProfile || (userProfile as any)?.onboarding_complete !== true;

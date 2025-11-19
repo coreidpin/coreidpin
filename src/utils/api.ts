@@ -628,6 +628,37 @@ class APIClient {
     }
   }
 
+  async registerStart(payload: { full_name: string; phone: string; email?: string; idempotency_key?: string }) {
+    const headers = this.getHeaders(undefined, true)
+    if (payload.idempotency_key) headers['X-Idempotency-Key'] = payload.idempotency_key
+    const response = await this.fetchWithRetry(`${BASE_URL}/api/register/start`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      const msg = data?.message || data?.error || 'Registration start failed'
+      throw new Error(msg)
+    }
+    return data
+  }
+
+  async registerVerifyOtp(payload: { reg_token: string; otp: string }) {
+    const headers = this.getHeaders(undefined, true)
+    const response = await this.fetchWithRetry(`${BASE_URL}/api/register/verify-otp`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload)
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+      const msg = data?.message || data?.error || 'OTP verification failed'
+      throw new Error(msg)
+    }
+    return data
+  }
+
   async passwordResetSend(email: string) {
     const response = await this.fetchWithRetry(`${BASE_URL}/auth/password-reset/send`, {
       method: 'POST',

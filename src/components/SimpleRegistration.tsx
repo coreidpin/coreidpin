@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
@@ -14,11 +14,12 @@ import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { Logo } from './Logo'
 import '../styles/auth-dark.css'
-import { Sparkles, ArrowLeft, ArrowRight, Loader2, Users, Mail, Briefcase, MapPin, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield } from 'lucide-react'
+import { Sparkles, ArrowLeft, ArrowRight, Loader2, Users, Mail, Briefcase, MapPin, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Shield, HelpCircle } from 'lucide-react'
 
 type SimpleRegistrationProps = {
   onComplete?: () => void
   onBack?: () => void
+  showChrome?: boolean
 }
 
 type FormData = {
@@ -72,7 +73,7 @@ function validatePassword(password: string) {
   return null
 }
 
-export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistrationProps) {
+export default function SimpleRegistration({ onComplete, onBack, showChrome = true }: SimpleRegistrationProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '', email: '', title: '', phone: '', location: '', password: '', confirmPassword: ''
   })
@@ -83,6 +84,101 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: [] as string[] })
   const [isEmailChecking, setIsEmailChecking] = useState(false)
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [pinVerified, setPinVerified] = useState(false)
+  const [pinLoading, setPinLoading] = useState(false)
+  const normalizePin = (raw: string) => (raw || '').toUpperCase().replace(/^PIN-/, '')
+  const isValidPinFormat = (raw: string) => {
+    const v = normalizePin(raw)
+    return /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{6}$/.test(v)
+  }
+  const sanitizedPin = (raw: string) => normalizePin(raw).replace(/[^A-Z0-9-]/g, '')
+  const [stage, setStage] = useState<'basic' | 'otp' | 'success'>('basic')
+  const [regToken, setRegToken] = useState<string>('')
+  const [otp, setOtp] = useState('')
+  const [otpError, setOtpError] = useState('')
+  const [resendCooldown, setResendCooldown] = useState<number>(0)
+  const [otpExpiresIn, setOtpExpiresIn] = useState<number>(0)
+  const [resendCount, setResendCount] = useState<number>(0)
+  const maxResends = Number(import.meta.env.VITE_OTP_MAX_SENDS_PER_HOUR || 3)
+  const resendDefault = Number(import.meta.env.VITE_OTP_RESEND_COOLDOWN || 90)
+  const requireEmailVerification = String(import.meta.env.VITE_REQUIRE_EMAIL_VERIFICATION || 'false') === 'true'
+  const defaultCountryCode = String(import.meta.env.VITE_DEFAULT_COUNTRY_CODE || '')
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const t = setInterval(() => setResendCooldown(prev => (prev > 0 ? prev - 1 : 0)), 1000)
+      return () => clearInterval(t)
+    }
+  }, [resendCooldown])
+
+  useEffect(() => {
+    if (otpExpiresIn > 0) {
+      const t = setInterval(() => setOtpExpiresIn(prev => (prev > 0 ? prev - 1 : 0)), 1000)
+      return () => clearInterval(t)
+    }
+  }, [otpExpiresIn])
+
+  const normalizePhoneLocal = (raw: string) => {
+    let p = (raw || '').replace(/\s+/g, '')
+    if (p.startsWith('0') && defaultCountryCode.startsWith('+')) p = `${defaultCountryCode}${p.slice(1)}`
+    if (!p.startsWith('+') && defaultCountryCode) p = `${defaultCountryCode}${p}`
+    return p
+  }
+  const maskPhone = (p: string) => {
+    const s = (p || '').replace(/\s+/g, '')
+    if (!s) return ''
+    const pref = s.startsWith('+') ? s.slice(0, 4) : ''
+    const tail = s.slice(-2)
+    return `${pref}••••••••${tail}`
+  }
+
+  const handleQuickContinue = async () => {
+    const newErrors: Record<string, string> = {}
+    const name = (formData.name || '').trim()
+    const email = (formData.email || '').trim()
+    const phone = normalizePhoneLocal((formData.phone || '').trim())
+    if (!name) newErrors.name = 'Full name is required'
+    if (email) {
+      const emailErr = validateEmail(email)
+      if (emailErr) newErrors.email = emailErr
+    }
+    if (!phone) newErrors.phone = 'Phone number is required'
+    else {
+      const phoneErr = validatePhone(phone)
+      if (phoneErr) newErrors.phone = phoneErr
+    }
+    setErrors(newErrors)
+    if (Object.keys(newErrors).length > 0) return
+    try {
+      localStorage.setItem('preName', name)
+      localStorage.setItem('preEmail', email)
+      localStorage.setItem('prePhone', phone)
+      const idem = `idem_${Date.now()}`
+      const start = await api.registerStart({ full_name: name, phone, email, idempotency_key: idem })
+      const token = start?.reg_token || ''
+      setRegToken(token)
+      try { localStorage.setItem('registration_token', token) } catch {}
+      setOtpExpiresIn(start?.otp_expires_in || 600)
+      setResendCooldown(resendDefault)
+      setResendCount(0)
+      setStage('otp')
+      toast.success('OTP sent')
+    } catch {}
+  }
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('registration_token') || ''
+      const phone = localStorage.getItem('prePhone') || ''
+      if (token && phone) {
+        setRegToken(token)
+        setStage('otp')
+        setResendCooldown(resendDefault)
+      }
+    } catch {}
+  }, [])
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -143,6 +239,10 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
+    if (pinInput && !pinVerified) {
+      setPinError('Verify your PIN before proceeding')
+      return
+    }
     
     setIsLoading(true)
     try {
@@ -212,11 +312,13 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
 
   return (
     <div className="min-h-screen bg-[#0a0b0d] text-white">
-      <Navbar 
-        currentPage="registration" 
-        onNavigate={(page) => console.log('Navigate to:', page)}
-        onLogin={(userType) => console.log('Login as:', userType)}
-      />
+      {showChrome && (
+        <Navbar 
+          currentPage="registration" 
+          onNavigate={(page) => console.log('Navigate to:', page)}
+          onLogin={(userType) => console.log('Login as:', userType)}
+        />
+      )}
       
       <header className="reg-header border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
@@ -239,216 +341,160 @@ export default function SimpleRegistration({ onComplete, onBack }: SimpleRegistr
         </div>
       </div>
 
-      <main className="container mx-auto px-4 py-8" aria-busy={isLoading}>
-        <div className="max-w-2xl mx-auto">
+      <main className="mx-auto px-6 py-10" aria-busy={isLoading}>
+        <div className="mx-auto max-w-[1600px]">
           <motion.div 
             initial={{ opacity: 0, x: 20 }} 
             animate={{ opacity: 1, x: 0 }} 
             transition={{ duration: 0.3 }}
           >
-            <Card className="bg-white/5 backdrop-blur-xl border-white/10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <Card className="mb-6 bg-white/5 backdrop-blur-xl border-white/10 lg:col-span-12 card-fixed mx-auto">
               <CardHeader>
-                <CardTitle className="text-white">Create Account</CardTitle>
-                <CardDescription className="text-gray-300">
-                  Enter your details to create your account.
-                </CardDescription>
+                <CardTitle className="text-white">PIN Verification</CardTitle>
+                <CardDescription className="text-gray-300">This PIN is generated after completing professional dashboard verification.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="card-content-scroll">
                 <div className="space-y-4">
-                  <Button onClick={handleGoogleSignUp} variant="outline" className="w-full h-12 bg-white text-black hover:bg-white/90" disabled={isLoading} type="button">
-                    Continue with Google
-                  </Button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10" /></div>
-                    <div className="relative flex justify-center text-xs uppercase"><span className="px-3 py-1 rounded-full bg-black/40 border border-white/10 text-white/70">Or fill manually</span></div>
-                  </div>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name" className="text-white">Full Name *</Label>
-                      <div className="relative">
-                        <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                        <Input
-                          id="name"
-                          placeholder="John Doe"
-                          value={formData.name}
-                          onChange={(e) => updateField('name', e.target.value)}
-                          className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60"
-                          aria-invalid={!!errors.name}
-                          aria-describedby={errors.name ? 'name-error' : undefined}
-                        />
-                      </div>
-                      {errors.name && <p id="name-error" className="text-xs text-red-600 mt-1">{errors.name}</p>}
-                    </div>
-                    <div>
-                      <Label htmlFor="email" className="text-white">Email Address *</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={formData.email}
-                          onChange={(e) => updateField('email', e.target.value)}
-                          className="pl-10 pr-10 bg-transparent border-white/20 text-white placeholder-white/60"
-                          aria-invalid={!!errors.email}
-                          aria-describedby={errors.email ? 'email-error' : undefined}
-                        />
-                        {isEmailChecking && (
-                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 animate-spin" />
-                        )}
-                        {!isEmailChecking && emailAvailable === true && (
-                          <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
-                        )}
-                        {!isEmailChecking && emailAvailable === false && (
-                          <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
-                        )}
-                      </div>
-                      {errors.email && <p id="email-error" className="text-xs text-red-600 mt-1">{errors.email}</p>}
-                    </div>
-                  </div>
-                  
-                  <div className="md:col-span-2">
-                    <Label htmlFor="title" className="text-white">Professional Title *</Label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                      <Input
-                        id="title"
-                        placeholder="e.g., Senior Frontend Developer"
-                        value={formData.title}
-                        onChange={(e) => updateField('title', e.target.value)}
-                        className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60"
-                        aria-invalid={!!errors.title}
-                        aria-describedby={errors.title ? 'title-error' : undefined}
-                      />
-                    </div>
-                    {errors.title && <p id="title-error" className="text-xs text-red-600 mt-1">{errors.title}</p>}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="location" className="text-white">Location</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                        <Input
-                          id="location"
-                          placeholder="City, Country"
-                          value={formData.location}
-                          onChange={(e) => updateField('location', e.target.value)}
-                          className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="phone" className="text-white">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="e.g., +234 801 234 5678"
-                        value={formData.phone}
-                        onChange={(e) => updateField('phone', e.target.value)}
-                        className="bg-transparent border-white/20 text-white placeholder-white/60"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="password" className="text-white">Password *</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
-                        <Input
-                          id="password"
-                          type={showPassword ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          value={formData.password}
-                          onChange={(e) => updateField('password', e.target.value)}
-                          className="pl-10 pr-10 bg-transparent border-white/20 text-white placeholder-white/60"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                        >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
-                      {formData.password && (
-                        <div className="mt-2">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Shield className="h-3 w-3 text-white/60" />
-                            <span className="text-xs text-white/60">Password Strength</span>
-                          </div>
-                          <Progress value={passwordStrength.score} className="h-1" />
-                          {passwordStrength.feedback.length > 0 && (
-                            <p className="text-xs text-white/60 mt-1">Missing: {passwordStrength.feedback.join(', ')}</p>
-                          )}
+                  {stage === 'basic' && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="quick-name" className="text-white">Full Name *</Label>
+                        <div className="relative">
+                          <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input
+                            id="quick-name"
+                            placeholder="John Doe"
+                            value={formData.name}
+                            onChange={(e) => updateField('name', e.target.value)}
+                            className="pl-10 bg-transparent border-white/20 text-white placeholder-white/60"
+                            aria-invalid={!!errors.name}
+                            aria-describedby={errors.name ? 'quick-name-error' : undefined}
+                          />
                         </div>
-                      )}
-                      {errors.password && <p className="text-xs text-red-600 mt-1">{errors.password}</p>}
-                    </div>
-                    <div>
-                      <Label htmlFor="confirmPassword" className="text-white">Confirm Password *</Label>
-                      <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder="••••••••"
-                          value={formData.confirmPassword}
-                          onChange={(e) => updateField('confirmPassword', e.target.value)}
-                          className="pr-10 bg-transparent border-white/20 text-white placeholder-white/60"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                        >
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
+                        {errors.name && <p id="quick-name-error" className="text-xs text-red-600 mt-1">{errors.name}</p>}
                       </div>
-                      {errors.confirmPassword && <p className="text-xs text-red-600 mt-1">{errors.confirmPassword}</p>}
+                      <div>
+                        <Label htmlFor="quick-email" className="text-white">Email (optional)</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" />
+                          <Input
+                            id="quick-email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={formData.email}
+                            onChange={(e) => updateField('email', e.target.value)}
+                            className="pl-10 pr-10 bg-transparent border-white/20 text-white placeholder-white/60"
+                            aria-invalid={!!errors.email}
+                            aria-describedby={errors.email ? 'quick-email-error' : undefined}
+                          />
+                        </div>
+                        {errors.email && <p id="quick-email-error" className="text-xs text-red-600 mt-1">{errors.email}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="quick-phone" className="text-white">Phone Number *</Label>
+                        <Input
+                          id="quick-phone"
+                          type="tel"
+                          placeholder="e.g., +234 801 234 5678"
+                          value={formData.phone}
+                          onChange={(e) => updateField('phone', e.target.value)}
+                          className="bg-transparent border-white/20 text-white placeholder-white/60"
+                          aria-invalid={!!errors.phone}
+                          aria-describedby={errors.phone ? 'quick-phone-error' : undefined}
+                        />
+                        {errors.phone && <p id="quick-phone-error" className="text-xs text-red-600 mt-1">{errors.phone}</p>}
+                      </div>
+                      <Button
+                        type="button"
+                        className="w-full h-11 bg-white text-black hover:bg-white/90"
+                        onClick={handleQuickContinue}
+                      >
+                        Continue
+                      </Button>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-8">
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      onClick={onBack} 
-                      className="min-w-[120px] border-white/20 text-white hover:bg-white/10"
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="min-w-[140px] text-white"
-                      aria-disabled={isLoading}
-                      aria-live="polite"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          <span>Creating...</span>
-                        </>
-                      ) : (
-                        <>
-                          Create Account
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
+                  )}
+                  {stage === 'otp' && (
+                    <div className="space-y-3">
+                      <div className="text-white/80 text-sm">Enter the 6-digit code sent to {formData.phone}</div>
+                      <div className="text-white/60 text-xs">Code expires in {otpExpiresIn}s</div>
+                      <div className="text-white/60 text-xs">To: {maskPhone(formData.phone)}</div>
+                      <Input
+                        id="otp"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="123456"
+                        value={otp}
+                        onChange={(e) => { setOtp(e.target.value.replace(/[^0-9]/g, '')); if (otpError) setOtpError('') }}
+                        onPaste={(e) => { const t = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0,6); setOtp(t); e.preventDefault(); }}
+                        className="bg-transparent border-white/20 text-white placeholder-white/60"
+                        aria-invalid={!!otpError}
+                        aria-describedby={otpError ? 'otp-error' : undefined}
+                      />
+                      {otpError && <p id="otp-error" className="text-xs text-red-600">{otpError}</p>}
+                      <div className="flex items-center gap-3">
+                        <Button
+                          type="button"
+                          className="h-10"
+                          onClick={async () => {
+                            if (!regToken || otp.length < 4) { setOtpError('Enter valid OTP'); return }
+                            try {
+                              setIsLoading(true)
+                              const res = await api.registerVerifyOtp({ reg_token: regToken, otp })
+                              const pinAssigned = res?.pin || ''
+                              try {
+                                localStorage.setItem('pin', pinAssigned)
+                                localStorage.setItem('isAuthenticated', 'true')
+                                localStorage.setItem('userType', 'professional')
+                                if (requireEmailVerification && formData.email) localStorage.setItem('requireEmailVerification', 'true')
+                              } catch {}
+                              try { toast.success('Welcome — PIN created') } catch {}
+                              setStage('success')
+                              setTimeout(() => { window.location.href = '/dashboard' }, 500)
+                            } catch (e: any) {
+                              setOtpError(e?.message || 'OTP verification failed')
+                            } finally {
+                              setIsLoading(false)
+                            }
+                          }}
+                        >Verify OTP</Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={resendCooldown > 0 || resendCount >= maxResends}
+                          onClick={async () => {
+                            try {
+                              const start = await api.registerStart({ full_name: formData.name, phone: formData.phone, email: formData.email, idempotency_key: `idem_${Date.now()}` })
+                              setRegToken(start?.reg_token || regToken)
+                              try { localStorage.setItem('registration_token', start?.reg_token || regToken) } catch {}
+                              setOtpExpiresIn(start?.otp_expires_in || 600)
+                              setResendCooldown(resendDefault)
+                              setResendCount(prev => prev + 1)
+                              toast.success('OTP resent')
+                            } catch {}
+                          }}
+                        >{resendCooldown > 0 ? `Resend in ${resendCooldown}s` : (resendCount >= maxResends ? 'Resend limit reached' : 'Resend OTP')}</Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => { setStage('basic'); setOtp(''); setOtpError('') }}
+                        >Change phone</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
+            
+            
+            </div>
           </motion.div>
         </div>
       </main>
       
-      <Footer onNavigate={(page) => console.log('Navigate to:', page)} />
+      {showChrome && (
+        <Footer onNavigate={(page) => console.log('Navigate to:', page)} />
+      )}
     </div>
   )
 }

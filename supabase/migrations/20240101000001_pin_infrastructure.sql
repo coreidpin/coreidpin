@@ -81,13 +81,37 @@ ALTER TABLE pin_audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE phone_verification_history ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for pin_verifications
-CREATE POLICY "Users can view their own PIN verifications" ON pin_verifications
-    FOR SELECT USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'public' AND p.tablename = 'pin_verifications' AND p.policyname = 'Users can view their own PIN verifications'
+  ) THEN
+    CREATE POLICY "Users can view their own PIN verifications" ON pin_verifications
+      FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- RLS policies for pin_audit_logs  
-CREATE POLICY "Users can view their own PIN audit logs" ON pin_audit_logs
-    FOR SELECT USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'public' AND p.tablename = 'pin_audit_logs' AND p.policyname = 'Users can view their own PIN audit logs'
+  ) THEN
+    CREATE POLICY "Users can view their own PIN audit logs" ON pin_audit_logs
+      FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- RLS policies for phone_verification_history
-CREATE POLICY "Users can view their own phone verification history" ON phone_verification_history
-    FOR SELECT USING (auth.uid() = user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'public' AND p.tablename = 'phone_verification_history' AND p.policyname = 'Users can view their own phone verification history'
+  ) THEN
+    CREATE POLICY "Users can view their own phone verification history" ON phone_verification_history
+      FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+END $$;

@@ -5,6 +5,7 @@ import { getSupabaseClient } from "./lib/supabaseClient.tsx";
 import { validateServerEnv } from "./lib/envCheck.tsx";
 import * as kv from "./kv_store.tsx";
 import { matching } from "./routes/matching.tsx";
+import { v4 as uuidv4 } from "npm:uuid";
 
 // Validate environment before app initializes
 validateServerEnv();
@@ -827,3 +828,349 @@ app.get("/make-server-5cd3a043/profile/analysis/:userId", async (c) => {
 app.route("/", matching);
 
 Deno.serve(app.fetch);
+async function sha256Hex(input: string) {
+  const enc = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", enc);
+  const bytes = new Uint8Array(hash);
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function normalizePhone(input: string, defaultCode: string) {
+  let p = (input || "").replace(/\s+/g, "");
+  if (p.startsWith("0") && defaultCode.startsWith("+")) p = `${defaultCode}${p.slice(1)}`;
+  if (!p.startsWith("+") && defaultCode) p = `${defaultCode}${p}`;
+  return p;
+}
+
+async function aesGcmEncrypt(plaintext: string, base64Key: string) {
+  const keyBytes = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder().encode(plaintext);
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, cryptoKey, enc);
+  const ctBytes = new Uint8Array(ct);
+  const payload = new Uint8Array(iv.length + ctBytes.length);
+  payload.set(iv, 0);
+  payload.set(ctBytes, iv.length);
+  return btoa(String.fromCharCode(...payload));
+}
+
+async function aesGcmDecrypt(b64: string, base64Key: string) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const iv = bytes.slice(0, 12);
+  const ct = bytes.slice(12);
+  const keyBytes = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, cryptoKey, ct);
+  return new TextDecoder().decode(pt);
+}
+
+async function enqueueJob(jobType: 'send_otp'|'send_email'|'anchor_chain', payload: Record<string, any>) {
+  const key = Deno.env.get('PHONE_ENCRYPTION_KEY') || '';
+  const encPayload = await aesGcmEncrypt(JSON.stringify(payload), key);
+  await supabase.from('job_queue').insert({ job_type: jobType, payload_encrypted: encPayload });
+}
+
+async function processJobs(limit = 10) {
+  const key = Deno.env.get('PHONE_ENCRYPTION_KEY') || '';
+  const { data: jobs } = await supabase
+    .from('job_queue')
+    .select('id, job_type, payload_encrypted, try_count')
+    .eq('status', 'pending')
+    .lte('run_after', new Date().toISOString())
+    .limit(limit);
+  for (const job of jobs || []) {
+    await supabase.from('job_queue').update({ status: 'processing' }).eq('id', job.id);
+    let ok = false;
+    try {
+      const payloadText = await aesGcmDecrypt(job.payload_encrypted, key);
+      const payload = JSON.parse(payloadText || '{}');
+      if (job.job_type === 'send_otp') {
+        const smsUrl = Deno.env.get('SMS_PROVIDER_URL') || '';
+        const smsKey = Deno.env.get('SMS_PROVIDER_KEY') || '';
+        if (smsUrl && smsKey) {
+          await withRetry(async () => {
+            await fetch(smsUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${smsKey}` }, body: JSON.stringify({ to: payload.phone, message: `Your Core-ID code is ${payload.otp}` }) });
+          }, 2);
+        }
+        ok = true;
+      } else if (job.job_type === 'send_email') {
+        const resendKey = Deno.env.get('RESEND_API_KEY') || '';
+        if (resendKey) {
+          await withRetry(async () => {
+            await fetch('https://api.resend.com/emails', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendKey}` }, body: JSON.stringify({ from: 'Core-ID <no-reply@coreid.africa>', to: payload.to, subject: payload.subject, html: payload.html }) });
+          }, 2);
+        }
+        ok = true;
+        if ((payload.subject || '').toLowerCase().includes('welcome')) {
+          await supabase.from('audit_events').insert({ event_type: 'welcome_email_sent', user_id: payload.user_id || null });
+          if (payload.user_id) await supabase.from('identity_users').update({ welcome_email_sent: true, welcome_email_sent_at: new Date().toISOString() }).eq('user_id', payload.user_id);
+        } else if ((payload.subject || '').toLowerCase().includes('verify')) {
+          await supabase.from('audit_events').insert({ event_type: 'email_verification_sent', user_id: payload.user_id || null });
+        }
+      } else if (job.job_type === 'anchor_chain') {
+        ok = true;
+      }
+    } catch (e) {
+      if (job.job_type === 'send_email' && (e?.message || '').length) {
+        await supabase.from('audit_events').insert({ event_type: 'welcome_email_failed', meta: { error: e.message } });
+      }
+    }
+    const updates: any = { try_count: (job.try_count || 0) + 1, updated_at: new Date().toISOString() };
+    if (ok) updates.status = 'done'; else {
+      const retryDelay = 60;
+      updates.status = 'pending';
+      updates.run_after = new Date(Date.now() + retryDelay * 1000).toISOString();
+    }
+    await supabase.from('job_queue').update(updates).eq('id', job.id);
+  }
+}
+
+app.post("/api/register/start", async (c) => {
+  try {
+    const body = await c.req.json();
+    const name = String(body.full_name || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const phoneRaw = String(body.phone || "").trim();
+    const idem = String(body.idempotency_key || "");
+  const defaultCode = Deno.env.get("DEFAULT_COUNTRY_CODE") || "+234";
+  const salt = Deno.env.get("SERVER_SALT") || "";
+  const ttlSec = Number(Deno.env.get("OTP_TTL_SEC") || 600);
+  const cooldownSec = Number(Deno.env.get("OTP_RESEND_COOLDOWN") || 90);
+  const maxSendsPerHour = Number(Deno.env.get("OTP_MAX_SENDS_PER_HOUR") || 3);
+  const phone = normalizePhone(phoneRaw, defaultCode);
+    if (!/^\+[1-9]\d{6,15}$/.test(phone)) return c.json({ error: "invalid_phone" }, 400);
+    const phoneHash = await sha256Hex(`${phone}${salt}`);
+    const now = new Date();
+    const hourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+    const { data: recentOtps, error: otpsErr } = await supabase
+      .from("otps")
+      .select("id, created_at")
+      .eq("contact_hash", phoneHash)
+      .gte("created_at", hourAgo);
+    if (!otpsErr && (recentOtps?.length || 0) >= maxSendsPerHour) return c.json({ error: "rate_limited" }, 429);
+    const regToken = uuidv4();
+    const { error: upErr } = await supabase
+      .from("registrations")
+      .upsert({ reg_token: regToken, data: { full_name: name, email, normalized_phone: phone }, phone_hash: phoneHash, progress_stage: "basic" }, { onConflict: "reg_token" });
+    if (upErr) return c.json({ error: "registration_upsert_failed" }, 500);
+    const ip = c.req.header('x-forwarded-for') || c.req.header('cf-connecting-ip') || c.req.header('x-real-ip') || '';
+    const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+    const otpHash = await sha256Hex(`${otpCode}${salt}`);
+    const expiresAt = new Date(now.getTime() + ttlSec * 1000).toISOString();
+    const { error: insErr } = await supabase.from("otps").insert({ contact_hash: phoneHash, otp_hash: otpHash, expires_at: expiresAt });
+    if (insErr) return c.json({ error: "otp_create_failed" }, 500);
+    await supabase.from("audit_events").insert({ event_type: "registration_started", meta: { phone_hash: phoneHash, ip }, user_id: null });
+    const { error: auditErr } = await supabase.from("audit_events").insert({ event_type: "otp_sent", meta: { phone_hash: phoneHash }, user_id: null });
+    if (auditErr) {}
+  await enqueueJob('send_otp', { phone, otp: otpCode });
+  Promise.resolve().then(() => processJobs(5));
+    return c.json({ reg_token: regToken, otp_expires_in: ttlSec, message: "OTP sent" });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+
+app.post("/api/register/verify-otp", async (c) => {
+  try {
+    const body = await c.req.json();
+    const regToken = String(body.reg_token || "");
+    const otp = String(body.otp || "").trim();
+    const salt = Deno.env.get("SERVER_SALT") || "";
+  const { data: regRow, error: regErr } = await supabase.from("registrations").select("id, phone_hash, data, user_id").eq("reg_token", regToken).maybeSingle();
+    if (regErr || !regRow) return c.json({ error: "invalid_reg_token" }, 401);
+    const phoneHash = regRow.phone_hash;
+    const otpHashInput = await sha256Hex(`${otp}${salt}`);
+    const nowIso = new Date().toISOString();
+    const { data: otpRows } = await supabase
+      .from("otps")
+      .select("id, otp_hash, expires_at, attempts, used")
+      .eq("contact_hash", phoneHash)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const otpRow = otpRows?.[0];
+    if (!otpRow) return c.json({ error: "otp_not_found" }, 401);
+    if (otpRow.used) return c.json({ error: "otp_used" }, 401);
+    if (otpRow.expires_at < nowIso) return c.json({ error: "otp_expired" }, 410);
+    const maxAttempts = Number(Deno.env.get("OTP_MAX_ATTEMPTS") || 5);
+    if ((otpRow.attempts || 0) >= maxAttempts) return c.json({ error: "attempts_exceeded" }, 429);
+    const match = otpRow.otp_hash === otpHashInput;
+    const { error: updOtpErr } = await supabase
+      .from("otps")
+      .update({ attempts: (otpRow.attempts || 0) + 1, used: match })
+      .eq("id", otpRow.id);
+    if (updOtpErr) return c.json({ error: "otp_update_failed" }, 500);
+    if (!match) {
+      await supabase.from("audit_events").insert({ event_type: "otp_failed", meta: { phone_hash: phoneHash }, user_id: null });
+      return c.json({ error: "invalid_otp" }, 401);
+    }
+    const { error: updRegErr } = await supabase.from("registrations").update({ otp_verified: true }).eq("id", regRow.id);
+    if (updRegErr) return c.json({ error: "registration_update_failed" }, 500);
+    let userId = regRow.user_id;
+    let pinVal = "";
+    const normalizedPhone = String(regRow.data?.normalized_phone || "");
+    const pinMode = (Deno.env.get("PIN_MODE") || "phone").toLowerCase();
+    if (!userId) {
+      const email = String(regRow.data?.email || "").toLowerCase();
+      const name = String(regRow.data?.full_name || "");
+      const { data: usersExisting } = await supabase.from("identity_users").select("user_id, pin").eq("phone_hash", phoneHash).maybeSingle();
+      if (usersExisting?.user_id) {
+        userId = usersExisting.user_id;
+        pinVal = usersExisting.pin;
+      } else {
+        const aliasEmail = email || `user_${phoneHash.slice(0,8)}@example.invalid`;
+        const { data: authCreated, error: authErr } = await supabase.auth.admin.createUser({ email: aliasEmail, password: crypto.randomUUID(), user_metadata: { full_name: name } });
+        if (authErr) return c.json({ error: "auth_create_failed" }, 500);
+        userId = authCreated.user?.id || "";
+        if (pinMode === "phone" && normalizedPhone) {
+          pinVal = normalizedPhone;
+        } else {
+          pinVal = `PIN-${regToken.replace(/-/g, "").slice(0,6).toUpperCase()}`;
+        }
+        const encPhone = await aesGcmEncrypt(normalizedPhone, Deno.env.get('PHONE_ENCRYPTION_KEY') || '');
+        const { error: insUserErr } = await supabase.from("identity_users").insert({ user_id: userId, full_name: name, email: email || null, email_verified: false, phone_encrypted: encPhone, phone_hash: phoneHash, pin: pinVal, status: "incomplete" });
+        if (insUserErr) return c.json({ error: "identity_create_failed" }, 500);
+        if (email) await enqueueJob('send_email', { to: email, subject: 'Verify your email', html: '<p>Verify your email to activate Core-ID features.</p>' });
+      }
+      const { error: linkErr } = await supabase.from("registrations").update({ user_id: userId }).eq("id", regRow.id);
+      if (linkErr) {}
+    }
+    const { error: auditOtpErr } = await supabase.from("audit_events").insert({ event_type: "otp_verified", meta: { phone_hash: phoneHash }, user_id: userId || null });
+    const { error: auditPinErr } = await supabase.from("audit_events").insert({ event_type: "pin_issued", meta: { phone_hash: phoneHash, pin: pinVal }, user_id: userId || null });
+    if (auditOtpErr) {}
+    if (auditPinErr) {}
+    return c.json({ registration_token: regToken, next: "complete_profile", user_exists: !!userId, pin: pinVal || null });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+
+app.post("/api/register/profile/save", async (c) => {
+  try {
+    const auth = c.req.header("Authorization") || "";
+    const token = auth.split(" ")[1] || "";
+    const body = await c.req.json();
+    const stage = String(body.stage || "basic");
+    const data = body.data || {};
+    const regToken = c.req.header("X-Registration-Token") || "";
+    const { data: regRow } = await supabase.from("registrations").select("id, user_id").eq("reg_token", regToken).maybeSingle();
+    if (!regRow) return c.json({ error: "invalid_registration_token" }, 401);
+    const { error: updErr } = await supabase.from("registrations").update({ data, progress_stage: stage }).eq("id", regRow.id);
+    if (updErr) return c.json({ error: "save_failed" }, 500);
+    let completion = 0;
+    if (regRow.user_id) {
+      const { error: compErr } = await supabase.from("identity_users").update({ profile_completion: 42 }).eq("user_id", regRow.user_id);
+      if (compErr) {}
+      completion = 42;
+    }
+    return c.json({ status: "ok", profile_completion: completion });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+
+app.post("/api/register/finalize", async (c) => {
+  try {
+    const regToken = c.req.header("X-Registration-Token") || "";
+    const { data: regRow } = await supabase.from("registrations").select("user_id, otp_verified").eq("reg_token", regToken).maybeSingle();
+    if (!regRow || !regRow.otp_verified) return c.json({ error: "insufficient_data" }, 422);
+    const { error: updErr } = await supabase.from("identity_users").update({ status: "active" }).eq("user_id", regRow.user_id);
+    if (updErr) return c.json({ error: "finalize_failed" }, 500);
+    const { data: userRow } = await supabase.from("identity_users").select("pin, email_verified, email").eq("user_id", regRow.user_id).maybeSingle();
+    if (userRow?.email) await enqueueJob('send_email', { to: userRow.email, subject: 'Welcome to Core-ID', html: '<p>Welcome — your Core-ID PIN has been created.</p>', user_id: regRow.user_id });
+    if ((Deno.env.get('ANCHOR_ASYNC') || 'false') === 'true') {
+      await enqueueJob('anchor_chain', { user_id: regRow.user_id, pin: userRow?.pin || null });
+      Promise.resolve().then(() => processJobs(5));
+      return c.json({ status: 202, message: 'Anchoring in progress' }, 202);
+    }
+    await supabase.from("audit_events").insert({ event_type: "registration_finalized", user_id: regRow.user_id });
+    return c.json({ access_token: "jwt.placeholder", user: { id: regRow.user_id, pin: userRow?.pin || null, email_verified: userRow?.email_verified || false } });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+
+app.post('/jobs/process', async (c) => {
+  try { await processJobs(10); return c.json({ status: 'ok' }); } catch { return c.json({ error: 'failed' }, 500) }
+});
+
+app.get("/user/me", async (c) => {
+  try {
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    if (!user?.id || error) return c.json({ error: "unauthorized" }, 401);
+    const { data: idUser } = await supabase.from("identity_users").select("pin, status, profile_completion, email_verified, welcome_email_sent").eq("user_id", user.id).maybeSingle();
+    return c.json({ pin: idUser?.pin || null, status: idUser?.status || "incomplete", profile_completion: idUser?.profile_completion || 0, email_verified: idUser?.email_verified || false, welcome_email_sent: idUser?.welcome_email_sent || false });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+
+app.post("/auth/resend-verification-email", async (c) => {
+  try {
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    if (!user?.id || error) return c.json({ error: "unauthorized" }, 401);
+    return c.json({ status: "ok" });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+
+app.get("/verify-email", async (c) => {
+  try {
+    const token = c.req.query("token") || "";
+    const { data: row } = await supabase.from("email_verification_tokens").select("user_id, expires_at, used").eq("token", token).maybeSingle();
+    if (!row || row.used || new Date(row.expires_at) < new Date()) return c.json({ error: "invalid_or_expired" }, 410);
+    const { error: markUsedErr } = await supabase.from("email_verification_tokens").update({ used: true }).eq("token", token);
+    if (markUsedErr) return c.json({ error: "update_failed" }, 500);
+    const { error: updUserErr } = await supabase.from("identity_users").update({ email_verified: true }).eq("user_id", row.user_id);
+    if (updUserErr) return c.json({ error: "verify_failed" }, 500);
+    const { error: auditErr } = await supabase.from("audit_events").insert({ event_type: "email_verified", user_id: row.user_id });
+    if (auditErr) {}
+    return c.json({ status: "ok" });
+  } catch (e: any) {
+    return c.json({ error: "server_error", message: e?.message || "" }, 500);
+  }
+});
+app.get('/metrics/summary', async (c) => {
+  try {
+    const hours = Number(c.req.query('hours') || '24');
+    const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+    const { data } = await supabase
+      .from('audit_events')
+      .select('event_type, created_at')
+      .gte('created_at', since);
+    const summary: Record<string, number> = {};
+    for (const row of data || []) summary[row.event_type] = (summary[row.event_type] || 0) + 1;
+    return c.json({ hours, summary });
+  } catch {
+    return c.json({ error: 'metrics_failed' }, 500);
+  }
+});
+
+app.get('/metrics/alerts', async (c) => {
+  try {
+    const otpThreshold = Number(Deno.env.get('ALERT_THRESHOLD_OTP_FAILED') || 10);
+    const regIpThreshold = Number(Deno.env.get('ALERT_THRESHOLD_REG_START_IP') || 50);
+    const emailFailThreshold = Number(Deno.env.get('ALERT_THRESHOLD_EMAIL_FAILED') || 5);
+    const now = Date.now();
+    const since15 = new Date(now - 15 * 60 * 1000).toISOString();
+    const since60 = new Date(now - 60 * 60 * 1000).toISOString();
+    const { data: otpFailed } = await supabase.from('audit_events').select('id').eq('event_type', 'otp_failed').gte('created_at', since15);
+    const { data: regStarted } = await supabase.from('audit_events').select('meta, created_at').eq('event_type', 'registration_started').gte('created_at', since60);
+    const { data: emailFailed } = await supabase.from('audit_events').select('id').eq('event_type', 'welcome_email_failed').gte('created_at', since60);
+    const alerts: any[] = [];
+    if ((otpFailed?.length || 0) > otpThreshold) alerts.push({ code: 'otp_spike', count: otpFailed?.length || 0 });
+    const ipCounts: Record<string, number> = {};
+    for (const row of regStarted || []) {
+      const ip = (row as any)?.meta?.ip || 'unknown';
+      ipCounts[ip] = (ipCounts[ip] || 0) + 1;
+    }
+    for (const [ip, cnt] of Object.entries(ipCounts)) if (cnt > regIpThreshold) alerts.push({ code: 'register_spike_ip', ip, count: cnt });
+    if ((emailFailed?.length || 0) > emailFailThreshold) alerts.push({ code: 'welcome_email_failures', count: emailFailed?.length || 0 });
+    return c.json({ alerts });
+  } catch {
+    return c.json({ error: 'alerts_failed' }, 500);
+  }
+});

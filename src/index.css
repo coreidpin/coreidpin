@@ -222,6 +222,51 @@
   }
 }
 
+@layer components {
+  .card-fixed {
+    width: 552px;
+    height: 437px;
+  }
+  @media (min-width: 1024px) {
+    .card-fixed {
+      width: 720px;
+      height: 560px;
+    }
+  }
+  .card-content-scroll {
+    overflow: auto;
+  }
+  .truncate-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .brand-gradient-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-3xl);
+    background: radial-gradient(circle at 15% 20%, rgba(191,165,255,0.25), transparent 50%),
+                radial-gradient(circle at 85% 80%, rgba(123,184,255,0.25), transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(50,240,140,0.15), transparent 50%);
+    filter: blur(var(--blur-xl));
+    animation: brandGradientFloat 12s var(--ease-in-out) infinite alternate;
+  }
+  @keyframes brandGradientFloat {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-6px); }
+  }
+  .brand-sheen {
+    background-image: linear-gradient(90deg, rgba(191,165,255,0.12), rgba(123,184,255,0.12), rgba(50,240,140,0.12));
+    background-size: 200% 100%;
+    animation: brandSheenMove 8s var(--ease-in-out) infinite;
+  }
+  @keyframes brandSheenMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+}
+
 @layer base {
   *, :after, :before, ::backdrop {
     box-sizing: border-box;

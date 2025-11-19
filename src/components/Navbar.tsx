@@ -254,7 +254,8 @@ export function Navbar({
                   size="sm"
                   disabled={isProd}
                   onClick={() => { if (isProd) return; navigate('/login'); }}
-                  className={isLight ? "text-white hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
+                  className={isLight ? "hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
+                  style={isLight ? { color: '#69798f' } : undefined}
                 >
                   Login
                 </Button>
@@ -264,7 +265,8 @@ export function Navbar({
                   size="sm"
                   disabled={isProd}
                   onClick={() => { if (isProd) return; handleLogin('professional'); }}
-                  className={isLight ? "text-white hover:bg-white/10 transition-colors" : ""}
+                  className={isLight ? "hover:bg-white/10 transition-colors" : ""}
+                  style={isLight ? { color: '#69798f' } : undefined}
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
                   <span className="hidden xl:inline">Get Started</span>

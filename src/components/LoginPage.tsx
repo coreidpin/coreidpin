@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, AlertTriangle, HelpCircle } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { api } from '../utils/api';
 
@@ -52,6 +52,16 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const [emailVerified, setEmailVerified] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [resendAttempts, setResendAttempts] = useState(0);
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinLoading, setPinLoading] = useState(false);
+
+  const normalizePin = (raw: string) => (raw || '').toUpperCase().replace(/^PIN-/, '');
+  const isValidPinFormat = (raw: string) => {
+    const v = normalizePin(raw);
+    return /^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{6}$/.test(v);
+  };
+  const sanitizedPin = (raw: string) => normalizePin(raw).replace(/[^A-Z0-9-]/g, '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -387,6 +397,88 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         </Button>
       </div>
 
+      <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <Label htmlFor="pin" className="text-white">Professional PIN</Label>
+          <a href="/help" className="text-xs text-white/70 hover:text-white flex items-center gap-1" aria-label="Where to find your PIN">
+            <HelpCircle className="h-4 w-4" /> Help
+          </a>
+        </div>
+        <div className="relative">
+          <Input
+            id="pin"
+            type="password"
+            inputMode="numeric"
+            placeholder="PIN-234-812345"
+            value={pin}
+            onChange={(e) => { setPin(e.target.value); if (pinError) setPinError(''); }}
+            aria-invalid={!!pinError}
+            aria-describedby={pinError ? 'pin-error' : undefined}
+            className="h-11 bg-transparent border-white/20 text-white placeholder-white/60"
+          />
+        </div>
+        {pinError && (
+          <p id="pin-error" className="text-xs text-red-400 mt-2">{pinError}</p>
+        )}
+        <div className="mt-3">
+          <Button
+            type="button"
+            className="w-full h-10"
+            disabled={pinLoading}
+            onClick={async () => {
+              setPinError('');
+              const pinValue = sanitizedPin(pin);
+              if (!isValidPinFormat(pinValue)) {
+                setPinError('Enter PIN as XXX-XXX-XXXXXX');
+                return;
+              }
+              try {
+                setPinLoading(true);
+                const data = await api.getPublicPIN(pinValue);
+                const ok = !!data && (data.success === undefined || data.success === true);
+                if (!ok) {
+                  setPinError('Invalid or expired PIN');
+                  return;
+                }
+                try {
+                  localStorage.setItem('isAuthenticated', 'true');
+                  localStorage.setItem('userType', 'professional');
+                  localStorage.setItem('userId', `pin:${pinValue}`);
+                  localStorage.setItem('emailVerified', 'true');
+                } catch {}
+                try {
+                  await supabase.from('verification_logs').insert({
+                    user_id: `pin:${pinValue}`,
+                    event_type: 'pin_login',
+                    timestamp: new Date().toISOString(),
+                    verified_status: true,
+                    user_agent: navigator.userAgent.substring(0, 255)
+                  });
+                } catch {}
+                if (onLoginSuccess) {
+                  onLoginSuccess('professional', { id: `pin:${pinValue}`, user_metadata: { userType: 'professional' } });
+                } else {
+                  defaultOnLoginSuccess();
+                }
+              } catch (e: any) {
+                setPinError(e?.message?.includes('Failed') ? 'PIN verification failed' : (e?.message || 'PIN verification failed'));
+              } finally {
+                setPinLoading(false);
+              }
+            }}
+          >
+            {pinLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Verifying PIN...
+              </>
+            ) : (
+              <>Login with PIN</>
+            )}
+          </Button>
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-white">Email Address</Label>
@@ -439,11 +531,11 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
             </div>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full h-11 bg-[#7bb8ff] text-white hover:bg-[#6aa5e6]"
-            disabled={isLoading}
-          >
+        <Button
+          type="submit"
+          className="w-full h-11 bg-[#7bb8ff] text-white hover:bg-[#6aa5e6]"
+          disabled={isLoading}
+        >
             {isLoading ? (
               <>
                 <Loader2 className="h-5 w-5 mr-2 animate-spin" />

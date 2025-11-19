@@ -6,7 +6,6 @@ import { Badge } from "./ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
-import { PINIdentityCard, generateMockPINData } from "./PINIdentityCard";
 import {
   CheckCircle,
   Globe,
@@ -58,11 +57,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
     }
   };
 
-  // Mock PIN data for showcase
-  const mockPINData = generateMockPINData();
+  
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0a0b0d' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       <Navbar 
         currentPage="landing"
         onNavigate={handleNavigate}
@@ -71,17 +69,9 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         userType={userType}
       />
 
-      {/* HERO SECTION - Premium Dark (mobile-first) */}
-      <section className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
-        {/* Animated gradient overlay */}
-        <div className="absolute inset-0 opacity-20 sm:opacity-30">
-          <div className="absolute top-0 left-1/4 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-purple-500/20 rounded-full blur-xl sm:blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute bottom-0 right-1/4 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-blue-500/20 rounded-full blur-xl sm:blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] sm:w-96 sm:h-96 bg-emerald-500/10 rounded-full blur-xl sm:blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
-        </div>
-
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(191,165,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(191,165,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:64px_64px]" />
+      {/* HERO SECTION - Modern Light */}
+      <section className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-slate-50">
+        
 
         <div className="container mx-auto px-4 py-12 sm:py-20 relative z-10">
           <div className="max-w-7xl mx-auto">
@@ -100,12 +90,11 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4 sm:mb-6 border border-white/10"
-                  style={{ backgroundColor: 'rgba(191, 165, 255, 0.1)' }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4 sm:mb-6 border border-slate-200 bg-white"
                 >
-                  <Sparkles className="h-4 w-4" style={{ color: '#bfa5ff' }} />
-                  <span className="text-white text-xs sm:text-sm">Introducing PIN</span>
-                  <Badge className="ml-1 text-xs" style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}>New</Badge>
+                  <Sparkles className="h-4 w-4" style={{ color: '#32F08C' }} />
+                  <span className="text-xs sm:text-sm" style={{ color: '#7BB8FF' }}>Introducing PIN</span>
+                  <Badge className="ml-1 text-xs" style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>New</Badge>
                 </motion.div>
 
                 {/* Main Headline */}
@@ -113,13 +102,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-6 text-white leading-snug md:leading-tight break-words"
+                  className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-6 leading-snug md:leading-tight break-words"
+                  style={{ color: '#0A0B0D' }}
                 >
-                  Your Global<br />
-                  <span className="text-white">
-                    Professional Identity
-                  </span>
-                  <br />Number
+                  Your Phone Number. Your Global Identity.
                 </motion.h1>
 
 
@@ -128,9 +114,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+                  className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+                  style={{ color: 'rgba(10,11,13,0.70)' }}
                 >
-                  The Global Identity Layer for the Future of Work
+                  Core-ID turns your phone number into a secure, universal Professional Identity Number (PIN). One identity, recognized across companies, platforms, and borders — powered by enterprise-grade infrastructure.
                 </motion.p>
 
                 {/* CTAs */}
@@ -143,18 +130,19 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                   <Button
                     size="lg"
                     onClick={() => (isAuthenticated ? handleNavigate('dashboard') : setShowWaitlist(true))}
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200"
-                    style={{ backgroundColor: '#32f08c', color: '#0a0b0d' }}
+                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200 text-white"
+                    style={{ backgroundColor: '#0A0B0D' }}
                   >
                     <Fingerprint className="h-5 w-5 mr-2" />
-                    {isAuthenticated ? 'Dashboard' : 'Join waitlist'}
+                    {isAuthenticated ? 'Dashboard' : 'Join the Waitlist'}
                     <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 <Button
                   size="lg"
                   onClick={() => handleNavigate('how-it-works')}
                   variant="outline"
-                  className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 bg-white text-black border-white/20 hover:bg-white hover:text-black hover:scale-105 transition-all duration-200"
+                  className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 hover:scale-105 transition-all duration-200"
+                  style={{ borderColor: '#BFA5FF', color: '#0A0B0D' }}
                 >
                   <Play className="h-5 w-5 mr-2" />
                   See How It Works
@@ -183,59 +171,39 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 </motion.div>
               </motion.div>
 
-              {/* Right: PIN Card Mockup */}
+              {/* Right: Abstract Identity Visualization */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
                 className="relative max-w-[min(90vw,520px)] mx-auto"
               >
-                {/* Glow effect behind card */}
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/30 to-emerald-500/30 blur-3xl rounded-3xl" />
-                
-                {/* PIN Card */}
-                <div className="relative z-10 transform hover:scale-105 transition-transform duration-500">
-                  <PINIdentityCard 
-                    data={mockPINData} 
-                    variant="full"
-                    showActions={false}
-                  />
+                <div className="relative rounded-3xl bg-white shadow-2xl border border-slate-200 p-8">
+                  <div className="absolute inset-0 rounded-3xl pointer-events-none bg-[radial-gradient(circle_at_20%_30%,#e2e8f0_0,transparent_40%),radial-gradient(circle_at_80%_70%,#f1f5f9_0,transparent_40%)]" />
+                  <div className="relative">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                      <div className="text-sm mb-2" style={{ color: '#0A0B0D' }}>Core-ID PIN</div>
+                      <div className="text-2xl font-semibold tracking-wide" style={{ color: '#0A0B0D' }}>PIN-234-812345</div>
+                      <div className="mt-4 relative">
+                        <div className="brand-gradient-overlay" />
+                        <div className="grid grid-cols-3 gap-3 relative">
+                        <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                          <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
+                          <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
+                        </div>
+                        <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                          <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
+                          <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
+                        </div>
+                        <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                          <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
+                          <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
+                        </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Floating stats */}
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 }}
-                  className="hidden md:block absolute -left-4 top-1/4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#32f08c' }}>
-                      <CheckCheck className="h-5 w-5 text-black" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm">Verified</div>
-                      <div className="text-gray-400 text-xs">AI + Blockchain</div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1 }}
-                  className="hidden md:block absolute -right-4 bottom-1/4 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-2xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: '#7bb8ff' }}>
-                      <Globe className="h-5 w-5 text-black" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm">Global</div>
-                      <div className="text-gray-400 text-xs">195+ countries</div>
-                    </div>
-                  </div>
-                </motion.div>
               </motion.div>
             </div>
           </div>
@@ -248,7 +216,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           transition={{ delay: 1.2, repeat: Infinity, duration: 1.5, repeatType: "reverse" }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
-          <ChevronRight className="h-6 w-6 text-white/40 rotate-90" />
+          <ChevronRight className="h-6 w-6 text-slate-400 rotate-90" />
         </motion.div>
       </section>
 
