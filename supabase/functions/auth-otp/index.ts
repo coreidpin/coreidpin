@@ -4,6 +4,14 @@ import { createClient } from "npm:@supabase/supabase-js";
 
 import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
 import { buildWelcomeEmail } from "../server/templates/welcome.ts";
+import { 
+  hashData, 
+  generateOTP, 
+  storeOTP, 
+  verifyOTP as verifyOTPUtil,
+  sendOTPEmail,
+  sendOTPSMS 
+} from "../_shared/otp-utils.ts";
 
 const app = new Hono();
 
@@ -19,20 +27,7 @@ app.use("/*", cors({
   credentials: false,
 }));
 
-// Helper to hash data
-async function hashData(data: string, salt: string = ''): Promise<string> {
-  const encoder = new TextEncoder();
-  const dataBuffer = encoder.encode(data + salt);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
 
-// Helper to generate OTP
-function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
 
 // Helper to generate Supabase JWT
 async function generateJWT(userId: string, email: string | null) {
@@ -76,33 +71,12 @@ const handleRequest = async (c: any) => {
     const otp = generateOTP();
     const otpHash = await hashData(otp); // Hash OTP before storing
 
-    // 3. Store in otps table
-    const insertData = {
-      contact_hash: contactHash,
-      otp_hash: otpHash,
-      expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-      attempts: 0,
-      used: false
-    };
-    
-    console.log('Inserting OTP record:', { 
-      contact_hash_preview: contactHash.substring(0, 10),
-      otp_hash_preview: otpHash.substring(0, 10),
-      expires_at: insertData.expires_at
-    });
-    
-    const { data: insertedData, error: dbError } = await supabase
-      .from('otps')
-      .insert(insertData)
-      .select()
-      .single();
-
-    if (dbError) {
-      console.error('OTP storage error:', dbError);
+    // 3. Store in otps table using shared utility
+    const storeResult = await storeOTP(supabase, contactHash, otpHash);
+    if (!storeResult.success) {
+      console.error('OTP storage error:', storeResult.error);
       return c.json({ error: 'Failed to generate OTP' }, 500);
     }
-    
-    console.log('OTP record inserted successfully:', { id: insertedData?.id });
 
     // 4. Send OTP
     if (contact_type === 'email') {
@@ -114,32 +88,9 @@ const handleRequest = async (c: any) => {
         return c.json({ error: 'Server configuration error' }, 500);
       }
 
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${RESEND_API_KEY}`
-        },
-        body: JSON.stringify({
-          from: `CoreID <${FROM_EMAIL}>`,
-          to: contact,
-          subject: 'Your CoreID Verification Code',
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2>Verification Code</h2>
-              <p>Your verification code is:</p>
-              <h1 style="font-size: 32px; letter-spacing: 5px; background: #f4f4f5; padding: 20px; text-align: center; border-radius: 8px;">${otp}</h1>
-              <p>This code will expire in 10 minutes.</p>
-              <p>If you didn't request this code, you can safely ignore this email.</p>
-            </div>
-          `
-        })
-      });
-
-      if (!res.ok) {
-        const errorData = await res.text();
-        console.error('Resend API error:', errorData);
-        return c.json({ error: 'Failed to send email' }, 500);
+      const sendResult = await sendOTPEmail(contact, otp, RESEND_API_KEY, FROM_EMAIL);
+      if (!sendResult.success) {
+        return c.json({ error: sendResult.error }, 500);
       }
     } else {
       // Send SMS via Termii
@@ -151,47 +102,10 @@ const handleRequest = async (c: any) => {
         return c.json({ error: 'Server configuration error' }, 500);
       }
 
-      const smsPayload = {
-        to: contact,
-        from: SENDER_ID,
-        sms: `Your CoreID verification code is: ${otp}. Valid for 10 minutes.`,
-        type: 'plain',
-        channel: 'dnd',
-        api_key: TERMII_API_KEY,
-      };
-
-      console.log('Sending SMS via Termii:', { to: contact, from: SENDER_ID });
-
-      const res = await fetch('https://api.ng.termii.com/api/sms/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(smsPayload),
-      });
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('Termii API error status:', res.status);
-        console.error('Termii API error body:', errorText);
-        
-        let errorDetail = errorText;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.message || errorJson.error || errorText;
-        } catch (e) {
-          // errorText is not JSON, use as is
-        }
-        
-        return c.json({ 
-          error: 'Failed to send SMS', 
-          details: errorDetail,
-          status: res.status 
-        }, 500);
+      const sendResult = await sendOTPSMS(contact, otp, TERMII_API_KEY, SENDER_ID);
+      if (!sendResult.success) {
+        return c.json({ error: sendResult.error }, 500);
       }
-
-      const responseData = await res.json();
-      console.log('Termii response:', responseData);
     }
     
     // Log audit event
@@ -228,48 +142,22 @@ const handleVerify = async (c: any) => {
     const contactHash = await hashData(contact, Deno.env.get('SERVER_SALT') ?? 'default-salt');
     const otpHash = await hashData(otp);
     
-    const currentTime = new Date().toISOString();
-    
     console.log('Verifying OTP:', {
       contact,
       contact_hash_preview: contactHash.substring(0, 10),
       otp_hash_preview: otpHash.substring(0, 10),
-      current_time: currentTime,
       has_metadata: !!(name || email || phone),
       create_account
     });
 
-    // 1. Find valid OTP
-    const { data: otpRecord, error: fetchError } = await supabase
-      .from('otps')
-      .select('*')
-      .eq('contact_hash', contactHash)
-      .eq('used', false)
-      .gt('expires_at', currentTime)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (fetchError || !otpRecord) {
-      console.error('OTP Verification Failed:', { fetchError, contactHash });
-      return c.json({ error: 'Invalid or expired OTP' }, 400);
+    // Verify OTP using shared utility
+    const verifyResult = await verifyOTPUtil(supabase, contactHash, otpHash);
+    
+    if (!verifyResult.valid) {
+      return c.json({ error: verifyResult.error }, verifyResult.shouldRetry ? 400 : 429);
     }
 
-    // 2. Check attempts
-    if (otpRecord.attempts >= 5) {
-      return c.json({ error: 'Too many attempts. Please request a new OTP.' }, 429);
-    }
-
-    // 3. Verify Hash
-    if (otpRecord.otp_hash !== otpHash) {
-      await supabase.from('otps').update({ attempts: otpRecord.attempts + 1 }).eq('id', otpRecord.id);
-      return c.json({ error: 'Invalid OTP' }, 400);
-    }
-
-    // 4. Mark used
-    await supabase.from('otps').update({ used: true }).eq('id', otpRecord.id);
-
-    // 5. Check if user exists
+    // 5. Check if user exists in identity_users
     let { data: user } = await supabase
       .from('identity_users')
       .select('user_id, full_name')
@@ -279,11 +167,50 @@ const handleVerify = async (c: any) => {
     let userId = user?.user_id;
     let userEmail: string | null = null;
 
-    // 6. Create user if not exists
+    // SECURITY CHECK: If user exists in identity_users, verify they still exist in auth.users
+    if (userId) {
+      console.log('User found in identity_users, verifying auth.users existence:', userId);
+      
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
+      
+      if (authError || !authUser) {
+        console.error('SECURITY: User exists in identity_users but NOT in auth.users (deleted account):', {
+          userId,
+          authError: authError?.message
+        });
+        
+        // This user was deleted - do not allow login or recreation
+        return c.json({ 
+          error: 'This account has been deleted and cannot be accessed. Please contact support if you believe this is an error.',
+          code: 'ACCOUNT_DELETED'
+        }, 403);
+      }
+      
+      // User exists in both tables - safe to proceed
+      userEmail = authUser.user.email || null;
+    }
+
+    // 6. Create user if not exists (only for registration)
     if (!userId) {
       // If create_account is not explicitly true, deny login for non-existent users
       if (!create_account) {
         return c.json({ error: 'Account not found. Please sign up.' }, 404);
+      }
+
+      // Additional check: ensure this wasn't a previously deleted user
+      // Check if identity_users record exists but auth.users doesn't (orphaned record)
+      const { data: orphanedUser } = await supabase
+        .from('identity_users')
+        .select('user_id')
+        .eq('phone_hash', contactHash)
+        .single();
+        
+      if (orphanedUser) {
+        console.error('SECURITY: Orphaned identity_users record found (deleted from auth.users):', orphanedUser.user_id);
+        return c.json({ 
+          error: 'This account was previously deleted and cannot be recreated. Please use a different contact method or contact support.',
+          code: 'ACCOUNT_DELETED'
+        }, 403);
       }
 
       const uniqueId = crypto.randomUUID().substring(0, 12);
@@ -303,6 +230,13 @@ const handleVerify = async (c: any) => {
 
       userId = newUserId;
       userEmail = placeholderEmail;
+
+      // Verify the user was actually created in auth.users
+      const { data: verifyAuthUser } = await supabase.auth.admin.getUserById(userId);
+      if (!verifyAuthUser) {
+        console.error('SECURITY: User creation succeeded but user not found in auth.users');
+        return c.json({ error: 'Failed to create user account' }, 500);
+      }
 
       // Create identity_users record
       await supabase.from('identity_users').insert({
