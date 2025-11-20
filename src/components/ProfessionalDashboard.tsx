@@ -82,6 +82,9 @@ export function ProfessionalDashboard() {
     projects: 3,
     endorsements: 5
   });
+  
+  // Derived state for highlighting manage button
+  const highlightManage = !userProfile || (userProfile as any)?.onboarding_complete !== true;
 
   const chartData = [
     { day: 1, actions: 2 },
@@ -193,7 +196,7 @@ export function ProfessionalDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0B0D] text-white">
+    <div className="min-h-screen bg-[#0a0b0d] text-white">
       <div className="container mx-auto px-6 py-8 space-y-8">
         
         {/* Header Section */}
@@ -241,56 +244,56 @@ export function ProfessionalDashboard() {
               transition={reducedMotion ? undefined : { delay: 0.1 }}
               className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4"
             >
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#bfa5ff]">{stats.profileViews}</div>
                   <div className="text-xs text-white mt-1">Profile Views</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#32f08c]">{stats.pinUsage}</div>
                   <div className="text-xs text-white mt-1">PIN Usage</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#7bb8ff]">{stats.verifications}</div>
                   <div className="text-xs text-white mt-1">Verifications</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#bfa5ff]">{stats.apiCalls}</div>
                   <div className="text-xs text-white mt-1">API Calls</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#32f08c]">{stats.countries}</div>
                   <div className="text-xs text-white mt-1">Countries</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#7bb8ff]">{stats.companies}</div>
                   <div className="text-xs text-white mt-1">Companies</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#bfa5ff]">{stats.projects}</div>
                   <div className="text-xs text-white mt-1">Projects</div>
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10 hover:bg-white/10 transition-all">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 hover:bg-[#14151a]/90 transition-all">
                 <CardContent className="p-4 text-center text-white">
                   <div className="text-2xl font-bold text-[#32f08c]">{stats.endorsements}</div>
                   <div className="text-xs text-white mt-1">Endorsements</div>
@@ -306,7 +309,7 @@ export function ProfessionalDashboard() {
                 animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
                 transition={reducedMotion ? undefined : { delay: 0.2 }}
               >
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
                   <CardContent className="p-6 text-white">
                     <div className="flex items-center gap-6">
                       <div className="relative">
@@ -358,7 +361,7 @@ export function ProfessionalDashboard() {
                 animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
                 transition={reducedMotion ? undefined : { delay: 0.3 }}
               >
-                <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+                <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
                   <CardContent className="p-6 text-white">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-white">PIN Activity Overview</h3>
@@ -412,12 +415,12 @@ export function ProfessionalDashboard() {
               animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
               transition={reducedMotion ? undefined : { delay: 0.5 }}
             >
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
                 <CardContent className="p-6 text-white">
                   <h3 className="text-lg font-semibold mb-4 text-white">Recent Activity</h3>
                   <div className="space-y-3">
                     {notifications.map((notification, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-[#14151a]/60">
                         {notification.type === 'verification' && <BadgeCheck className="h-4 w-4 text-[#32f08c]" />}
                         {notification.type === 'api' && <Globe className="h-4 w-4 text-[#7bb8ff]" />}
                         {notification.type === 'view' && <Eye className="h-4 w-4 text-[#bfa5ff]" />}
@@ -435,40 +438,40 @@ export function ProfessionalDashboard() {
               animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
               transition={reducedMotion ? undefined : { delay: 0.4 }}
             >
-              <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
                 <CardContent className="p-6 text-white">
                   <h3 className="text-lg font-semibold mb-4 text-white">Quick Actions</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <Button 
                       onClick={() => window.location.href = '/identity-management'}
                       variant="outline" 
-                      className={`h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white ${highlightManage ? 'ring-2 ring-[#32f08c] shadow-[0_0_20px_#32f08c40]' : ''}`}
+                      className={`h-auto p-4 flex-col gap-2 border-white/20 hover:bg-[#14151a]/90 text-white ${highlightManage ? 'ring-2 ring-[#32f08c] shadow-[0_0_20px_#32f08c40]' : ''}`}
                     >
                       <Fingerprint className="h-5 w-5 text-[#bfa5ff]" />
                       <span className="text-xs text-white">Manage Identity</span>
                     </Button>
                     
-                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white">
+                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-[#14151a]/90 text-white">
                       <Eye className="h-5 w-5 text-[#32f08c]" />
                       <span className="text-xs text-white">View Public Profile</span>
                     </Button>
                     
-                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white">
+                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-[#14151a]/90 text-white">
                       <Download className="h-5 w-5 text-[#7bb8ff]" />
                       <span className="text-xs text-white">Download Badge</span>
                     </Button>
                     
-                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white">
+                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-[#14151a]/90 text-white">
                       <Phone className="h-5 w-5 text-[#bfa5ff]" />
                       <span className="text-xs text-white">Update Phone</span>
                     </Button>
                     
-                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white">
+                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-[#14151a]/90 text-white">
                       <Share2 className="h-5 w-5 text-[#32f08c]" />
                       <span className="text-xs text-white">Share PIN</span>
                     </Button>
                     
-                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-white/10 text-white">
+                    <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-white/20 hover:bg-[#14151a]/90 text-white">
                       <Settings className="h-5 w-5 text-[#7bb8ff]" />
                       <span className="text-xs text-white">Security Settings</span>
                     </Button>
@@ -490,7 +493,7 @@ export function ProfessionalDashboard() {
 
             <div className="grid md:grid-cols-2 gap-6">
               {projects.map((project) => (
-                <Card key={project.id} className="bg-white/5 backdrop-blur-sm border-white/10">
+                <Card key={project.id} className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
                   <CardContent className="p-6 text-white">
                     <div className="flex items-start justify-between mb-4">
                       <div>
@@ -531,7 +534,7 @@ export function ProfessionalDashboard() {
 
             <div className="space-y-4">
               {endorsements.map((endorsement) => (
-                <Card key={endorsement.id} className="bg-white/5 backdrop-blur-sm border-white/10">
+                <Card key={endorsement.id} className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
                   <CardContent className="p-6 text-white">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
@@ -566,7 +569,7 @@ export function ProfessionalDashboard() {
 
       {userProfile && userProfile.email_verified === true && userProfile.phone_verified !== true && (
         <div className="mt-6">
-          <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+          <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
             <CardContent className="p-6 text-white">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Verify Phone to Activate PIN</h3>
@@ -589,4 +592,3 @@ export function ProfessionalDashboard() {
     </div>
   );
 }
-  const highlightManage = !userProfile || (userProfile as any)?.onboarding_complete !== true;

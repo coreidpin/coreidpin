@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { AppRouter } from './components/Router';
 
 import { AdminLoginDialog } from './components/AdminLoginDialog';
 import { WelcomeToast } from './components/WelcomeToast';
 import PasswordResetDialog from './components/PasswordResetDialog';
-import { VerificationSuccessModal } from './components/VerificationSuccessModal.tsx';
+import { VerificationSuccessModal } from './components/VerificationSuccessModal';
 import { supabase } from './utils/supabase/client';
 import { isAuthenticated as authIsAuthed } from './utils/auth';
 import { api } from './utils/api';
@@ -22,7 +22,15 @@ type UserType = 'landing' | 'employer' | 'professional' | 'university';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('professional');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    // Initialize from localStorage to prevent race conditions with protected routes
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('isAuthenticated') === 'true' && 
+             !!localStorage.getItem('accessToken') && 
+             !!localStorage.getItem('userId');
+    }
+    return false;
+  });
   const [userData, setUserData] = useState<any>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
@@ -72,11 +80,18 @@ export default function App() {
       }
     } catch {}
 
-    // Skip initAuth to avoid 401 errors
-    // onAuthChange((authed) => {
-    //   setIsAuthenticated(authed);
-    //   if (authed) setAppState('dashboard');
-    // });
+    // Initialize auth to restore session from localStorage
+    const initializeAuth = async () => {
+      try {
+        const { initAuth } = await import('./utils/auth');
+        await initAuth();
+      } catch (error) {
+        console.warn('Failed to initialize auth:', error);
+      }
+    };
+    
+    initializeAuth();
+
     const checkSession = async () => {
       // Check for OAuth callback
       const { data: { session } } = await supabase.auth.getSession();
@@ -547,6 +562,7 @@ export default function App() {
         }}
         userType={currentView as 'employer' | 'professional' | 'university'}
       />
+      <Toaster />
     </>
   );
 }

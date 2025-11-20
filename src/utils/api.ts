@@ -2,6 +2,9 @@ import { projectId, publicAnonKey } from './supabase/info';
 import { ensureValidSession, refreshTokenIfNeeded, handleSessionExpiry } from './session';
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
+const AUTH_OTP_URL = `https://${projectId}.supabase.co/functions/v1/auth-otp`;
+const AUTH_PIN_URL = `https://${projectId}.supabase.co/functions/v1/auth-pin`;
+const USER_URL = `https://${projectId}.supabase.co/functions/v1/user`;
 
 export interface RegisterUserData {
   email: string;
@@ -84,6 +87,13 @@ class APIClient {
         
         // Handle transient errors (500, 429)
         if (res.status >= 500 || res.status === 429) {
+          // Try to read the error body to log it for debugging
+          try {
+            const errorBody = await res.clone().json();
+            console.error(`[API] ${res.status} Error Body:`, errorBody);
+          } catch (e) {
+            console.error(`[API] ${res.status} Error (could not read body):`, e);
+          }
           throw Object.assign(new Error(`Transient error: ${res.status}`), { status: res.status });
         }
         
@@ -791,21 +801,94 @@ class APIClient {
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data?.success) {
       const msg = data?.message || data?.error || 'Failed to issue PIN';
-      throw new Error(msg);
-    }
-    return data;
-  }
-
-  // Project Management API Methods
-  async getProjects(accessToken: string) {
-    const response = await this.fetchWithRetry(`${BASE_URL}/projects`, {
-      method: 'GET',
-      headers: this.getHeaders(accessToken)
-    });
-    if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to get projects');
     }
+    return response.json();
+  }
+
+  // ============================================================================
+  // Passwordless Auth API Methods
+  // ============================================================================
+
+  async requestOTP(contact: string, contactType: 'phone' | 'email') {
+    const response = await this.fetchWithRetry(`${AUTH_OTP_URL}/request`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ contact, contact_type: contactType })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error('API Error Response:', error);
+      throw new Error(error.error || JSON.stringify(error) || 'Failed to send OTP');
+    }
+    
+    const data = await response.json();
+    console.log('OTP Request Response:', data);
+    return data;
+  }
+
+  async verifyOTP(contact: string, otp: string) {
+    const response = await this.fetchWithRetry(`${AUTH_OTP_URL}/verify`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ contact, otp })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      // Attach debug info to the error object if available
+      const errorObj = new Error(error.error || 'Failed to verify OTP');
+      (errorObj as any).debug = error.debug;
+      console.error('OTP Verify Error Details:', JSON.stringify(error, null, 2));
+      throw errorObj;
+    }
+    
+    return response.json();
+  }
+
+  async setupPIN(regToken: string, pin: string, fullName?: string) {
+    const response = await this.fetchWithRetry(`${AUTH_PIN_URL}/setup`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ reg_token: regToken, pin, full_name: fullName })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to set PIN');
+    }
+    
+    return response.json();
+  }
+
+  async verifyPIN(regToken: string, pin: string) {
+    const response = await this.fetchWithRetry(`${AUTH_PIN_URL}/verify`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ reg_token: regToken, pin })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to verify PIN');
+    }
+    
+    return response.json();
+  }
+
+  async getMyProfile(accessToken: string) {
+    const response = await this.fetchWithRetry(`${USER_URL}/me`, {
+      method: 'GET',
+      headers: this.getHeaders(accessToken)
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'Failed to get user profile');
+    }
+    
     return response.json();
   }
 

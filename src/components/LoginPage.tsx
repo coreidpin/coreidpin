@@ -1,62 +1,63 @@
 import React, { useState } from 'react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Loader2, Chrome, Shield } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
-import { api } from '../utils/api';
+import { OTPRequestForm } from '../features/auth/OTPRequestForm';
+import { OTPVerifyForm } from '../features/auth/OTPVerifyForm';
+import { PINSetupForm } from '../features/auth/PINSetupForm';
+import { PINVerifyForm } from '../features/auth/PINVerifyForm';
 
 interface LoginPageProps {
   onLoginSuccess?: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
 }
 
+type AuthStep = 'request' | 'verify_otp' | 'setup_pin' | 'verify_pin';
+
 export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [pin, setPin] = useState('');
-  const [pinLoading, setPinLoading] = useState(false);
-  const [pinError, setPinError] = useState('');
+  
+  // Auth Flow State
+  const [step, setStep] = useState<AuthStep>('request');
+  const [contact, setContact] = useState('');
+  const [contactType, setContactType] = useState<'phone' | 'email'>('phone');
+  const [regToken, setRegToken] = useState('');
 
   const defaultOnLoginSuccess = () => {
     window.location.href = '/dashboard';
   };
 
-  const handlePinLogin = async () => {
-    setPinError('');
-    const pinValue = pin.toUpperCase().replace(/^PIN-/, '');
+  const handleLoginSuccess = (accessToken: string, user: any) => {
+    // Extract userType from metadata or default to professional
+    const userType = user?.user_metadata?.userType || 'professional';
     
-    if (!/^[A-Z0-9]{3}-[A-Z0-9]{3}-[A-Z0-9]{6}$/.test(pinValue)) {
-      setPinError('Enter PIN as XXX-XXX-XXXXXX');
-      return;
+    if (onLoginSuccess) {
+      onLoginSuccess(userType, user);
+    } else {
+      defaultOnLoginSuccess();
     }
-    
-    try {
-      setPinLoading(true);
-      const data = await api.getPublicPIN(pinValue);
-      
-      if (!data || (data.success !== undefined && !data.success)) {
-        setPinError('Invalid or expired PIN');
-        return;
-      }
-      
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userType', 'professional');
-      localStorage.setItem('userId', `pin:${pinValue}`);
-      localStorage.setItem('emailVerified', 'true');
-      
-      toast.success('PIN login successful!');
-      
-      if (onLoginSuccess) {
-        onLoginSuccess('professional', { id: `pin:${pinValue}`, user_metadata: { userType: 'professional' } });
-      } else {
-        defaultOnLoginSuccess();
-      }
-    } catch (e: any) {
-      setPinError('PIN verification failed');
-    } finally {
-      setPinLoading(false);
-    }
+  };
+
+  const handleOTPRequestSuccess = (newContact: string, newType: 'phone' | 'email') => {
+    setContact(newContact);
+    setContactType(newType);
+    setStep('verify_otp');
+  };
+
+  const handleOTPVerifySuccess = (token: string, nextStep: 'pin_setup' | 'pin_required') => {
+    setRegToken(token);
+    setStep(nextStep === 'pin_setup' ? 'setup_pin' : 'verify_pin');
+  };
+
+  const handleBackToRequest = () => {
+    setStep('request');
+    setContact('');
+  };
+
+  const handleForgotPin = () => {
+    setStep('request');
+    setContact('');
   };
 
   const handleGoogleSignIn = async () => {
@@ -89,78 +90,109 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
 
   return (
     <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
-      <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
-      <p className="text-sm mb-6 text-white/70">Sign in to your account</p>
+      {step === 'request' && (
+        <>
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
+            <p className="text-sm text-white/70">Sign in to your account</p>
+          </div>
 
-      {error && (
-        <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50/10 text-sm text-red-400">
-          {error}
-        </div>
+          {error && (
+            <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50/10 text-sm text-red-400">
+              {error}
+            </div>
+          )}
+        </>
       )}
 
-      <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Shield className="h-4 w-4 text-white" />
-          <Label htmlFor="pin" className="text-white">Professional PIN</Label>
-        </div>
-        <Input
-          id="pin"
-          type="text"
-          placeholder="PIN-234-812345"
-          value={pin}
-          onChange={(e) => {
-            setPin(e.target.value);
-            if (pinError) setPinError('');
-          }}
-          className="h-11 bg-transparent border-white/20 text-white placeholder-white/60 mb-3"
-        />
-        {pinError && (
-          <p className="text-xs text-red-400 mb-3">{pinError}</p>
+      {/* Auth Flow Components */}
+      <div className="mb-6">
+        {step === 'request' && (
+          <OTPRequestForm onSuccess={handleOTPRequestSuccess} />
         )}
-        <Button
-          type="button"
-          className="w-full h-10 bg-blue-600 hover:bg-blue-700"
-          disabled={pinLoading}
-          onClick={handlePinLogin}
-        >
-          {pinLoading ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Verifying PIN...
-            </>
-          ) : (
-            'Login with PIN'
-          )}
-        </Button>
+
+        {step === 'verify_otp' && (
+          <OTPVerifyForm 
+            contact={contact} 
+            contactType={contactType} 
+            onSuccess={handleOTPVerifySuccess}
+            onBack={handleBackToRequest}
+          />
+        )}
+
+        {step === 'setup_pin' && (
+          <PINSetupForm 
+            regToken={regToken} 
+            onSuccess={async (accessToken, user) => {
+              // Save tokens to localStorage for session persistence
+              localStorage.setItem('accessToken', accessToken);
+              localStorage.setItem('refreshToken', accessToken); // Using access token as refresh token
+              localStorage.setItem('isAuthenticated', 'true');
+              localStorage.setItem('userId', user?.id || '');
+              
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: accessToken
+              });
+              
+              handleLoginSuccess(accessToken, user);
+            }} 
+          />
+        )}
+
+        {step === 'verify_pin' && (
+          <PINVerifyForm 
+            regToken={regToken} 
+            onSuccess={async (accessToken, user) => {
+              // Save tokens to localStorage for session persistence
+              localStorage.setItem('accessToken', accessToken);
+              localStorage.setItem('refreshToken', accessToken); // Using access token as refresh token
+              localStorage.setItem('isAuthenticated', 'true');
+              localStorage.setItem('userId', user?.id || '');
+              
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: accessToken
+              });
+              
+              handleLoginSuccess(accessToken, user);
+            }}
+            onForgotPin={handleForgotPin}
+          />
+        )}
       </div>
 
-      <div className="relative mb-4">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/20" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="px-2 bg-transparent text-white/60">OR</span>
-        </div>
-      </div>
+      {step === 'request' && (
+        <>
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-transparent text-white/40 uppercase tracking-wider">Or continue with</span>
+            </div>
+          </div>
 
-      <Button
-        type="button"
-        className="w-full h-11 bg-white text-black hover:bg-white/90"
-        disabled={isLoading}
-        onClick={handleGoogleSignIn}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            Signing in...
-          </>
-        ) : (
-          <>
-            <Chrome className="h-5 w-5 mr-2" />
-            Continue with Google
-          </>
-        )}
-      </Button>
+          <Button
+            type="button"
+            className="w-full h-11 bg-white text-black hover:bg-white/90 font-medium"
+            disabled={isLoading}
+            onClick={handleGoogleSignIn}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                <Chrome className="h-5 w-5 mr-2" />
+                Google
+              </>
+            )}
+          </Button>
+        </>
+      )}
     </div>
   );
 }

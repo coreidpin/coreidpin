@@ -1,6 +1,8 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 
+import { motion } from 'motion/react';
+
 // Wrapper for PublicPINPage to handle URL parameters
 const PublicPINPageWrapper: React.FC = () => {
   const { pinNumber } = useParams<{ pinNumber: string }>();
@@ -17,17 +19,16 @@ const CookiesPolicy = lazy(() => import('./CookiesPolicy').then(m => ({ default:
 const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ default: m.GDPRCompliance })));
 const EmployerDashboard = lazy(() => import('./EmployerDashboard').then(m => ({ default: m.EmployerDashboard })));
 const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
-const UniversityDashboard = lazy(() => import('./UniversityDashboard').then(m => ({ default: m.UniversityDashboard })));
-const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
-const PublicPINPage = lazy(() => import('./PublicPINPage').then(m => ({ default: m.PublicPINPage })));
-const AuthVerifyEmail = lazy(() => import('./AuthVerifyEmail').then(m => ({ default: m.AuthVerifyEmail })));
-const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
+const Navbar = lazy(() => import('./Navbar').then(m => ({ default: m.Navbar })));
+const Footer = lazy(() => import('./Footer').then(m => ({ default: m.Footer })));
 const LoginPage = lazy(() => import('./LoginPage'));
 const SimpleRegistration = lazy(() => import('./SimpleRegistration'));
+const AuthVerifyEmail = lazy(() => import('./AuthVerifyEmail'));
+const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
+const PublicPINPage = lazy(() => import('./PublicPINPage'));
+const UniversityDashboard = lazy(() => import('./UniversityDashboard').then(m => ({ default: m.UniversityDashboard })));
+const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
-import { Navbar } from './Navbar';
-import { Footer } from './Footer';
-import { motion } from 'motion/react';
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center py-16">
@@ -290,9 +291,6 @@ export const AppRouter: React.FC<RouterProps> = ({
           } 
         />
 
-        {/* Email Verification Routes */}
-        <Route path="/auth/verify-email" element={<Suspense fallback={<LoadingSpinner />}><AuthVerifyEmail /></Suspense>} />
-        <Route path="/auth/callback" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
         <Route path="/verify-email" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
         <Route path="/email-verification" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
 
