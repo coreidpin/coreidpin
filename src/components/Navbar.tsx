@@ -14,7 +14,8 @@ import {
   BookOpen,
   HelpCircle,
   Phone,
-  LogIn
+  LogIn,
+  User
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -218,7 +219,7 @@ export function Navbar({
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={isLight ? "border-b bg-white/70 text-black backdrop-blur-md sticky top-0 z-50 shadow-sm" : "border-b bg-[var(--brand-bg)]/70 text-[var(--brand-fg)] backdrop-blur-md sticky top-0 z-50 shadow-sm"}
+        className="border-b bg-[#0a0b0d]/95 text-white backdrop-blur-md sticky top-0 z-50 shadow-sm border-white/10"
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-18">
@@ -306,24 +307,30 @@ export function Navbar({
                   <Menu className="h-5 w-5" />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="right" className={isLight ? "w-[85vw] max-w-[350px] p-0 bg-white text-black" : "w-[85vw] max-w-[350px] p-0 bg-[var(--brand-bg)] text-[var(--brand-fg)]"}>
-              <SheetHeader className={isLight ? "px-6 py-4 border-b border-black/10" : "px-6 py-4 border-b border-surface"}>
-                <SheetTitle className="flex items-center gap-2 text-left">
-                  <Logo size="sm" isLight={isLight} showText={false} />
+            <SheetContent side="right" className="w-[85vw] max-w-[350px] p-0 bg-[#0a0b0d] text-white border-l border-white/10">
+              <SheetHeader className="px-6 py-4 border-b border-white/10">
+                <SheetTitle className="flex items-center gap-2 text-left text-white">
+                  <Logo size="sm" isLight={false} showText={false} />
                 </SheetTitle>
-                <SheetDescription className={isLight ? "text-left text-black/70" : "text-left text-[var(--brand-fg)]/70"}>
+                <SheetDescription className="text-left text-white/70">
                   Navigate through swipe platform sections and features
                 </SheetDescription>
               </SheetHeader>
               
-              <div className="px-6 py-4 space-y-6 overflow-y-auto flex-1">
+              <div className="px-4 py-6 space-y-6 overflow-y-auto flex-1">
                 {!isAuthenticated ? (
                   <>
-                    {/* Mobile Navigation */}
-                    <div className="space-y-6">
-                      {navigationItems.map((item) => (
-                        <div key={item.label} className="space-y-3">
-                          <h4 className={isLight ? "font-medium text-sm text-black/70 uppercase tracking-wider px-2" : "font-medium text-sm text-[var(--brand-fg)]/70 uppercase tracking-wider px-2"}>
+                    {/* Mobile Navigation - Card Style */}
+                    <div className="space-y-4">
+                      {navigationItems.map((item, idx) => (
+                        <motion.div 
+                          key={item.label}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          className="bg-white/5 rounded-xl p-4 border border-white/10"
+                        >
+                          <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
                             {item.label}
                           </h4>
                           <div className="space-y-1">
@@ -331,63 +338,96 @@ export function Navbar({
                               <button
                                 key={subItem.href}
                                 onClick={() => handleNavigate(subItem.href)}
-                                className={isLight ? "flex items-center gap-3 w-full px-4 py-3 text-left text-black hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all duration-200 active:scale-95" : "flex items-center gap-3 w-full px-4 py-3 text-left text-[var(--brand-fg)] hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all duration-200 active:scale-95"}
+                                className="flex items-center gap-3 w-full px-3 py-3 text-left text-white hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95 group"
                               >
-                                {subItem.icon && <subItem.icon className={isLight ? "h-5 w-5 text-[var(--brand-primary)] flex-shrink-0" : "h-5 w-5 text-[var(--brand-primary)] flex-shrink-0"} />}
-                                <span className="font-medium">{subItem.label}</span>
+                                {subItem.icon && <subItem.icon className="h-5 w-5 text-[#32f08c] flex-shrink-0 group-hover:scale-110 transition-transform" />}
+                                <span className="font-medium text-sm">{subItem.label}</span>
                               </button>
                             ))}
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
 
-                    {/* Mobile Auth Buttons */}
-                    <div className="space-y-4 pt-6 border-t border-border">
-                      <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider px-2">
-                        Account
-                      </h4>
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start h-11 px-4"
-                        disabled={isProd}
-                        onClick={() => {
-                          if (isProd) return;
-                          setIsMobileMenuOpen(false);
-                          navigate('/login');
-                        }}
-                      >
-                        <LogIn className="h-4 w-4 mr-3" />
-                        <span className="font-medium">Login</span>
-                      </Button>
+                    {/* Mobile Auth Buttons - Modern Cards */}
+                    <div className="space-y-4 pt-2">
+                      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                       
-                      <div className="pt-4">
-                        <div className="text-xs text-muted-foreground px-2 mb-3">New to swipe?</div>
-                        <div className="space-y-3">
-                          <Button 
-                            variant="default" 
-                            className="w-full justify-start h-12 px-4 bg-primary"
-                            disabled={isProd}
-                            onClick={() => { if (isProd) return; handleLogin('professional'); }}
-                          >
-                            <UserCheck className="h-5 w-5 mr-3" />
-                            <div className="text-left">
-                              <div className="font-medium">I'm a Professional</div>
-                              <div className="text-xs text-primary-foreground/80">Get verified & hired</div>
-                            </div>
-                          </Button>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
+                          Account
+                        </h4>
                         <Button 
-                          variant="ghost" 
-                          className="w-full justify-start h-12 px-4"
+                          variant="outline" 
+                          className="w-full justify-start h-12 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#32f08c]/50"
                           disabled={isProd}
-                          onClick={() => { if (isProd) return; handleLogin('employer'); }}
+                          onClick={() => {
+                            if (isProd) return;
+                            setIsMobileMenuOpen(false);
+                            navigate('/login');
+                          }}
                         >
-                          <Building className="h-5 w-5 mr-3 text-blue-600" />
-                          <div className="text-left">
-                            <div className="font-medium">I'm an Employer</div>
-                            <div className="text-xs text-muted-foreground">Hire verified talent</div>
-                          </div>
+                          <LogIn className="h-5 w-5 mr-3 text-[#32f08c]" />
+                          <span className="font-medium">Login</span>
                         </Button>
+                      </motion.div>
+                      
+                      <div className="pt-2">
+                        <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
+                          Get Started
+                        </h4>
+                        <div className="space-y-3">
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                          >
+                            <Button 
+                              variant="default" 
+                              className="w-full justify-between h-14 px-4 bg-gradient-to-r from-[#32f08c] to-[#28d97a] hover:from-[#28d97a] hover:to-[#32f08c] text-black shadow-lg shadow-[#32f08c]/20"
+                              disabled={isProd}
+                              onClick={() => { if (isProd) return; handleLogin('professional'); }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-black/10 rounded-lg">
+                                  <UserCheck className="h-5 w-5" />
+                                </div>
+                                <div className="text-left">
+                                  <div className="font-semibold">Professional</div>
+                                  <div className="text-xs opacity-80">Get verified & hired</div>
+                                </div>
+                              </div>
+                              <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
+                            </Button>
+                          </motion.div>
+
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                          >
+                            <Button 
+                              variant="outline" 
+                              className="w-full justify-between h-14 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#bfa5ff]/50"
+                              disabled={isProd}
+                              onClick={() => { if (isProd) return; handleLogin('employer'); }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-[#bfa5ff]/10 rounded-lg">
+                                  <Building className="h-5 w-5 text-[#bfa5ff]" />
+                                </div>
+                                <div className="text-left">
+                                  <div className="font-semibold">Employer</div>
+                                  <div className="text-xs text-white/60">Hire verified talent</div>
+                                </div>
+                              </div>
+                              <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
+                            </Button>
+                          </motion.div>
                           {/*
                           <Button 
                             variant="ghost" 
@@ -433,6 +473,61 @@ export function Navbar({
         </div>
       </div>
     </motion.header>
+
+      {/* Mobile Bottom Tab Bar - Only visible on mobile */}
+      {isAuthenticated && (
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0a0b0d]/95 backdrop-blur-lg border-t border-white/10 z-50 safe-area-pb"
+        >
+          <nav className="flex items-center justify-around px-2 py-3">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                currentPage.includes('dashboard') 
+                  ? 'text-[#32f08c] bg-[#32f08c]/10' 
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <Building className="h-5 w-5" />
+              <span className="text-xs font-medium">Home</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/identity-management')}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                currentPage === 'identity-management' 
+                  ? 'text-[#32f08c] bg-[#32f08c]/10' 
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <User className="h-5 w-5" />
+              <span className="text-xs font-medium">Profile</span>
+            </button>
+
+            <button
+              onClick={() => navigate('/help')}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                currentPage === 'help' 
+                  ? 'text-[#32f08c] bg-[#32f08c]/10' 
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              <HelpCircle className="h-5 w-5" />
+              <span className="text-xs font-medium">Help</span>
+            </button>
+
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg text-white/60 hover:text-white transition-all"
+            >
+              <Menu className="h-5 w-5" />
+              <span className="text-xs font-medium">Menu</span>
+            </button>
+          </nav>
+        </motion.div>
+      )}
     </>
   );
 }

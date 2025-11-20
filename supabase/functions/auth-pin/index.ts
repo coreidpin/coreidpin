@@ -1,3 +1,5 @@
+// DEPRECATED: This function is no longer used as of 2025-11-20. 
+// PIN authentication has been removed in favor of true passwordless auth via auth-otp.
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { createClient } from "npm:@supabase/supabase-js";

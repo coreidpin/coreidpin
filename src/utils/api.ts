@@ -829,11 +829,25 @@ class APIClient {
     return data;
   }
 
-  async verifyOTP(contact: string, otp: string) {
+  async verifyOTP(
+    contact: string, 
+    otp: string,
+    metadata?: { name?: string; email?: string; phone?: string },
+    createAccount: boolean = false
+  ) {
+    const requestBody: any = { contact, otp, create_account: createAccount };
+    
+    // Include metadata if provided (for registration flow)
+    if (metadata) {
+      if (metadata.name) requestBody.name = metadata.name;
+      if (metadata.email) requestBody.email = metadata.email;
+      if (metadata.phone) requestBody.phone = metadata.phone;
+    }
+    
     const response = await this.fetchWithRetry(`${AUTH_OTP_URL}/verify`, {
       method: 'POST',
       headers: this.getHeaders(undefined, true),
-      body: JSON.stringify({ contact, otp })
+      body: JSON.stringify(requestBody)
     });
     
     if (!response.ok) {
@@ -848,35 +862,7 @@ class APIClient {
     return response.json();
   }
 
-  async setupPIN(regToken: string, pin: string, fullName?: string) {
-    const response = await this.fetchWithRetry(`${AUTH_PIN_URL}/setup`, {
-      method: 'POST',
-      headers: this.getHeaders(undefined, true),
-      body: JSON.stringify({ reg_token: regToken, pin, full_name: fullName })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to set PIN');
-    }
-    
-    return response.json();
-  }
 
-  async verifyPIN(regToken: string, pin: string) {
-    const response = await this.fetchWithRetry(`${AUTH_PIN_URL}/verify`, {
-      method: 'POST',
-      headers: this.getHeaders(undefined, true),
-      body: JSON.stringify({ reg_token: regToken, pin })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.error || 'Failed to verify PIN');
-    }
-    
-    return response.json();
-  }
 
   async getMyProfile(accessToken: string) {
     const response = await this.fetchWithRetry(`${USER_URL}/me`, {

@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 interface OTPVerifyFormProps {
   contact: string;
   contactType: 'phone' | 'email';
-  onSuccess: (regToken: string, nextStep: 'pin_setup' | 'pin_required') => void;
+  onSuccess: (accessToken: string, user: any) => void;
   onBack: () => void;
 }
 
@@ -34,8 +34,13 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
       const normalizedOTP = otp.trim();
 
       const response = await api.verifyOTP(normalizedContact, normalizedOTP);
-      toast.success('Code verified');
-      onSuccess(response.reg_token, response.next);
+      
+      if (response.access_token) {
+        toast.success('Code verified');
+        onSuccess(response.access_token, response.user);
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error: any) {
       console.error('OTP Verify Error:', error);
       toast.error(error.message || 'Invalid code');

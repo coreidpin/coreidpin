@@ -28,6 +28,9 @@ const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback
 const PublicPINPage = lazy(() => import('./PublicPINPage'));
 const UniversityDashboard = lazy(() => import('./UniversityDashboard').then(m => ({ default: m.UniversityDashboard })));
 const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const IdentityManagementPage = lazy(() => import('./IdentityManagementPage').then(m => ({ default: m.IdentityManagementPage })));
+const IdentityCard = lazy(() => import('./IdentityCard').then(m => ({ default: m.IdentityCard })));
+const PublicProfile = lazy(() => import('./PublicProfile').then(m => ({ default: m.PublicProfile })));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
 
 const LoadingSpinner: React.FC = () => (
@@ -122,9 +125,13 @@ const Layout: React.FC<{
     <main className="flex-1">
       {children}
     </main>
-    <Footer onNavigate={() => {}} />
+    {currentPage !== 'login' && currentPage !== 'get-started' && <Footer onNavigate={() => {}} />}
   </div>
 );
+
+import { ensureValidSession } from '../utils/session';
+
+// ... imports
 
 // Dashboard Authentication Wrapper
 const DashboardAuthWrapper: React.FC<{
@@ -137,20 +144,14 @@ const DashboardAuthWrapper: React.FC<{
   const [isValidAuth, setIsValidAuth] = React.useState(false);
 
   React.useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
-        const hasToken = !!localStorage.getItem('accessToken');
-        const isAuthFlag = localStorage.getItem('isAuthenticated') === 'true';
-        const hasUserId = !!localStorage.getItem('userId');
+        // Use robust session check
+        const token = await ensureValidSession();
         
-        const isValid = isAuthenticated && hasToken && isAuthFlag && hasUserId;
-        
-        if (!isValid) {
-          console.error('Dashboard auth failed:', { isAuthenticated, hasToken, isAuthFlag, hasUserId });
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userId');
+        if (!token) {
+          console.error('Dashboard auth failed: Invalid session');
+          onLogout(); // Clear state
           window.location.href = '/login';
           return;
         }
@@ -165,7 +166,7 @@ const DashboardAuthWrapper: React.FC<{
     };
 
     checkAuth();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, onLogout]);
 
   if (!authChecked) {
     return (
@@ -183,7 +184,7 @@ const DashboardAuthWrapper: React.FC<{
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
       <Navbar 
         currentPage="dashboard"
         onNavigate={() => {}}
@@ -200,7 +201,6 @@ const DashboardAuthWrapper: React.FC<{
           {children}
         </motion.div>
       </main>
-      <Footer onNavigate={() => {}} />
     </div>
   );
 };
@@ -464,17 +464,60 @@ export const AppRouter: React.FC<RouterProps> = ({
           } 
         />
 
-        {/* Protected Dashboard Routes */}
-        <Route 
-          path="/dashboard" 
+        {/* Dashboard Routes - Protected */}
+        <Route
+          path="/dashboard"
           element={
             <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
-                {userType === 'employer' && <EmployerDashboard />}
                 {userType === 'professional' && <ProfessionalDashboard />}
+                {userType === 'employer' && <EmployerDashboard />}
                 {userType === 'university' && <UniversityDashboard />}
+                {userType === 'admin' && <AdminDashboard />}
               </Suspense>
             </DashboardAuthWrapper>
+          }
+        />
+
+        <Route 
+          path="/identity-management" 
+          element={
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <IdentityManagementPage />
+              </Suspense>
+            </DashboardAuthWrapper>
+          } 
+        />
+
+        <Route 
+          path="/card" 
+          element={
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <IdentityCard />
+              </Suspense>
+            </DashboardAuthWrapper>
+          } 
+        />
+
+        {/* Public Profile - No auth required */}
+        <Route 
+          path="/profile/:slug" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicProfile />
+            </Suspense>
+          } 
+        />
+
+        {/* Public Profile - No auth required */}
+        <Route 
+          path="/profile/:slug" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicProfile />
+            </Suspense>
           } 
         />
 

@@ -35,18 +35,17 @@ import {
 // @ts-ignore
 import type * as RechartsTypes from 'recharts';
 
-import { EmailVerificationModal } from './EmailVerificationModal';
+
 import { PhoneVerification } from './PhoneVerification';
 import { supabase } from '../utils/supabase/client';
+import { getSessionState, ensureValidSession } from '../utils/session';
 
 export function ProfessionalDashboard() {
-  const [phonePin] = useState('+234 802 555 3322');
+  const [phonePin, setPhonePin] = useState('Loading...');
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
   const [userProfile, setUserProfile] = useState(null);
 
   const [projects, setProjects] = useState([
@@ -95,50 +94,93 @@ export function ProfessionalDashboard() {
     { day: 30, actions: 15 }
   ];
 
-  // Check email verification status on component mount
+
+
+  // Fetch user profile on mount
   useEffect(() => {
-    const checkEmailVerification = async () => {
+    const fetchProfile = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserEmail(user.email || '');
-          let verified = !!user.email_confirmed_at;
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-          if (profile) {
-            setUserProfile(profile);
-            if (profile.email_verified === true) {
-              verified = true;
-            }
-          }
-          if (!verified) {
-            const flag = localStorage.getItem('emailVerified');
-            if (flag === 'true') {
-              verified = true;
-            }
-          }
-          if (!verified) {
-            setTimeout(() => setShowEmailVerification(true), 1500);
-          }
+        // Ensure session is valid
+        const token = await ensureValidSession();
+        if (!token) {
+          console.log('Session expired or invalid');
           return;
         }
-        try {
-          const regEmail = localStorage.getItem('registrationEmail');
-          const verifiedFlag = localStorage.getItem('emailVerified');
-          if (regEmail && verifiedFlag !== 'true') {
-            setUserEmail(regEmail);
-            setTimeout(() => setShowEmailVerification(true), 1500);
+
+        // Get user ID from session state
+        const session = getSessionState();
+        if (!session?.userId) {
+          console.error('No user ID found in session');
+          return;
+        }
+
+        // Fetch Profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.userId)
+          .single();
+        
+        console.log('Profile fetch result:', { profile, profileError });
+        
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+        } else if (profile) {
+          console.log('Setting profile with data:', {
+            name: profile.name,
+            role: profile.role,
+            email: profile.email,
+            user_type: profile.user_type
+          });
+          setUserProfile(profile);
+        } else {
+          console.log('No profile data returned');
+        }
+
+        // Fetch PIN
+        const { data: pinData, error: pinError } = await supabase
+          .from('professional_pins')
+          .select('pin_number')
+          .eq('user_id', session.userId)
+          .single();
+
+        if (pinError) {
+          console.error('Error fetching PIN:', pinError);
+          console.error('PIN Error details:', {
+            code: pinError.code,
+            message: pinError.message,
+            details: pinError.details,
+            hint: pinError.hint
+          });
+          
+          // If no PIN found (PGRST116), that's okay - show placeholder
+          if (pinError.code === 'PGRST116') {
+            setPhonePin('Generating PIN...');
+          } else {
+            setPhonePin('No PIN Assigned');
           }
-        } catch {}
+        } else if (pinData) {
+          setPhonePin(pinData.pin_number);
+        } else {
+          setPhonePin('No PIN Assigned');
+        }
       } catch (error) {
-        console.error('Error checking verification status:', error);
+        console.error('Error fetching profile:', error);
       }
     };
     
-    checkEmailVerification();
+    fetchProfile();
+
+    // Refetch profile when window regains focus (user returns to tab)
+    const handleFocus = () => {
+      fetchProfile();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Reduced motion preference
@@ -199,27 +241,18 @@ export function ProfessionalDashboard() {
     <div className="min-h-screen bg-[#0a0b0d] text-white">
       <div className="container mx-auto px-6 py-8 space-y-8">
         
-        {/* Header Section */}
+        {/* Header Section - User Info Only */}
         <motion.div 
           initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
           animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
           className="text-center space-y-4"
         >
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
-            <Phone className="h-5 w-5 text-[#bfa5ff]" />
-            <span className="text-xl font-mono tracking-wider text-white">{phonePin}</span>
-            <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30">
-              Your Core-ID PIN
-            </Badge>
-          </div>
-          <p className="text-white text-sm">Your universal identity for work.</p>
-          
           <div className="flex items-center justify-center gap-6 text-sm">
-            <span className="text-white">Adebayo Olatunji</span>
-            <span className="text-white">•</span>
-            <span className="text-white">Senior Frontend Developer</span>
-            <span className="text-white">•</span>
-            <span className="text-white">Nigeria</span>
+            <span className="text-white text-lg font-semibold">{userProfile?.name || 'Professional'}</span>
+            <span className="text-white/40">•</span>
+            <span className="text-white/80">{userProfile?.role || 'Role Not Set'}</span>
+            <span className="text-white/40">•</span>
+            <span className="text-white/80">Nigeria</span>
             <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30">
               <CheckCircleIcon className="h-3 w-3 mr-1" />
               Verified
@@ -560,34 +593,9 @@ export function ProfessionalDashboard() {
         </TabsContent>
       </Tabs>
       
-      {/* Email Verification Modal */}
-      <EmailVerificationModal
-        isOpen={showEmailVerification}
-        onClose={() => setShowEmailVerification(false)}
-        userEmail={userEmail}
-      />
 
-      {userProfile && userProfile.email_verified === true && userProfile.phone_verified !== true && (
-        <div className="mt-6">
-          <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
-            <CardContent className="p-6 text-white">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Verify Phone to Activate PIN</h3>
-                <Badge className="bg-[#bfa5ff]/20 text-[#bfa5ff] border-[#bfa5ff]/30">Required</Badge>
-              </div>
-              <div className="max-w-xl">
-                <PhoneVerification 
-                  initialPhone={(userProfile?.phone as string) || ''}
-                  isVerified={false}
-                  onVerificationComplete={() => {
-                    try { setUserProfile({ ...(userProfile as any), phone_verified: true }); } catch {}
-                  }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
+
       </div>
     </div>
   );

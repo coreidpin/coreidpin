@@ -55,20 +55,6 @@ export async function initAuth() {
   }
   
   if (session?.access_token) {
-    try {
-      const res = await fetch(`${BASE_URL}/auth/session-cookie`, {
-        method: 'POST',
-        headers: getSecureHeaders(),
-        body: JSON.stringify({ token: session.access_token })
-      })
-      
-      if (!res.ok) throw new Error('Session validation failed')
-      
-      const data = await res.json().catch(() => ({}))
-      if (data?.csrf) {
-        localStorage.setItem('csrfToken', data.csrf)
-      }
-      
       // Save session state for persistence
       saveSessionState({
         accessToken: session.access_token,
@@ -77,11 +63,6 @@ export async function initAuth() {
         userType: session.user.user_metadata?.userType || 'professional',
         expiresAt: Date.now() + (session.expires_in || 3600) * 1000
       })
-      
-    } catch (error) {
-      console.error('Session initialization failed:', error)
-      await clearSession()
-    }
   } else {
     try {
       const res = await fetch(`${BASE_URL}/auth/csrf`, { 
@@ -200,19 +181,9 @@ export function onAuthChange(cb: (authed: boolean) => void) {
       localStorage.setItem('isAuthenticated', 'true')
       localStorage.setItem('emailVerified', String(!!session.user.email_confirmed_at))
       
-      // Update CSRF token
-      try {
-        const res = await fetch(`${BASE_URL}/auth/session-cookie`, {
-          method: 'POST',
-          headers: getSecureHeaders(),
-          body: JSON.stringify({ token: session.access_token })
-        })
-        const data = await res.json().catch(() => ({}))
-        if (data?.csrf) {
-          localStorage.setItem('csrfToken', data.csrf)
-        }
-      } catch (error) {
-        console.warn('CSRF token update failed:', error)
+      // Update CSRF token if needed
+      if (!localStorage.getItem('csrfToken')) {
+        generateCSRFToken()
       }
       
     } else if (event === 'SIGNED_OUT') {

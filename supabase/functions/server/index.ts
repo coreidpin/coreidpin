@@ -21,12 +21,12 @@ app.options("/*", (c) => c.text("", 204));
 app.get("/server/health", (c) => c.json({ status: "ok" }));
 
 // Auth endpoints
-app.get('/server/auth/csrf', (c) => {
+app.get('/auth/csrf', (c) => {
   const csrf = crypto.randomUUID();
   return c.json({ csrf });
 });
 
-app.post('/server/auth/session-cookie', async (c) => {
+app.post('/auth/session-cookie', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const { token } = body;
@@ -42,12 +42,12 @@ app.post('/server/auth/session-cookie', async (c) => {
   }
 });
 
-app.post('/server/auth/logout', (c) => {
+app.post('/auth/logout', (c) => {
   return c.json({ success: true });
 });
 
 // Registration OTP endpoints
-app.post('/server/registration/send-otp', async (c) => {
+app.post('/registration/send-otp', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const { phone, name, email } = body;
@@ -114,7 +114,7 @@ app.post('/server/registration/send-otp', async (c) => {
   }
 });
 
-app.post('/server/registration/verify-otp', async (c) => {
+app.post('/registration/verify-otp', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const { phone, otp, reg_token } = body;
@@ -163,7 +163,7 @@ app.post('/server/registration/verify-otp', async (c) => {
   }
 });
 
-app.post('/server/register', async (c) => {
+app.post('/register', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}));
     const { email, password, name, userType, phoneNumber, title, location } = body;

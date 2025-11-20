@@ -5,14 +5,12 @@ import { Loader2, Chrome, Shield } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { OTPRequestForm } from '../features/auth/OTPRequestForm';
 import { OTPVerifyForm } from '../features/auth/OTPVerifyForm';
-import { PINSetupForm } from '../features/auth/PINSetupForm';
-import { PINVerifyForm } from '../features/auth/PINVerifyForm';
 
 interface LoginPageProps {
   onLoginSuccess?: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
 }
 
-type AuthStep = 'request' | 'verify_otp' | 'setup_pin' | 'verify_pin';
+type AuthStep = 'request' | 'verify_otp';
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +20,6 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const [step, setStep] = useState<AuthStep>('request');
   const [contact, setContact] = useState('');
   const [contactType, setContactType] = useState<'phone' | 'email'>('phone');
-  const [regToken, setRegToken] = useState('');
 
   const defaultOnLoginSuccess = () => {
     window.location.href = '/dashboard';
@@ -45,9 +42,19 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     setStep('verify_otp');
   };
 
-  const handleOTPVerifySuccess = (token: string, nextStep: 'pin_setup' | 'pin_required') => {
-    setRegToken(token);
-    setStep(nextStep === 'pin_setup' ? 'setup_pin' : 'verify_pin');
+  const handleOTPVerifySuccess = async (accessToken: string, user: any) => {
+    // Save tokens to localStorage for session persistence
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', accessToken); // Using access token as refresh token
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('userId', user?.id || '');
+    
+    await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: accessToken
+    });
+    
+    handleLoginSuccess(accessToken, user);
   };
 
   const handleBackToRequest = () => {
@@ -55,10 +62,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     setContact('');
   };
 
-  const handleForgotPin = () => {
-    setStep('request');
-    setContact('');
-  };
+
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -117,47 +121,6 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
             contactType={contactType} 
             onSuccess={handleOTPVerifySuccess}
             onBack={handleBackToRequest}
-          />
-        )}
-
-        {step === 'setup_pin' && (
-          <PINSetupForm 
-            regToken={regToken} 
-            onSuccess={async (accessToken, user) => {
-              // Save tokens to localStorage for session persistence
-              localStorage.setItem('accessToken', accessToken);
-              localStorage.setItem('refreshToken', accessToken); // Using access token as refresh token
-              localStorage.setItem('isAuthenticated', 'true');
-              localStorage.setItem('userId', user?.id || '');
-              
-              await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: accessToken
-              });
-              
-              handleLoginSuccess(accessToken, user);
-            }} 
-          />
-        )}
-
-        {step === 'verify_pin' && (
-          <PINVerifyForm 
-            regToken={regToken} 
-            onSuccess={async (accessToken, user) => {
-              // Save tokens to localStorage for session persistence
-              localStorage.setItem('accessToken', accessToken);
-              localStorage.setItem('refreshToken', accessToken); // Using access token as refresh token
-              localStorage.setItem('isAuthenticated', 'true');
-              localStorage.setItem('userId', user?.id || '');
-              
-              await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: accessToken
-              });
-              
-              handleLoginSuccess(accessToken, user);
-            }}
-            onForgotPin={handleForgotPin}
           />
         )}
       </div>

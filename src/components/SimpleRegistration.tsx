@@ -48,8 +48,8 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   
-  // Stages: basic -> otp-verification -> pin-setup -> success
-  const [stage, setStage] = useState<'basic' | 'otp-verification' | 'pin-setup' | 'success'>('basic')
+  // Stages: basic -> otp-verification -> success
+  const [stage, setStage] = useState<'basic' | 'otp-verification' | 'success'>('basic')
   
   const [countryCode, setCountryCode] = useState(getDefaultCountry().code)
   const [countryError, setCountryError] = useState('')
@@ -59,10 +59,10 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
   const [contactType, setContactType] = useState<'phone' | 'email'>('phone')
   const [activeContact, setActiveContact] = useState('')
   
-  // PIN State
-  const [pin, setPin] = useState('')
-  const [confirmPin, setConfirmPin] = useState('')
-  const [regToken, setRegToken] = useState('')
+  // PIN State removed
+  // const [pin, setPin] = useState('')
+  // const [confirmPin, setConfirmPin] = useState('')
+  // const [regToken, setRegToken] = useState('')
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -119,7 +119,7 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
       
       // Save partial state
       RegistrationStateManager.save({
-        step: 'otp_sent',
+        step: 'phone_verification',
         name,
         email: type === 'email' ? contact : email,
         phone: type === 'phone' ? contact : phone
@@ -142,50 +142,15 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
 
     setIsLoading(true)
     try {
-      const result = await api.verifyOTP(activeContact, otp)
-      
-      if (result.reg_token) {
-        setRegToken(result.reg_token)
-        
-        // If user already exists and has PIN, they might be redirected to login
-        // But for registration flow, we assume they need to set PIN if new
-        // The backend returns 'next_step' which we can check
-        
-        if (result.next_step === 'pin_setup') {
-           setStage('pin-setup')
-        } else {
-           // User likely exists, but let's allow them to reset/set PIN or login
-           // For this flow, we proceed to PIN setup to ensure they have one
-           setStage('pin-setup')
-        }
-        
-        toast.success('Phone verified successfully')
-      }
-    } catch (err: any) {
-      console.error('OTP verification failed:', err)
-      toast.error(err.message || 'Invalid OTP')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleSetPIN = async () => {
-    if (pin.length !== 6) {
-      toast.error('PIN must be 6 digits')
-      return
-    }
-    if (pin !== confirmPin) {
-      toast.error('PINs do not match')
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      // Set PIN and create user
-      const result = await api.setupPIN(regToken, pin, formData.name)
+      // Send registration metadata along with OTP
+      const result = await api.verifyOTP(activeContact, otp, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      }, true)
       
       if (result.access_token) {
-        // Handle successful login/registration
+        // Handle successful login/registration directly
         localStorage.setItem('accessToken', result.access_token)
         localStorage.setItem('refreshToken', result.access_token) // Save refresh token for session persistence
         localStorage.setItem('isAuthenticated', 'true')
@@ -200,15 +165,19 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
         
         RegistrationStateManager.markCompleted()
         setStage('success')
-        toast.success('Account created successfully!')
+        toast.success('Registration completed successfully')
+      } else {
+        throw new Error('Invalid response from server')
       }
     } catch (err: any) {
-      console.error('PIN setup failed:', err)
-      toast.error(err.message || 'Failed to set PIN')
+      console.error('OTP verification failed:', err)
+      toast.error(err.message || 'Invalid OTP')
     } finally {
       setIsLoading(false)
     }
   }
+
+  // PIN setup handler removed
 
   return (
     <div className="min-h-screen bg-[#0a0b0d] text-white flex flex-col">
@@ -234,13 +203,11 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
             <h1 className="text-2xl font-bold text-white mb-2">
               {stage === 'basic' && 'Create your account'}
               {stage === 'otp-verification' && 'Verify your identity'}
-              {stage === 'pin-setup' && 'Secure your account'}
               {stage === 'success' && 'Welcome to CoreID'}
             </h1>
             <p className="text-white/60 text-sm">
               {stage === 'basic' && 'Start your professional identity journey today.'}
               {stage === 'otp-verification' && `We sent a code to ${activeContact}`}
-              {stage === 'pin-setup' && 'Set a PIN to protect your digital identity.'}
               {stage === 'success' && 'Your account has been successfully created.'}
             </p>
           </div>
@@ -378,42 +345,7 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
                   </div>
                 )}
 
-                {/* STAGE 3: PIN SETUP */}
-                {stage === 'pin-setup' && (
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-white/80 ml-1">Create PIN</Label>
-                        <OTPInput
-                          value={pin}
-                          onChange={setPin}
-                          length={6}
-                          isPassword
-                          className="justify-center"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-white/80 ml-1">Confirm PIN</Label>
-                        <OTPInput
-                          value={confirmPin}
-                          onChange={setConfirmPin}
-                          length={6}
-                          isPassword
-                          className="justify-center"
-                        />
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={handleSetPIN}
-                      disabled={isLoading || pin.length !== 6 || pin !== confirmPin}
-                      className="w-full h-14 bg-white text-black hover:bg-white/90 rounded-xl font-medium text-base shadow-lg shadow-white/5 transition-all mt-4"
-                    >
-                      {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Create Account'}
-                    </Button>
-                  </div>
-                )}
+                {/* STAGE 3: PIN SETUP REMOVED */}
 
                 {/* STAGE 4: SUCCESS */}
                 {stage === 'success' && (

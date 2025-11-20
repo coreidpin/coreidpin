@@ -2,6 +2,9 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { createClient } from "npm:@supabase/supabase-js";
 
+import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
+import { buildWelcomeEmail } from "../server/templates/welcome.ts";
+
 const app = new Hono();
 
 const supabase = createClient(
@@ -29,6 +32,29 @@ async function hashData(data: string, salt: string = ''): Promise<string> {
 // Helper to generate OTP
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Helper to generate Supabase JWT
+async function generateJWT(userId: string, email: string | null) {
+  const payload = {
+    aud: "authenticated",
+    exp: getNumericDate(60 * 60 * 24), // 24 hours
+    sub: userId,
+    email: email || "",
+    role: "authenticated",
+    app_metadata: { provider: "email", providers: ["email"] },
+    user_metadata: {}
+  };
+  
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(Deno.env.get('SUPABASE_JWT_SECRET') ?? ''),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  
+  return await create({ alg: "HS256", type: "JWT" }, payload, key);
 }
 
 const handleRequest = async (c: any) => {
@@ -190,7 +216,7 @@ const handleRequest = async (c: any) => {
 const handleVerify = async (c: any) => {
   try {
     const body = await c.req.json().catch(() => ({}));
-    let { contact, otp } = body;
+    let { contact, otp, name, email, phone, create_account } = body;
 
     if (!contact || !otp) {
       return c.json({ error: 'Contact and OTP required' }, 400);
@@ -208,7 +234,9 @@ const handleVerify = async (c: any) => {
       contact,
       contact_hash_preview: contactHash.substring(0, 10),
       otp_hash_preview: otpHash.substring(0, 10),
-      current_time: currentTime
+      current_time: currentTime,
+      has_metadata: !!(name || email || phone),
+      create_account
     });
 
     // 1. Find valid OTP
@@ -221,32 +249,10 @@ const handleVerify = async (c: any) => {
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
-      
-    console.log('OTP query result:', {
-      found: !!otpRecord,
-      error: fetchError,
-      record_id: otpRecord?.id,
-      record_expires_at: otpRecord?.expires_at,
-      current_time_used_in_query: currentTime,
-      time_comparison: otpRecord?.expires_at ? `${otpRecord.expires_at} > ${currentTime}` : 'N/A'
-    });
 
     if (fetchError || !otpRecord) {
-      console.error('OTP Verification Failed:', {
-        contact,
-        contactHash,
-        fetchError,
-        otpRecord
-      });
-      return c.json({ 
-        error: 'Invalid or expired OTP',
-        debug: {
-          received_contact: contact,
-          contact_hash_preview: contactHash.substring(0, 10),
-          record_found: !!otpRecord,
-          fetch_error: fetchError
-        }
-      }, 400);
+      console.error('OTP Verification Failed:', { fetchError, contactHash });
+      return c.json({ error: 'Invalid or expired OTP' }, 400);
     }
 
     // 2. Check attempts
@@ -256,58 +262,142 @@ const handleVerify = async (c: any) => {
 
     // 3. Verify Hash
     if (otpRecord.otp_hash !== otpHash) {
-      // Increment attempts
       await supabase.from('otps').update({ attempts: otpRecord.attempts + 1 }).eq('id', otpRecord.id);
-      return c.json({ 
-        error: 'Invalid OTP',
-        debug: {
-          otp_mismatch: true,
-          received_otp_hash_preview: otpHash.substring(0, 10),
-          stored_otp_hash_preview: otpRecord.otp_hash.substring(0, 10)
-        }
-      }, 400);
+      return c.json({ error: 'Invalid OTP' }, 400);
     }
 
     // 4. Mark used
     await supabase.from('otps').update({ used: true }).eq('id', otpRecord.id);
 
     // 5. Check if user exists
-    const { data: user } = await supabase
+    let { data: user } = await supabase
       .from('identity_users')
-      .select('user_id, pin_hash')
+      .select('user_id, full_name')
       .eq('phone_hash', contactHash) 
       .single();
 
-    // 6. Issue Registration Token (Session)
-    const regToken = crypto.randomUUID();
-    const scope = user?.pin_hash ? 'pin_required' : 'pin_setup';
-    
-    const { error: sessionError } = await supabase
-      .from('sessions')
-      .insert({
-        token: regToken,
-        user_id: user?.user_id || null, 
-        scope: scope,
-        expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 mins
+    let userId = user?.user_id;
+    let userEmail: string | null = null;
+
+    // 6. Create user if not exists
+    if (!userId) {
+      // If create_account is not explicitly true, deny login for non-existent users
+      if (!create_account) {
+        return c.json({ error: 'Account not found. Please sign up.' }, 404);
+      }
+
+      const uniqueId = crypto.randomUUID().substring(0, 12);
+      const placeholderEmail = `passwordless_${uniqueId}@coreid.app`;
+      const randomPassword = `P@ssw0rd_${crypto.randomUUID()}!`;
+      
+      // Use RPC function to create user
+      const { data: newUserId, error: createError } = await supabase.rpc('create_passwordless_user', {
+        p_email: placeholderEmail,
+        p_password: randomPassword
       });
 
-    if (sessionError) {
-      console.error('Session creation error:', sessionError);
-      return c.json({ error: 'Failed to create session' }, 500);
+      if (createError || !newUserId) {
+        console.error('User creation error:', createError);
+        return c.json({ error: 'Failed to create user account' }, 500);
+      }
+
+      userId = newUserId;
+      userEmail = placeholderEmail;
+
+      // Create identity_users record
+      await supabase.from('identity_users').insert({
+        user_id: userId,
+        phone_hash: contactHash,
+        phone_encrypted: 'placeholder',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+      // Create profile with registration data
+      const profileData: any = {
+        user_id: userId,
+        user_type: 'professional',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      if (name) profileData.name = name;
+      if (email) profileData.email = email;
+      if (phone) profileData.phone = phone;
+      
+      // Fallbacks
+      if (!profileData.phone && contact.startsWith('+')) profileData.phone = contact;
+      if (!profileData.email && contact.includes('@')) profileData.email = contact;
+      
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert(profileData, { onConflict: 'user_id' });
+        
+      if (profileError) console.error('Profile creation error:', profileError);
+
+      // Send Welcome Email
+      const recipientEmail = email || (contact.includes('@') ? contact : null);
+      if (recipientEmail) {
+        const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+        const FROM_EMAIL = Deno.env.get('FROM_EMAIL');
+        
+        if (RESEND_API_KEY && FROM_EMAIL) {
+          try {
+            const { subject, html, text } = buildWelcomeEmail(name || 'Professional', 'https://coreid.app');
+            
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${RESEND_API_KEY}`
+              },
+              body: JSON.stringify({
+                from: `CoreID <${FROM_EMAIL}>`,
+                to: recipientEmail,
+                subject: subject,
+                html: html,
+                text: text
+              })
+            });
+            console.log('Welcome email sent to:', recipientEmail);
+          } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+          }
+        }
+      }
+      
+    } else {
+      // Existing user - fetch email
+      const { data: userData } = await supabase.auth.admin.getUserById(userId);
+      userEmail = userData?.user?.email || null;
+      
+      // Update profile if new data provided
+      if (name || email || phone) {
+        const updateData: any = { updated_at: new Date().toISOString() };
+        if (name) updateData.name = name;
+        if (email) updateData.email = email;
+        if (phone) updateData.phone = phone;
+        
+        await supabase.from('profiles').update(updateData).eq('user_id', userId);
+      }
     }
 
-    // Log audit
+    // 7. Generate JWT
+    const jwt = await generateJWT(userId, userEmail);
+
+    // 8. Log audit
     await supabase.from('audit_events').insert({
-      event_type: 'otp_verified',
-      user_id: user?.user_id,
-      meta: { contact_masked: contact.replace(/.(?=.{4})/g, '*') }
+      event_type: 'login_success',
+      user_id: userId,
+      meta: { method: 'otp', contact_masked: contact.replace(/.(?=.{4})/g, '*') }
     });
 
     return c.json({
       status: 'ok',
-      reg_token: regToken,
-      next: scope,
-      user_exists: !!user
+      access_token: jwt,
+      expires_in: 86400,
+      user: { id: userId, email: userEmail }
     });
 
   } catch (error) {

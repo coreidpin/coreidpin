@@ -199,36 +199,58 @@ export async function restoreSession(): Promise<SessionState | null> {
     // First, try to get session from Supabase
     const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (error) {
-      console.error('Failed to get session from Supabase:', error);
-      clearSessionState();
-      return null;
+    if (session) {
+      // Calculate expiry time
+      const expiresAt = session.expires_at 
+        ? session.expires_at * 1000 
+        : Date.now() + 3600 * 1000;
+
+      const sessionState: SessionState = {
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        userId: session.user.id,
+        userType: (session.user.user_metadata?.userType || 'professional') as SessionState['userType'],
+        expiresAt,
+      };
+
+      // Save to localStorage
+      saveSessionState(sessionState);
+      console.log('Session restored successfully from Supabase');
+      return sessionState;
     }
 
-    if (!session) {
-      console.log('No Supabase session found');
-      clearSessionState();
-      return null;
+    // If Supabase session is missing, try to recover from localStorage
+    // This handles cases where we use custom JWTs or Supabase client hasn't initialized fully
+    console.log('No Supabase session found, checking localStorage...');
+    const localSession = getSessionState();
+
+    if (localSession) {
+      // Check if token is expired
+      if (isTokenExpired(localSession.expiresAt)) {
+        console.log('Local session expired');
+        clearSessionState();
+        return null;
+      }
+
+      console.log('Recovering session from localStorage...');
+      
+      // Attempt to re-hydrate Supabase session
+      const { error: setError } = await supabase.auth.setSession({
+        access_token: localSession.accessToken,
+        refresh_token: localSession.refreshToken
+      });
+
+      if (setError) {
+        console.warn('Failed to re-hydrate Supabase session:', setError);
+        // We still return localSession because it might be valid for our API calls
+        // even if Supabase client rejects it for auto-refresh
+      }
+
+      return localSession;
     }
 
-    // Calculate expiry time
-    const expiresAt = session.expires_at 
-      ? session.expires_at * 1000 
-      : Date.now() + 3600 * 1000;
-
-    const sessionState: SessionState = {
-      accessToken: session.access_token,
-      refreshToken: session.refresh_token,
-      userId: session.user.id,
-      userType: (session.user.user_metadata?.userType || 'professional') as SessionState['userType'],
-      expiresAt,
-    };
-
-    // Save to localStorage
-    saveSessionState(sessionState);
-
-    console.log('Session restored successfully');
-    return sessionState;
+    clearSessionState();
+    return null;
 
   } catch (error) {
     console.error('Failed to restore session:', error);
