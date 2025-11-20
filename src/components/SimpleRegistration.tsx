@@ -11,7 +11,7 @@ import { initAuth } from '../utils/auth'
 import { supabase } from '../utils/supabase/client'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
-import { Sparkles, Loader2, Users, Mail, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Sparkles, Loader2, Users, Mail, CheckCircle, ArrowLeft, Chrome } from 'lucide-react'
 import { RegistrationStateManager } from '../utils/registrationState'
 import { CountryCodeSelect } from './ui/country-code-select'
 import { getDefaultCountry, isCountrySupported } from '../utils/countryCodes'
@@ -110,8 +110,8 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
     
     setIsLoading(true)
     try {
-      // Request OTP
-      await api.requestOTP(contact, type)
+      // Request OTP with createAccount=true
+      await api.requestOTP(contact, type, true)
       
       setActiveContact(contact)
       setContactType(type)
@@ -128,7 +128,17 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
       toast.success(`OTP sent to ${contact}`)
     } catch (err: any) {
       console.error('Registration start failed:', err)
-      toast.error(err.message || 'Failed to send OTP')
+      if (err.message?.includes('Account already exists')) {
+        toast.error('Account already exists', {
+          description: 'Please log in instead.',
+          action: {
+            label: 'Log In',
+            onClick: () => window.location.href = '/login'
+          }
+        })
+      } else {
+        toast.error(err.message || 'Failed to send OTP')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -173,6 +183,29 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
       console.error('OTP verification failed:', err)
       toast.error(err.message || 'Invalid OTP')
     } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+      if (error) {
+        toast.error(error.message)
+        setIsLoading(false)
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Google sign-in failed')
       setIsLoading(false)
     }
   }
@@ -309,6 +342,34 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
                       className="w-full h-14 bg-white text-black hover:bg-white/90 rounded-xl font-medium text-base shadow-lg shadow-white/5 transition-all mt-2"
                     >
                       {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
+                    </Button>
+
+                    <div className="relative py-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-white/10" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-[#0a0b0d] px-2 text-white/40">Or register with</span>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      className="w-full h-14 bg-white text-black hover:bg-white/90 rounded-xl font-medium text-base shadow-lg shadow-white/5 transition-all"
+                      disabled={isLoading}
+                      onClick={handleGoogleSignIn}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                          Signing in...
+                        </>
+                      ) : (
+                        <>
+                          <Chrome className="h-5 w-5 mr-2" />
+                          Google
+                        </>
+                      )}
                     </Button>
                   </div>
                 )}

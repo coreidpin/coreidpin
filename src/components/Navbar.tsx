@@ -307,167 +307,250 @@ export function Navbar({
                   <Menu className="h-5 w-5" />
                 </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] max-w-[350px] p-0 bg-[#0a0b0d] text-white border-l border-white/10">
-              <SheetHeader className="px-6 py-4 border-b border-white/10">
-                <SheetTitle className="flex items-center gap-2 text-left text-white">
-                  <Logo size="sm" isLight={false} showText={false} />
-                </SheetTitle>
-                <SheetDescription className="text-left text-white/70">
-                  Navigate through swipe platform sections and features
-                </SheetDescription>
-              </SheetHeader>
-              
-              <div className="px-4 py-6 space-y-6 overflow-y-auto flex-1">
-                {!isAuthenticated ? (
-                  <>
-                    {/* Mobile Navigation - Card Style */}
-                    <div className="space-y-4">
-                      {navigationItems.map((item, idx) => (
-                        <motion.div 
-                          key={item.label}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: idx * 0.1 }}
-                          className="bg-white/5 rounded-xl p-4 border border-white/10"
+            <SheetContent 
+              side="right" 
+              className="w-[85vw] max-w-[350px] p-0 bg-[#0a0b0d]/95 backdrop-blur-xl text-white border-l border-white/10"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="h-full flex flex-col"
+              >
+                <SheetHeader className="px-6 py-4 border-b border-white/10 backdrop-blur-sm bg-white/5">
+                  <SheetTitle className="flex items-center gap-2 text-left text-white">
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    >
+                      <Logo size="sm" isLight={false} showText={false} />
+                    </motion.div>
+                  </SheetTitle>
+                  <SheetDescription className="text-left text-white/70">
+                    Navigate through swipe platform sections and features
+                  </SheetDescription>
+                </SheetHeader>
+                
+                  <div className="px-4 py-6 space-y-6 overflow-y-auto flex-1">
+                  {!isAuthenticated ? (
+                    <>
+                      {/* Mobile Navigation - Enhanced Card Style with Glassmorphism */}
+                      <div className="space-y-4">
+                        {navigationItems.map((item, idx) => (
+                          <motion.div 
+                            key={item.label}
+                            initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            transition={{ 
+                              type: "spring",
+                              stiffness: 120,
+                              damping: 15,
+                              delay: idx * 0.08
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            className="group relative bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-4 border border-white/20 backdrop-blur-md shadow-lg hover:shadow-[#32f08c]/20 hover:border-[#32f08c]/30 transition-all duration-300"
+                          >
+                            {/* Animated gradient background overlay */}
+                            <motion.div
+                              className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#32f08c]/0 to-[#32f08c]/0 group-hover:from-[#32f08c]/5 group-hover:to-transparent transition-all duration-500"
+                              initial={false}
+                            />
+                            
+                            {/* Shimmer effect on hover */}
+                            <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                              <motion.div
+                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                                initial={{ x: "-100%" }}
+                                whileHover={{ x: "100%" }}
+                                transition={{ duration: 0.6, ease: "easeInOut" }}
+                              />
+                            </div>
+                            
+                            <div className="relative z-10">
+                              <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
+                                {item.label}
+                              </h4>
+                              <div className="space-y-1">
+                                {item.items.map((subItem, subIdx) => (
+                                  <motion.button
+                                    key={subItem.href}
+                                    onClick={() => handleNavigate(subItem.href)}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.08 + subIdx * 0.05 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="relative flex items-center gap-3 w-full px-3 py-3 text-left text-white hover:bg-white/10 rounded-xl transition-all duration-200 overflow-hidden group/item"
+                                  >
+                                    {/* Ripple effect container */}
+                                    <span className="absolute inset-0 rounded-xl overflow-hidden">
+                                      <span className="absolute inset-0 bg-gradient-to-r from-[#32f08c]/0 via-[#32f08c]/20 to-[#32f08c]/0 translate-x-[-100%] group-hover/item:translate-x-[100%] transition-transform duration-700 ease-out" />
+                                    </span>
+                                    
+                                    {subItem.icon && (
+                                      <motion.div
+                                        whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }}
+                                        transition={{ duration: 0.5 }}
+                                      >
+                                        <subItem.icon className="h-5 w-5 text-[#32f08c] flex-shrink-0 relative z-10" />
+                                      </motion.div>
+                                    )}
+                                    <span className="font-medium text-sm relative z-10">{subItem.label}</span>
+                                  </motion.button>
+                                ))}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Mobile Auth Buttons - Premium Cards with Magnetic Effect */}
+                      <div className="space-y-4 pt-2">
+                        <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                        
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ type: "spring", delay: 0.3 }}
                         >
                           <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
-                            {item.label}
+                            Account
                           </h4>
-                          <div className="space-y-1">
-                            {item.items.map((subItem) => (
-                              <button
-                                key={subItem.href}
-                                onClick={() => handleNavigate(subItem.href)}
-                                className="flex items-center gap-3 w-full px-3 py-3 text-left text-white hover:bg-white/10 rounded-lg transition-all duration-200 active:scale-95 group"
-                              >
-                                {subItem.icon && <subItem.icon className="h-5 w-5 text-[#32f08c] flex-shrink-0 group-hover:scale-110 transition-transform" />}
-                                <span className="font-medium text-sm">{subItem.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Mobile Auth Buttons - Modern Cards */}
-                    <div className="space-y-4 pt-2">
-                      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                      
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
-                          Account
-                        </h4>
-                        <Button 
-                          variant="outline" 
-                          className="w-full justify-start h-12 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#32f08c]/50"
-                          disabled={isProd}
-                          onClick={() => {
-                            if (isProd) return;
-                            setIsMobileMenuOpen(false);
-                            navigate('/login');
-                          }}
-                        >
-                          <LogIn className="h-5 w-5 mr-3 text-[#32f08c]" />
-                          <span className="font-medium">Login</span>
-                        </Button>
-                      </motion.div>
-                      
-                      <div className="pt-2">
-                        <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
-                          Get Started
-                        </h4>
-                        <div className="space-y-3">
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                          >
-                            <Button 
-                              variant="default" 
-                              className="w-full justify-between h-14 px-4 bg-gradient-to-r from-[#32f08c] to-[#28d97a] hover:from-[#28d97a] hover:to-[#32f08c] text-black shadow-lg shadow-[#32f08c]/20"
-                              disabled={isProd}
-                              onClick={() => { if (isProd) return; handleLogin('professional'); }}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-black/10 rounded-lg">
-                                  <UserCheck className="h-5 w-5" />
-                                </div>
-                                <div className="text-left">
-                                  <div className="font-semibold">Professional</div>
-                                  <div className="text-xs opacity-80">Get verified & hired</div>
-                                </div>
-                              </div>
-                              <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
-                            </Button>
-                          </motion.div>
-
-                          <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                          >
+                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                             <Button 
                               variant="outline" 
-                              className="w-full justify-between h-14 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#bfa5ff]/50"
+                              className="relative w-full justify-start h-12 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#32f08c]/50 overflow-hidden group"
                               disabled={isProd}
-                              onClick={() => { if (isProd) return; handleLogin('employer'); }}
+                              onClick={() => {
+                                if (isProd) return;
+                                setIsMobileMenuOpen(false);
+                                navigate('/login');
+                              }}
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-[#bfa5ff]/10 rounded-lg">
-                                  <Building className="h-5 w-5 text-[#bfa5ff]" />
-                                </div>
-                                <div className="text-left">
-                                  <div className="font-semibold">Employer</div>
-                                  <div className="text-xs text-white/60">Hire verified talent</div>
-                                </div>
-                              </div>
-                              <ChevronDown className="h-4 w-4 rotate-[-90deg]" />
+                              <span className="absolute inset-0 bg-gradient-to-r from-[#32f08c]/0 via-[#32f08c]/10 to-[#32f08c]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                              <LogIn className="h-5 w-5 mr-3 text-[#32f08c] relative z-10" />
+                              <span className="font-medium relative z-10">Login</span>
                             </Button>
                           </motion.div>
-                          {/*
-                          <Button 
-                            variant="ghost" 
-                            className="w-full justify-start h-12 px-4"
-                            onClick={() => handleLogin('university')}
-                          >
-                            <GraduationCap className="h-5 w-5 mr-3 text-purple-600" />
-                            <div className="text-left">
-                              <div className="font-medium">I'm from a University</div>
-                              <div className="text-xs text-muted-foreground">Issue credentials</div>
-                            </div>
-                          </Button>
-                          */}
+                        </motion.div>
+                        
+                        <div className="pt-2">
+                          <h4 className="font-semibold text-xs text-white/50 uppercase tracking-wider mb-3 px-1">
+                            Get Started
+                          </h4>
+                          <div className="space-y-3">
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ type: "spring", delay: 0.4 }}
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <Button 
+                                variant="default" 
+                                className="relative w-full justify-between h-14 px-4 bg-gradient-to-r from-[#32f08c] to-[#28d97a] hover:from-[#28d97a] hover:to-[#32f08c] text-black shadow-lg shadow-[#32f08c]/20 hover:shadow-[#32f08c]/40 overflow-hidden group"
+                                disabled={isProd}
+                                onClick={() => { if (isProd) return; handleLogin('professional'); }}
+                              >
+                                {/* Animated glow effect */}
+                                <motion.div
+                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                                  animate={{ x: ["-100%", "100%"] }}
+                                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                />
+                                
+                                <div className="flex items-center gap-3 relative z-10">
+                                  <motion.div 
+                                    className="p-2 bg-black/10 rounded-lg"
+                                    whileHover={{ rotate: [0, -5, 5, 0] }}
+                                    transition={{ duration: 0.3 }}
+                                  >
+                                    <UserCheck className="h-5 w-5" />
+                                  </motion.div>
+                                  <div className="text-left">
+                                    <div className="font-semibold">Professional</div>
+                                    <div className="text-xs opacity-80">Get verified & hired</div>
+                                  </div>
+                                </div>
+                                <motion.div
+                                  animate={{ x: [0, 3, 0] }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                  <ChevronDown className="h-4 w-4 rotate-[-90deg] relative z-10" />
+                                </motion.div>
+                              </Button>
+                            </motion.div>
+
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ type: "spring", delay: 0.5 }}
+                              whileHover={{ scale: 1.02, y: -2 }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <Button 
+                                variant="outline" 
+                                className="relative w-full justify-between h-14 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#bfa5ff]/50 hover:shadow-lg hover:shadow-[#bfa5ff]/20 overflow-hidden group"
+                                disabled={isProd}
+                                onClick={() => { if (isProd) return; handleLogin('employer'); }}
+                              >
+                                {/* Ripple background on hover */}
+                                <span className="absolute inset-0 bg-gradient-to-r from-[#bfa5ff]/0 via-[#bfa5ff]/10 to-[#bfa5ff]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                
+                                <div className="flex items-center gap-3 relative z-10">
+                                  <motion.div 
+                                    className="p-2 bg-[#bfa5ff]/10 rounded-lg"
+                                    whileHover={{ rotate: [0, -5, 5, 0] }}
+                                    transition={{ duration: 0.3 }}
+                                  >
+                                    <Building className="h-5 w-5 text-[#bfa5ff]" />
+                                  </motion.div>
+                                  <div className="text-left">
+                                    <div className="font-semibold">Employer</div>
+                                    <div className="text-xs text-white/60">Hire verified talent</div>
+                                  </div>
+                                </div>
+                                <ChevronDown className="h-4 w-4 rotate-[-90deg] relative z-10" />
+                              </Button>
+                            </motion.div>
+                          </div>
                         </div>
                       </div>
+                    </>
+                  ) : (
+                    <div className="space-y-4">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border border-primary/20 backdrop-blur-sm"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <motion.div 
+                            className="w-2 h-2 bg-emerald-500 rounded-full"
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                          <p className="text-sm text-muted-foreground">Logged in as</p>
+                        </div>
+                        <p className="font-medium">
+                          {userType === 'employer' && 'Employer Dashboard'}
+                          {userType === 'professional' && 'Professional Dashboard'}
+                        </p>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button 
+                          variant="outline" 
+                          className="w-full h-12 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all duration-300"
+                          onClick={onLogout}
+                        >
+                          Logout
+                        </Button>
+                      </motion.div>
                     </div>
-                  </>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                        <p className="text-sm text-muted-foreground">Logged in as</p>
-                      </div>
-                      <p className="font-medium">
-                        {userType === 'employer' && 'Employer Dashboard'}
-                        {userType === 'professional' && 'Professional Dashboard'}
-                        {/* {userType === 'university' && 'University Dashboard'} */}
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-12 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                      onClick={onLogout}
-                    >
-                      Logout
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              </motion.div>
             </SheetContent>
           </Sheet>
         </div>

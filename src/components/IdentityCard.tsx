@@ -148,156 +148,156 @@ export const IdentityCard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0b0d] text-white py-8">
-      <div className="container mx-auto px-4 max-w-2xl">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-100 text-gray-900 py-8 font-sans">
+      <div className="container mx-auto px-4 max-w-lg">
+        {/* Header Navigation */}
         <Button
           variant="ghost"
           onClick={() => navigate('/dashboard')}
-          className="mb-6 text-white/60 hover:text-white pl-0 hover:bg-transparent"
+          className="mb-6 text-gray-600 hover:text-gray-900 pl-0 hover:bg-transparent transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
 
-        {/* Digital Identity Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
+          className="space-y-8"
         >
-          {/* Main Card */}
-          <Card className="bg-gradient-to-br from-[#32f08c]/20 via-[#0e0f12] to-[#bfa5ff]/20 border-[#32f08c]/30 backdrop-blur-sm">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Left: Profile Info */}
-                <div className="flex-1 space-y-4">
-                  {/* Header */}
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h1 className="text-2xl font-bold text-white mb-1">{profile?.name || 'User'}</h1>
-                      <p className="text-white/90">{profile?.role || 'Professional'}</p>
-                    </div>
-                    <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      {verificationStatus === 'verified' ? 'Verified' : 'Pending'}
-                    </Badge>
+          {/* Physical ID Card Design */}
+          <div className="relative group perspective-1000">
+            <div className="relative bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 overflow-hidden transition-transform duration-500 hover:scale-[1.02]">
+              
+              {/* Decorative Header Strip */}
+              <div className="h-3 w-full bg-gradient-to-r from-[#0a0b0d] to-[#1a1b1f]" />
+              
+              <div className="p-6 sm:p-8">
+                {/* Top Section: Identity & Verification */}
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">
+                      {profile?.name || 'User'}
+                    </h1>
+                    <p className="text-gray-500 font-medium text-sm uppercase tracking-wider">
+                      {profile?.role || 'Professional'}
+                    </p>
                   </div>
-
-                  {/* Contact */}
-                  <div className="space-y-2">
-                    {profile?.phone && (
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Phone className="h-4 w-4 text-[#32f08c]" />
-                        <span className="text-sm">{profile.phone}</span>
-                      </div>
-                    )}
-                    {profile?.email && (
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Mail className="h-4 w-4 text-[#32f08c]" />
-                        <span className="text-sm">{profile.email}</span>
-                      </div>
-                    )}
-                    {profile?.industry && (
-                      <div className="flex items-center gap-2 text-white/80">
-                        <Briefcase className="h-4 w-4 text-[#32f08c]" />
-                        <span className="text-sm">{profile.industry}</span>
-                      </div>
-                    )}
+                  <div className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${
+                    verificationStatus === 'verified' 
+                      ? 'bg-green-50 text-green-700 border-green-200' 
+                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                  }`}>
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    {verificationStatus === 'verified' ? 'VERIFIED' : 'PENDING'}
                   </div>
-
-                  {/* PIN Display */}
-                  {pin && (
-                    <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Shield className="h-4 w-4 text-[#32f08c]" />
-                        <span className="text-xs text-white/60 uppercase tracking-wide">Professional PIN</span>
-                      </div>
-                      <div className="text-2xl font-mono font-bold text-white tracking-wider">{pin}</div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Right: QR Code */}
-                <div className="flex flex-col items-center justify-center gap-3">
-                  {publicProfileUrl && (
-                    <>
-                      <div className="p-4 bg-white rounded-lg">
+                <div className="flex flex-col sm:flex-row gap-8">
+                  {/* Left Column: Details */}
+                  <div className="flex-1 space-y-5 min-w-0">
+                    <div className="space-y-3">
+                      {profile?.phone && (
+                        <div className="flex items-center gap-3 text-gray-600 group/item">
+                          <div className="p-2 rounded-full bg-gray-50 group-hover/item:bg-gray-100 transition-colors">
+                            <Phone className="h-4 w-4 text-gray-900" />
+                          </div>
+                          <span className="text-sm font-medium">{profile.phone}</span>
+                        </div>
+                      )}
+                      {profile?.email && (
+                        <div className="flex items-center gap-3 text-gray-600 group/item">
+                          <div className="p-2 rounded-full bg-gray-50 group-hover/item:bg-gray-100 transition-colors">
+                            <Mail className="h-4 w-4 text-gray-900" />
+                          </div>
+                          <span className="text-sm font-medium truncate max-w-[180px]">{profile.email}</span>
+                        </div>
+                      )}
+                      {profile?.industry && (
+                        <div className="flex items-center gap-3 text-gray-600 group/item">
+                          <div className="p-2 rounded-full bg-gray-50 group-hover/item:bg-gray-100 transition-colors">
+                            <Briefcase className="h-4 w-4 text-gray-900" />
+                          </div>
+                          <span className="text-sm font-medium">{profile.industry}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* PIN Section */}
+                    {pin && (
+                      <div className="pt-2">
+                        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1.5">Professional PIN</div>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                          <Shield className="h-4 w-4 text-gray-900" />
+                          <span className="text-xl font-mono font-bold text-gray-900 tracking-widest">{pin}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right Column: QR Code */}
+                  <div className="flex flex-col items-center justify-center sm:items-end">
+                    {publicProfileUrl && (
+                      <div className="bg-white p-2 rounded-xl border-2 border-gray-100 shadow-sm">
                         <QRCodeSVG 
                           value={publicProfileUrl}
-                          size={180}
+                          size={120}
                           level="H"
-                          includeMargin
+                          className="rounded-lg"
                         />
                       </div>
-                      <p className="text-xs text-white/60 text-center">
-                        Scan to view profile
-                      </p>
-                    </>
-                  )}
+                    )}
+                    <p className="mt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide text-center sm:text-right w-full">
+                      Scan to Verify
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer Strip */}
+                <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-gray-900" />
+                    <span className="text-xs font-bold text-gray-900 tracking-wider">CORE ID</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400">Official Digital Identity</span>
                 </div>
               </div>
-
-              {/* Bio */}
-              {profile?.bio && (
-                <div className="mt-6 pt-6 border-t border-white/10">
-                  <p className="text-white/90 text-sm leading-relaxed">{profile.bio}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+            
+            {/* Card Shadow Effect */}
+            <div className="absolute -inset-0.5 bg-gradient-to-br from-gray-200 to-gray-100 rounded-2xl blur opacity-30 -z-10 translate-y-2" />
+          </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button
               onClick={handleShare}
-              className="bg-[#32f08c] hover:bg-[#32f08c]/90 text-black font-semibold"
+              className="bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5"
             >
               <Share2 className="h-4 w-4 mr-2" />
-              Share Card
+              Share
             </Button>
 
             <Button
               onClick={handleDownloadWallet}
               variant="outline"
-              className="border-white/20 text-white hover:bg-white/5"
+              className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm transition-all hover:-translate-y-0.5"
             >
               <Download className="h-4 w-4 mr-2" />
-              Add to Wallet
+              Wallet
             </Button>
 
             {publicProfileUrl && (
               <Button
                 onClick={() => window.open(publicProfileUrl, '_blank')}
                 variant="outline"
-                className="border-white/20 text-white hover:bg-white/5"
+                className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm transition-all hover:-translate-y-0.5"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                View Public Profile
+                Profile
               </Button>
             )}
           </div>
-
-          {/* Info Card */}
-          <Card className="bg-[#0e0f12]/60 border-[#1a1b1f]/50">
-            <CardContent className="p-6">
-              <h3 className="text-sm font-semibold text-white mb-3">About Your Identity Card</h3>
-              <ul className="space-y-2 text-sm text-white/80">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[#32f08c] flex-shrink-0 mt-0.5" />
-                  <span>Your QR code links to your public profile that anyone can verify</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[#32f08c] flex-shrink-0 mt-0.5" />
-                  <span>Share your card at networking events for instant credential sharing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[#32f08c] flex-shrink-0 mt-0.5" />
-                  <span>Add to Apple Wallet for quick access on your mobile device</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
         </motion.div>
       </div>
     </div>

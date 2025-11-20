@@ -11,6 +11,9 @@ import { professionals } from "./routes/professionals.tsx";
 import { profile } from "./routes/profile.tsx";
 import { diagnostics } from "./routes/diagnostics.tsx";
 import { pin } from "./routes/pin.tsx";
+import { stats } from "./routes/stats.tsx";
+import { projects } from "./routes/projects.tsx";
+import { endorsements } from "./routes/endorsements.tsx";
 import { requireAuth } from "./lib/auth.ts";
 import { signVerificationToken } from "./lib/token.ts";
 import { trackApiPerformance } from "./lib/monitoring.ts";
@@ -198,6 +201,12 @@ app.route('/server/professionals', professionals);
 app.route('/server/profile', profile);
 app.use('/server/pin/*', requireAuth);
 app.route('/server/pin', pin);
+app.use('/server/stats/*', requireAuth);
+app.route('/server/stats', stats);
+app.use('/server/projects/*', requireAuth);
+app.route('/server/projects', projects);
+app.use('/server/endorsements/*', requireAuth);
+app.route('/server/endorsements', endorsements);
 
 // Route handlers for professionals and profile are provided by modular routers above.
 

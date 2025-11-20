@@ -811,11 +811,11 @@ class APIClient {
   // Passwordless Auth API Methods
   // ============================================================================
 
-  async requestOTP(contact: string, contactType: 'phone' | 'email') {
+  async requestOTP(contact: string, contactType: 'phone' | 'email', createAccount: boolean = false) {
     const response = await this.fetchWithRetry(`${AUTH_OTP_URL}/request`, {
       method: 'POST',
       headers: this.getHeaders(undefined, true),
-      body: JSON.stringify({ contact, contact_type: contactType })
+      body: JSON.stringify({ contact, contact_type: contactType, create_account: createAccount })
     });
     
     if (!response.ok) {

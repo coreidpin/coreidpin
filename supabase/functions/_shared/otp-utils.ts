@@ -140,7 +140,7 @@ export async function sendOTPEmail(
         'Authorization': `Bearer ${resendApiKey}`
       },
       body: JSON.stringify({
-        from: `CoreID <${fromEmail}>`,
+        from: `Seun from CoreID <${fromEmail}>`,
         to: email,
         subject: 'Your CoreID Verification Code',
         html: `

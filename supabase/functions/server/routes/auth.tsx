@@ -432,17 +432,6 @@ auth.post('/login', async (c) => {
       };
       try {
         const enc = await maybeEncryptKVValue(failPayload);
-        await kv.set(logKey, enc);
-      } catch (_) {}
-      return c.json({ error: `Login failed: ${error.message}` }, 401);
-    }
-
-    const userId = data.user?.id;
-    const userData = userId ? await kv.get(`user:${userId}`) : null;
-
-    // If the user's email is confirmed, reflect verification in KV profile
-    try {
-      if (userId && data.user?.email_confirmed_at) {
         const current = userData || {};
         await kv.set(`user:${userId}`, {
           ...current,

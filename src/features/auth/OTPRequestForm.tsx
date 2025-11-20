@@ -27,7 +27,11 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
       onSuccess(contact, contactType);
     } catch (error: any) {
       console.error('OTP Request Error:', error);
-      toast.error(error.message || 'Failed to send OTP');
+      if (error.message?.includes('Account not found')) {
+        toast.error('Account does not exist. Please create an account first.');
+      } else {
+        toast.error(error.message || 'Failed to send OTP');
+      }
     } finally {
       setLoading(false);
     }

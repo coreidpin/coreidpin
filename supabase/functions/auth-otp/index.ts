@@ -55,7 +55,7 @@ async function generateJWT(userId: string, email: string | null) {
 const handleRequest = async (c: any) => {
   try {
     const body = await c.req.json().catch(() => ({}));
-    let { contact, contact_type } = body; // contact_type: 'phone' | 'email'
+    let { contact, contact_type, create_account } = body; // contact_type: 'phone' | 'email'
 
     if (!contact || !contact_type) {
       return c.json({ error: 'Contact and contact_type required' }, 400);
@@ -76,6 +76,25 @@ const handleRequest = async (c: any) => {
     if (!storeResult.success) {
       console.error('OTP storage error:', storeResult.error);
       return c.json({ error: 'Failed to generate OTP' }, 500);
+    }
+
+    // Check if user exists in identity_users
+    const { data: existingUser } = await supabase
+      .from('identity_users')
+      .select('user_id')
+      .eq('phone_hash', contactHash)
+      .single();
+
+    if (create_account) {
+      // Registration Flow: User should NOT exist
+      if (existingUser) {
+        return c.json({ error: 'Account already exists. Please log in.' }, 400);
+      }
+    } else {
+      // Login Flow: User MUST exist
+      if (!existingUser) {
+         return c.json({ error: 'Account not found. Please create an account.' }, 404);
+      }
     }
 
     // 4. Send OTP
@@ -287,7 +306,7 @@ const handleVerify = async (c: any) => {
                 'Authorization': `Bearer ${RESEND_API_KEY}`
               },
               body: JSON.stringify({
-                from: `CoreID <${FROM_EMAIL}>`,
+                from: `Seun from CoreID <${FROM_EMAIL}>`,
                 to: recipientEmail,
                 subject: subject,
                 html: html,
