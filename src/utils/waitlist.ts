@@ -41,7 +41,17 @@ export async function submitWaitlistForm(data: WaitlistData) {
     try {
       const err = await response.json();
       message = err.error || err.message || message;
-    } catch (_) {
+      
+      // Check for duplicate email constraint violation
+      if (message.includes('duplicate key value') && message.includes('waitlist_email_key')) {
+        throw new Error('This email is already registered on the waitlist. Thank you for your interest!');
+      }
+    } catch (parseError: any) {
+      // If the error is already our custom message, re-throw it
+      if (parseError.message?.includes('already registered')) {
+        throw parseError;
+      }
+      
       const text = await response.text();
       if (text) message = text;
     }
