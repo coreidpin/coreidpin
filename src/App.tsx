@@ -17,6 +17,7 @@ import {
   saveSessionState,
   SessionState
 } from './utils/session';
+import { initAmplitude, identifyUser, resetAmplitude, trackEvent } from './utils/amplitude';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university';
 
@@ -79,6 +80,9 @@ export default function App() {
         localStorage.setItem('csrfToken', token);
       }
     } catch {}
+
+    // Initialize Amplitude Analytics
+    initAmplitude();
 
     // Initialize auth to restore session from localStorage
     const initializeAuth = async () => {
@@ -411,6 +415,14 @@ export default function App() {
       localStorage.setItem('userId', user.id);
     }
     
+    // Track login in Amplitude
+    identifyUser(user?.id || session?.user.id, {
+      userType,
+      email: user?.email || session?.user.email,
+      name: user?.user_metadata?.name
+    });
+    trackEvent('User Logged In', { userType });
+    
     setShowWelcomeToast(true);
     
     // Navigate to dashboard
@@ -458,6 +470,9 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      // Track logout in Amplitude
+      trackEvent('User Logged Out');
+      
       // Sign out from Supabase first
       await supabase.auth.signOut();
       
@@ -474,6 +489,9 @@ export default function App() {
       localStorage.removeItem('userType');
       localStorage.removeItem('emailVerified');
       localStorage.removeItem('tempSession');
+      
+      // Reset Amplitude user
+      resetAmplitude();
       
       // Reset state
       setIsAuthenticated(false);
@@ -496,6 +514,9 @@ export default function App() {
       localStorage.removeItem('userType');
       localStorage.removeItem('emailVerified');
       localStorage.removeItem('tempSession');
+      
+      // Reset Amplitude user
+      resetAmplitude();
       
       setIsAuthenticated(false);
       setUserData(null);

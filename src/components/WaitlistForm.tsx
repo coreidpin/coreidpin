@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { CheckCircle, Loader2, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitWaitlistForm } from '../utils/waitlist';
+import { trackEvent } from '../utils/amplitude';
 
 const countries = [
   'Nigeria', 'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Netherlands', 'South Africa', 'Kenya', 'Ghana', 'Other'
@@ -100,6 +101,15 @@ export function WaitlistForm({ onClose }: WaitlistFormProps) {
         wantsEarlyAccess: formData.wantsEarlyAccess,
         willingToProvideFeedback: formData.willingToProvideFeedback,
       });
+      
+      // Track successful waitlist join in Amplitude
+      trackEvent('Join Waitlist', {
+        userType: formData.userType,
+        country: formData.country,
+        problemToSolve: formData.problemToSolve,
+        wantsEarlyAccess: formData.wantsEarlyAccess
+      });
+      
       setShowSuccess(true);
     } catch (e: any) {
       toast.error(e?.message || 'Failed to join waitlist');
