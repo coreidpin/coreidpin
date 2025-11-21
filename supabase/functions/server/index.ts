@@ -2,6 +2,17 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { createClient } from "npm:@supabase/supabase-js";
 
+// Import route handlers
+import { projects } from "./routes/projects.tsx";
+import { endorsements } from "./routes/endorsements.tsx";
+import { stats } from "./routes/stats.tsx";
+import { pin } from "./routes/pin.tsx";
+import { ai } from "./routes/ai.tsx";
+import { professionals } from "./routes/professionals.tsx";
+import { profile } from "./routes/profile.tsx";
+import { matching } from "./routes/matching.tsx";
+import { auth } from "./routes/auth.tsx";
+
 const app = new Hono();
 
 const supabase = createClient(
@@ -11,7 +22,7 @@ const supabase = createClient(
 
 app.use("/*", cors({
   origin: "*",
-  allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "apikey"],
+  allowHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "apikey", "x-client-info", "x-idempotency-key"],
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: false,
 }));
@@ -19,6 +30,17 @@ app.use("/*", cors({
 app.options("/*", (c) => c.text("", 204));
 
 app.get("/server/health", (c) => c.json({ status: "ok" }));
+
+// Mount sub-apps
+app.route("/server/projects", projects);
+app.route("/server/endorsements", endorsements);
+app.route("/server/stats", stats);
+app.route("/server/pin", pin);
+app.route("/server/ai", ai);
+app.route("/server/professionals", professionals);
+app.route("/server/profile", profile);
+app.route("/server", matching);
+app.route("/server", auth);
 
 // Auth endpoints
 app.get('/auth/csrf', (c) => {

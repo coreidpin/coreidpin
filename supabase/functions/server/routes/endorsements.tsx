@@ -42,6 +42,10 @@ endorsements.get("/", async (c) => {
   }
 });
 
+import { sendEmail } from "../lib/email.ts";
+
+// ... imports
+
 // Request a new endorsement
 endorsements.post("/request", async (c) => {
   try {
@@ -52,10 +56,10 @@ endorsements.post("/request", async (c) => {
     }
 
     const body = await c.req.json();
-    const { endorser_name, endorser_id, role, company, text } = body;
+    const { endorser_name, endorser_id, role, company, text, endorser_email } = body;
 
-    if (!endorser_name || !text) {
-      return c.json({ error: "Endorser name and text are required" }, 400);
+    if (!endorser_name || !text || !endorser_email) {
+      return c.json({ error: "Endorser name, email, and text are required" }, 400);
     }
 
     const supabase = getSupabaseClient();
@@ -78,6 +82,28 @@ endorsements.post("/request", async (c) => {
     if (insertError) {
       console.error("Insert endorsement error:", insertError);
       return c.json({ error: `Failed to request endorsement: ${insertError.message}` }, 500);
+    }
+
+    // Send email notification
+    try {
+      const emailSubject = `Endorsement Request from ${user.email}`;
+      const emailHtml = `
+        <div style="font-family: sans-serif; color: #333;">
+          <h2>Endorsement Request</h2>
+          <p>Hi ${endorser_name},</p>
+          <p><strong>${user.email}</strong> has requested an endorsement from you for their professional profile.</p>
+          <blockquote style="background: #f9f9f9; border-left: 4px solid #ccc; margin: 1.5em 10px; padding: 0.5em 10px;">
+            "${text}"
+          </blockquote>
+          <p>Please reply to this email to verify this endorsement.</p>
+        </div>
+      `;
+      const emailText = `Hi ${endorser_name}, ${user.email} has requested an endorsement: "${text}". Please reply to verify.`;
+
+      await sendEmail(endorser_email, emailSubject, emailHtml, emailText, { userId: user.id, type: 'endorsement_request' });
+    } catch (emailErr) {
+      console.error("Failed to send endorsement email:", emailErr);
+      // Don't fail the request if email fails, just log it
     }
 
     return c.json({

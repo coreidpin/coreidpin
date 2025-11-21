@@ -87,14 +87,18 @@ class APIClient {
         
         // Handle transient errors (500, 429)
         if (res.status >= 500 || res.status === 429) {
+          let errorMessage = `Transient error: ${res.status}`;
           // Try to read the error body to log it for debugging
           try {
             const errorBody = await res.clone().json();
             console.error(`[API] ${res.status} Error Body:`, errorBody);
+            if (errorBody.error) {
+              errorMessage = errorBody.error;
+            }
           } catch (e) {
             console.error(`[API] ${res.status} Error (could not read body):`, e);
           }
-          throw Object.assign(new Error(`Transient error: ${res.status}`), { status: res.status });
+          throw Object.assign(new Error(errorMessage), { status: res.status });
         }
         
         return res;

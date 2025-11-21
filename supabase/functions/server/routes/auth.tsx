@@ -440,9 +440,10 @@ auth.post('/login', async (c) => {
           verificationStatus: 'verified',
           updatedAt: new Date().toISOString(),
         });
+      } catch (kvErr) {
+        console.log('Failed to update verificationStatus in KV on login:', kvErr);
       }
-    } catch (kvErr) {
-      console.log('Failed to update verificationStatus in KV on login:', kvErr);
+      throw error;
     }
 
     // Log success attempt

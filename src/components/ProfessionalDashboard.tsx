@@ -28,7 +28,12 @@ import {
   MoreHorizontal,
   ExternalLink,
   Calendar,
-  Mail
+  Mail,
+  Pencil,
+  Trash2,
+  Check,
+  X,
+  Quote
 } from 'lucide-react';
 // Defer Recharts load until chart is visible
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -98,6 +103,7 @@ export function ProfessionalDashboard() {
   // Endorsement form state
   const [endorsementFormData, setEndorsementFormData] = useState({
     endorser_name: '',
+    endorser_email: '',
     role: '',
     company: '',
     text: ''
@@ -222,6 +228,7 @@ export function ProfessionalDashboard() {
   const handleRequestEndorsement = () => {
     setEndorsementFormData({
       endorser_name: '',
+      endorser_email: '',
       role: '',
       company: '',
       text: ''
@@ -230,8 +237,8 @@ export function ProfessionalDashboard() {
   };
 
   const handleSaveEndorsement = async () => {
-    if (!endorsementFormData.endorser_name || !endorsementFormData.text) {
-      alert('Please enter endorser name and endorsement text');
+    if (!endorsementFormData.endorser_name || !endorsementFormData.text || !endorsementFormData.endorser_email) {
+      alert('Please enter endorser name, email, and endorsement text');
       return;
     }
 
@@ -426,27 +433,31 @@ export function ProfessionalDashboard() {
           .from('professional_pins')
           .select('pin_number')
           .eq('user_id', session.userId)
-          .single();
+          .maybeSingle();
 
         if (pinError) {
           console.error('Error fetching PIN:', pinError);
-          console.error('PIN Error details:', {
-            code: pinError.code,
-            message: pinError.message,
-            details: pinError.details,
-            hint: pinError.hint
-          });
-          
-          // If no PIN found (PGRST116), that's okay - show placeholder
-          if (pinError.code === 'PGRST116') {
-            setPhonePin('Generating PIN...');
-          } else {
-            setPhonePin('No PIN Assigned');
-          }
+          setPhonePin('Error loading PIN');
         } else if (pinData) {
           setPhonePin(pinData.pin_number);
         } else {
-          setPhonePin('No PIN Assigned');
+          // No PIN found, trigger generation
+          setPhonePin('Generating PIN...');
+          try {
+            const { data: newPin, error: issueError } = await supabase.functions.invoke('server', {
+              body: { route: 'pin/issue' }
+            });
+            
+            if (issueError) {
+              console.error('Error issuing PIN:', issueError);
+              setPhonePin('Failed to generate');
+            } else if (newPin && newPin.pin) {
+              setPhonePin(newPin.pin);
+            }
+          } catch (err) {
+            console.error('Error calling pin/issue:', err);
+            setPhonePin('Failed to generate');
+          }
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -979,79 +990,219 @@ export function ProfessionalDashboard() {
           {/* Projects Tab */}
           <TabsContent value="projects" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
+                <p className="text-gray-500 text-sm mt-1">Showcase your professional work and contributions</p>
+              </div>
               <Button onClick={handleAddProject} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Project
               </Button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {projects.map((project) => (
-                <Card key={project.id} className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
-                        <p className="text-sm text-gray-600">{project.role}</p>
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-gray-600 mb-4">{project.description}</p>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-500">{project.timeline}</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.skills.map((skill, index) => (
-                        <Badge key={index} className="bg-blue-50 text-blue-600 border-blue-100">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {projects.length === 0 && !projectsLoading ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200"
+              >
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Briefcase className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">Add your professional projects to showcase your experience and skills to potential clients.</p>
+                <Button onClick={handleAddProject} variant="outline">
+                  Add Your First Project
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project: any, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col group">
+                      <CardContent className="p-6 flex flex-col h-full">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                            <Briefcase className="h-5 w-5" />
+                          </div>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                              onClick={() => handleEditProject(project)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteProject(project.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1" title={project.title}>{project.title}</h3>
+                        <p className="text-sm font-medium text-blue-600 mb-3">{project.role}</p>
+                        
+                        <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">{project.description}</p>
+                        
+                        <div className="space-y-4 mt-auto">
+                          <div className="flex flex-wrap gap-2">
+                            {(project.skills || []).slice(0, 3).map((skill: string, i: number) => (
+                              <Badge key={i} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 font-normal">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {(project.skills || []).length > 3 && (
+                              <Badge variant="secondary" className="bg-gray-50 text-gray-500 font-normal">
+                                +{(project.skills || []).length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>{project.timeline}</span>
+                            </div>
+                            {project.links && project.links.length > 0 && (
+                              <div className="flex items-center gap-1.5 text-blue-600">
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>View</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Endorsements Tab */}
           <TabsContent value="endorsements" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Endorsements</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Endorsements</h2>
+                <p className="text-gray-500 text-sm mt-1">Validations from your professional network</p>
+              </div>
               <Button onClick={handleRequestEndorsement} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105">
                 <Plus className="h-4 w-4 mr-2" />
                 Request Endorsement
               </Button>
             </div>
 
-            <div className="space-y-4">
-              {endorsements.map((endorsement) => (
-                <Card key={endorsement.id} className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-gray-500" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{endorsement.endorserName}</h3>
-                          <p className="text-sm text-gray-500">{endorsement.role} • {endorsement.company}</p>
-                        </div>
+            {endorsements.length === 0 && !endorsementsLoading ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200"
+              >
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No endorsements yet</h3>
+                <p className="text-gray-500 max-w-md mx-auto mb-6">Request endorsements from colleagues and clients to build trust and credibility.</p>
+                <Button onClick={handleRequestEndorsement} variant="outline">
+                  Request Your First Endorsement
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {endorsements.map((endorsement: any, index) => (
+                  <motion.div
+                    key={endorsement.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-4 opacity-10">
+                        <Quote className="h-16 w-16 text-gray-900 transform rotate-180" />
                       </div>
-                      <Badge className="bg-green-50 text-green-600 border-green-100">
-                        <CheckCircleIcon className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                    </div>
-                    <p className="text-gray-700 mb-4">"{endorsement.text}"</p>
-                    <p className="text-sm text-gray-400">{new Date(endorsement.date).toLocaleDateString()}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      
+                      <CardContent className="p-6 flex flex-col h-full relative z-10">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 border-2 border-white shadow-sm">
+                              {(endorsement.endorserName || '?').charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900">{endorsement.endorserName || 'Unknown'}</h3>
+                              <p className="text-xs text-gray-500 font-medium">{endorsement.role}</p>
+                              <p className="text-xs text-gray-400">{endorsement.company}</p>
+                            </div>
+                          </div>
+                          {endorsement.status === 'accepted' && (
+                            <Badge className="bg-green-50 text-green-600 border-green-100 hover:bg-green-100">
+                              <CheckCircleIcon className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          )}
+                          {endorsement.status === 'pending' && (
+                            <Badge className="bg-yellow-50 text-yellow-600 border-yellow-100 hover:bg-yellow-100">
+                              Pending
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        <div className="mb-6 flex-grow">
+                          <p className="text-gray-700 italic leading-relaxed">"{endorsement.text}"</p>
+                        </div>
+                        
+                        <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                          <span className="text-xs text-gray-400 font-medium">{new Date(endorsement.date).toLocaleDateString()}</span>
+                          
+                          <div className="flex gap-2">
+                            {endorsement.status === 'pending' ? (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  className="bg-black hover:bg-gray-800 text-white h-8 px-3"
+                                  onClick={() => handleRespondToEndorsement(endorsement.id, 'accepted')}
+                                >
+                                  <Check className="h-3.5 w-3.5 mr-1.5" />
+                                  Accept
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="border-gray-200 text-red-600 hover:bg-red-50 h-8 px-3"
+                                  onClick={() => handleRespondToEndorsement(endorsement.id, 'rejected')}
+                                >
+                                  <X className="h-3.5 w-3.5 mr-1.5" />
+                                  Reject
+                                </Button>
+                              </>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDeleteEndorsement(endorsement.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       
@@ -1155,6 +1306,17 @@ export function ProfessionalDashboard() {
                 value={endorsementFormData.endorser_name}
                 onChange={(e) => setEndorsementFormData({ ...endorsementFormData, endorser_name: e.target.value })}
                 placeholder="e.g. John Doe"
+                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endorser_email">Endorser Email</Label>
+              <Input
+                id="endorser_email"
+                type="email"
+                value={endorsementFormData.endorser_email}
+                onChange={(e) => setEndorsementFormData({ ...endorsementFormData, endorser_email: e.target.value })}
+                placeholder="e.g. john@company.com"
                 className="bg-white border-gray-200 focus:border-black focus:ring-black"
               />
             </div>

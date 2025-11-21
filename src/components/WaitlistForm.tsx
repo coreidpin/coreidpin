@@ -547,13 +547,12 @@ export function WaitlistForm({ onClose }: WaitlistFormProps) {
               {step < 4 ? (
                 (() => {
                   const canProceed = isStepValid();
-                  const enabledClasses = "bg-[#7bb8ff] hover:bg-[#7bb8ff]/90 text-white rounded-lg border-2 border-[#7bb8ff]";
-                  const disabledClasses = "bg-transparent text-[#7bb8ff] rounded-lg border-2 border-[#7bb8ff] disabled:opacity-100";
+                  const enabledClasses = "bg-[#7bb8ff] hover:bg-[#7bb8ff]/90 text-black rounded-lg border-2 border-[#7bb8ff]";
+                  const disabledClasses = "bg-[#7bb8ff]/50 text-black rounded-lg border-2 border-[#7bb8ff]/50 cursor-not-allowed";
                   return (
                     <Button
                       onClick={nextStep}
                       disabled={!canProceed}
-                      variant={!canProceed ? 'outline' : undefined}
                       className={`flex items-center gap-2 h-9 sm:h-10 px-4 sm:px-6 text-xs sm:text-sm w-full sm:w-auto ${canProceed ? enabledClasses : disabledClasses}`}
                     >
                       Next

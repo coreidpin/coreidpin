@@ -250,6 +250,23 @@ pin.post('/verify-phone', async (c) => {
       return c.json({ success: false, error: 'Unauthorized' }, 401);
     }
 
+    // Rate limiting verification attempts: max 10 per hour per user
+    const ip = (c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip') || 'unknown').toString();
+    const vWindowMs = 60 * 60 * 1000;
+    const vMax = 10;
+    const vNow = Date.now();
+    const vKey = `rate:phone-verify:${userId}:${ip}`;
+    const vBucket = (await kv.get(vKey)) || { count: 0, resetAt: new Date(vNow + vWindowMs).toISOString() };
+    const vResetAt = new Date(vBucket.resetAt).getTime();
+    let vCount = vBucket.count || 0;
+    if (vNow > vResetAt) vCount = 0;
+    if (vCount >= vMax) {
+      await kv.set(vKey, { count: vCount, resetAt: new Date(vResetAt).toISOString() });
+      const remainingMs = Math.max(0, vResetAt - vNow);
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+      return c.json({ success: false, error: `Too many verification attempts. Wait ${remainingSeconds}s` }, 429);
+    }
+
     const body = await c.req.json();
     const { phone, otp } = body;
 
@@ -315,19 +332,3 @@ pin.post('/verify-phone', async (c) => {
 });
 
 export { pin };
-    // Rate limiting verification attempts: max 10 per hour per user
-    const ip = (c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || c.req.header('cf-connecting-ip') || 'unknown').toString();
-    const vWindowMs = 60 * 60 * 1000;
-    const vMax = 10;
-    const vNow = Date.now();
-    const vKey = `rate:phone-verify:${userId}:${ip}`;
-    const vBucket = (await kv.get(vKey)) || { count: 0, resetAt: new Date(vNow + vWindowMs).toISOString() };
-    const vResetAt = new Date(vBucket.resetAt).getTime();
-    let vCount = vBucket.count || 0;
-    if (vNow > vResetAt) vCount = 0;
-    if (vCount >= vMax) {
-      await kv.set(vKey, { count: vCount, resetAt: new Date(vResetAt).toISOString() });
-      const remainingMs = Math.max(0, vResetAt - vNow);
-      const remainingSeconds = Math.ceil(remainingMs / 1000);
-      return c.json({ success: false, error: `Too many verification attempts. Wait ${remainingSeconds}s` }, 429);
-    }
