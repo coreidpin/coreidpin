@@ -5,6 +5,19 @@
   contain: layout style paint;
 }
 
+/* 3D Perspective Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
 /* Mobile centering for hero text container */
 @media (max-width: 768px) {
   /* Center the entire hero grid column content */

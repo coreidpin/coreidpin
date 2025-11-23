@@ -3,7 +3,7 @@ import { ensureValidSession, refreshTokenIfNeeded, handleSessionExpiry } from '.
 
 const BASE_URL = `https://${projectId}.supabase.co/functions/v1/server`;
 const AUTH_OTP_URL = `https://${projectId}.supabase.co/functions/v1/auth-otp`;
-const AUTH_PIN_URL = `https://${projectId}.supabase.co/functions/v1/auth-pin`;
+const AUTH_PIN_URL = `https://${projectId}.supabase.co/functions/v1/pin`;
 const USER_URL = `https://${projectId}.supabase.co/functions/v1/user`;
 
 export interface RegisterUserData {

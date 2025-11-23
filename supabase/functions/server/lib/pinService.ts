@@ -25,9 +25,9 @@ export async function generatePin(): Promise<string> {
     pin = Math.floor(10000000 + Math.random() * 90000000).toString();
     
     const { data } = await supabase
-      .from('users')
+      .from('professional_pins')
       .select('id')
-      .eq('pin', pin)
+      .eq('pin_number', pin)
       .single();
     
     if (!data) isUnique = true;
@@ -41,52 +41,45 @@ export async function generatePin(): Promise<string> {
 // Create PIN hash for blockchain
 export function createPinHash(userId: string, pin: string, phone: string): string {
   return createHash('sha256')
-    .update(`${userId}:${pin}:${phone}:${Date.now()}`)
+    .update(`${userId}:${pin}:${phone || 'no-phone'}:${Date.now()}`)
     .digest('hex');
 }
 
 // Issue PIN to user
 export async function issuePinToUser(userId: string): Promise<PinGenerationResult> {
   try {
-    // Check if user exists and phone is verified
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('phone, phone_verified, pin')
-      .eq('id', userId)
+    // Check if PIN already exists in professional_pins
+    const { data: existingPin, error: fetchError } = await supabase
+      .from('professional_pins')
+      .select('pin_number')
+      .eq('user_id', userId)
       .single();
 
-    if (userError || !user) {
-      return { success: false, error: 'User not found' };
+    if (existingPin) {
+      return { success: true, pin: existingPin.pin_number };
     }
 
-    if (!user.phone_verified) {
-      return { success: false, error: 'Phone not verified' };
-    }
-
-    if (user.pin) {
-      return { success: false, error: 'PIN already exists' };
-    }
-
-    // Generate PIN and hash
+    // Generate PIN
     const pin = await generatePin();
-    const pinHash = createPinHash(userId, pin, user.phone);
+    
+    // Insert PIN into professional_pins
+    const { error: insertError } = await supabase
+      .from('professional_pins')
+      .insert({
+        user_id: userId,
+        pin_number: pin,
+        verification_status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
-    // Update user with PIN
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        pin,
-        pin_hash: pinHash,
-        pin_issued_at: new Date().toISOString()
-      })
-      .eq('id', userId);
-
-    if (updateError) {
+    if (insertError) {
+      console.error('Failed to save PIN:', insertError);
       return { success: false, error: 'Failed to save PIN' };
     }
 
     // Log PIN creation
-    await logPinEvent(userId, pin, 'PIN_CREATED', { pinHash });
+    await logPinEvent(userId, pin, 'PIN_CREATED', {});
 
     return { success: true, pin };
   } catch (error: any) {
@@ -98,13 +91,13 @@ export async function issuePinToUser(userId: string): Promise<PinGenerationResul
 export async function verifyPin(pin: string, verifierType: string, verifierId: string): Promise<PinVerificationResult> {
   try {
     // Find user by PIN
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, phone, pin_hash')
-      .eq('pin', pin)
+    const { data: pinRecord, error: pinError } = await supabase
+      .from('professional_pins')
+      .select('user_id')
+      .eq('pin_number', pin)
       .single();
 
-    if (userError || !user) {
+    if (pinError || !pinRecord) {
       await logPinEvent(null, pin, 'PIN_VERIFICATION_FAILED', { 
         reason: 'PIN not found',
         verifierType,
@@ -113,16 +106,18 @@ export async function verifyPin(pin: string, verifierType: string, verifierId: s
       return { success: false, error: 'Invalid PIN' };
     }
 
+    const userId = pinRecord.user_id;
+
     // Create verification hash
     const verificationHash = createHash('sha256')
-      .update(`${user.id}:${pin}:${verifierType}:${verifierId}:${Date.now()}`)
+      .update(`${userId}:${pin}:${verifierType}:${verifierId}:${Date.now()}`)
       .digest('hex');
 
     // Record verification
     const { error: verifyError } = await supabase
       .from('pin_verifications')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         pin,
         verifier_type: verifierType,
         verifier_id: verifierId,
@@ -134,13 +129,13 @@ export async function verifyPin(pin: string, verifierType: string, verifierId: s
     }
 
     // Log verification
-    await logPinEvent(user.id, pin, 'PIN_VERIFIED', {
+    await logPinEvent(userId, pin, 'PIN_VERIFIED', {
       verifierType,
       verifierId,
       verificationHash
     });
 
-    return { success: true, userId: user.id };
+    return { success: true, userId };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

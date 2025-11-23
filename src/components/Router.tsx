@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-
 import { motion } from 'motion/react';
+import { supabase } from '../utils/supabase/client';
 
 // Wrapper for PublicPINPage to handle URL parameters
 const PublicPINPageWrapper: React.FC = () => {
@@ -27,7 +27,16 @@ const AuthVerifyEmail = lazy(() => import('./AuthVerifyEmail'));
 const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
 const PublicPINPage = lazy(() => import('./PublicPINPage'));
 const UniversityDashboard = lazy(() => import('./UniversityDashboard').then(m => ({ default: m.UniversityDashboard })));
-const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
+const UsersPage = lazy(() => import('../admin/pages/Users').then(m => ({ default: m.UsersPage })));
+const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
+const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
+const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
+const PINLoginLogsPage = lazy(() => import('../admin/pages/logs/PINLoginLogs').then(m => ({ default: m.PINLoginLogsPage })));
+const EmailVerificationLogsPage = lazy(() => import('../admin/pages/logs/EmailVerificationLogs').then(m => ({ default: m.EmailVerificationLogsPage })));
+const APIKeysPage = lazy(() => import('../admin/pages/integrations/APIKeys').then(m => ({ default: m.APIKeysPage })));
+const SettingsPage = lazy(() => import('../admin/pages/Settings'));
+const AcceptInvitationPage = lazy(() => import('../admin/pages/AcceptInvitation').then(m => ({ default: m.AcceptInvitation })));
 const IdentityManagementPage = lazy(() => import('./IdentityManagementPage').then(m => ({ default: m.IdentityManagementPage })));
 const IdentityCard = lazy(() => import('./IdentityCard').then(m => ({ default: m.IdentityCard })));
 const PublicProfile = lazy(() => import('./PublicProfile').then(m => ({ default: m.PublicProfile })));
@@ -100,7 +109,42 @@ const ProtectedRoute: React.FC<{
 
 // Admin Route Component
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const [isAdmin, setIsAdmin] = React.useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setIsAdmin(false);
+          setIsLoading(false);
+          return;
+        }
+
+        const { data: adminUser } = await supabase
+          .from('admin_users')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        setIsAdmin(!!adminUser);
+      } catch (error) {
+        console.error('Admin check error:', error);
+        setIsAdmin(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAdmin();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   return isAdmin ? <>{children}</> : <Navigate to="/" replace />;
 };
 
@@ -521,21 +565,110 @@ export const AppRouter: React.FC<RouterProps> = ({
           } 
         />
 
-        {/* Admin Routes */}
         <Route 
           path="/admin" 
           element={
             <AdminRoute>
-              <div className="min-h-screen bg-background flex flex-col">
-                <Navbar currentPage="admin" onNavigate={() => {}} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
-                <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
-                  <Suspense fallback={<DashboardSkeleton />}>
-                    <AdminDashboard />
-                  </Suspense>
-                </main>
-                <Footer onNavigate={() => {}} />
-              </div>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <AdminDashboard />
+              </Suspense>
             </AdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/users" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <UsersPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/projects" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ProjectsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/endorsements" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <EndorsementsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/logs/auth" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <AuthLogsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/logs/pin" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <PINLoginLogsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/logs/email-verification" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <EmailVerificationLogsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/integrations/api-keys" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <APIKeysPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/settings" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <SettingsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/accept-invitation" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AcceptInvitationPage />
+            </Suspense>
           } 
         />
 

@@ -7,17 +7,13 @@ import { Label } from './ui/label';
 import { Alert, AlertDescription } from './ui/alert';
 import { Lock, Shield, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
+import { supabase } from '../utils/supabase/client';
+
 interface AdminLoginDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onLoginSuccess: () => void;
 }
-
-// Admin credentials
-const ADMIN_CREDENTIALS = {
-  email: 'admin@swipe.work',
-  password: 'SwipeAdmin2025!'
-};
 
 export function AdminLoginDialog({ open, onOpenChange, onLoginSuccess }: AdminLoginDialogProps) {
   const [email, setEmail] = useState('');
@@ -31,22 +27,48 @@ export function AdminLoginDialog({ open, onOpenChange, onLoginSuccess }: AdminLo
     setError('');
     setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      // 1. Authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-      // Store admin session
+      if (authError) throw authError;
+
+      if (!authData.user) {
+        throw new Error('Authentication failed');
+      }
+
+      // 2. Verify Admin Status
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_users')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      if (adminError || !adminData) {
+        // Not an admin - sign out immediately
+        await supabase.auth.signOut();
+        throw new Error('Unauthorized: You do not have admin access.');
+      }
+
+      // 3. Success - Store session info
       localStorage.setItem('isAdmin', 'true');
+      localStorage.setItem('adminRole', adminData.role);
       localStorage.setItem('adminSession', Date.now().toString());
+      
       onLoginSuccess();
       onOpenChange(false);
       setEmail('');
       setPassword('');
-    } else {
-      setError('Invalid credentials. Please check your email and password.');
-    }
 
-    setIsLoading(false);
+    } catch (err: any) {
+      console.error('Admin login error:', err);
+      setError(err.message || 'Failed to login. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
@@ -123,20 +145,7 @@ export function AdminLoginDialog({ open, onOpenChange, onLoginSuccess }: AdminLo
             </div>
           </div>
 
-          <div className="bg-muted/50 p-4 rounded-lg border border-border">
-            <div className="flex gap-3">
-              <Lock className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm">Demo Credentials</p>
-                <p className="text-xs text-muted-foreground">
-                  Email: <code className="bg-background px-1 py-0.5 rounded">admin@nwanne.com</code>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Password: <code className="bg-background px-1 py-0.5 rounded">NwanneAdmin2025!</code>
-                </p>
-              </div>
-            </div>
-          </div>
+
 
           <div className="flex gap-3">
             <Button

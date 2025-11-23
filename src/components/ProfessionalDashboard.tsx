@@ -40,18 +40,31 @@ import {
 // @ts-ignore
 import type * as RechartsTypes from 'recharts';
 
-
 import { PhoneVerification } from './PhoneVerification';
 import { supabase } from '../utils/supabase/client';
 import { getSessionState, ensureValidSession } from '../utils/session';
+import { toast } from 'sonner';
+import { trackEvent } from '../utils/analytics';
+import { Checkbox } from './ui/checkbox';
+import { DialogFooter, DialogDescription } from './ui/dialog';
 
 export function ProfessionalDashboard() {
-  const [phonePin, setPhonePin] = useState('Loading...');
+  const [phonePin, setPhonePin] = useState<string | null>('Loading...');
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+
+  // PIN Generation State
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpRegToken, setOtpRegToken] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
 
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -428,6 +441,7 @@ export function ProfessionalDashboard() {
           console.log('No profile data returned');
         }
 
+
         // Fetch PIN
         const { data: pinData, error: pinError } = await supabase
           .from('professional_pins')
@@ -438,26 +452,11 @@ export function ProfessionalDashboard() {
         if (pinError) {
           console.error('Error fetching PIN:', pinError);
           setPhonePin('Error loading PIN');
-        } else if (pinData) {
-          setPhonePin(pinData.pin_number);
+        } else if ((pinData as any)?.pin_number) {
+          setPhonePin((pinData as any).pin_number);
         } else {
-          // No PIN found, trigger generation
-          setPhonePin('Generating PIN...');
-          try {
-            const { data: newPin, error: issueError } = await supabase.functions.invoke('server', {
-              body: { route: 'pin/issue' }
-            });
-            
-            if (issueError) {
-              console.error('Error issuing PIN:', issueError);
-              setPhonePin('Failed to generate');
-            } else if (newPin && newPin.pin) {
-              setPhonePin(newPin.pin);
-            }
-          } catch (err) {
-            console.error('Error calling pin/issue:', err);
-            setPhonePin('Failed to generate');
-          }
+          // No PIN found - Show options to user instead of auto-generating
+          setPhonePin(null); 
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -549,7 +548,6 @@ export function ProfessionalDashboard() {
             'Content-Type': 'application/json'
           }
         });
-
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.activities) {
@@ -683,13 +681,182 @@ export function ProfessionalDashboard() {
   }, [chartVisible, Recharts]);
 
 
-  // Inline minimal check-circle icon for repeated usage
+  // PIN Generation Handlers
+  const handleGeneratePin = (usePhone: boolean) => {
+    if (usePhone) {
+      setShowPhoneModal(true);
+    } else {
+      setShowTermsModal(true);
+    }
+  };
+
+  const handlePhoneSubmit = async () => {
+    if (!phoneInput) {
+      toast.error('Please enter a phone number');
+      return;
+    }
+    try {
+      const token = await ensureValidSession();
+      if (!token) return;
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/request`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ phone: phoneInput })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOtpRegToken(data.registration_token);
+        setOtpSent(true);
+        toast.success('OTP sent to your phone');
+      } else {
+        toast.error('Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast.error('Error sending OTP');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpInput || !otpRegToken) {
+      toast.error('Please enter OTP');
+      return;
+    }
+    try {
+      const token = await ensureValidSession();
+      if (!token) return;
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/verify`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ registration_token: otpRegToken, otp: otpInput })
+      });
+
+      if (response.ok) {
+        // OTP verified, assign phone as PIN
+        const pinResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pin/issue`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ customPin: phoneInput })
+        });
+        if (pinResponse.ok) {
+          const pinData = await pinResponse.json();
+          setPhonePin(pinData.pin);
+          toast.success('PIN assigned successfully');
+        } else {
+          toast.error('Failed to assign PIN');
+        }
+        setShowPhoneModal(false);
+        setPhoneInput('');
+        setOtpInput('');
+        setOtpSent(false);
+        setOtpRegToken('');
+      } else {
+        toast.error('Invalid OTP');
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      toast.error('Error verifying OTP');
+    }
+  };
+
+  const handleRandomPinConfirm = async () => {
+    if (!termsAccepted) {
+      toast.error('You must accept the terms to continue');
+      return;
+    }
+    try {
+      const token = await ensureValidSession();
+      if (!token) return;
+
+      setPinLoading(true);
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pin/issue`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPhonePin(data.pin);
+        toast.success('Random PIN generated');
+        setShowTermsModal(false);
+      } else {
+        toast.error('Failed to generate PIN');
+      }
+    } catch (error) {
+      console.error('Error generating random PIN:', error);
+      toast.error('Error generating PIN');
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
+// Inline minimal check-circle icon for repeated usage
   const CheckCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="M21.801 10A10 10 0 1 1 17 3.335" />
       <path d="m9 11 3 3L22 4" />
     </svg>
   );
+
+  {/* Phone Number Modal */}
+  <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Use Phone Number as PIN</DialogTitle>
+        <DialogDescription>Enter your phone number to receive an OTP.</DialogDescription>
+      </DialogHeader>
+      {!otpSent ? (
+        <div className="space-y-4 mt-4">
+          <Input placeholder="+1234567890" value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} />
+          <Button onClick={handlePhoneSubmit}>Send OTP</Button>
+        </div>
+      ) : (
+        <div className="space-y-4 mt-4">
+          <Input placeholder="Enter OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} />
+          <Button onClick={handleVerifyOtp}>Verify OTP</Button>
+        </div>
+      )}
+    </DialogContent>
+  </Dialog>
+
+  {/* Terms & Conditions Modal for Random PIN */}
+  <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Generate Random PIN</DialogTitle>
+        <DialogDescription>
+          Please review and accept the terms and conditions before generating a random PIN. The PIN will be created automatically and assigned to your account.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="mt-4 space-y-2">
+        <p className="text-sm text-gray-600">• The PIN is a one‑time code valid for 1 minute.</p>
+        <p className="text-sm text-gray-600">• You must keep the PIN confidential.</p>
+        <p className="text-sm text-gray-600">• The PIN will be used for authentication purposes only.</p>
+        <div className="flex items-center space-x-2 mt-2">
+          <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} />
+          <label htmlFor="terms" className="text-sm font-medium text-gray-700">I accept the terms and conditions</label>
+        </div>
+      </div>
+      <DialogFooter className="mt-4">
+        <Button variant="outline" onClick={() => setShowTermsModal(false)}>Cancel</Button>
+        <Button onClick={handleRandomPinConfirm} disabled={!termsAccepted || pinLoading}>{pinLoading ? 'Generating...' : 'Confirm'}</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
@@ -712,6 +879,160 @@ export function ProfessionalDashboard() {
               Verified
             </Badge>
           </div>
+        </motion.div>
+
+        {/* CoreID PIN Display - PROMINENT */}
+        <motion.div
+          initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+          transition={reducedMotion ? undefined : { delay: 0.1 }}
+        >
+          <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden relative">
+            <CardContent className="p-8 relative z-10">
+              <div className="grid md:grid-cols-2 gap-6 items-center">
+                {/* Left: PIN Display */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                      <Fingerprint className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-gray-900 text-sm font-medium">Your CoreID PIN</h3>
+                      <p className="text-gray-500 text-xs">Unique Professional Identity Number</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-4">
+                    {!phonePin ? (
+                      <div className="flex flex-col gap-3">
+                        <p className="text-sm text-gray-600">You don't have a PIN yet. Choose how to generate it:</p>
+                        <div className="flex gap-3">
+                          <Button 
+                            onClick={() => handleGeneratePin(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Phone className="h-4 w-4 mr-2" />
+                            Use Phone Number
+                          </Button>
+                          <Button 
+                            onClick={() => handleGeneratePin(false)}
+                            variant="outline"
+                            className="border-gray-300 hover:bg-gray-50"
+                          >
+                            <Fingerprint className="h-4 w-4 mr-2" />
+                            Generate Random
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <div className="bg-gray-50 rounded-2xl px-6 py-4 border border-gray-200">
+                          <div className="text-gray-900 text-3xl md:text-4xl font-bold tracking-widest font-mono">
+                            {phonePin}
+                          </div>
+                        </div>
+                        
+                        <Button
+                          onClick={() => {
+                            if (phonePin && phonePin !== 'Loading...' && phonePin !== 'Generating...' && !phonePin.includes('Error') && !phonePin.includes('Failed')) {
+                              navigator.clipboard.writeText(phonePin);
+                              trackEvent('pin_copied', { pin: phonePin, source: 'dashboard' });
+                              toast.success('PIN copied to clipboard!', {
+                                description: 'Share it with employers to verify your credentials',
+                                duration: 3000
+                              });
+                            }
+                          }}
+                          disabled={!phonePin || phonePin === 'Loading...' || phonePin === 'Generating...' || phonePin.includes('Error') || phonePin.includes('Failed')}
+                          className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 h-12 w-12 p-0 rounded-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        >
+                          <Share2 className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Right: PIN Info */}
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <Shield className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-gray-900 text-sm font-medium">Shareable Verification</p>
+                          <p className="text-gray-500 text-xs">Employers can verify your credentials with this PIN</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <Globe className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-gray-900 text-sm font-medium">Global Recognition</p>
+                          <p className="text-gray-500 text-xs">Accepted by companies worldwide</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium h-11 rounded-xl transition-all shadow-sm"
+                      onClick={() => window.open(`/pin/${phonePin}`, '_blank')}
+                      disabled={!phonePin || phonePin === 'Loading...' || phonePin === 'Generating PIN...' || phonePin.includes('Error') || phonePin.includes('Failed')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View Public Profile
+                    </Button>
+                    
+                    {/* Social Sharing */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-gray-200 h-9 text-xs"
+                        onClick={() => {
+                          if (phonePin && !phonePin.includes('Loading') && !phonePin.includes('Error')) {
+                            const text = `Check out my CoreID Professional Profile! PIN: ${phonePin}`;
+                            const url = `${window.location.origin}/pin/${phonePin}`;
+                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
+                            trackEvent('pin_shared', { platform: 'twitter', pin: phonePin });
+                            toast.success('Sharing on X (Twitter)');
+                          }
+                        }}
+                        disabled={!phonePin || phonePin.includes('Loading') || phonePin.includes('Error')}
+                      >
+                        <svg className="h-3.5 w-3.5 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        Share
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-gray-200 h-9 text-xs"
+                        onClick={() => {
+                          if (phonePin && !phonePin.includes('Loading') && !phonePin.includes('Error')) {
+                            const url = `${window.location.origin}/pin/${phonePin}`;
+                            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
+                            trackEvent('pin_shared', { platform: 'linkedin', pin: phonePin });
+                            toast.success('Sharing on LinkedIn');
+                          }
+                        }}
+                        disabled={!phonePin || phonePin.includes('Loading') || phonePin.includes('Error')}
+                      >
+                        <svg className="h-3.5 w-3.5 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                        Share
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Main Dashboard Tabs */}

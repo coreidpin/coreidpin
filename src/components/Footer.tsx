@@ -32,6 +32,7 @@ import {
   Target,
   TrendingUp
 } from 'lucide-react';
+import { AdminLoginDialog } from '../admin/components/LoginDialog';
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -96,10 +97,29 @@ const certifications = [
 ];
 
 export function Footer({ onNavigate }: FooterProps = {}) {
+  const [showAdminDialog, setShowAdminDialog] = React.useState(false);
+
   const handleNavigate = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
     }
+  };
+
+  const handleAdminClick = () => {
+    // Check if already admin
+    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    if (isAdmin) {
+      // Already logged in as admin, navigate to admin dashboard
+      window.location.href = '/admin';
+    } else {
+      // Show login dialog
+      setShowAdminDialog(true);
+    }
+  };
+
+  const handleAdminLoginSuccess = () => {
+    // Navigate to admin dashboard after successful login
+    window.location.href = '/admin';
   };
 
   return (
@@ -394,23 +414,30 @@ export function Footer({ onNavigate }: FooterProps = {}) {
           </div>
         </div>
 
-        {/* Admin Access - Hidden but accessible */}
+        {/* Admin Access - Subtle but accessible */}
         <div className="border-t border-white/5">
-          <div className="container mx-auto px-4 py-3">
+          <div className="container mx-auto px-4 py-4">
             <div className="flex justify-center">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleNavigate('admin')}
-                className="text-xs text-white/20 hover:text-white/60 hover:bg-surface transition-all"
+                onClick={handleAdminClick}
+                className="text-xs text-white/30 hover:text-white hover:bg-white/5 transition-all duration-300 group"
               >
-                <Lock className="h-3 w-3 mr-1" />
-                Admin
+                <Lock className="h-3 w-3 mr-1.5 group-hover:text-[#bfa5ff] transition-colors" />
+                <span className="group-hover:text-white">Admin Access</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Admin Login Dialog */}
+      <AdminLoginDialog
+        open={showAdminDialog}
+        onOpenChange={setShowAdminDialog}
+        onLoginSuccess={handleAdminLoginSuccess}
+      />
     </footer>
   );
 }

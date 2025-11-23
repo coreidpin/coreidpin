@@ -68,6 +68,22 @@ export async function verifyOTP(
 }> {
   const currentTime = new Date().toISOString();
 
+  console.log('[verifyOTP] Searching for OTP with:', {
+    contactHash_preview: contactHash.substring(0, 20),
+    currentTime,
+    searching_for: 'used=false, not expired'
+  });
+
+  // Debug: Check if ANY record exists for this contact
+  const { data: anyRecords } = await supabase
+    .from('otps')
+    .select('id, contact_hash, used, expires_at, created_at, attempts')
+    .eq('contact_hash', contactHash)
+    .order('created_at', { ascending: false })
+    .limit(3);
+  
+  console.log('[verifyOTP] All records for this contact:', anyRecords);
+
   // Find valid OTP
   const { data: otpRecord, error: fetchError } = await supabase
     .from('otps')
@@ -77,7 +93,18 @@ export async function verifyOTP(
     .gt('expires_at', currentTime)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
+
+  console.log('[verifyOTP] Query result:', {
+    found: !!otpRecord,
+    error: fetchError?.message,
+    record_preview: otpRecord ? {
+      id: otpRecord.id,
+      used: otpRecord.used,
+      expires_at: otpRecord.expires_at,
+      attempts: otpRecord.attempts
+    } : null
+  });
 
   if (fetchError || !otpRecord) {
     return { 
@@ -97,6 +124,13 @@ export async function verifyOTP(
   }
 
   // Verify hash
+  console.log('OTP Verification Debug:', {
+    provided_hash_preview: otpHash.substring(0, 20),
+    stored_hash_preview: otpRecord.otp_hash.substring(0, 20),
+    hashes_match: otpRecord.otp_hash === otpHash,
+    attempts: otpRecord.attempts
+  });
+  
   if (otpRecord.otp_hash !== otpHash) {
     // Increment attempts
     await supabase

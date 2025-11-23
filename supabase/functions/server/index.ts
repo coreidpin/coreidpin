@@ -6,12 +6,13 @@ import { createClient } from "npm:@supabase/supabase-js";
 import { projects } from "./routes/projects.tsx";
 import { endorsements } from "./routes/endorsements.tsx";
 import { stats } from "./routes/stats.tsx";
-import { pin } from "./routes/pin.tsx";
+import { matching } from "./routes/matching.tsx";
 import { ai } from "./routes/ai.tsx";
 import { professionals } from "./routes/professionals.tsx";
 import { profile } from "./routes/profile.tsx";
-import { matching } from "./routes/matching.tsx";
-import { auth } from "./routes/auth.tsx";
+
+import { getAuthUser } from "./lib/supabaseClient.tsx";
+import { issuePinToUser } from "../_shared/pinService.ts";
 
 const app = new Hono();
 
@@ -27,20 +28,46 @@ app.use("/*", cors({
   credentials: false,
 }));
 
+// Auth Middleware
+app.use("/*", async (c, next) => {
+  // Skip for public endpoints
+  if (c.req.path.includes('/auth/') || c.req.path.includes('/registration/') || c.req.path.includes('/health')) {
+    return next();
+  }
+  
+  const { user } = await getAuthUser(c);
+  if (user) {
+    c.set('userId', user.id);
+    c.set('user', user);
+  }
+  await next();
+});
+
 app.options("/*", (c) => c.text("", 204));
 
 app.get("/server/health", (c) => c.json({ status: "ok" }));
 
-// Mount sub-apps
+// Mount sub-apps (Double mapped for safety)
+app.route("/projects", projects);
 app.route("/server/projects", projects);
+
+app.route("/endorsements", endorsements);
 app.route("/server/endorsements", endorsements);
+
+app.route("/stats", stats);
 app.route("/server/stats", stats);
-app.route("/server/pin", pin);
+
+app.route("/ai", ai);
 app.route("/server/ai", ai);
+
+app.route("/professionals", professionals);
 app.route("/server/professionals", professionals);
+
+app.route("/profile", profile);
 app.route("/server/profile", profile);
+
+app.route("/", matching);
 app.route("/server", matching);
-app.route("/server", auth);
 
 // Auth endpoints
 app.get('/auth/csrf', (c) => {
@@ -149,6 +176,8 @@ app.post('/registration/verify-otp', async (c) => {
       return c.json({ success: false, error: 'Invalid OTP' }, 400);
     }
     
+    console.log(`[VerifyOTP] Attempting verification for ${phone} with token ${reg_token} and OTP ${otp}`);
+
     // Verify OTP from database
     const { data: otpData, error: otpError } = await supabase
       .from('otp_verifications')
@@ -161,11 +190,23 @@ app.post('/registration/verify-otp', async (c) => {
       .limit(1)
       .single();
     
-    if (otpError || !otpData) {
+    if (otpError) {
+      console.error('[VerifyOTP] Database error or no record found:', otpError);
+    }
+
+    if (!otpData) {
+      console.error('[VerifyOTP] No matching record found for:', { phone, reg_token, otp });
+      // Debug: Check if ANY record exists for this phone
+      const { data: anyRecord } = await supabase.from('otp_verifications').select('*').eq('phone_number', phone).limit(1);
+      console.log('[VerifyOTP] Any record for phone?', anyRecord);
+      
       return c.json({ success: false, error: 'Invalid or expired OTP' }, 400);
     }
     
+    console.log(`[VerifyOTP] Record found. Expected: ${otpData.otp_code}, Received: ${otp}`);
+
     if (otpData.otp_code !== otp) {
+      console.error('[VerifyOTP] OTP mismatch');
       return c.json({ success: false, error: 'Incorrect OTP' }, 400);
     }
     
@@ -226,8 +267,21 @@ app.post('/register', async (c) => {
         onboarding_complete: false
       });
     
+
+
+// ... (existing code)
+
     if (profileError) {
       console.error('Profile creation error:', profileError);
+    }
+
+    // Auto-generate PIN for email registration
+    try {
+      await issuePinToUser(userId);
+      console.log('Auto-generated PIN for email user:', userId);
+    } catch (pinError) {
+      console.error('Failed to auto-generate PIN:', pinError);
+      // Non-blocking, user can generate later
     }
     
     // Generate session tokens
