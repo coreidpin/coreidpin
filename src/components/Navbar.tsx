@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { Logo } from './Logo';
 import { AnnouncementBanner } from './AnnouncementBanner';
+import { WaitlistForm } from './WaitlistForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { 
   Menu, 
@@ -39,6 +40,7 @@ export function Navbar({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
+  const [showWaitlist, setShowWaitlist] = useState(false);
   const isLight = currentPage === 'landing';
   const isProd = import.meta.env.PROD;
 
@@ -165,9 +167,7 @@ export function Navbar({
   return (
     <>
       <AnnouncementBanner 
-        message="We are launching soon, Join our beta forum to learn more"
-        type="promotional"
-        dismissible={true}
+        onCtaClick={() => setShowWaitlist(true)}
       />
       <Dialog open={showCookieConsent} onOpenChange={setShowCookieConsent}>
         <DialogContent className="bg-white text-black rounded-3xl border-0 shadow-2xl p-8 max-w-lg">
@@ -610,6 +610,10 @@ export function Navbar({
             </button>
           </nav>
         </motion.div>
+      )}
+      
+      {showWaitlist && (
+        <WaitlistForm onClose={() => setShowWaitlist(false)} />
       )}
     </>
   );

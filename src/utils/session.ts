@@ -139,42 +139,41 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
   console.log('Token needs refresh, attempting refresh...');
 
   try {
-    // Use Supabase's built-in refresh mechanism
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token: currentSession.refreshToken,
+    // Call our custom refresh endpoint
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentSession.accessToken}`
+      }
     });
 
-    if (error) {
-      console.error('Token refresh failed:', error.message);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Token refresh failed:', errorData);
+      throw new Error(errorData.error || 'Refresh failed');
     }
 
-    if (!data.session) {
-      console.error('Token refresh succeeded but no session returned');
-      throw new Error('No session after refresh');
+    const data = await response.json();
+
+    if (!data.access_token) {
+      console.error('Token refresh succeeded but no token returned');
+      throw new Error('No token after refresh');
     }
 
-    // Calculate token expiry (Supabase tokens typically expire in 1 hour)
-    const expiresAt = data.session.expires_at 
-      ? data.session.expires_at * 1000 
-      : Date.now() + 3600 * 1000;
+    // Calculate token expiry (7 days from now)
+    const expiresAt = Date.now() + (data.expires_in * 1000);
 
     const newSession: SessionState = {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
-      userId: data.session.user.id,
-      userType: (data.session.user.user_metadata?.userType || 'professional') as SessionState['userType'],
+      accessToken: data.access_token,
+      refreshToken: data.access_token, // Use same token for both
+      userId: data.user.id,
+      userType: currentSession.userType, // Preserve user type
       expiresAt,
     };
 
     // Save updated session
     saveSessionState(newSession);
-
-    // Update Supabase session
-    await supabase.auth.setSession({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-    });
 
     console.log('Token refreshed successfully');
     return newSession;
@@ -182,9 +181,8 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
   } catch (error: any) {
     console.error('Failed to refresh token:', error);
     
-    // If refresh fails, clear session and notify user
+    // If refresh fails, clear session
     clearSessionState();
-    await supabase.auth.signOut();
     
     return null;
   }

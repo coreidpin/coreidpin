@@ -48,7 +48,7 @@ async function generateJWT(userId: string, email: string | null) {
   
   const payload = {
     aud: "authenticated",
-    exp: getNumericDate(60 * 60 * 24), // 24 hours
+    exp: getNumericDate(60 * 60 * 24 * 7), // 7 days (extended from 24 hours)
     sub: userId,
     email: email || "",
     role: "authenticated",
@@ -335,6 +335,7 @@ const handleVerify = async (c: any) => {
       const profileData: any = {
         user_id: userId,
         user_type: 'professional',
+        email_verified: true, // Mark as verified since they passed OTP
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -443,6 +444,79 @@ app.post('/functions/v1/auth-otp/request', handleRequest);
 app.post('/verify', handleVerify);
 app.post('/auth-otp/verify', handleVerify);
 app.post('/functions/v1/auth-otp/verify', handleVerify);
+
+// Token Refresh Endpoint
+const handleRefresh = async (c: any) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) {
+      return c.json({ error: 'No token provided' }, 401);
+    }
+
+    const oldToken = authHeader.replace('Bearer ', '');
+    const jwtSecret = Deno.env.get('JWT_SECRET') || Deno.env.get('SUPABASE_JWT_SECRET');
+    
+    if (!jwtSecret) {
+      console.error('JWT_SECRET not configured');
+      return c.json({ error: 'Server configuration error' }, 500);
+    }
+
+    // Verify the old token (even if expired)
+    const { verify } = await import("https://deno.land/x/djwt@v2.9.1/mod.ts");
+    
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(jwtSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    let payload;
+    try {
+      payload = await verify(oldToken, key, { ignoreExpiration: true });
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return c.json({ error: 'Invalid token' }, 401);
+    }
+
+    if (!payload || !payload.sub) {
+      return c.json({ error: 'Invalid token payload' }, 401);
+    }
+
+    const userId = payload.sub as string;
+    const userEmail = payload.email as string || null;
+
+    // Check if user still exists
+    const { data: user } = await supabase
+      .from('identity_users')
+      .select('user_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // Generate new token
+    const newToken = await generateJWT(userId, userEmail);
+
+    return c.json({
+      status: 'ok',
+      access_token: newToken,
+      expires_in: 604800, // 7 days in seconds
+      user: { id: userId, email: userEmail }
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    return c.json({ error: 'Failed to refresh token' }, 500);
+  }
+};
+
+app.post('/refresh', handleRefresh);
+app.post('/auth-otp/refresh', handleRefresh);
+app.post('/functions/v1/auth-otp/refresh', handleRefresh);
 
 // Debug catch-all
 app.all('*', (c) => {

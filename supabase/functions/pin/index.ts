@@ -5,29 +5,45 @@ import { issuePinToUser, verifyPin } from "../_shared/pinService.ts";
 
 const app = new Hono();
 
-// Helper to get Auth User
+// Helper to verify JWT and extract user ID
 async function getAuthUser(c: any) {
-  const authHeader = c.req.header('Authorization');
-  if (!authHeader) return { user: null, error: 'No authorization header' };
-  
-  const token = authHeader.replace('Bearer ', '');
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-  );
-  
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error) {
-    console.error('getUser failed:', {
-      message: error.message,
-      status: error.status,
-      name: error.name,
-      token_preview: token.substring(0, 10) + '...'
-    });
-  }
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader) return { user: null, error: 'No authorization header' };
+    
+    const token = authHeader.replace('Bearer ', '');
+    const jwtSecret = Deno.env.get('JWT_SECRET') || Deno.env.get('SUPABASE_JWT_SECRET');
+    
+    if (!jwtSecret) {
+      console.error('JWT_SECRET not configured');
+      return { user: null, error: 'Server configuration error' };
+    }
 
-  return { user, error };
+    // Verify the JWT
+    const { verify } = await import("https://deno.land/x/djwt@v2.9.1/mod.ts");
+    
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(jwtSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+
+    const payload = await verify(token, key);
+    
+    if (payload && payload.sub) {
+      return { 
+        user: { id: payload.sub as string, email: payload.email as string || '' }, 
+        error: null 
+      };
+    }
+    
+    return { user: null, error: 'Invalid token' };
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    return { user: null, error: 'Token verification failed' };
+  }
 }
 
 // Middleware
@@ -66,6 +82,37 @@ const handleIssue = async (c: any) => {
   console.log('Issuing PIN for user:', userId, 'Custom PIN requested:', !!customPin);
   
   const result = await issuePinToUser(userId, customPin);
+
+  // Auto-verify if profile is complete
+  if (result.success) {
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name, role, email')
+        .eq('user_id', userId)
+        .single();
+
+      if (profile && profile.name && profile.role && profile.email) {
+        console.log(`Profile complete for user ${userId}, auto-verifying new PIN...`);
+        await supabase
+          .from('professional_pins')
+          .update({ 
+            verification_status: 'verified',
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+      }
+    } catch (err) {
+      console.error('Failed to auto-verify new PIN:', err);
+      // Don't fail the request, just log the error
+    }
+  }
+
   return c.json(result);
 };
 

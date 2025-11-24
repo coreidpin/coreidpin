@@ -13,6 +13,7 @@ import { Label } from './ui/label';
 import { 
   Phone, 
   Eye, 
+  EyeOff,
   Shield, 
   Globe, 
   Building, 
@@ -50,6 +51,7 @@ import { DialogFooter, DialogDescription } from './ui/dialog';
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
+  const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -812,51 +814,7 @@ export function ProfessionalDashboard() {
     </svg>
   );
 
-  {/* Phone Number Modal */}
-  <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle>Use Phone Number as PIN</DialogTitle>
-        <DialogDescription>Enter your phone number to receive an OTP.</DialogDescription>
-      </DialogHeader>
-      {!otpSent ? (
-        <div className="space-y-4 mt-4">
-          <Input placeholder="+1234567890" value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} />
-          <Button onClick={handlePhoneSubmit}>Send OTP</Button>
-        </div>
-      ) : (
-        <div className="space-y-4 mt-4">
-          <Input placeholder="Enter OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} />
-          <Button onClick={handleVerifyOtp}>Verify OTP</Button>
-        </div>
-      )}
-    </DialogContent>
-  </Dialog>
 
-  {/* Terms & Conditions Modal for Random PIN */}
-  <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
-    <DialogContent className="sm:max-w-md">
-      <DialogHeader>
-        <DialogTitle>Generate Random PIN</DialogTitle>
-        <DialogDescription>
-          Please review and accept the terms and conditions before generating a random PIN. The PIN will be created automatically and assigned to your account.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="mt-4 space-y-2">
-        <p className="text-sm text-gray-600">• The PIN is a one‑time code valid for 1 minute.</p>
-        <p className="text-sm text-gray-600">• You must keep the PIN confidential.</p>
-        <p className="text-sm text-gray-600">• The PIN will be used for authentication purposes only.</p>
-        <div className="flex items-center space-x-2 mt-2">
-          <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} />
-          <label htmlFor="terms" className="text-sm font-medium text-gray-700">I accept the terms and conditions</label>
-        </div>
-      </div>
-      <DialogFooter className="mt-4">
-        <Button variant="outline" onClick={() => setShowTermsModal(false)}>Cancel</Button>
-        <Button onClick={handleRandomPinConfirm} disabled={!termsAccepted || pinLoading}>{pinLoading ? 'Generating...' : 'Confirm'}</Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
@@ -909,29 +867,37 @@ export function ProfessionalDashboard() {
                         <div className="flex gap-3">
                           <Button 
                             onClick={() => handleGeneratePin(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-6 text-base shadow-sm transition-all hover:scale-105"
                           >
-                            <Phone className="h-4 w-4 mr-2" />
+                            <Phone className="h-5 w-5 mr-2" />
                             Use Phone Number
                           </Button>
                           <Button 
                             onClick={() => handleGeneratePin(false)}
                             variant="outline"
-                            className="border-gray-300 hover:bg-gray-50"
+                            className="border-gray-300 hover:bg-gray-50 h-12 px-6 text-base shadow-sm transition-all hover:scale-105"
                           >
-                            <Fingerprint className="h-4 w-4 mr-2" />
+                            <Fingerprint className="h-5 w-5 mr-2" />
                             Generate Random
                           </Button>
                         </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-4">
-                        <div className="bg-gray-50 rounded-2xl px-6 py-4 border border-gray-200">
+                        <div className="bg-gray-50 rounded-2xl px-6 py-4 border border-gray-200 min-w-[200px] flex justify-center">
                           <div className="text-gray-900 text-3xl md:text-4xl font-bold tracking-widest font-mono">
-                            {phonePin}
+                            {pinVisible ? phonePin : '••••••'}
                           </div>
                         </div>
                         
+                        <Button
+                          onClick={() => setPinVisible(!pinVisible)}
+                          className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 h-12 w-12 p-0 rounded-xl transition-all hover:scale-105 shadow-sm"
+                          title={pinVisible ? "Hide PIN" : "Show PIN"}
+                        >
+                          {pinVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </Button>
+
                         <Button
                           onClick={() => {
                             if (phonePin && phonePin !== 'Loading...' && phonePin !== 'Generating...' && !phonePin.includes('Error') && !phonePin.includes('Failed')) {
@@ -1682,6 +1648,51 @@ export function ProfessionalDashboard() {
               {endorsementSaving ? 'Sending...' : 'Send Request'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Phone Number Modal */}
+      <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Use Phone Number as PIN</DialogTitle>
+            <DialogDescription>Enter your phone number to receive an OTP.</DialogDescription>
+          </DialogHeader>
+          {!otpSent ? (
+            <div className="space-y-4 mt-4">
+              <Input placeholder="+1234567890" value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} />
+              <Button onClick={handlePhoneSubmit}>Send OTP</Button>
+            </div>
+          ) : (
+            <div className="space-y-4 mt-4">
+              <Input placeholder="Enter OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} />
+              <Button onClick={handleVerifyOtp}>Verify OTP</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Terms & Conditions Modal for Random PIN */}
+      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Generate Random PIN</DialogTitle>
+            <DialogDescription>
+              Please review and accept the terms and conditions before generating a random PIN. The PIN will be created automatically and assigned to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 space-y-2">
+            <p className="text-sm text-gray-600">• The PIN is a one‑time code valid for 1 minute.</p>
+            <p className="text-sm text-gray-600">• You must keep the PIN confidential.</p>
+            <p className="text-sm text-gray-600">• The PIN will be used for authentication purposes only.</p>
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} />
+              <label htmlFor="terms" className="text-sm font-medium text-gray-700">I accept the terms and conditions</label>
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowTermsModal(false)}>Cancel</Button>
+            <Button onClick={handleRandomPinConfirm} disabled={!termsAccepted || pinLoading}>{pinLoading ? 'Generating...' : 'Confirm'}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

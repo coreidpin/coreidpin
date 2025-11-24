@@ -1,0 +1,34 @@
+.announcement-banner {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Desktop: CTA inline */
+.announcement-banner .cta-desktop {
+  display: block;
+}
+
+/* Mobile adjustments */
+@media (max-width: 680px) {
+  .announcement-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .announcement-banner .announcement-icon {
+    align-self: flex-start;
+  }
+
+  /* Move CTA below content on mobile and make full width */
+  .announcement-banner .cta-desktop {
+    display: block;
+    margin-left: 0;
+  }
+
+  .announcement-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}

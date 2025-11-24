@@ -60,7 +60,7 @@ export const IdentityCard: React.FC = () => {
         .from('professional_pins')
         .select('pin_number, verification_status')
         .eq('user_id', session.userId)
-        .single();
+        .maybeSingle();
 
       if (pinData) {
         setPin(pinData.pin_number);
@@ -148,131 +148,187 @@ export const IdentityCard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900 py-8 font-sans">
+    <div className="min-h-screen bg-slate-950 text-white py-8 font-sans selection:bg-blue-500/30">
       <div className="container mx-auto px-4 max-w-lg">
         {/* Header Navigation */}
         <Button
           variant="ghost"
           onClick={() => navigate('/dashboard')}
-          className="mb-6 text-gray-600 hover:text-gray-900 pl-0 hover:bg-transparent transition-colors"
+          className="mb-8 text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
           Back to Dashboard
         </Button>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
           className="space-y-8"
         >
-          {/* Physical ID Card Design */}
+          {/* Premium ID Card Design */}
           <div className="relative group perspective-1000">
-            <div className="relative bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 overflow-hidden transition-transform duration-500 hover:scale-[1.02]">
+            {/* Glow Effects */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
+            
+            <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden shadow-2xl transition-all duration-500 hover:scale-[1.01]">
               
-              {/* Decorative Header Strip */}
-              <div className="h-3 w-full bg-gradient-to-r from-[#0a0b0d] to-[#1a1b1f]" />
+              {/* Decorative Background Elements */}
+              <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
               
-              <div className="p-6 sm:p-8">
+              {/* Header Strip */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+              
+              <div className="p-6 sm:p-8 relative z-10">
                 {/* Top Section: Identity & Verification */}
                 <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">
-                      {profile?.name || 'User'}
-                    </h1>
-                    <p className="text-gray-500 font-medium text-sm uppercase tracking-wider">
-                      {profile?.role || 'Professional'}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    {/* Dynamic Avatar */}
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 flex items-center justify-center shadow-lg group-hover:shadow-blue-500/20 transition-all">
+                        {profile?.profile_picture_url ? (
+                          <img src={profile.profile_picture_url} alt={profile.name} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-purple-400">
+                            {profile?.name?.charAt(0) || 'U'}
+                          </span>
+                        )}
+                      </div>
+                      {verificationStatus === 'verified' && (
+                        <div className="absolute -bottom-1 -right-1 bg-slate-900 rounded-full p-1 border border-slate-800">
+                          <div className="bg-blue-500 rounded-full p-0.5">
+                            <CheckCircle2 className="h-3 w-3 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <h1 className="text-2xl font-bold text-white tracking-tight mb-1">
+                        {profile?.name || 'User'}
+                      </h1>
+                      <p className="text-slate-400 font-medium text-xs uppercase tracking-widest">
+                        {profile?.role || 'Professional'}
+                      </p>
+                    </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${
+
+                  <div className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider border backdrop-blur-md ${
                     verificationStatus === 'verified' 
-                      ? 'bg-green-50 text-green-700 border-green-200' 
-                      : 'bg-gray-50 text-gray-600 border-gray-200'
+                      ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]' 
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700'
                   }`}>
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    {verificationStatus === 'verified' ? 'VERIFIED' : 'PENDING'}
+                    {verificationStatus === 'verified' ? 'VERIFIED ID' : 'UNVERIFIED'}
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-8">
                   {/* Left Column: Details */}
-                  <div className="flex-1 space-y-5 min-w-0">
-                    <div className="space-y-3">
-                      {profile?.phone && (
-                        <div className="flex items-center gap-3 text-gray-600 group/item">
-                          <div className="p-2 rounded-full bg-gray-50 group-hover/item:bg-gray-100 transition-colors">
-                            <Phone className="h-4 w-4 text-gray-900" />
-                          </div>
-                          <span className="text-sm font-medium">{profile.phone}</span>
-                        </div>
-                      )}
+                  <div className="sm:col-span-3 space-y-6">
+                    <div className="space-y-4">
                       {profile?.email && (
-                        <div className="flex items-center gap-3 text-gray-600 group/item">
-                          <div className="p-2 rounded-full bg-gray-50 group-hover/item:bg-gray-100 transition-colors">
-                            <Mail className="h-4 w-4 text-gray-900" />
+                        <div className="group/item">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Email</p>
+                          <div className="flex items-center gap-3 text-slate-300">
+                            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-400">
+                              <Mail className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-sm font-medium truncate">{profile.email}</span>
                           </div>
-                          <span className="text-sm font-medium truncate max-w-[180px]">{profile.email}</span>
                         </div>
                       )}
-                      {profile?.industry && (
-                        <div className="flex items-center gap-3 text-gray-600 group/item">
-                          <div className="p-2 rounded-full bg-gray-50 group-hover/item:bg-gray-100 transition-colors">
-                            <Briefcase className="h-4 w-4 text-gray-900" />
+                      
+                      {profile?.phone && (
+                        <div className="group/item">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Phone</p>
+                          <div className="flex items-center gap-3 text-slate-300">
+                            <div className="p-1.5 rounded-md bg-purple-500/10 text-purple-400">
+                              <Phone className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-sm font-medium">{profile.phone}</span>
                           </div>
-                          <span className="text-sm font-medium">{profile.industry}</span>
+                        </div>
+                      )}
+
+                      {profile?.industry && (
+                        <div className="group/item">
+                          <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Industry</p>
+                          <div className="flex items-center gap-3 text-slate-300">
+                            <div className="p-1.5 rounded-md bg-pink-500/10 text-pink-400">
+                              <Briefcase className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="text-sm font-medium">{profile.industry}</span>
+                          </div>
                         </div>
                       )}
                     </div>
 
                     {/* PIN Section */}
-                    {pin && (
-                      <div className="pt-2">
-                        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-1.5">Professional PIN</div>
-                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg border border-gray-100">
-                          <Shield className="h-4 w-4 text-gray-900" />
-                          <span className="text-xl font-mono font-bold text-gray-900 tracking-widest">{pin}</span>
-                        </div>
+                    <div className="pt-2">
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-2 flex items-center gap-2">
+                        <Shield className="h-3 w-3" />
+                        Secure PIN
                       </div>
-                    )}
+                      {pin ? (
+                        <div className="relative overflow-hidden inline-flex items-center gap-3 px-5 py-2.5 bg-slate-950/50 rounded-xl border border-white/5 shadow-inner group/pin">
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover/pin:opacity-100 transition-opacity" />
+                          <span className="text-xl font-mono font-bold text-white tracking-[0.2em] drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                            {pin}
+                          </span>
+                        </div>
+                      ) : (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate('/dashboard')}
+                          className="text-xs h-9 border-dashed border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-800"
+                        >
+                          Generate PIN
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right Column: QR Code */}
-                  <div className="flex flex-col items-center justify-center sm:items-end">
-                    {publicProfileUrl && (
-                      <div className="bg-white p-2 rounded-xl border-2 border-gray-100 shadow-sm">
-                        <QRCodeSVG 
-                          value={publicProfileUrl}
-                          size={120}
-                          level="H"
-                          className="rounded-lg"
-                        />
+                  <div className="sm:col-span-2 flex flex-col items-center justify-center sm:items-end">
+                    <div className="relative group/qr">
+                      <div className="absolute -inset-1 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur opacity-20 group-hover/qr:opacity-50 transition duration-500" />
+                      <div className="relative bg-white p-3 rounded-lg shadow-xl">
+                        {publicProfileUrl && (
+                          <QRCodeSVG 
+                            value={publicProfileUrl}
+                            size={110}
+                            level="H"
+                            className="rounded"
+                          />
+                        )}
                       </div>
-                    )}
-                    <p className="mt-2 text-[10px] text-gray-400 font-medium uppercase tracking-wide text-center sm:text-right w-full">
-                      Scan to Verify
-                    </p>
+                    </div>
+                    <div className="mt-3 flex items-center gap-1.5 text-slate-500">
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Scan to Verify</span>
+                      <ArrowLeft className="h-3 w-3 rotate-180" />
+                    </div>
                   </div>
                 </div>
 
                 {/* Footer Strip */}
-                <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+                <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-gray-900" />
-                    <span className="text-xs font-bold text-gray-900 tracking-wider">CORE ID</span>
+                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                    <span className="text-xs font-bold text-slate-300 tracking-widest">CORE ID</span>
                   </div>
-                  <span className="text-[10px] text-gray-400">Official Digital Identity</span>
+                  <span className="text-[10px] text-slate-600 font-mono">SECURE DIGITAL IDENTITY</span>
                 </div>
               </div>
             </div>
-            
-            {/* Card Shadow Effect */}
-            <div className="absolute -inset-0.5 bg-gradient-to-br from-gray-200 to-gray-100 rounded-2xl blur opacity-30 -z-10 translate-y-2" />
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Button
               onClick={handleShare}
-              className="bg-gray-900 hover:bg-gray-800 text-white shadow-lg shadow-gray-900/20 transition-all hover:-translate-y-0.5"
+              className="bg-white text-slate-950 hover:bg-slate-200 shadow-lg shadow-white/5 transition-all hover:-translate-y-0.5 font-medium"
             >
               <Share2 className="h-4 w-4 mr-2" />
               Share
@@ -281,7 +337,7 @@ export const IdentityCard: React.FC = () => {
             <Button
               onClick={handleDownloadWallet}
               variant="outline"
-              className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm transition-all hover:-translate-y-0.5"
+              className="bg-slate-900/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600 transition-all hover:-translate-y-0.5 backdrop-blur-sm"
             >
               <Download className="h-4 w-4 mr-2" />
               Wallet
@@ -291,7 +347,7 @@ export const IdentityCard: React.FC = () => {
               <Button
                 onClick={() => window.open(publicProfileUrl, '_blank')}
                 variant="outline"
-                className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm transition-all hover:-translate-y-0.5"
+                className="bg-slate-900/50 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600 transition-all hover:-translate-y-0.5 backdrop-blur-sm"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Profile
