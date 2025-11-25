@@ -253,8 +253,7 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  disabled={isProd}
-                  onClick={() => { if (isProd) return; navigate('/login'); }}
+                  onClick={() => navigate('/login')}
                   className={isLight ? "hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
                   style={isLight ? { color: '#69798f' } : undefined}
                 >
@@ -264,8 +263,7 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
-                  disabled={isProd}
-                  onClick={() => { if (isProd) return; handleLogin('professional'); }}
+                  onClick={() => handleLogin('professional')}
                   className={isLight ? "hover:bg-white/10 transition-colors" : ""}
                   style={isLight ? { color: '#69798f' } : undefined}
                 >

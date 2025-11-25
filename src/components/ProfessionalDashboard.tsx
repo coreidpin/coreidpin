@@ -38,7 +38,8 @@ import {
   X,
   Quote,
   Activity,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 // Defer Recharts load until chart is visible
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -52,6 +53,7 @@ import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
 import { Checkbox } from './ui/checkbox';
 import { DialogFooter, DialogDescription } from './ui/dialog';
+import * as Tooltip from '@radix-ui/react-tooltip';
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
@@ -484,22 +486,44 @@ export function ProfessionalDashboard() {
           .eq('user_id', session.userId)
           .single();
         
-        console.log('Profile fetch result:', { profile, profileError });
+        // Check email verification status from Auth
+        const { data: { user } } = await supabase.auth.getUser();
+        const isVerified = !!user?.email_confirmed_at;
+        
+        // Self-healing: If user is logged in but not verified, force verify
+        if (user && !isVerified) {
+          console.log('User logged in but not verified. Attempting self-healing...');
+          try {
+            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/verify-email`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            if (response.ok) {
+              console.log('Self-healing successful: Email verified');
+              // Refresh user to get updated status
+              await supabase.auth.refreshSession();
+            }
+          } catch (err) {
+            console.error('Self-healing failed:', err);
+          }
+        }
+
+        console.log('Profile fetch result:', { profile, profileError, isVerified });
         
         if (profileError) {
           console.error('Error fetching profile:', profileError);
         } else if (profile) {
-          console.log('Setting profile with data:', {
-            name: profile.name,
-            role: profile.role,
-            email: profile.email,
-            user_type: profile.user_type
+          setUserProfile({
+            ...profile,
+            email_verified: isVerified || profile.email_verified // Fallback to profile if available
           });
-          setUserProfile(profile);
         } else {
           console.log('No profile data returned');
         }
-
 
         // Fetch PIN
         const { data: pinData, error: pinError } = await supabase
@@ -524,7 +548,6 @@ export function ProfessionalDashboard() {
     
     fetchProfile();
 
-    // Refetch profile when window regains focus (user returns to tab)
     const handleFocus = () => {
       fetchProfile();
     };
@@ -887,6 +910,18 @@ export function ProfessionalDashboard() {
     return then.toLocaleDateString();
   };
 
+  // Stat card tooltip descriptions
+  const statTooltips: Record<string, string> = {
+    profileViews: 'Number of times your professional profile has been viewed',
+    pinUsage: 'Total times your PIN has been used for verification',
+    verifications: 'Number of successful identity verifications',
+    apiCalls: 'Total API requests made to your professional data',
+    countries: 'Number of different countries accessing your profile',
+    companies: 'Number of unique companies that have viewed your profile',
+    projects: 'Total projects added to your portfolio',
+    endorsements: 'Number of professional endorsements received'
+  };
+
   // Skeleton Components
   const StatCardSkeleton = () => (
     <Card className="bg-white border-gray-100 shadow-sm">
@@ -925,18 +960,26 @@ export function ProfessionalDashboard() {
         <motion.div 
           initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
           animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-          className="text-center space-y-4"
+          className="text-center space-y-3"
         >
-          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6 text-sm">
-            <span className="text-gray-900 text-lg font-bold tracking-tight">{userProfile?.name || 'Professional'}</span>
-            <span className="text-gray-300 hidden md:inline">•</span>
-            <span className="text-gray-600 font-medium">{userProfile?.role || 'Role Not Set'}</span>
-            <span className="text-gray-300 hidden md:inline">•</span>
+          {/* Name - Primary */}
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+            {userProfile?.name || 'Professional'}
+          </h1>
+          
+          {/* Role, Location, Badge - Secondary */}
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 text-sm">
+            <span className="text-gray-600 font-medium">
+              {userProfile?.role || 'Role Not Set'}
+            </span>
+            <span className="text-gray-300 hidden sm:inline">•</span>
             <span className="text-gray-600">Nigeria</span>
-            <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
-              <CheckCircleIcon className="h-3 w-3 mr-1" />
-              Verified
-            </Badge>
+            {userProfile?.email_verified && (
+              <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
+                <CheckCircleIcon className="h-3 w-3 mr-1" />
+                Verified
+              </Badge>
+            )}
           </div>
         </motion.div>
 
@@ -965,7 +1008,7 @@ export function ProfessionalDashboard() {
                     {!phonePin ? (
                       <div className="flex flex-col gap-3">
                         <p className="text-sm text-gray-600">You don't have a PIN yet. Choose how to generate it:</p>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                           <Button 
                             onClick={() => handleGeneratePin(true)}
                             className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-6 text-base shadow-sm transition-all hover:scale-105"
@@ -984,7 +1027,7 @@ export function ProfessionalDashboard() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-4">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="bg-gray-50 rounded-2xl px-6 py-4 border border-gray-200 min-w-[200px] flex justify-center">
                           <div className="text-gray-900 text-3xl md:text-4xl font-bold tracking-widest font-mono">
                             {pinVisible ? phonePin : '••••••'}
@@ -1145,7 +1188,7 @@ export function ProfessionalDashboard() {
               initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
               animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
               transition={reducedMotion ? undefined : { delay: 0.1 }}
-              className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4"
             >
               {statsLoading ? (
                 <>
@@ -1160,141 +1203,248 @@ export function ProfessionalDashboard() {
                 </>
               ) : (
                 <>
-                  <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{stats.profileViews}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.profileViews.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.profileViews.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.profileViews.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">Profile Views</div>
-                </CardContent>
-              </Card>
+                  <Tooltip.Provider delayDuration={200}>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                          <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                          <CardContent className="p-4 text-center">
+                            <div className="text-2xl font-bold text-purple-600">{stats.profileViews}</div>
+                            <div className="flex items-center justify-center gap-1 mt-1">
+                              {statsTrends.profileViews.direction === 'up' ? (
+                                <TrendingUp className="h-3 w-3 text-green-600" />
+                              ) : (
+                                <TrendingDown className="h-3 w-3 text-red-600" />
+                              )}
+                              <span className={`text-xs font-medium ${statsTrends.profileViews.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                                {statsTrends.profileViews.change}%
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 font-medium">Profile Views</div>
+                          </CardContent>
+                        </Card>
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50"
+                          sideOffset={5}
+                        >
+                          {statTooltips.profileViews}
+                          <Tooltip.Arrow className="fill-gray-900" />
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{stats.pinUsage}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.pinUsage.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.pinUsage.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.pinUsage.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">PIN Usage</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-green-600">{stats.pinUsage}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.pinUsage.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.pinUsage.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {statsTrends.pinUsage.change}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">PIN Usage</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.pinUsage}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{stats.verifications}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.verifications.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.verifications.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.verifications.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">Verifications</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-blue-600">{stats.verifications}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.verifications.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.verifications.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {statsTrends.verifications.change}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">Verifications</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.verifications}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{stats.apiCalls}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.apiCalls.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.apiCalls.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {Math.abs(statsTrends.apiCalls.change)}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">API Calls</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-purple-600">{stats.apiCalls}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.apiCalls.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.apiCalls.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {Math.abs(statsTrends.apiCalls.change)}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">API Calls</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.apiCalls}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{stats.countries}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.countries.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.countries.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.countries.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">Countries</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-green-600">{stats.countries}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.countries.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.countries.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {statsTrends.countries.change}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">Countries</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.countries}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{stats.companies}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.companies.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.companies.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.companies.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">Companies</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-blue-600">{stats.companies}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.companies.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.companies.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {statsTrends.companies.change}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">Companies</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.companies}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{stats.projects}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.projects.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.projects.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.projects.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">Projects</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-purple-600">{stats.projects}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.projects.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.projects.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {statsTrends.projects.change}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">Projects</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.projects}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
               
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">{stats.endorsements}</div>
-                  <div className="flex items-center justify-center gap-1 mt-1">
-                    {statsTrends.endorsements.direction === 'up' ? (
-                      <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 text-red-600" />
-                    )}
-                    <span className={`text-xs font-medium ${statsTrends.endorsements.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                      {statsTrends.endorsements.change}%
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 font-medium">Endorsements</div>
-                </CardContent>
-              </Card>
+              <Tooltip.Provider delayDuration={200}>
+                <Tooltip.Root>
+                  <Tooltip.Trigger asChild>
+                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 relative">
+                      <Info className="absolute top-2 right-2 h-3.5 w-3.5 text-gray-400 cursor-help" />
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-green-600">{stats.endorsements}</div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          {statsTrends.endorsements.direction === 'up' ? (
+                            <TrendingUp className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                          )}
+                          <span className={`text-xs font-medium ${statsTrends.endorsements.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {statsTrends.endorsements.change}%
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 font-medium">Endorsements</div>
+                      </CardContent>
+                    </Card>
+                  </Tooltip.Trigger>
+                  <Tooltip.Portal>
+                    <Tooltip.Content className="bg-gray-900 text-white text-xs rounded px-3 py-2 max-w-xs shadow-lg z-50" sideOffset={5}>
+                      {statTooltips.endorsements}
+                      <Tooltip.Arrow className="fill-gray-900" />
+                    </Tooltip.Content>
+                  </Tooltip.Portal>
+                </Tooltip.Root>
+              </Tooltip.Provider>
                 </>
               )}
             </motion.div>
@@ -2014,20 +2164,101 @@ export function ProfessionalDashboard() {
       </Dialog>
       {/* Phone Number Modal */}
       <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Use Phone Number as PIN</DialogTitle>
-            <DialogDescription>Enter your phone number to receive an OTP.</DialogDescription>
+            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Phone className="h-5 w-5 text-blue-600" />
+              Use Phone Number as PIN
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-900 mt-2">
+              {!otpSent 
+                ? "Enter your phone number to receive an OTP."
+                : "Enter the OTP code sent to your phone number."
+              }
+            </DialogDescription>
           </DialogHeader>
+          
           {!otpSent ? (
             <div className="space-y-4 mt-4">
-              <Input placeholder="+1234567890" value={phoneInput} onChange={(e) => setPhoneInput(e.target.value)} />
-              <Button onClick={handlePhoneSubmit}>Send OTP</Button>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-900">
+                  Phone Number
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="phone"
+                    placeholder="+1234567890" 
+                    value={phoneInput} 
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    className="pl-10 bg-white border-gray-200 focus:border-blue-600 focus:ring-blue-600"
+                  />
+                </div>
+                <p className="text-xs text-gray-900">
+                  Include country code (e.g., +1 for USA, +234 for Nigeria)
+                </p>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowPhoneModal(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handlePhoneSubmit}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!phoneInput}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send OTP
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4 mt-4">
-              <Input placeholder="Enter OTP" value={otpInput} onChange={(e) => setOtpInput(e.target.value)} />
-              <Button onClick={handleVerifyOtp}>Verify OTP</Button>
+              <div className="space-y-2">
+                <Label htmlFor="otp" className="text-sm font-medium text-gray-900">
+                  Verification Code
+                </Label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    id="otp"
+                    placeholder="Enter 6-digit code" 
+                    value={otpInput} 
+                    onChange={(e) => setOtpInput(e.target.value)}
+                    className="pl-10 bg-white border-gray-200 focus:border-blue-600 focus:ring-blue-600 text-center text-lg tracking-widest"
+                    maxLength={6}
+                  />
+                </div>
+                <p className="text-xs text-gray-900">
+                  Didn't receive the code? <button className="text-blue-600 hover:underline font-medium" onClick={handlePhoneSubmit}>Resend OTP</button>
+                </p>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtpInput('');
+                  }}
+                  className="flex-1"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleVerifyOtp}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={!otpInput || otpInput.length < 6}
+                >
+                  <BadgeCheck className="h-4 w-4 mr-2" />
+                  Verify OTP
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
@@ -2035,25 +2266,81 @@ export function ProfessionalDashboard() {
 
       {/* Terms & Conditions Modal for Random PIN */}
       <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Generate Random PIN</DialogTitle>
-            <DialogDescription>
-              Please review and accept the terms and conditions before generating a random PIN. The PIN will be created automatically and assigned to your account.
+            <DialogTitle className="text-xl font-bold text-gray-900">Generate Random PIN</DialogTitle>
+            <DialogDescription className="text-sm text-gray-900 mt-2">
+              Please review and accept the terms before generating your PIN.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-4 space-y-2">
-            <p className="text-sm text-gray-600">• The PIN is a one‑time code valid for 1 minute.</p>
-            <p className="text-sm text-gray-600">• You must keep the PIN confidential.</p>
-            <p className="text-sm text-gray-600">• The PIN will be used for authentication purposes only.</p>
-            <div className="flex items-center space-x-2 mt-2">
-              <Checkbox id="terms" checked={termsAccepted} onCheckedChange={(checked) => setTermsAccepted(checked as boolean)} />
-              <label htmlFor="terms" className="text-sm font-medium text-gray-700">I accept the terms and conditions</label>
+          
+          <div className="mt-4 space-y-4">
+            {/* Terms List with Icons */}
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <Shield className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Secure & Unique</p>
+                  <p className="text-xs text-gray-900">Your PIN is automatically generated and unique to your account</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <Fingerprint className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Your PIN becomes your passport</p>
+                  <p className="text-xs text-gray-900">You can now share your PIN with anyone</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <BadgeCheck className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Authentication</p>
+                  <p className="text-xs text-gray-900">Used solely for verifying your professional credentials</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Acceptance Checkbox */}
+            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <Checkbox 
+                id="terms" 
+                checked={termsAccepted} 
+                onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                className="mt-0.5"
+              />
+              <label htmlFor="terms" className="text-sm font-medium text-gray-900 cursor-pointer">
+                I understand and accept these terms and conditions
+              </label>
             </div>
           </div>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowTermsModal(false)}>Cancel</Button>
-            <Button onClick={handleRandomPinConfirm} disabled={!termsAccepted || pinLoading}>{pinLoading ? 'Generating...' : 'Confirm'}</Button>
+          
+          <DialogFooter className="mt-6 gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowTermsModal(false)}
+              className="flex-1 sm:flex-none"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRandomPinConfirm} 
+              disabled={!termsAccepted || pinLoading}
+              className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {pinLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Fingerprint className="h-4 w-4 mr-2" />
+                  Generate PIN
+                </>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

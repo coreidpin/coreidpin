@@ -10,6 +10,7 @@ import { matching } from "./routes/matching.tsx";
 import { ai } from "./routes/ai.tsx";
 import { professionals } from "./routes/professionals.tsx";
 import { profile } from "./routes/profile.tsx";
+import { pin } from "./routes/pin.tsx";
 
 import { getAuthUser } from "./lib/supabaseClient.tsx";
 import { issuePinToUser } from "../_shared/pinService.ts";
@@ -65,6 +66,9 @@ app.route("/server/professionals", professionals);
 
 app.route("/profile", profile);
 app.route("/server/profile", profile);
+
+app.route("/pin", pin);
+app.route("/server/pin", pin);
 
 app.route("/", matching);
 app.route("/server", matching);
@@ -246,7 +250,9 @@ app.post('/register', async (c) => {
         phoneNumber: phoneNumber || null,
         location: location || null
       },
-      email_confirm: false
+      email_confirm: true,
+      phone: phoneNumber || undefined,
+      phone_confirm: true
     });
     
     if (authError || !authData.user) {
