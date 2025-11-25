@@ -665,22 +665,22 @@ Return ONLY the JSON object, no markdown, no explanations.`;
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white py-8 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-gray-50 text-slate-900 py-8 selection:bg-blue-500/30">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="mb-10">
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="mb-6 text-slate-400 hover:text-white pl-0 hover:bg-transparent group"
+            className="mb-6 text-black hover:text-black pl-0 hover:bg-transparent group"
           >
             <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Dashboard
           </Button>
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 tracking-tight">
+          <h1 className="text-4xl font-bold text-black tracking-tight">
             Manage Identity
           </h1>
-          <p className="text-slate-400 mt-2 text-lg">Your professional identity hub</p>
+          <p className="text-black mt-2 text-lg">Your professional identity hub</p>
         </div>
 
         {/* Message Banner */}
@@ -704,7 +704,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-900/50 backdrop-blur-xl border border-white/5 p-1 rounded-xl h-auto">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-100 border border-slate-200 p-1 rounded-xl h-auto">
             <TabsTrigger 
               value="overview" 
               className="py-3 rounded-lg text-slate-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
@@ -728,17 +728,17 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6 focus-visible:outline-none">
             {/* Identity Overview Card */}
-            <Card className="bg-slate-900/50 backdrop-blur-xl border-white/10 shadow-2xl overflow-hidden relative group">
+            <Card className="bg-white border-slate-200 shadow-xl overflow-hidden relative group">
               <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-colors duration-500" />
               
               <CardHeader className="relative z-10">
-                <CardTitle className="text-white flex items-center gap-3 text-xl">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                <CardTitle className="text-slate-900 flex items-center gap-3 text-xl">
+                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                     <Shield className="h-5 w-5" />
                   </div>
                   Identity Overview
                 </CardTitle>
-                <CardDescription className="text-slate-400 text-base">
+                <CardDescription className="text-slate-500 text-base">
                   Your professional identity at a glance
                 </CardDescription>
               </CardHeader>
@@ -747,14 +747,14 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
                   <div className="flex-shrink-0 relative group/avatar">
                     <div 
-                      className="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-900 shadow-xl flex items-center justify-center cursor-pointer relative overflow-hidden ring-2 ring-white/10 group-hover/avatar:ring-blue-500/50 transition-all duration-300"
+                      className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center cursor-pointer relative overflow-hidden ring-2 ring-slate-100 group-hover/avatar:ring-blue-100 transition-all duration-300"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {profile?.profile_picture_url ? (
                         <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
                       ) : (
                         <div className="text-center">
-                          <User className="h-12 w-12 text-slate-500 mx-auto mb-2" />
+                          <User className="h-12 w-12 text-slate-300 mx-auto mb-2" />
                         </div>
                       )}
                       
@@ -777,7 +777,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   
                   <div className="flex-1 space-y-4 text-center sm:text-left w-full">
                     <div>
-                      <h3 className="text-3xl font-bold text-white tracking-tight">{formData.name || 'Not Set'}</h3>
+                      <h3 className="text-3xl font-bold text-black tracking-tight">{formData.name || 'Not Set'}</h3>
                       <p className="text-slate-400 text-lg">{formData.role || 'No Role Set'}</p>
                     </div>
                     
@@ -810,10 +810,10 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 {/* Profile Completeness */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-300">Profile Completeness</span>
-                    <span className="text-sm font-bold text-blue-400">{profileCompleteness}%</span>
+                    <span className="text-sm font-medium text-slate-500">Profile Completeness</span>
+                    <span className="text-sm font-bold text-blue-600">{profileCompleteness}%</span>
                   </div>
-                  <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${profileCompleteness}%` }}
@@ -828,28 +828,28 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Verification Status</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {profile?.email_verified ? (
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                        <div className="p-1 rounded-full bg-emerald-500/20">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm">
+                        <div className="p-1 rounded-full bg-emerald-100">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         </div>
-                        <span className="text-sm font-medium text-emerald-400">Email</span>
+                        <span className="text-sm font-medium text-emerald-700">Email</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 rounded-xl border border-white/5 opacity-60">
-                        <div className="p-1 rounded-full bg-white/10">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 opacity-60">
+                        <div className="p-1 rounded-full bg-slate-200">
                           <CheckCircle2 className="h-4 w-4 text-slate-400" />
                         </div>
-                        <span className="text-sm font-medium text-slate-400">Email</span>
+                        <span className="text-sm font-medium text-slate-500">Email</span>
                       </div>
                     )}
                     
                     {/* Placeholder badges for other verifications */}
                     {['Phone', 'Work', 'Identity'].map((item) => (
-                      <div key={item} className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 rounded-xl border border-white/5 opacity-60">
-                         <div className="p-1 rounded-full bg-white/10">
+                      <div key={item} className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 opacity-60">
+                         <div className="p-1 rounded-full bg-slate-200">
                           <CheckCircle2 className="h-4 w-4 text-slate-400" />
                         </div>
-                        <span className="text-sm font-medium text-slate-400">{item}</span>
+                        <span className="text-sm font-medium text-slate-500">{item}</span>
                       </div>
                     ))}
                   </div>
@@ -861,45 +861,45 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           {/* DETAILS TAB */}
           <TabsContent value="details" className="space-y-6">
             {/* Personal Information */}
-            <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <User className="h-5 w-5 text-[#bfa5ff]" />
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <User className="h-5 w-5 text-purple-600" />
                   Personal Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-white">Full Name</Label>
+                    <Label className="text-slate-700">Full Name</Label>
                     <Input 
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50" 
+                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
                     />
                   </div>
                   
                   <div>
-                    <Label className="text-white">Date of Birth</Label>
+                    <Label className="text-slate-700">Date of Birth</Label>
                     <Input 
                       type="date"
                       value={formData.date_of_birth}
                       onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50" 
+                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
                     />
                   </div>
 
                   <div>
                     <Label className="text-white">Gender</Label>
                     <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white placeholder:text-white/50">
+                      <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0e0f12] border-white/10">
+                      <SelectContent className="bg-white border-slate-200">
                         <SelectItem value="male" className="text-white">Male</SelectItem>
                         <SelectItem value="female" className="text-white">Female</SelectItem>
                         <SelectItem value="non-binary" className="text-white">Non-binary</SelectItem>
-                        <SelectItem value="prefer-not-to-say" className="text-white">Prefer not to say</SelectItem>
+                        <SelectItem value="prefer-not-to-say" className="text-slate-900">Prefer not to say</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -909,7 +909,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     <Input 
                       value={formData.nationality}
                       onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50" 
+                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
                       placeholder="e.g. Nigerian"
                     />
                   </div>
@@ -919,7 +919,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     <Input 
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50" 
+                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
                       placeholder="e.g. Lagos"
                     />
                   </div>
@@ -937,37 +937,37 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </Card>
 
             {/* Contact Identity (Critical Section) */}
-            <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50 border-l-4 border-l-[#32f08c]">
+            <Card className="bg-white border-slate-200 shadow-sm border-l-4 border-l-green-500">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-[#32f08c]" />
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-green-600" />
                   Contact Identity
                 </CardTitle>
-                <CardDescription className="text-white/90">
+                <CardDescription className="text-slate-500">
                   Manage your primary identity and contact channels
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Primary Identity: Phone */}
-                <div className="bg-[#32f08c]/5 rounded-lg p-4 border border-[#32f08c]/20">
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                   <div className="flex items-center justify-between mb-2">
-                    <Label className="text-[#32f08c] font-semibold flex items-center gap-2">
+                    <Label className="text-green-700 font-semibold flex items-center gap-2">
                       <Phone className="h-4 w-4" />
                       Primary Identity (Phone)
                     </Label>
-                    <Badge className="bg-[#32f08c] text-black hover:bg-[#32f08c]/90">Verified</Badge>
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Verified</Badge>
                   </div>
                   <div className="flex items-center gap-3">
                     <Input 
                       value={formData.phone}
                       readOnly
-                      className="bg-black/20 border-white/10 text-white font-mono text-lg tracking-wide" 
+                      className="bg-white border-slate-200 text-slate-900 font-mono text-lg tracking-wide" 
                     />
-                    <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:text-white">
+                    <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900">
                       Change
                     </Button>
                   </div>
-                  <p className="text-xs text-white/50 mt-2">
+                  <p className="text-xs text-slate-500 mt-2">
                     Your phone number is your primary unique identifier on CoreID.
                   </p>
                 </div>
@@ -975,12 +975,12 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 {/* Email Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label className="text-white mb-1.5 block">Primary Email</Label>
+                    <Label className="text-slate-700 mb-1.5 block">Primary Email</Label>
                     <div className="relative">
                       <Input 
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="bg-white/5 border-white/10 text-white pr-24" 
+                        className="bg-white border-slate-200 text-slate-900 pr-24" 
                       />
                       <div className="absolute right-1 top-1 bottom-1 flex items-center">
                         {profile?.email_verified ? (
@@ -988,7 +988,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                             Verified
                           </Badge>
                         ) : (
-                          <Button size="sm" variant="ghost" className="h-7 text-xs text-[#32f08c] hover:text-[#32f08c] hover:bg-[#32f08c]/10">
+                          <Button size="sm" variant="ghost" className="h-7 text-xs text-green-600 hover:text-green-700 hover:bg-green-50">
                             Verify Now
                           </Button>
                         )}
@@ -997,15 +997,15 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
 
                   <div>
-                    <Label className="text-white mb-1.5 block">Recovery Email</Label>
+                    <Label className="text-slate-700 mb-1.5 block">Recovery Email</Label>
                     <div className="flex gap-2">
                       <Input 
                         value={formData.recovery_email || ''}
                         onChange={(e) => setFormData({ ...formData, recovery_email: e.target.value })}
-                        className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                        className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
                         placeholder="backup@example.com"
                       />
-                      <Button variant="outline" size="icon" className="border-white/20 text-white hover:bg-white/10 shrink-0">
+                      <Button variant="outline" size="icon" className="border-slate-200 text-slate-700 hover:bg-slate-50 shrink-0">
                         <Save className="h-4 w-4" />
                       </Button>
                     </div>
@@ -1016,7 +1016,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
                 {/* Social Links */}
                 <div>
-                  <Label className="text-white mb-3 block">Social Links</Label>
+                  <Label className="text-slate-700 mb-3 block">Social Links</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="relative">
                       <div className="absolute left-3 top-2.5 text-white/40">
@@ -1046,16 +1046,16 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </Card>
 
             {/* Professional Summary */}
-            <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-[#32f08c]" />
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-green-600" />
                   Professional Summary
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-white">Professional Title</Label>
+                  <Label className="text-slate-700">Professional Title</Label>
                   <Select 
                     value={formData.role}
                     onValueChange={(value) => {
@@ -1064,12 +1064,12 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                       if (value !== 'Custom') setCustomRoleText('');
                     }}
                   >
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white placeholder:text-white/50">
+                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#0e0f12] border-white/10">
+                    <SelectContent className="bg-white border-slate-200">
                       {PROFESSIONAL_ROLES.map((role) => (
-                        <SelectItem key={role} value={role} className="text-white">{role}</SelectItem>
+                        <SelectItem key={role} value={role} className="text-slate-900">{role}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -1077,25 +1077,25 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     <Input 
                       value={customRoleText}
                       onChange={(e) => setCustomRoleText(e.target.value)}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50 mt-2" 
+                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 mt-2" 
                       placeholder="Enter your custom role"
                     />
                   )}
                 </div>
 
                 <div>
-                  <Label className="text-white">Professional Bio</Label>
+                  <Label className="text-slate-700">Professional Bio</Label>
                   <Textarea 
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/50 min-h-[100px]" 
+                    className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 min-h-[100px]" 
                     placeholder="Tell us about your professional background..."
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label className="text-white">Years of Experience</Label>
+                    <Label className="text-slate-700">Years of Experience</Label>
                     <Input 
                       type="number"
                       value={formData.years_of_experience}
@@ -1106,28 +1106,28 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
 
                   <div>
-                    <Label className="text-white">Industry</Label>
+                    <Label className="text-slate-700">Industry</Label>
                     <Select value={formData.industry} onValueChange={(value) => setFormData({ ...formData, industry: value })}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white placeholder:text-white/50">
+                      <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
                         <SelectValue placeholder="Select industry" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0e0f12] border-white/10">
+                      <SelectContent className="bg-white border-slate-200">
                         {INDUSTRIES.map((ind) => (
-                          <SelectItem key={ind} value={ind.toLowerCase()} className="text-white">{ind}</SelectItem>
+                          <SelectItem key={ind} value={ind.toLowerCase()} className="text-slate-900">{ind}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label className="text-white">Work Preference</Label>
+                    <Label className="text-slate-700">Work Preference</Label>
                     <Select value={formData.work_preference} onValueChange={(value) => setFormData({ ...formData, work_preference: value })}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                      <SelectTrigger className="bg-white border-slate-200 text-slate-900">
                         <SelectValue placeholder="Select preference" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#0e0f12] border-white/10">
+                      <SelectContent className="bg-white border-slate-200">
                         {WORK_PREFERENCES.map((pref) => (
-                          <SelectItem key={pref} value={pref} className="text-white capitalize">{pref}</SelectItem>
+                          <SelectItem key={pref} value={pref} className="text-slate-900 capitalize">{pref}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1173,7 +1173,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 onClick={() => cvInputRef.current?.click()}
                 disabled={isUploadingCV}
                 variant="outline"
-                className="bg-white/5 border-white/10 text-white hover:bg-white/10 transition-colors"
+                className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 {isUploadingCV ? (
                   <>
@@ -1190,34 +1190,34 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </div>
 
             {/* Work Experience */}
-            <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-[#32f08c]" />
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-blue-600" />
                   Work Experience
                 </CardTitle>
                 <Button 
                   onClick={() => setShowWorkModal(true)}
                   size="sm" 
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200"
                 >
                   Add Position
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 {formData.work_experience.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed border-white/10 rounded-lg">
-                    <p className="text-white/50 text-sm">No work experience added yet.</p>
+                  <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
+                    <p className="text-slate-500 text-sm">No work experience added yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {formData.work_experience.map((work, index) => (
-                      <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10 group relative">
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="text-white font-semibold">{work.role}</h4>
-                            <p className="text-[#32f08c] text-sm">{work.company}</p>
-                            <p className="text-white/50 text-xs mt-1">
+                            <h4 className="text-slate-900 font-semibold">{work.role}</h4>
+                            <p className="text-blue-600 text-sm">{work.company}</p>
+                            <p className="text-slate-500 text-xs mt-1">
                               {work.start_date} - {work.current ? 'Present' : work.end_date}
                             </p>
                           </div>
@@ -1230,7 +1230,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                               }}
                               size="icon" 
                               variant="ghost" 
-                              className="h-8 w-8 text-white/70 hover:text-white"
+                              className="h-8 w-8 text-slate-400 hover:text-slate-900"
                             >
                               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                             </Button>
@@ -1245,7 +1245,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                           </div>
                         </div>
                         {work.description && (
-                          <p className="text-white/70 text-sm mt-3 border-t border-white/5 pt-3">
+                          <p className="text-slate-600 text-sm mt-3 border-t border-slate-200 pt-3">
                             {work.description}
                           </p>
                         )}
@@ -1259,9 +1259,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             {/* Skills & Tools */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Skills */}
-              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+              <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Skills</CardTitle>
+                  <CardTitle className="text-slate-900 text-lg">Skills</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -1271,7 +1271,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         onChange={(e) => setSkillInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddTag('skills', skillInput, setSkillInput)}
                         placeholder="Add a skill (e.g. React)"
-                        className="bg-white/5 border-white/10 text-white"
+                        className="bg-white border-slate-200 text-slate-900"
                       />
                       <Button 
                         onClick={() => handleAddTag('skills', skillInput, setSkillInput)}
@@ -1283,9 +1283,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.skills.map((skill) => (
-                        <Badge key={skill} className="bg-[#32f08c]/10 text-[#32f08c] border-[#32f08c]/20 hover:bg-[#32f08c]/20 pr-1">
+                        <Badge key={skill} className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 pr-1">
                           {skill}
-                          <button onClick={() => handleRemoveTag('skills', skill)} className="ml-2 hover:text-white">
+                          <button onClick={() => handleRemoveTag('skills', skill)} className="ml-2 hover:text-blue-800">
                             <X className="h-3 w-3" />
                           </button>
                         </Badge>
@@ -1296,9 +1296,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </Card>
 
               {/* Tools */}
-              <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+              <Card className="bg-white border-slate-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-white text-lg">Tools & Software</CardTitle>
+                  <CardTitle className="text-slate-900 text-lg">Tools & Software</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -1308,7 +1308,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         onChange={(e) => setToolInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddTag('tools', toolInput, setToolInput)}
                         placeholder="Add a tool (e.g. Figma)"
-                        className="bg-white/5 border-white/10 text-white"
+                        className="bg-white border-slate-200 text-slate-900"
                       />
                       <Button 
                         onClick={() => handleAddTag('tools', toolInput, setToolInput)}
@@ -1320,9 +1320,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.tools.map((tool) => (
-                        <Badge key={tool} className="bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 pr-1">
+                        <Badge key={tool} className="bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 pr-1">
                           {tool}
-                          <button onClick={() => handleRemoveTag('tools', tool)} className="ml-2 hover:text-white">
+                          <button onClick={() => handleRemoveTag('tools', tool)} className="ml-2 hover:text-purple-800">
                             <X className="h-3 w-3" />
                           </button>
                         </Badge>
@@ -1334,9 +1334,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </div>
 
             {/* Industry Tags */}
-            <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white text-lg">Industry Focus</CardTitle>
+                <CardTitle className="text-slate-900 text-lg">Industry Focus</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -1346,21 +1346,21 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                       onChange={(e) => setIndustryInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddTag('industry_tags', industryInput, setIndustryInput)}
                       placeholder="Add industry (e.g. Fintech)"
-                      className="bg-white/5 border-white/10 text-white"
+                      className="bg-white border-slate-200 text-slate-900"
                     />
                     <Button 
                       onClick={() => handleAddTag('industry_tags', industryInput, setIndustryInput)}
                       variant="outline"
-                      className="border-white/20 text-white"
+                      className="border-slate-200 text-slate-700 hover:bg-slate-50"
                     >
                       Add
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.industry_tags.map((tag) => (
-                      <Badge key={tag} className="bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20 pr-1">
+                      <Badge key={tag} className="bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 pr-1">
                         {tag}
-                        <button onClick={() => handleRemoveTag('industry_tags', tag)} className="ml-2 hover:text-white">
+                        <button onClick={() => handleRemoveTag('industry_tags', tag)} className="ml-2 hover:text-indigo-800">
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
@@ -1371,10 +1371,10 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </Card>
 
             {/* Certifications */}
-            <Card className="bg-[#0e0f12]/80 backdrop-blur-sm border-[#1a1b1f]/50">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-[#32f08c]" />
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-green-600" />
                   Certifications
                 </CardTitle>
                 <Button 
@@ -1387,17 +1387,17 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </CardHeader>
               <CardContent>
                 {formData.certifications.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed border-white/10 rounded-lg">
-                    <p className="text-white/50 text-sm">No certifications added yet.</p>
+                  <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
+                    <p className="text-slate-500 text-sm">No certifications added yet.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {formData.certifications.map((cert, index) => (
-                      <div key={index} className="bg-white/5 rounded-lg p-4 border border-white/10 flex justify-between items-start group">
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 flex justify-between items-start group">
                         <div>
-                          <h4 className="text-white font-semibold">{cert.name}</h4>
-                          <p className="text-white/70 text-sm">{cert.issuer}</p>
-                          <p className="text-white/50 text-xs mt-1">{cert.date}</p>
+                          <h4 className="text-slate-900 font-semibold">{cert.name}</h4>
+                          <p className="text-slate-600 text-sm">{cert.issuer}</p>
+                          <p className="text-slate-500 text-xs mt-1">{cert.date}</p>
                         </div>
                         <Button 
                           onClick={() => handleRemoveCert(index)}
@@ -1439,7 +1439,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>
-          <DialogContent className="bg-[#0e0f12] border-white/10 text-white sm:max-w-[500px]">
+          <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
             </DialogHeader>
@@ -1450,7 +1450,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <Input 
                     value={tempWork.company}
                     onChange={(e) => setTempWork({ ...tempWork, company: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-white border-slate-200 text-slate-900"
                   />
                 </div>
                 <div>
@@ -1458,7 +1458,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <Input 
                     value={tempWork.role}
                     onChange={(e) => setTempWork({ ...tempWork, role: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-white border-slate-200 text-slate-900"
                   />
                 </div>
               </div>
@@ -1469,7 +1469,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     type="month"
                     value={tempWork.start_date}
                     onChange={(e) => setTempWork({ ...tempWork, start_date: e.target.value })}
-                    className="bg-white/5 border-white/10 text-white"
+                    className="bg-white border-slate-200 text-slate-900"
                   />
                 </div>
                 <div>
@@ -1479,7 +1479,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     value={tempWork.end_date}
                     onChange={(e) => setTempWork({ ...tempWork, end_date: e.target.value })}
                     disabled={tempWork.current}
-                    className="bg-white/5 border-white/10 text-white disabled:opacity-50"
+                    className="bg-white border-slate-200 text-slate-900 disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -1489,30 +1489,30 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   id="current-role"
                   checked={tempWork.current}
                   onChange={(e) => setTempWork({ ...tempWork, current: e.target.checked })}
-                  className="rounded border-white/10 bg-white/5 text-[#32f08c]"
+                  className="rounded border-slate-300 text-blue-600"
                 />
-                <Label htmlFor="current-role">I currently work here</Label>
+                <Label htmlFor="current-role" className="text-slate-900">I currently work here</Label>
               </div>
               <div>
                 <Label>Description</Label>
                 <Textarea 
                   value={tempWork.description}
                   onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white min-h-[100px]"
+                  className="bg-white border-slate-200 text-slate-900 min-h-[100px]"
                   placeholder="Describe your responsibilities and achievements..."
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="border-white/10 text-white hover:bg-white/5">Cancel</Button>
-              <Button onClick={handleSaveWork} className="bg-[#32f08c] text-black hover:bg-[#32f08c]/90">Save Position</Button>
+              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</Button>
+              <Button onClick={handleSaveWork} className="bg-slate-900 text-white hover:bg-slate-800">Save Position</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
         {/* Certification Modal */}
         <Dialog open={showCertModal} onOpenChange={setShowCertModal}>
-          <DialogContent className="bg-[#0e0f12] border-white/10 text-white sm:max-w-[400px]">
+          <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>Add Certification</DialogTitle>
             </DialogHeader>
@@ -1522,7 +1522,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Input 
                   value={tempCert.name}
                   onChange={(e) => setTempCert({ ...tempCert, name: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-white border-slate-200 text-slate-900"
                 />
               </div>
               <div>
@@ -1530,7 +1530,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Input 
                   value={tempCert.issuer}
                   onChange={(e) => setTempCert({ ...tempCert, issuer: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-white border-slate-200 text-slate-900"
                 />
               </div>
               <div>
@@ -1539,7 +1539,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   type="month"
                   value={tempCert.date}
                   onChange={(e) => setTempCert({ ...tempCert, date: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-white border-slate-200 text-slate-900"
                 />
               </div>
               <div>
@@ -1547,14 +1547,14 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Input 
                   value={tempCert.url}
                   onChange={(e) => setTempCert({ ...tempCert, url: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="bg-white border-slate-200 text-slate-900"
                   placeholder="https://..."
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCertModal(false)} className="border-white/10 text-white hover:bg-white/5">Cancel</Button>
-              <Button onClick={handleSaveCert} className="bg-[#32f08c] text-black hover:bg-[#32f08c]/90">Add Certification</Button>
+              <Button variant="outline" onClick={() => setShowCertModal(false)} className="border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</Button>
+              <Button onClick={handleSaveCert} className="bg-slate-900 text-white hover:bg-slate-800">Add Certification</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

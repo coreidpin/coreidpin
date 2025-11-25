@@ -20,9 +20,11 @@ import {
   Download, 
   Share2, 
   Settings,
+  Search,
   Fingerprint,
   BadgeCheck,
   TrendingUp,
+  TrendingDown,
   Plus,
   Briefcase,
   Users,
@@ -34,7 +36,9 @@ import {
   Trash2,
   Check,
   X,
-  Quote
+  Quote,
+  Activity,
+  Loader2
 } from 'lucide-react';
 // Defer Recharts load until chart is visible
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -52,6 +56,7 @@ import { DialogFooter, DialogDescription } from './ui/dialog';
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
   const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
+  const [copiedPin, setCopiedPin] = useState(false);
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -72,6 +77,14 @@ export function ProfessionalDashboard() {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [endorsements, setEndorsements] = useState([]);
   const [endorsementsLoading, setEndorsementsLoading] = useState(true);
+  const [projectFormErrors, setProjectFormErrors] = useState<Record<string, string>>({});
+  const [endorsementFormErrors, setEndorsementFormErrors] = useState<Record<string, string>>({});
+  const [projectSearch, setProjectSearch] = useState('');
+  const [selectedSkill, setSelectedSkill] = useState('all');
+  const [projectSort, setProjectSort] = useState('date-desc');
+  const [endorsementFilter, setEndorsementFilter] = useState('all');
+  const [projectFormDirty, setProjectFormDirty] = useState(false);
+  const [endorsementFormDirty, setEndorsementFormDirty] = useState(false);
   
   // Stats state - now fetched from API
   const [stats, setStats] = useState({
@@ -85,6 +98,16 @@ export function ProfessionalDashboard() {
     endorsements: 0
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [statsTrends] = useState({
+    profileViews: { change: 12, direction: 'up' as const },
+    pinUsage: { change: 8, direction: 'up' as const },
+    verifications: { change: 5, direction: 'up' as const },
+    apiCalls: { change: -3, direction: 'down' as const },
+    countries: { change: 15, direction: 'up' as const },
+    companies: { change: 10, direction: 'up' as const },
+    projects: { change: 0, direction: 'up' as const },
+    endorsements: { change: 20, direction: 'up' as const }
+  });
 
   // Notifications state - now fetched from API
   const [notifications, setNotifications] = useState<Array<{text: string, type: string}>>([]);
@@ -152,9 +175,24 @@ export function ProfessionalDashboard() {
     setShowProjectModal(true);
   };
 
+  const validateProjectForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!projectFormData.title || projectFormData.title.trim().length < 3) {
+      errors.title = 'Title must be at least 3 characters';
+    }
+    
+    if (!projectFormData.description || projectFormData.description.trim().length < 10) {
+      errors.description = 'Description must be at least 10 characters';
+    }
+    
+    setProjectFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSaveProject = async () => {
-    if (!projectFormData.title) {
-      alert('Please enter a project title');
+    if (!validateProjectForm()) {
+      toast.error('Please fix form errors');
       return;
     }
 
@@ -251,9 +289,28 @@ export function ProfessionalDashboard() {
     setShowEndorsementModal(true);
   };
 
+  const validateEndorsementForm = () => {
+    const errors: Record<string, string> = {};
+    
+    if (!endorsementFormData.endorser_name || endorsementFormData.endorser_name.trim().length < 2) {
+      errors.endorser_name = 'Name must be at least 2 characters';
+    }
+    
+    if (!endorsementFormData.endorser_email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(endorsementFormData.endorser_email)) {
+      errors.endorser_email = 'Please enter a valid email address';
+    }
+    
+    if (!endorsementFormData.text || endorsementFormData.text.trim().length < 20) {
+      errors.text = 'Endorsement text must be at least 20 characters';
+    }
+    
+    setEndorsementFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSaveEndorsement = async () => {
-    if (!endorsementFormData.endorser_name || !endorsementFormData.text || !endorsementFormData.endorser_email) {
-      alert('Please enter endorser name, email, and endorsement text');
+    if (!validateEndorsementForm()) {
+      toast.error('Please fix form errors');
       return;
     }
 
@@ -814,6 +871,50 @@ export function ProfessionalDashboard() {
     </svg>
   );
 
+  // Utility function for relative time
+  const getRelativeTime = (dateString: string) => {
+    const now = new Date();
+    const then = new Date(dateString);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return then.toLocaleDateString();
+  };
+
+  // Skeleton Components
+  const StatCardSkeleton = () => (
+    <Card className="bg-white border-gray-100 shadow-sm">
+      <CardContent className="p-4 text-center">
+        <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mx-auto mb-2"></div>
+        <div className="h-4 w-20 bg-gray-200 animate-pulse rounded mx-auto"></div>
+      </CardContent>
+    </Card>
+  );
+
+  const ActivityItemSkeleton = () => (
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+      <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
+      <div className="h-4 flex-1 bg-gray-200 animate-pulse rounded"></div>
+    </div>
+  );
+
+  const ProjectCardSkeleton = () => (
+    <Card className="bg-white border-gray-100 shadow-sm h-full">
+      <CardContent className="p-6">
+        <div className="h-10 w-10 bg-gray-200 animate-pulse rounded-lg mb-4"></div>
+        <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded mb-2"></div>
+        <div className="h-4 w-full bg-gray-200 animate-pulse rounded mb-4"></div>
+        <div className="h-4 w-2/3 bg-gray-200 animate-pulse rounded"></div>
+      </CardContent>
+    </Card>
+  );
+
 
 
   return (
@@ -902,17 +1003,23 @@ export function ProfessionalDashboard() {
                           onClick={() => {
                             if (phonePin && phonePin !== 'Loading...' && phonePin !== 'Generating...' && !phonePin.includes('Error') && !phonePin.includes('Failed')) {
                               navigator.clipboard.writeText(phonePin);
+                              setCopiedPin(true);
                               trackEvent('pin_copied', { pin: phonePin, source: 'dashboard' });
                               toast.success('PIN copied to clipboard!', {
                                 description: 'Share it with employers to verify your credentials',
                                 duration: 3000
                               });
+                              setTimeout(() => setCopiedPin(false), 2000);
                             }
                           }}
                           disabled={!phonePin || phonePin === 'Loading...' || phonePin === 'Generating...' || phonePin.includes('Error') || phonePin.includes('Failed')}
-                          className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 h-12 w-12 p-0 rounded-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                          className={`h-12 w-12 p-0 rounded-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm ${
+                            copiedPin
+                              ? 'bg-green-100 border-green-300 text-green-600'
+                              : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                          }`}
                         >
-                          <Share2 className="h-5 w-5" />
+                          {copiedPin ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                         </Button>
                       </div>
                     )}
@@ -1020,7 +1127,14 @@ export function ProfessionalDashboard() {
               value="endorsements" 
               className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
             >
-              Endorsements
+              <div className="flex items-center gap-2">
+                Endorsements
+                {endorsements.filter(e => e.status === 'pending').length > 0 && (
+                  <Badge className="bg-red-500 text-white h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                    {endorsements.filter(e => e.status === 'pending').length}
+                  </Badge>
+                )}
+              </div>
             </TabsTrigger>
           </TabsList>
 
@@ -1033,9 +1147,32 @@ export function ProfessionalDashboard() {
               transition={reducedMotion ? undefined : { delay: 0.1 }}
               className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4"
             >
-              <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+              {statsLoading ? (
+                <>
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                  <StatCardSkeleton />
+                </>
+              ) : (
+                <>
+                  <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600">{stats.profileViews}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.profileViews.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.profileViews.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.profileViews.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">Profile Views</div>
                 </CardContent>
               </Card>
@@ -1043,6 +1180,16 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600">{stats.pinUsage}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.pinUsage.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.pinUsage.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.pinUsage.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">PIN Usage</div>
                 </CardContent>
               </Card>
@@ -1050,6 +1197,16 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600">{stats.verifications}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.verifications.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.verifications.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.verifications.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">Verifications</div>
                 </CardContent>
               </Card>
@@ -1057,6 +1214,16 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600">{stats.apiCalls}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.apiCalls.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.apiCalls.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {Math.abs(statsTrends.apiCalls.change)}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">API Calls</div>
                 </CardContent>
               </Card>
@@ -1064,6 +1231,16 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600">{stats.countries}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.countries.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.countries.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.countries.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">Countries</div>
                 </CardContent>
               </Card>
@@ -1071,6 +1248,16 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-blue-600">{stats.companies}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.companies.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.companies.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.companies.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">Companies</div>
                 </CardContent>
               </Card>
@@ -1078,6 +1265,16 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-purple-600">{stats.projects}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.projects.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.projects.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.projects.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">Projects</div>
                 </CardContent>
               </Card>
@@ -1085,9 +1282,21 @@ export function ProfessionalDashboard() {
               <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <CardContent className="p-4 text-center">
                   <div className="text-2xl font-bold text-green-600">{stats.endorsements}</div>
+                  <div className="flex items-center justify-center gap-1 mt-1">
+                    {statsTrends.endorsements.direction === 'up' ? (
+                      <TrendingUp className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 text-red-600" />
+                    )}
+                    <span className={`text-xs font-medium ${statsTrends.endorsements.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                      {statsTrends.endorsements.change}%
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1 font-medium">Endorsements</div>
                 </CardContent>
               </Card>
+                </>
+              )}
             </motion.div>
 
             {/* Profile Completion & PIN Activity */}
@@ -1208,14 +1417,32 @@ export function ProfessionalDashboard() {
                 <CardContent className="p-6">
                   <h3 className="text-lg font-semibold mb-4 text-gray-900">Recent Activity</h3>
                   <div className="space-y-3">
-                    {notifications.map((notification, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                        {notification.type === 'verification' && <BadgeCheck className="h-4 w-4 text-green-500" />}
-                        {notification.type === 'api' && <Globe className="h-4 w-4 text-blue-500" />}
-                        {notification.type === 'view' && <Eye className="h-4 w-4 text-purple-500" />}
-                        <span className="text-sm text-gray-700">{notification.text}</span>
+                    {activitiesLoading ? (
+                      <>
+                        <ActivityItemSkeleton />
+                        <ActivityItemSkeleton />
+                        <ActivityItemSkeleton />
+                      </>
+                    ) : notifications.length > 0 ? (
+                      notifications.map((notification, index) => (
+                        <div key={index} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                          <div className="flex items-center gap-3 flex-1">
+                            {notification.type === 'verification' && <BadgeCheck className="h-4 w-4 text-green-500 flex-shrink-0" />}
+                            {notification.type === 'api' && <Globe className="h-4 w-4 text-blue-500 flex-shrink-0" />}
+                            {notification.type === 'view' && <Eye className="h-4 w-4 text-purple-500 flex-shrink-0" />}
+                            <span className="text-sm text-gray-700">{notification.text}</span>
+                          </div>
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {getRelativeTime(notification.date || new Date().toISOString())}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <Activity className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No recent activity</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1281,30 +1508,78 @@ export function ProfessionalDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
                 <p className="text-gray-500 text-sm mt-1">Showcase your professional work and contributions</p>
               </div>
-              <Button onClick={handleAddProject} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105">
+              <Button onClick={handleAddProject} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105" aria-label="Add new project">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Project
               </Button>
             </div>
 
-            {projects.length === 0 && !projectsLoading ? (
+            {/* Search and Filter */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search projects..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  className="pl-10 bg-white border-gray-200"
+                  aria-label="Search projects by title or description"
+                />
+              </div>
+              <select
+                value={projectSort}
+                onChange={(e) => setProjectSort(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="title-asc">A-Z</option>
+                <option value="title-desc">Z-A</option>
+              </select>
+            </div>
+
+            {projectsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
+              </div>
+            ) : projects.length === 0 ? (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200"
               >
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Briefcase className="h-8 w-8 text-gray-400" />
+                <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
+                  <Briefcase className="h-12 w-12 text-purple-600" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-6">Add your professional projects to showcase your experience and skills to potential clients.</p>
+                <p className="text-gray-500 max-w-md mx-auto mb-4">Add your professional projects to showcase your experience and skills to potential clients.</p>
+                <div className="text-sm text-gray-400 mb-6">
+                  <p>💡 Tip: Add 3-5 projects for best results</p>
+                </div>
                 <Button onClick={handleAddProject} variant="outline">
                   Add Your First Project
                 </Button>
               </motion.div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((project: any, index) => (
+                {projects
+                  .filter((p: any) => {
+                    const matchesSearch = p.title?.toLowerCase().includes(projectSearch.toLowerCase()) ||
+                                        p.description?.toLowerCase().includes(projectSearch.toLowerCase());
+                    return matchesSearch;
+                  })
+                  .sort((a: any, b: any) => {
+                    switch(projectSort) {
+                      case 'date-desc': return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+                      case 'date-asc': return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+                      case 'title-asc': return (a.title || '').localeCompare(b.title || '');
+                      case 'title-desc': return (b.title || '').localeCompare(a.title || '');
+                      default: return 0;
+                    }
+                  })
+                  .map((project: any, index) => (
                   <motion.div
                     key={project.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -1384,30 +1659,55 @@ export function ProfessionalDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">Endorsements</h2>
                 <p className="text-gray-500 text-sm mt-1">Validations from your professional network</p>
               </div>
-              <Button onClick={handleRequestEndorsement} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105">
+              <Button onClick={handleRequestEndorsement} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105" aria-label="Request new endorsement">
                 <Plus className="h-4 w-4 mr-2" />
                 Request Endorsement
               </Button>
             </div>
 
-            {endorsements.length === 0 && !endorsementsLoading ? (
+            {/* Status Filter Pills */}
+            <div className="flex gap-2">
+              {['all', 'pending', 'accepted'].map(status => (
+                <Button
+                  key={status}
+                  variant={endorsementFilter === status ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setEndorsementFilter(status)}
+                  className={endorsementFilter === status ? 'bg-black text-white' : ''}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Button>
+              ))}
+            </div>
+
+            {endorsementsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ProjectCardSkeleton />
+                <ProjectCardSkeleton />
+              </div>
+            ) : endorsements.length === 0 ? (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200"
               >
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-gray-400" />
+                <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-green-100 to-teal-100 rounded-full flex items-center justify-center">
+                  <Users className="h-12 w-12 text-green-600" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No endorsements yet</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-6">Request endorsements from colleagues and clients to build trust and credibility.</p>
+                <p className="text-gray-500 max-w-md mx-auto mb-4">Request endorsements from colleagues and clients to build trust and credibility.</p>
+                <div className="text-sm text-gray-400 mb-6">
+                  <p>💡 Tip: Endorsements boost your profile visibility</p>
+                </div>
                 <Button onClick={handleRequestEndorsement} variant="outline">
                   Request Your First Endorsement
                 </Button>
               </motion.div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {endorsements.map((endorsement: any, index) => (
+                {endorsements
+                  .filter((e: any) => endorsementFilter === 'all' || e.status === endorsementFilter)
+                  .map((endorsement: any, index) => (
                   <motion.div
                     key={endorsement.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -1506,14 +1806,22 @@ export function ProfessionalDashboard() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Project Title</Label>
+              <Label htmlFor="title">Project Title *</Label>
               <Input
                 id="title"
                 value={projectFormData.title}
-                onChange={(e) => setProjectFormData({ ...projectFormData, title: e.target.value })}
+                onChange={(e) => {
+                  setProjectFormData({ ...projectFormData, title: e.target.value });
+                  if (projectFormErrors.title) {
+                    setProjectFormErrors({ ...projectFormErrors, title: '' });
+                  }
+                }}
                 placeholder="e.g. E-commerce Platform"
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${projectFormErrors.title ? 'border-red-500' : ''}`}
               />
+              {projectFormErrors.title && (
+                <p className="text-xs text-red-600 mt-1">{projectFormErrors.title}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">Your Role</Label>
@@ -1526,14 +1834,26 @@ export function ProfessionalDashboard() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
                 value={projectFormData.description}
-                onChange={(e) => setProjectFormData({ ...projectFormData, description: e.target.value })}
+                onChange={(e) => {
+                  setProjectFormData({ ...projectFormData, description: e.target.value });
+                  if (projectFormErrors.description) {
+                    setProjectFormErrors({ ...projectFormErrors, description: '' });
+                  }
+                }}
                 placeholder="Describe the project and your contribution..."
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${projectFormErrors.description ? 'border-red-500' : ''}`}
+                maxLength={500}
               />
+              {projectFormErrors.description && (
+                <p className="text-xs text-red-600 mt-1">{projectFormErrors.description}</p>
+              )}
+              <div className={`text-xs text-right mt-1 ${(projectFormData.description?.length || 0) > 450 ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+                {projectFormData.description?.length || 0}/500 characters
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1573,7 +1893,14 @@ export function ProfessionalDashboard() {
               Cancel
             </Button>
             <Button onClick={handleSaveProject} disabled={projectSaving} className="bg-black hover:bg-gray-800 text-white">
-              {projectSaving ? 'Saving...' : 'Save Project'}
+              {projectSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Project'
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -1587,25 +1914,41 @@ export function ProfessionalDashboard() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="endorser_name">Endorser Name</Label>
+              <Label htmlFor="endorser_name">Endorser Name *</Label>
               <Input
                 id="endorser_name"
                 value={endorsementFormData.endorser_name}
-                onChange={(e) => setEndorsementFormData({ ...endorsementFormData, endorser_name: e.target.value })}
+                onChange={(e) => {
+                  setEndorsementFormData({ ...endorsementFormData, endorser_name: e.target.value });
+                  if (endorsementFormErrors.endorser_name) {
+                    setEndorsementFormErrors({ ...endorsementFormErrors, endorser_name: '' });
+                  }
+                }}
                 placeholder="e.g. John Doe"
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${endorsementFormErrors.endorser_name ? 'border-red-500' : ''}`}
               />
+              {endorsementFormErrors.endorser_name && (
+                <p className="text-xs text-red-600 mt-1">{endorsementFormErrors.endorser_name}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endorser_email">Endorser Email</Label>
+              <Label htmlFor="endorser_email">Endorser Email *</Label>
               <Input
                 id="endorser_email"
                 type="email"
                 value={endorsementFormData.endorser_email}
-                onChange={(e) => setEndorsementFormData({ ...endorsementFormData, endorser_email: e.target.value })}
+                onChange={(e) => {
+                  setEndorsementFormData({ ...endorsementFormData, endorser_email: e.target.value });
+                  if (endorsementFormErrors.endorser_email) {
+                    setEndorsementFormErrors({ ...endorsementFormErrors, endorser_email: '' });
+                  }
+                }}
                 placeholder="e.g. john@company.com"
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${endorsementFormErrors.endorser_email ? 'border-red-500' : ''}`}
               />
+              {endorsementFormErrors.endorser_email && (
+                <p className="text-xs text-red-600 mt-1">{endorsementFormErrors.endorser_email}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -1630,14 +1973,26 @@ export function ProfessionalDashboard() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endorsement_text">Endorsement Text</Label>
+              <Label htmlFor="endorsement_text">Endorsement Text *</Label>
               <Textarea
                 id="endorsement_text"
                 value={endorsementFormData.text}
-                onChange={(e) => setEndorsementFormData({ ...endorsementFormData, text: e.target.value })}
+                onChange={(e) => {
+                  setEndorsementFormData({ ...endorsementFormData, text: e.target.value });
+                  if (endorsementFormErrors.text) {
+                    setEndorsementFormErrors({ ...endorsementFormErrors, text: '' });
+                  }
+                }}
                 placeholder="Enter the endorsement text..."
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${endorsementFormErrors.text ? 'border-red-500' : ''}`}
+                maxLength={1000}
               />
+              {endorsementFormErrors.text && (
+                <p className="text-xs text-red-600 mt-1">{endorsementFormErrors.text}</p>
+              )}
+              <div className={`text-xs text-right mt-1 ${(endorsementFormData.text?.length || 0) > 900 ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+                {endorsementFormData.text?.length || 0}/1000 characters
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3">
@@ -1645,7 +2000,14 @@ export function ProfessionalDashboard() {
               Cancel
             </Button>
             <Button onClick={handleSaveEndorsement} disabled={endorsementSaving} className="bg-black hover:bg-gray-800 text-white">
-              {endorsementSaving ? 'Sending...' : 'Send Request'}
+              {endorsementSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                'Send Request'
+              )}
             </Button>
           </div>
         </DialogContent>
