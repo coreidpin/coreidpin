@@ -52,36 +52,40 @@ const LoadingSpinner: React.FC = () => (
 );
 
 const DashboardSkeleton: React.FC = () => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <div className="h-8 w-48 bg-white/10 rounded-md animate-pulse" />
-      <div className="h-10 w-32 bg-white/10 rounded-md animate-pulse" />
-    </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="bg-white/10 rounded-xl border border-white/10">
-          <div className="p-4">
-            <div className="h-6 w-16 bg-white/10 rounded-md animate-pulse mb-2" />
-            <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
-          </div>
+  <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
+    <div className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-48 bg-white/10 rounded-md animate-pulse" />
+          <div className="h-10 w-32 bg-white/10 rounded-md animate-pulse" />
         </div>
-      ))}
-    </div>
-    <div className="grid lg:grid-cols-2 gap-8">
-      <div className="bg-white/10 rounded-xl border border-white/10">
-        <div className="p-6 space-y-4">
-          <div className="h-6 w-40 bg-white/10 rounded-md animate-pulse" />
-          <div className="h-24 w-full bg-white/10 rounded-md animate-pulse" />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
-            <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="bg-white/10 rounded-xl border border-white/10">
+              <div className="p-4">
+                <div className="h-6 w-16 bg-white/10 rounded-md animate-pulse mb-2" />
+                <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-      <div className="bg-white/10 rounded-xl border border-white/10">
-        <div className="p-6">
-          <div className="h-6 w-48 bg-white/10 rounded-md animate-pulse mb-4" />
-          <div className="h-32 w-full bg-white/10 rounded-md animate-pulse" />
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="bg-white/10 rounded-xl border border-white/10">
+            <div className="p-6 space-y-4">
+              <div className="h-6 w-40 bg-white/10 rounded-md animate-pulse" />
+              <div className="h-24 w-full bg-white/10 rounded-md animate-pulse" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
+                <div className="h-4 w-24 bg-white/10 rounded-md animate-pulse" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white/10 rounded-xl border border-white/10">
+            <div className="p-6">
+              <div className="h-6 w-48 bg-white/10 rounded-md animate-pulse mb-4" />
+              <div className="h-32 w-full bg-white/10 rounded-md animate-pulse" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -190,12 +194,28 @@ const DashboardAuthWrapper: React.FC<{
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Use robust session check
+        // Quick check: if already authenticated in App state, trust it initially
+        if (isAuthenticated && localStorage.getItem('accessToken') && localStorage.getItem('userId')) {
+          setIsValidAuth(true);
+          setAuthChecked(true);
+          
+          // Validate session in background
+          ensureValidSession().then(token => {
+            if (!token) {
+              console.error('Background auth validation failed');
+              onLogout();
+              window.location.href = '/login';
+            }
+          });
+          return;
+        }
+        
+        // Full validation if not authenticated
         const token = await ensureValidSession();
         
         if (!token) {
           console.error('Dashboard auth failed: Invalid session');
-          onLogout(); // Clear state
+          onLogout();
           window.location.href = '/login';
           return;
         }
@@ -214,11 +234,20 @@ const DashboardAuthWrapper: React.FC<{
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-muted-foreground">Verifying authentication...</p>
-        </div>
+      <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
+        <Navbar 
+          currentPage="dashboard"
+          onNavigate={() => {}}
+          onLogout={onLogout}
+          isAuthenticated={isAuthenticated}
+          userType={userType}
+        />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <div className="animate-spin h-8 w-8 border-2 border-[#32f08c] border-t-transparent rounded-full mx-auto" />
+            <p className="text-white/70">Loading dashboard...</p>
+          </div>
+        </main>
       </div>
     );
   }
@@ -512,14 +541,14 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route
           path="/dashboard"
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
-              <Suspense fallback={<DashboardSkeleton />}>
+            <Suspense fallback={<DashboardSkeleton />}>
+              <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
                 {userType === 'professional' && <ProfessionalDashboard />}
                 {userType === 'employer' && <EmployerDashboard />}
                 {userType === 'university' && <UniversityDashboard />}
                 {userType === 'admin' && <AdminDashboard />}
-              </Suspense>
-            </DashboardAuthWrapper>
+              </DashboardAuthWrapper>
+            </Suspense>
           }
         />
 

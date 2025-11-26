@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ArrowRight, CheckCircle, Shield, Play, Fingerprint, Clock, Sparkles, ChevronRight } from 'lucide-react';
@@ -11,14 +12,36 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: HeroSectionProps) {
+  const navigate = useNavigate();
+  
   const handleNavigate = (page: string) => {
-    onNavigate(page);
+    if (page === 'dashboard') {
+      navigate('/dashboard');
+    } else {
+      onNavigate(page);
+    }
   };
 
   return (
     <>
       {/* HERO SECTION - Modern Light */}
       <section className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-slate-50">
+        {/* Animated gradient overlay */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          animate={{
+            background: [
+              'radial-gradient(circle 800px at 20% 50%, rgba(123, 184, 255, 0.15) 0%, transparent 70%)',
+              'radial-gradient(circle 800px at 80% 50%, rgba(191, 165, 255, 0.15) 0%, transparent 70%)',
+              'radial-gradient(circle 800px at 20% 50%, rgba(123, 184, 255, 0.15) 0%, transparent 70%)',
+            ],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
         <div className="container mx-auto px-4 py-12 sm:py-20 relative z-10">
           <div className="max-w-7xl mx-auto">
             {/* Hero Content */}
@@ -166,31 +189,59 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   <div className="absolute inset-0 rounded-3xl pointer-events-none bg-[radial-gradient(circle_at_20%_30%,#e2e8f0_0,transparent_40%),radial-gradient(circle_at_80%_70%,#f1f5f9_0,transparent_40%)]" />
                   <div className="relative">
                     <motion.div 
-                      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+                      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden"
                       whileHover={{ y: -2 }}
                     >
-                      <div className="text-sm mb-2" style={{ color: '#0A0B0D' }}>Core-ID PIN</div>
-                      <motion.div 
-                        className="text-2xl font-semibold tracking-wide" 
-                        style={{ color: '#0A0B0D' }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        PIN-234-812345
-                      </motion.div>
-                      <div className="mt-4 relative">
-                        <div className="brand-gradient-overlay" />
-                        <div className="grid grid-cols-3 gap-3 relative">
-                          <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                            <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
-                            <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
-                          </div>
-                          <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                            <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
-                            <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
-                          </div>
-                          <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                            <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
-                            <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
+                      {/* Animated gradient overlay */}
+                      <motion.div
+                        className="absolute inset-0"
+                        animate={{
+                          background: [
+                            'radial-gradient(circle at 20% 50%, rgba(123, 184, 255, 0.2) 0%, transparent 50%)',
+                            'radial-gradient(circle at 80% 50%, rgba(191, 165, 255, 0.2) 0%, transparent 50%)',
+                            'radial-gradient(circle at 20% 50%, rgba(123, 184, 255, 0.2) 0%, transparent 50%)',
+                          ],
+                        }}
+                        transition={{
+                          duration: 8,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                      
+                      {/* Subtle grid pattern */}
+                      <div
+                        className="absolute inset-0 opacity-5"
+                        style={{
+                          backgroundImage: 'linear-gradient(rgba(10,11,13,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(10,11,13,0.05) 1px, transparent 1px)',
+                          backgroundSize: '32px 32px',
+                        }}
+                      />
+                      
+                      <div className="relative z-10">
+                        <div className="text-sm mb-2" style={{ color: '#0A0B0D' }}>Core-ID PIN</div>
+                        <motion.div 
+                          className="text-2xl font-semibold tracking-wide" 
+                          style={{ color: '#0A0B0D' }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          PIN-234-812345
+                        </motion.div>
+                        <div className="mt-4 relative">
+                          <div className="brand-gradient-overlay" />
+                          <div className="grid grid-cols-3 gap-3 relative">
+                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                              <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
+                              <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
+                            </div>
+                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                              <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
+                              <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
+                            </div>
+                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                              <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
+                              <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
+                            </div>
                           </div>
                         </div>
                       </div>
