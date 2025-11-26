@@ -1439,7 +1439,45 @@ export function ProfessionalDashboard() {
               />
             </motion.div>
             <motion.div initial={reducedMotion ? undefined : { opacity: 0, x: 20 }} animate={reducedMotion ? undefined : { opacity: 1, x: 0 }} transition={reducedMotion ? undefined : { delay: 0.2 }}>
-              <ProfileCompletionWidget percentage={profileCompletion} checklist={[{ id: '1', label: 'Identity verification', completed: true }, { id: '2', label: 'Document verification', completed: true }, { id: '3', label: 'Skills & experience', completed: false }]} onItemClick={() => setActiveTab('projects')} />
+              <ProfileCompletionWidget 
+                percentage={profileCompletion} 
+                checklist={[
+                  {
+                    id: 'email_verified',
+                    label: 'Email verification',
+                    completed: !!((userProfile as any)?.email_verified)
+                  },
+                  {
+                    id: 'pin_generated',
+                    label: 'PIN generated',
+                    completed: !!(phonePin && phonePin !== 'Loading...')
+                  },
+                  {
+                    id: 'profile_picture',
+                    label: 'Profile picture',
+                    completed: !!((userProfile as any)?.profile_picture_url)
+                  },
+                  {
+                    id: 'work_experience',
+                    label: 'Work experience',
+                    completed: !!((userProfile as any)?.work_experience && (userProfile as any)?.work_experience?.length > 0)
+                  },
+                  {
+                    id: 'skills',
+                    label: 'Skills & tools',
+                    completed: !!((userProfile as any)?.skills && (userProfile as any)?.skills?.length > 0)
+                  }
+                ]} 
+                onItemClick={(itemId) => {
+                  if (itemId === 'email_verified' || itemId === 'profile_picture' || itemId === 'work_experience' || itemId === 'skills') {
+                    // Navigate to identity management
+                    window.location.href = '/identity';
+                  } else if (itemId === 'pin_generated') {
+                    // Trigger PIN generation
+                    handleGeneratePin(true);
+                  }
+                }} 
+              />
             </motion.div>
             <motion.div initial={reducedMotion ? undefined : { opacity: 0, x: 20 }} animate={reducedMotion ? undefined : { opacity: 1, x: 0 }} transition={reducedMotion ? undefined : { delay: 0.3 }}>
               <ActivityFeed activities={notifications.length > 0 ? notifications.map((n, i) => ({ type: (n.type === 'success' ? 'verification' : 'view'), text: n.text })) : [{ type: 'verification', text: 'Account Created' }]} />
