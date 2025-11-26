@@ -22,6 +22,8 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { colors, typography, spacing, borderRadius } from '../styles/designTokens';
+import { shadows, premiumCardShadow } from '../styles/shadows';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -664,6 +666,33 @@ Return ONLY the JSON object, no markdown, no explanations.`;
     );
   }
 
+  const PremiumBackground = () => (
+    <>
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          background: [
+            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+            'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
+            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+          ],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 text-slate-900 py-8 selection:bg-blue-500/30">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -728,33 +757,42 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           {/* OVERVIEW TAB */}
           <TabsContent value="overview" className="space-y-6 focus-visible:outline-none">
             {/* Identity Overview Card */}
-            <Card className="bg-white border-slate-200 shadow-xl overflow-hidden relative group">
-              <div className="absolute top-0 right-0 -mt-20 -mr-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-colors duration-500" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative overflow-hidden rounded-xl"
+              style={{
+                background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              <PremiumBackground />
               
-              <CardHeader className="relative z-10">
-                <CardTitle className="text-slate-900 flex items-center gap-3 text-xl">
-                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+              <div className="relative z-10 p-6 space-y-8">
+                {/* Header */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
                     <Shield className="h-5 w-5" />
                   </div>
-                  Identity Overview
-                </CardTitle>
-                <CardDescription className="text-slate-500 text-base">
-                  Your professional identity at a glance
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-8 relative z-10">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Identity Overview</h3>
+                    <p className="text-gray-400 text-sm">Your professional identity at a glance</p>
+                  </div>
+                </div>
+
                 {/* Profile Picture & Basic Info */}
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
                   <div className="flex-shrink-0 relative group/avatar">
                     <div 
-                      className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-xl flex items-center justify-center cursor-pointer relative overflow-hidden ring-2 ring-slate-100 group-hover/avatar:ring-blue-100 transition-all duration-300"
+                      className="w-32 h-32 rounded-full bg-black border-4 border-white/10 shadow-xl flex items-center justify-center cursor-pointer relative overflow-hidden ring-2 ring-white/5 group-hover/avatar:ring-blue-500/50 transition-all duration-300"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {profile?.profile_picture_url ? (
                         <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
                       ) : (
                         <div className="text-center">
-                          <User className="h-12 w-12 text-slate-300 mx-auto mb-2" />
+                          <User className="h-12 w-12 text-gray-600 mx-auto mb-2" />
                         </div>
                       )}
                       
@@ -777,24 +815,24 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   
                   <div className="flex-1 space-y-4 text-center sm:text-left w-full">
                     <div>
-                      <h3 className="text-3xl font-bold text-black tracking-tight">{formData.name || 'Not Set'}</h3>
-                      <p className="text-slate-400 text-lg">{formData.role || 'No Role Set'}</p>
+                      <h3 className="text-3xl font-bold text-white tracking-tight">{formData.name || 'Not Set'}</h3>
+                      <p className="text-gray-400 text-lg">{formData.role || 'No Role Set'}</p>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto sm:mx-0">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <Phone className="h-4 w-4 text-purple-400" />
-                        <span className="text-sm text-slate-300">{formData.phone || 'Not Set'}</span>
+                        <span className="text-sm text-gray-300">{formData.phone || 'Not Set'}</span>
                       </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                         <Mail className="h-4 w-4 text-blue-400" />
-                        <span className="text-sm text-slate-300 truncate">{formData.email || 'Not Set'}</span>
+                        <span className="text-sm text-gray-300 truncate">{formData.email || 'Not Set'}</span>
                       </div>
                     </div>
 
                     {/* PIN Display */}
                     {pinData && (
-                      <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-950/50 rounded-lg border border-white/10 shadow-inner mt-2">
+                      <div className="inline-flex items-center gap-3 px-4 py-2 bg-black/40 rounded-lg border border-white/10 shadow-inner mt-2 backdrop-blur-sm">
                         <Shield className="h-4 w-4 text-emerald-400" />
                         <span className="font-mono text-emerald-400 font-bold tracking-widest text-lg">{pinData.pin_number}</span>
                         <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] ml-2">
@@ -810,10 +848,10 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 {/* Profile Completeness */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-500">Profile Completeness</span>
-                    <span className="text-sm font-bold text-blue-600">{profileCompleteness}%</span>
+                    <span className="text-sm font-medium text-gray-400">Profile Completeness</span>
+                    <span className="text-sm font-bold text-blue-400">{profileCompleteness}%</span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${profileCompleteness}%` }}
@@ -825,116 +863,128 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
                 {/* Verification Badges */}
                 <div>
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Verification Status</h4>
+                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Verification Status</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {profile?.email_verified ? (
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 shadow-sm">
-                        <div className="p-1 rounded-full bg-emerald-100">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
+                        <div className="p-1 rounded-full bg-emerald-500/20">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                         </div>
-                        <span className="text-sm font-medium text-emerald-700">Email</span>
+                        <span className="text-sm font-medium text-emerald-400">Email</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 opacity-60">
-                        <div className="p-1 rounded-full bg-slate-200">
-                          <CheckCircle2 className="h-4 w-4 text-slate-400" />
+                      <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/5 opacity-60">
+                        <div className="p-1 rounded-full bg-white/10">
+                          <CheckCircle2 className="h-4 w-4 text-gray-500" />
                         </div>
-                        <span className="text-sm font-medium text-slate-500">Email</span>
+                        <span className="text-sm font-medium text-gray-500">Email</span>
                       </div>
                     )}
                     
                     {/* Placeholder badges for other verifications */}
                     {['Phone', 'Work', 'Identity'].map((item) => (
-                      <div key={item} className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 opacity-60">
-                         <div className="p-1 rounded-full bg-slate-200">
-                          <CheckCircle2 className="h-4 w-4 text-slate-400" />
+                      <div key={item} className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/5 opacity-60">
+                         <div className="p-1 rounded-full bg-white/10">
+                          <CheckCircle2 className="h-4 w-4 text-gray-500" />
                         </div>
-                        <span className="text-sm font-medium text-slate-500">{item}</span>
+                        <span className="text-sm font-medium text-gray-500">{item}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </motion.div>
           </TabsContent>
 
           {/* DETAILS TAB */}
           <TabsContent value="details" className="space-y-6">
             {/* Personal Information */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-900 flex items-center gap-2">
-                  <User className="h-5 w-5 text-purple-600" />
-                  Personal Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-700">Full Name</Label>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative overflow-hidden rounded-xl"
+              style={{
+                background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              <PremiumBackground />
+              
+              <div className="relative z-10 p-6 space-y-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Personal Information</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-gray-400">Full Name</Label>
                     <Input 
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
                     />
                   </div>
                   
-                  <div>
-                    <Label className="text-slate-700">Date of Birth</Label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400">Date of Birth</Label>
                     <Input 
                       type="date"
                       value={formData.date_of_birth}
                       onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all [color-scheme:dark]" 
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-white">Gender</Label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400">Gender</Label>
                     <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                      <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
+                      <SelectTrigger className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200">
-                        <SelectItem value="male" className="text-white">Male</SelectItem>
-                        <SelectItem value="female" className="text-white">Female</SelectItem>
-                        <SelectItem value="non-binary" className="text-white">Non-binary</SelectItem>
-                        <SelectItem value="prefer-not-to-say" className="text-slate-900">Prefer not to say</SelectItem>
+                      <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
+                        <SelectItem value="male" className="focus:bg-white/10 focus:text-white cursor-pointer">Male</SelectItem>
+                        <SelectItem value="female" className="focus:bg-white/10 focus:text-white cursor-pointer">Female</SelectItem>
+                        <SelectItem value="non-binary" className="focus:bg-white/10 focus:text-white cursor-pointer">Non-binary</SelectItem>
+                        <SelectItem value="prefer-not-to-say" className="focus:bg-white/10 focus:text-white cursor-pointer">Prefer not to say</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div>
-                    <Label className="text-white">Nationality</Label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400">Nationality</Label>
                     <Input 
                       value={formData.nationality}
                       onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
                       placeholder="e.g. Nigerian"
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-white">City</Label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400">City</Label>
                     <Input 
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
                       placeholder="e.g. Lagos"
                     />
                   </div>
 
-                  <div>
-                    <Label className="text-white">Phone Number</Label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400">Phone Number</Label>
                     <Input 
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </motion.div>
 
             {/* Contact Identity (Critical Section) */}
             <Card className="bg-white border-slate-200 shadow-sm border-l-4 border-l-green-500">

@@ -39,8 +39,8 @@ const SESSION_CONFIG = {
   REFRESH_THRESHOLD_MS: 5 * 60 * 1000,
   // Auto-refresh every 30 minutes during active use
   AUTO_REFRESH_INTERVAL_MS: 30 * 60 * 1000,
-  // Session timeout after 24 hours of inactivity
-  INACTIVITY_TIMEOUT_MS: 24 * 60 * 60 * 1000,
+  // Session timeout after 30 days of inactivity (matches JWT expiry)
+  INACTIVITY_TIMEOUT_MS: 30 * 24 * 60 * 60 * 1000,
   // Buffer time before token actually expires
   TOKEN_EXPIRY_BUFFER_MS: 60 * 1000,
 } as const;

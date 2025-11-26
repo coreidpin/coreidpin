@@ -48,7 +48,7 @@ async function generateJWT(userId: string, email: string | null) {
   
   const payload = {
     aud: "authenticated",
-    exp: getNumericDate(60 * 60 * 24 * 7), // 7 days (extended from 24 hours)
+    exp: getNumericDate(60 * 60 * 24 * 30), // 30 days for development
     sub: userId,
     email: email || "",
     role: "authenticated",
@@ -426,7 +426,7 @@ const handleVerify = async (c: any) => {
     return c.json({
       status: 'ok',
       access_token: jwt,
-      expires_in: 86400,
+      expires_in: 2592000, // 30 days in seconds
       user: { id: userId, email: userEmail }
     });
 
@@ -504,7 +504,7 @@ const handleRefresh = async (c: any) => {
     return c.json({
       status: 'ok',
       access_token: newToken,
-      expires_in: 604800, // 7 days in seconds
+      expires_in: 2592000, // 30 days in seconds
       user: { id: userId, email: userEmail }
     });
 

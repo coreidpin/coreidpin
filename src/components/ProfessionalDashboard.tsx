@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -47,6 +48,7 @@ import { PINGenerationCard } from './dashboard/PINGenerationCard';
 import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { ActivityChart } from './dashboard/ActivityChart';
 import { ActivityFeed } from './dashboard/ActivityFeed';
+import { QuickActions } from './dashboard/QuickActions';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
@@ -62,6 +64,16 @@ export function ProfessionalDashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.openPinGeneration) {
+      setShowTermsModal(true);
+      // Clear state to prevent reopening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   // PIN Generation State
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -233,6 +245,7 @@ export function ProfessionalDashboard() {
           const data = await listResponse.json();
           if (data.success) setProjects(data.projects);
         }
+        fetchStats(); // Refresh stats
       } else {
         alert('Failed to save project');
       }
@@ -268,6 +281,7 @@ export function ProfessionalDashboard() {
           const data = await listResponse.json();
           if (data.success) setProjects(data.projects);
         }
+        fetchStats(); // Refresh stats
       } else {
         alert('Failed to delete project');
       }
@@ -353,6 +367,7 @@ export function ProfessionalDashboard() {
             setEndorsements(formatted);
           }
         }
+        fetchStats(); // Refresh stats
       } else {
         alert('Failed to request endorsement');
       }
@@ -402,6 +417,7 @@ export function ProfessionalDashboard() {
             setEndorsements(formatted);
           }
         }
+        fetchStats(); // Refresh stats
       } else {
         alert(`Failed to ${status === 'accepted' ? 'accept' : 'reject'} endorsement`);
       }
@@ -447,6 +463,7 @@ export function ProfessionalDashboard() {
             setEndorsements(formatted);
           }
         }
+        fetchStats(); // Refresh stats
       } else {
         alert('Failed to delete endorsement');
       }
@@ -511,13 +528,25 @@ export function ProfessionalDashboard() {
         }
 
         console.log('Profile fetch result:', { profile, profileError, isVerified });
+        console.log('Profile data fields:', profile ? Object.keys(profile) : 'none');
+        console.log('Location-related fields:', {
+          location: profile?.location,
+          country: profile?.country,
+          city: profile?.city,
+          state: profile?.state,
+          address: profile?.address,
+          residence: profile?.residence,
+          nationality: profile?.nationality
+        });
+        console.log('All profile data:', profile);
         
         if (profileError) {
           console.error('Error fetching profile:', profileError);
         } else if (profile) {
+          console.log('Setting profile with data:', profile);
           setUserProfile({
             ...profile,
-            email_verified: isVerified || profile.email_verified // Fallback to profile if available
+            email_verified: isVerified || profile.email_verified
           });
         } else {
           console.log('No profile data returned');
@@ -558,33 +587,35 @@ export function ProfessionalDashboard() {
   }, []);
 
   // Fetch dashboard stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const token = await ensureValidSession();
-        if (!token) return;
+  const fetchStats = async () => {
+    try {
+      const token = await ensureValidSession();
+      if (!token) return;
 
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/stats/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success &&data.stats) {
-            setStats(data.stats);
-          }
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/stats/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.stats) {
+          setStats(data.stats);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
+    const interval = setInterval(fetchStats, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch PIN analytics for chart
@@ -857,24 +888,31 @@ export function ProfessionalDashboard() {
       return;
     }
     try {
-      const token = await ensureValidSession();
-      if (!token) return;
-
       setPinLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pin/issue`, {
+      
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+      if (sessionError || !session) {
+        toast.error('Session expired. Please login again.');
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/generate`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
-      if (response.ok) {
-        const data = await response.json();
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
         setPhonePin(data.pin);
-        toast.success('Random PIN generated');
+        toast.success('Random PIN generated successfully');
         setShowTermsModal(false);
       } else {
-        toast.error('Failed to generate PIN');
+        console.error('PIN generation error:', data);
+        toast.error(data.error || 'Failed to generate PIN');
       }
     } catch (error) {
       console.error('Error generating random PIN:', error);
@@ -951,7 +989,7 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Header Profile Card */}
@@ -960,13 +998,11 @@ export function ProfessionalDashboard() {
           animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
         >
           <HeroProfileCard 
-            userProfile={userProfile}
-            profileCompletion={profileCompletion}
-            onEditProfile={() => window.location.href = '/identity-management'}
-            onShareProfile={() => {
-              navigator.clipboard.writeText(`https://coreid.com/p/${phonePin}`);
-              toast.success('Profile link copied!');
-            }}
+            name={(userProfile as any)?.full_name || (userProfile as any)?.name || 'Professional User'}
+            role={(userProfile as any)?.role || (userProfile as any)?.job_title || 'Professional'}
+            country={(userProfile as any)?.city || (userProfile as any)?.nationality || 'Location not set'}
+            isVerified={(userProfile as any)?.email_verified || false}
+            isBetaTester={true}
           />
         </motion.div>
 
@@ -974,34 +1010,7 @@ export function ProfessionalDashboard() {
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* PIN Generation/Display Card */}
-            <motion.div
-              initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
-              animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-              transition={reducedMotion ? undefined : { delay: 0.1 }}
-            >
-              <PINGenerationCard 
-                currentPin={phonePin}
-                onGenerate={handleGeneratePin}
-                onCopy={(pin) => {
-                  navigator.clipboard.writeText(pin);
-                  toast.success('PIN copied to clipboard');
-                }}
-                onShare={(pin) => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: 'My Professional PIN',
-                      text: `Connect with me using my CoreID PIN: ${pin}`,
-                      url: window.location.href
-                    });
-                  } else {
-                    navigator.clipboard.writeText(pin);
-                    toast.success('PIN copied to clipboard');
-                  }
-                }}
-                onToggleVisibility={() => {}}
-              />
-            </motion.div>
+
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -1035,17 +1044,70 @@ export function ProfessionalDashboard() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
-            <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
-              <ActivityChart data={chartData.map(d => ({ date: `Day ${d.day}`, value: d.actions, label: `${d.actions} Actions` }))} period="30d" onPeriodChange={() => {}} />
-            </motion.div>
-            <div className="grid lg:grid-cols-2 gap-8">
-              <motion.div initial={reducedMotion ? undefined : { opacity: 0, x: -20 }} animate={reducedMotion ? undefined : { opacity: 1, x: 0 }} transition={reducedMotion ? undefined : { delay: 0.2 }}>
-                <ProfileCompletionWidget completionPercentage={profileCompletion} tasks={[{ id: '1', label: 'Identity verification', isCompleted: true }, { id: '2', label: 'Document verification', isCompleted: true }, { id: '3', label: 'Skills & experience', isCompleted: false }]} onTaskClick={() => setActiveTab('projects')} />
-              </motion.div>
-              <motion.div initial={reducedMotion ? undefined : { opacity: 0, x: 20 }} animate={reducedMotion ? undefined : { opacity: 1, x: 0 }} transition={reducedMotion ? undefined : { delay: 0.3 }}>
-                <ActivityFeed activities={notifications.length > 0 ? notifications.map((n, i) => ({ id: i.toString(), type: (n.type === 'success' ? 'verification' : 'profile_update'), title: n.text, description: 'Activity recorded', timestamp: new Date(n.date || Date.now()), icon: n.type === 'success' ? 'check' : 'file' })) : [{ id: '1', type: 'verification', title: 'Account Created', description: 'Your professional identity was created', timestamp: new Date(), icon: 'shield' }]} />
-              </motion.div>
+            <QuickActions 
+              onAddProject={handleAddProject}
+              onRequestEndorsement={handleRequestEndorsement}
+              reducedMotion={reducedMotion}
+              userPin={phonePin || undefined}
+            />
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {statsLoading ? (
+                Array(8).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
+              ) : (
+                [
+                  { key: 'profileViews', label: 'Profile Views', color: 'purple', value: stats.profileViews },
+                  { key: 'pinUsage', label: 'PIN Usage', color: 'green', value: stats.pinUsage },
+                  { key: 'verifications', label: 'Verifications', color: 'blue', value: stats.verifications },
+                  { key: 'apiCalls', label: 'API Calls', color: 'purple', value: stats.apiCalls },
+                  { key: 'countries', label: 'Countries', color: 'purple', value: stats.countries },
+                  { key: 'companies', label: 'Companies', color: 'blue', value: stats.companies },
+                  { key: 'projects', label: 'Projects', color: 'purple', value: stats.projects },
+                  { key: 'endorsements', label: 'Endorsements', color: 'green', value: stats.endorsements }
+                ].map((stat, index) => {
+                  const trend = statsTrends[stat.key as keyof typeof statsTrends];
+                  return (
+                    <motion.div
+                      key={stat.key}
+                      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
+                      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+                      whileHover={reducedMotion ? undefined : { scale: 1.02 }}
+                      transition={reducedMotion ? undefined : { delay: index * 0.05 }}
+                    >
+                      <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                        <CardContent className="p-6 text-center relative">
+                          <button
+                            className="absolute top-3 right-3 opacity-40 hover:opacity-100 transition-opacity"
+                            title={statTooltips[stat.key as keyof typeof statTooltips]}
+                          >
+                            <div className="h-4 w-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">i</div>
+                          </button>
+                          <div className={`text-4xl font-bold mb-2 ${stat.color === 'purple' ? 'text-purple-600' : stat.color === 'green' ? 'text-green-600' : 'text-blue-600'}`}>
+                            {stat.value}
+                          </div>
+                          <div className={`flex items-center justify-center gap-1 text-xs font-medium mb-2 ${
+                            trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {trend.direction === 'up' ? (
+                              <TrendingUp className="h-3 w-3" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3" />
+                            )}
+                            <span>{trend.change}%</span>
+                          </div>
+                          <div className="text-sm text-gray-600 font-medium">{stat.label}</div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
+            
+            <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
+              <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
+            </motion.div>
           </TabsContent>
 
           {/* Projects Tab */}
@@ -1339,11 +1401,51 @@ export function ProfessionalDashboard() {
             )}
           </TabsContent>
         </Tabs>
-      
-
-
-
       </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            <motion.div 
+              initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+              animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+              transition={reducedMotion ? undefined : { delay: 0.1 }}
+            >
+              <PINGenerationCard 
+                currentPin={phonePin || undefined}
+                onGenerateWithPhone={() => handleGeneratePin(true)}
+                onGenerateRandom={() => handleGeneratePin(false)}
+                onCopyPin={() => {
+                  if (phonePin) {
+                    navigator.clipboard.writeText(phonePin);
+                    toast.success('PIN copied to clipboard');
+                  }
+                }}
+                onSharePin={(platform) => {
+                  if (phonePin) {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: 'My Professional PIN',
+                        text: `Connect with me using my CoreID PIN: ${phonePin}`,
+                        url: window.location.href
+                      });
+                    } else {
+                      navigator.clipboard.writeText(phonePin);
+                      toast.success('PIN copied to clipboard');
+                    }
+                  }
+                }}
+                pinVisible={pinVisible}
+                onTogglePinVisibility={() => setPinVisible(!pinVisible)}
+              />
+            </motion.div>
+            <motion.div initial={reducedMotion ? undefined : { opacity: 0, x: 20 }} animate={reducedMotion ? undefined : { opacity: 1, x: 0 }} transition={reducedMotion ? undefined : { delay: 0.2 }}>
+              <ProfileCompletionWidget percentage={profileCompletion} checklist={[{ id: '1', label: 'Identity verification', completed: true }, { id: '2', label: 'Document verification', completed: true }, { id: '3', label: 'Skills & experience', completed: false }]} onItemClick={() => setActiveTab('projects')} />
+            </motion.div>
+            <motion.div initial={reducedMotion ? undefined : { opacity: 0, x: 20 }} animate={reducedMotion ? undefined : { opacity: 1, x: 0 }} transition={reducedMotion ? undefined : { delay: 0.3 }}>
+              <ActivityFeed activities={notifications.length > 0 ? notifications.map((n, i) => ({ type: (n.type === 'success' ? 'verification' : 'view'), text: n.text })) : [{ type: 'verification', text: 'Account Created' }]} />
+            </motion.div>
+          </div>
+        </div>
 
       {/* Project Modal */}
       <Dialog open={showProjectModal} onOpenChange={setShowProjectModal}>
@@ -1741,6 +1843,7 @@ export function ProfessionalDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

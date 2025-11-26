@@ -8,12 +8,14 @@ interface QuickActionsProps {
   onAddProject?: () => void;
   onRequestEndorsement?: () => void;
   reducedMotion?: boolean;
+  userPin?: string;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ 
   onAddProject, 
   onRequestEndorsement, 
-  reducedMotion = false 
+  reducedMotion = false,
+  userPin 
 }) => {
   return (
     <motion.div
@@ -57,7 +59,13 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             </Button>
             
             <Button 
-              onClick={() => window.location.href = '/card'}
+              onClick={() => {
+                if (userPin) {
+                  window.location.href = `/pin/${userPin}`;
+                } else {
+                  window.location.href = '/card';
+                }
+              }}
               variant="outline" 
               className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
             >
