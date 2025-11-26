@@ -38,22 +38,20 @@ import {
   X,
   Quote,
   Activity,
-  Loader2,
-  Info
+  Loader2
 } from 'lucide-react';
-// Defer Recharts load until chart is visible
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import type * as RechartsTypes from 'recharts';
 
-import { PhoneVerification } from './PhoneVerification';
 import { supabase } from '../utils/supabase/client';
+import { HeroProfileCard } from './dashboard/HeroProfileCard';
+import { PINGenerationCard } from './dashboard/PINGenerationCard';
+import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
+import { ActivityChart } from './dashboard/ActivityChart';
+import { ActivityFeed } from './dashboard/ActivityFeed';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
 import { Checkbox } from './ui/checkbox';
 import { DialogFooter, DialogDescription } from './ui/dialog';
-import * as Tooltip from '@radix-ui/react-tooltip';
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
@@ -953,203 +951,57 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <div className="container mx-auto px-6 py-8 space-y-8">
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Header Section - User Info Only */}
-        <motion.div 
-          initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
-          animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-          className="text-center space-y-3"
-        >
-          {/* Name - Primary */}
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-            {userProfile?.name || 'Professional'}
-          </h1>
-          
-          {/* Role, Location, Badge - Secondary */}
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 text-sm">
-            <span className="text-gray-600 font-medium">
-              {userProfile?.role || 'Role Not Set'}
-            </span>
-            <span className="text-gray-300 hidden sm:inline">•</span>
-            <span className="text-gray-600">Nigeria</span>
-            {userProfile?.email_verified && (
-              <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
-                <CheckCircleIcon className="h-3 w-3 mr-1" />
-                Verified
-              </Badge>
-            )}
-          </div>
-        </motion.div>
-
-        {/* CoreID PIN Display - PROMINENT */}
+        {/* Header Profile Card */}
         <motion.div
           initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
           animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-          transition={reducedMotion ? undefined : { delay: 0.1 }}
         >
-          <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden relative">
-            <CardContent className="p-8 relative z-10">
-              <div className="grid md:grid-cols-2 gap-6 items-center">
-                {/* Left: PIN Display */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                      <Fingerprint className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-gray-900 text-sm font-medium">Your CoreID PIN</h3>
-                      <p className="text-gray-500 text-xs">Unique Professional Identity Number</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-4">
-                    {!phonePin ? (
-                      <div className="flex flex-col gap-3">
-                        <p className="text-sm text-gray-600">You don't have a PIN yet. Choose how to generate it:</p>
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Button 
-                            onClick={() => handleGeneratePin(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-6 text-base shadow-sm transition-all hover:scale-105"
-                          >
-                            <Phone className="h-5 w-5 mr-2" />
-                            Use Phone Number
-                          </Button>
-                          <Button 
-                            onClick={() => handleGeneratePin(false)}
-                            variant="outline"
-                            className="border-gray-300 hover:bg-gray-50 h-12 px-6 text-base shadow-sm transition-all hover:scale-105"
-                          >
-                            <Fingerprint className="h-5 w-5 mr-2" />
-                            Generate Random
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="bg-gray-50 rounded-2xl px-6 py-4 border border-gray-200 min-w-[200px] flex justify-center">
-                          <div className="text-gray-900 text-3xl md:text-4xl font-bold tracking-widest font-mono">
-                            {pinVisible ? phonePin : '••••••'}
-                          </div>
-                        </div>
-                        
-                        <Button
-                          onClick={() => setPinVisible(!pinVisible)}
-                          className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 h-12 w-12 p-0 rounded-xl transition-all hover:scale-105 shadow-sm"
-                          title={pinVisible ? "Hide PIN" : "Show PIN"}
-                        >
-                          {pinVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </Button>
-
-                        <Button
-                          onClick={() => {
-                            if (phonePin && phonePin !== 'Loading...' && phonePin !== 'Generating...' && !phonePin.includes('Error') && !phonePin.includes('Failed')) {
-                              navigator.clipboard.writeText(phonePin);
-                              setCopiedPin(true);
-                              trackEvent('pin_copied', { pin: phonePin, source: 'dashboard' });
-                              toast.success('PIN copied to clipboard!', {
-                                description: 'Share it with employers to verify your credentials',
-                                duration: 3000
-                              });
-                              setTimeout(() => setCopiedPin(false), 2000);
-                            }
-                          }}
-                          disabled={!phonePin || phonePin === 'Loading...' || phonePin === 'Generating...' || phonePin.includes('Error') || phonePin.includes('Failed')}
-                          className={`h-12 w-12 p-0 rounded-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm ${
-                            copiedPin
-                              ? 'bg-green-100 border-green-300 text-green-600'
-                              : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
-                          }`}
-                        >
-                          {copiedPin ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Right: PIN Info */}
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <Shield className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-gray-900 text-sm font-medium">Shareable Verification</p>
-                          <p className="text-gray-500 text-xs">Employers can verify your credentials with this PIN</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <Globe className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-gray-900 text-sm font-medium">Global Recognition</p>
-                          <p className="text-gray-500 text-xs">Accepted by companies worldwide</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium h-11 rounded-xl transition-all shadow-sm"
-                      onClick={() => window.open(`/pin/${phonePin}`, '_blank')}
-                      disabled={!phonePin || phonePin === 'Loading...' || phonePin === 'Generating PIN...' || phonePin.includes('Error') || phonePin.includes('Failed')}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View Public Profile
-                    </Button>
-                    
-                    {/* Social Sharing */}
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-gray-200 h-9 text-xs"
-                        onClick={() => {
-                          if (phonePin && !phonePin.includes('Loading') && !phonePin.includes('Error')) {
-                            const text = `Check out my CoreID Professional Profile! PIN: ${phonePin}`;
-                            const url = `${window.location.origin}/pin/${phonePin}`;
-                            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
-                            trackEvent('pin_shared', { platform: 'twitter', pin: phonePin });
-                            toast.success('Sharing on X (Twitter)');
-                          }
-                        }}
-                        disabled={!phonePin || phonePin.includes('Loading') || phonePin.includes('Error')}
-                      >
-                        <svg className="h-3.5 w-3.5 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                        </svg>
-                        Share
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border-gray-200 h-9 text-xs"
-                        onClick={() => {
-                          if (phonePin && !phonePin.includes('Loading') && !phonePin.includes('Error')) {
-                            const url = `${window.location.origin}/pin/${phonePin}`;
-                            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'width=550,height=420');
-                            trackEvent('pin_shared', { platform: 'linkedin', pin: phonePin });
-                            toast.success('Sharing on LinkedIn');
-                          }
-                        }}
-                        disabled={!phonePin || phonePin.includes('Loading') || phonePin.includes('Error')}
-                      >
-                        <svg className="h-3.5 w-3.5 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                        </svg>
-                        Share
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <HeroProfileCard 
+            userProfile={userProfile}
+            profileCompletion={profileCompletion}
+            onEditProfile={() => window.location.href = '/identity-management'}
+            onShareProfile={() => {
+              navigator.clipboard.writeText(`https://coreid.com/p/${phonePin}`);
+              toast.success('Profile link copied!');
+            }}
+          />
         </motion.div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* PIN Generation/Display Card */}
+            <motion.div
+              initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
+              animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+              transition={reducedMotion ? undefined : { delay: 0.1 }}
+            >
+              <PINGenerationCard 
+                currentPin={phonePin}
+                onGenerate={handleGeneratePin}
+                onCopy={(pin) => {
+                  navigator.clipboard.writeText(pin);
+                  toast.success('PIN copied to clipboard');
+                }}
+                onShare={(pin) => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'My Professional PIN',
+                      text: `Connect with me using my CoreID PIN: ${pin}`,
+                      url: window.location.href
+                    });
+                  } else {
+                    navigator.clipboard.writeText(pin);
+                    toast.success('PIN copied to clipboard');
+                  }
+                }}
+                onToggleVisibility={() => {}}
+              />
+            </motion.div>
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
