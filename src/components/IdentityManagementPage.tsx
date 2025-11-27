@@ -420,6 +420,11 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       const file = event.target.files?.[0];
       if (!file) return;
 
+      if (!profile?.user_id) {
+        toast.error('User profile not loaded');
+        return;
+      }
+
       // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         toast.error('Image size must be less than 2MB');
@@ -429,17 +434,18 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       const toastId = toast.loading('Uploading image...');
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}.${fileExt}`;
+      const filePath = `${profile.user_id}/${fileName}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) {
+        console.error('Supabase upload error:', uploadError);
         toast.dismiss(toastId);
-        throw uploadError;
+        throw new Error(uploadError.message);
       }
 
       // Get Public URL
@@ -454,17 +460,18 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         .eq('user_id', profile.user_id);
 
       if (updateError) {
+        console.error('Profile update error:', updateError);
         toast.dismiss(toastId);
-        throw updateError;
+        throw new Error(updateError.message);
       }
 
       setProfile({ ...profile, profile_picture_url: publicUrl });
       toast.dismiss(toastId);
       toast.success('Profile picture updated');
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      toast.error(`Failed to upload image: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -694,23 +701,64 @@ Return ONLY the JSON object, no markdown, no explanations.`;
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 py-8 selection:bg-blue-500/30">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <div className="min-h-screen bg-gray-50 text-slate-900 py-4 sm:py-8 selection:bg-blue-500/30">
+      <div className="container mx-auto px-3 sm:px-4 max-w-6xl">
         {/* Header */}
-        <div className="mb-10">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="mb-6 text-black hover:text-black pl-0 hover:bg-transparent group"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-4xl font-bold text-black tracking-tight">
-            Manage Identity
-          </h1>
-          <p className="text-black mt-2 text-lg">Your professional identity hub</p>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-10 relative overflow-hidden rounded-2xl"
+          style={{
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          {/* Animated gradient overlay */}
+          <motion.div
+            className="absolute inset-0"
+            animate={{
+              background: [
+                'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+                'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
+                'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+              ],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+
+          {/* Subtle grid pattern */}
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+              backgroundSize: '32px 32px',
+            }}
+          />
+
+          <div className="relative z-10 p-4 sm:p-6 md:p-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+              className="mb-3 sm:mb-4 text-white/70 hover:text-white hover:bg-white/10 pl-0 group text-sm sm:text-base"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:-translate-x-1 transition-transform" />
+              Back to Dashboard
+            </Button>
+            
+            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+                Manage Identity
+              </h1>
+              <span className="text-white/40 hidden sm:inline">•</span>
+              <p className="text-white text-sm sm:text-base md:text-lg w-full sm:w-auto">Your professional identity hub</p>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Message Banner */}
         {message && (
@@ -732,23 +780,24 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           </motion.div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-100 border border-slate-200 p-1 rounded-xl h-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 sm:space-y-12 mt-4 sm:mt-8">
+          <TabsList className="flex flex-wrap w-full bg-slate-100 border border-slate-200 p-1 rounded-xl gap-1">
             <TabsTrigger 
               value="overview" 
-              className="py-3 rounded-lg text-slate-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 min-w-[100px] py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="details" 
-              className="py-3 rounded-lg text-slate-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 min-w-[120px] py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base text-center data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
             >
-              Personal & Professional
+              <span className="hidden sm:inline">Personal & Professional</span>
+              <span className="sm:hidden">Personal & Prof.</span>
             </TabsTrigger>
             <TabsTrigger 
               value="work" 
-              className="py-3 rounded-lg text-slate-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 min-w-[100px] py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
             >
               Work Identity
             </TabsTrigger>
@@ -769,7 +818,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             >
               <PremiumBackground />
               
-              <div className="relative z-10 p-6 space-y-8">
+              <div className="relative z-10 p-6 sm:p-8 md:p-10 space-y-8">
                 {/* Header */}
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
@@ -987,7 +1036,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </motion.div>
 
             {/* Contact Identity (Critical Section) */}
-            <Card className="bg-white border-slate-200 shadow-sm border-l-4 border-l-green-500">
+            <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-slate-900 flex items-center gap-2">
                   <Shield className="h-5 w-5 text-green-600" />
@@ -997,97 +1046,125 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   Manage your primary identity and contact channels
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Primary Identity: Phone */}
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-green-700 font-semibold flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      Primary Identity (Phone)
-                    </Label>
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Verified</Badge>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Input 
-                      value={formData.phone}
-                      readOnly
-                      className="bg-white border-slate-200 text-slate-900 font-mono text-lg tracking-wide" 
-                    />
-                    <Button variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900">
-                      Change
-                    </Button>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Your phone number is your primary unique identifier on CoreID.
-                  </p>
-                </div>
-
-                {/* Email Section */}
+              <CardContent className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-slate-700 mb-1.5 block">Primary Email</Label>
+                  {/* Primary Identity: Phone */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-slate-700 font-medium">Phone</Label>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
+                      </Badge>
+                    </div>
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="h-4 w-4 text-slate-400" />
+                      </div>
+                      <Input 
+                        value={formData.phone}
+                        readOnly
+                        className="bg-slate-50 border-slate-200 text-slate-900 pl-10 font-mono" 
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="absolute right-1 top-1 bottom-1 h-auto px-2 text-xs text-slate-500 hover:text-slate-900"
+                      >
+                        Change
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Your unique identifier on GidiPIN.
+                    </p>
+                  </div>
+
+                  {/* Primary Email */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-slate-700 font-medium">Email</Label>
+                      {profile?.email_verified ? (
+                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                          Unverified
+                        </Badge>
+                      )}
+                    </div>
                     <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Mail className="h-4 w-4 text-slate-400" />
+                      </div>
                       <Input 
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 pr-24" 
+                        className="bg-white border-slate-200 text-slate-900 pl-10" 
                       />
-                      <div className="absolute right-1 top-1 bottom-1 flex items-center">
-                        {profile?.email_verified ? (
-                          <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10 mr-1">
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Button size="sm" variant="ghost" className="h-7 text-xs text-green-600 hover:text-green-700 hover:bg-green-50">
-                            Verify Now
-                          </Button>
-                        )}
-                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="text-slate-700 mb-1.5 block">Recovery Email</Label>
-                    <div className="flex gap-2">
+                  {/* Recovery Email */}
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-medium">Recovery Email</Label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Shield className="h-4 w-4 text-slate-400" />
+                      </div>
                       <Input 
                         value={formData.recovery_email || ''}
                         onChange={(e) => setFormData({ ...formData, recovery_email: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
                         placeholder="backup@example.com"
                       />
-                      <Button variant="outline" size="icon" className="border-slate-200 text-slate-700 hover:bg-slate-50 shrink-0">
+                      <Button 
+                        size="icon"
+                        variant="ghost" 
+                        className="absolute right-1 top-1 bottom-1 h-auto w-8 text-slate-400 hover:text-blue-600"
+                      >
                         <Save className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </div>
 
-                <Separator className="bg-white/10" />
+                <Separator className="bg-slate-100" />
 
                 {/* Social Links */}
-                <div>
-                  <Label className="text-slate-700 mb-3 block">Social Links</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <Label className="text-slate-700 font-medium block">Social Presence</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-white/40">
+                      <div className="absolute left-3 top-2.5 text-slate-400">
                         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
                       </div>
                       <Input 
                         value={formData.linkedin || ''}
                         onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                        className="bg-white/5 border-white/10 text-white pl-10 placeholder:text-white/30"
+                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
                         placeholder="LinkedIn Profile URL"
                       />
                     </div>
                     <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-white/40">
+                      <div className="absolute left-3 top-2.5 text-slate-400">
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                       </div>
                       <Input 
                         value={formData.website || ''}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        className="bg-white/5 border-white/10 text-white pl-10 placeholder:text-white/30"
+                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
                         placeholder="Personal Website URL"
+                      />
+                    </div>
+                    <div className="relative">
+                      <div className="absolute left-3 top-2.5 text-slate-400">
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                      </div>
+                      <Input 
+                        value={formData.twitter || ''}
+                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
+                        placeholder="Twitter Profile URL"
                       />
                     </div>
                   </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import "./announcement-banner.css";
 
 /**
@@ -26,13 +27,6 @@ import "./announcement-banner.css";
  */
 
 const STORAGE_PREFIX = "announcement_dismissed_";
-
-const bgByVariant = {
-  info: "#F5F8FF",
-  success: "#F3FFF7",
-  warning: "#FFF8F0",
-  neutral: "#F7F7F8",
-};
 
 function AnnouncementBanner({
   id = "beta-testing-2025",
@@ -62,69 +56,97 @@ function AnnouncementBanner({
   if (!visible) return null;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
       role="region"
       aria-label={`Announcement: ${title}`}
-      className="announcement-banner"
+      className="announcement-banner relative overflow-hidden"
       style={{
-        background: bgByVariant[variant] || bgByVariant.info,
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
         borderRadius: 8,
-        padding: "12px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: 16,
-        boxShadow: "0 6px 22px rgba(9,10,11,0.06)",
+        padding: '8px 12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
       }}
     >
+      {/* Animated gradient overlay - same as HeroProfileCard */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          background: [
+            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+            'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
+            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+          ],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+
+      {/* Subtle grid pattern - same as HeroProfileCard */}
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+
       {/* Icon container */}
       <div
-        className="announcement-icon"
+        className="announcement-icon relative z-10 hidden sm:flex"
         style={{
-          minWidth: 36,
-          minHeight: 36,
-          borderRadius: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "rgba(0,0,0,0.04)",
+          minWidth: 28,
+          minHeight: 28,
+          borderRadius: 6,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(255,255,255,0.1)',
         }}
         aria-hidden
       >
         {/* Simple inline SVG icon (megaphone) */}
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M3 10v4h3l7 5V5L6 10H3z" fill="#0A0B0D" opacity="0.9" />
-          <path d="M20 8v8a1 1 0 0 1-1.447.894L16 15H15V9h1l2.553-1.894A1 1 0 0 1 20 8z" fill="#7BB8FF" />
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <path d="M3 10v4h3l7 5V5L6 10H3z" fill="#ffffff" opacity="0.9" />
+          <path d="M20 8v8a1 1 0 0 1-1.447.894L16 15H15V9h1l2.553-1.894A1 1 0 0 1 20 8z" fill="#3DE6B3" />
         </svg>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "baseline", justifyContent: "space-between" }}>
-          <div style={{ minWidth: 0 }}>
+      <div className="relative z-10" style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
                 fontWeight: 600,
-                color: "#0A0B0D",
-                fontSize: 15,
+                color: '#ffffff',
+                fontSize: '12px',
                 lineHeight: 1.2,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               {title}
             </div>
             <div
+              className="hidden sm:block"
               style={{
-                marginTop: 4,
-                color: "#333",
-                fontSize: 14,
-                lineHeight: 1.3,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
+                marginTop: 1,
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '11px',
+                lineHeight: 1.2,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
               {message}
@@ -132,51 +154,57 @@ function AnnouncementBanner({
           </div>
 
           {/* CTA on wide screens */}
-          <div className="cta-desktop" style={{ marginLeft: 12 }}>
+          <div className="cta-desktop relative z-10" style={{ marginLeft: 6 }}>
             {ctaText && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={onCtaClick}
                 className="announcement-cta"
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "8px 14px",
-                  background: "#0A2540",
-                  color: "#FFFFFF",
-                  borderRadius: 6,
-                  border: "none",
-                  cursor: "pointer",
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '5px 10px',
+                  background: '#3DE6B3',
+                  color: '#000000',
+                  borderRadius: 5,
+                  border: 'none',
+                  cursor: 'pointer',
                   fontWeight: 600,
-                  fontSize: 14,
+                  fontSize: '12px',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {ctaText}
-              </button>
+              </motion.button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Mobile CTA fallback shown via CSS; close button */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      {/* Close button */}
+      <div className="relative z-10" style={{ display: 'flex', alignItems: 'center' }}>
         <button
           onClick={dismiss}
           aria-label="Dismiss announcement"
           style={{
-            border: "none",
-            background: "transparent",
-            cursor: "pointer",
-            padding: 6,
-            borderRadius: 6,
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            padding: 3,
+            borderRadius: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M18 6L6 18" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 6l12 12" stroke="#334155" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M18 6L6 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 6l12 12" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

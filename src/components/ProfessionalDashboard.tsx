@@ -39,7 +39,8 @@ import {
   X,
   Quote,
   Activity,
-  Loader2
+  Loader2,
+  Bell
 } from 'lucide-react';
 
 import { supabase } from '../utils/supabase/client';
@@ -54,6 +55,7 @@ import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
 import { Checkbox } from './ui/checkbox';
 import { DialogFooter, DialogDescription } from './ui/dialog';
+import { NotificationCenter, ToastContainer } from './notifications';
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
@@ -97,6 +99,12 @@ export function ProfessionalDashboard() {
   const [endorsementFilter, setEndorsementFilter] = useState('all');
   const [projectFormDirty, setProjectFormDirty] = useState(false);
   const [endorsementFormDirty, setEndorsementFormDirty] = useState(false);
+  
+  // Notification system state
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info' | 'warning'; message: string }>>([]);
+  const [realTimeNotifications, setRealTimeNotifications] = useState<Array<any>>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   
   // Stats state - now fetched from API
   const [stats, setStats] = useState({
@@ -647,7 +655,7 @@ export function ProfessionalDashboard() {
     fetchPinAnalytics();
   }, []);
 
-  // Fetch activity feed
+  // Fetch activity feed and notifications
   useEffect(() => {
     const fetchActivities = async () => {
       try {
@@ -663,22 +671,37 @@ export function ProfessionalDashboard() {
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.activities) {
-            // Transform activities into notification format
+            // Transform activities into notification format for activity feed
             const formattedNotifications = data.activities.slice(0, 3).map((activity: any) => ({
               text: activity.text,
               type: activity.type
             }));
             setNotifications(formattedNotifications);
+            
+            // Transform activities into notification center format
+            const notificationCenterData = data.activities.map((activity: any, index: number) => ({
+              id: `activity-${index}`,
+              type: activity.type === 'verification' ? 'success' : activity.type === 'view' ? 'info' : 'info',
+              title: activity.type === 'verification' ? 'Verification' : activity.type === 'view' ? 'Profile View' : 'Activity',
+              message: activity.text,
+              timestamp: getRelativeTime(activity.timestamp || new Date().toISOString()),
+              isNew: index < 2,
+              category: 'notification' as const,
+            }));
+            setRealTimeNotifications(notificationCenterData);
           }
         }
       } catch (error) {
         console.error('Error fetching activities:', error);
       } finally {
         setActivitiesLoading(false);
+        setNotificationsLoading(false);
       }
     };
 
     fetchActivities();
+    const interval = setInterval(fetchActivities, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch projects
@@ -993,6 +1016,31 @@ export function ProfessionalDashboard() {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
+        {/* Welcome Section */}
+        <div className="mb-2 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Welcome back, <span className="text-slate-500">{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
+            </h1>
+            <p className="text-slate-500 mt-1 text-sm sm:text-base">
+              Ah, you don show! Your identity dey active.
+            </p>
+            <p className="text-slate-500 mt-1 text-sm sm:text-base">
+              Check what's new updates, verification status, and recent profile views.
+            </p>
+          </div>
+          <button
+            onClick={() => setNotificationCenterOpen(true)}
+            className="relative p-3 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+            aria-label="Open notifications"
+          >
+            <Bell className="w-5 h-5 text-gray-700" />
+            {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            )}
+          </button>
+        </div>
+
         {/* Header Profile Card */}
         <motion.div
           initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
@@ -1882,6 +1930,25 @@ export function ProfessionalDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={notificationCenterOpen}
+        onClose={() => setNotificationCenterOpen(false)}
+        notifications={realTimeNotifications}
+        onNotificationClick={(notification) => {
+          console.log('Notification clicked:', notification);
+          toast.success('Notification opened');
+        }}
+        onMarkAsRead={(id) => {
+          setRealTimeNotifications(prev => 
+            prev.map(n => n.id === id ? { ...n, isNew: false } : n)
+          );
+        }}
+      />
+
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} position="bottom-right" />
       </div>
     </div>
   );
