@@ -2,16 +2,33 @@ import { Hono } from "npm:hono";
 import { createClient } from "npm:@supabase/supabase-js";
 import { getAuthUser } from "../lib/supabaseClient.tsx";
 import { issuePinToUser } from "../../_shared/pinService.ts";
+import { checkRateLimit } from "../../_shared/rateLimiter.ts";
 
 const app = new Hono();
 
 // Generate random PIN for authenticated user
 app.post("/generate", async (c) => {
   try {
-    const { user } = await getAuthUser(c);
+    const { user, error } = await getAuthUser(c);
+    
+    console.log(`[PIN Generation] Auth check:`, { 
+      hasUser: !!user, 
+      userId: user?.id,
+      error: error?.message 
+    });
     
     if (!user) {
-      return c.json({ success: false, error: "Unauthorized" }, 401);
+      console.error(`[PIN Generation] Unauthorized:`, error);
+      return c.json({ success: false, error: "Unauthorized", details: error?.message }, 401);
+    }
+
+    // Rate limit: 3 PIN generations per hour
+    const rateLimit = await checkRateLimit(user.id, 'pin_generation', 3, 60);
+    if (!rateLimit.allowed) {
+      return c.json({ 
+        success: false, 
+        error: "Rate limit exceeded. Please try again later." 
+      }, 429);
     }
 
     console.log(`[PIN Generation] Generating PIN for user: ${user.id}`);

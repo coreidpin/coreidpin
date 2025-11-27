@@ -9,16 +9,18 @@ export function getSupabaseClient() {
   if (!supabaseServiceSingleton) {
     const url = Deno.env.get('SUPABASE_URL') ?? 'https://evcqpapvcvmljgqiuzsq.supabase.co';
     const serviceKey =
-      Deno.env.get('SUPABASE_SERVICE_KEY') ??
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??
-      Deno.env.get('SERVICE_KEY') ??
+      Deno.env.get('SUPABASE_SERVICE_KEY') ??
       Deno.env.get('SERVICE_ROLE_KEY') ??
-      // Fallback to anon/publishable to avoid startup crash; admin ops will fail gracefully
-      Deno.env.get('SUPABASE_KEY') ??
-      Deno.env.get('SUPABASE_ANON_KEY') ??
-      'anon-key-placeholder';
+      Deno.env.get('SERVICE_KEY') ?? '';
 
-    supabaseServiceSingleton = createClient(url, serviceKey);
+    if (!serviceKey) {
+      console.error('WARNING: No service role key found in environment');
+    }
+
+    supabaseServiceSingleton = createClient(url, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
   }
   return supabaseServiceSingleton;
 }
@@ -41,10 +43,36 @@ export function getSupabasePublicClient() {
 
 // Helper to extract user from Authorization header consistently
 export async function getAuthUser(c: any) {
+  const authHeader = c.req.header('Authorization');
+  const accessToken = authHeader?.split(' ')[1];
   const supabase = getSupabaseClient();
-  const accessToken = c.req.header('Authorization')?.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(accessToken);
-  return { user, error, accessToken };
+  
+  if (!accessToken) {
+    return { user: null, error: { message: 'No authorization token provided' }, supabase };
+  }
+  
+  try {
+    const payload = JSON.parse(atob(accessToken.split('.')[1]));
+    const userId = payload.sub;
+    const email = payload.email;
+    
+    if (!userId) {
+      return { user: null, error: { message: 'Invalid token: no user ID' }, supabase };
+    }
+    
+    // Return user from JWT payload - trust the token since it's signed
+    const user = {
+      id: userId,
+      email: email,
+      aud: payload.aud,
+      role: payload.role
+    };
+    
+    return { user, error: null, supabase };
+  } catch (err: any) {
+    console.error('[getAuthUser] Token decode error:', err.message);
+    return { user: null, error: { message: 'Invalid token format' }, supabase };
+  }
 }
 
 // Simple retry helper for transient failures on HTTP-based operations

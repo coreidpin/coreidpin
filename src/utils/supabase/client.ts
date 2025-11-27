@@ -18,12 +18,12 @@ export function createClient() {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'coreid-auth',
+        storageKey: 'gidipin-auth',
         flowType: 'pkce'
       },
       global: {
         headers: {
-          'x-client-info': 'coreid-web'
+          'x-client-info': 'gidipin-web'
         }
       }
     });

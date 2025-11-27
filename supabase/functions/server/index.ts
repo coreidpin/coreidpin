@@ -14,6 +14,7 @@ import { pin } from "./routes/pin.tsx";
 
 import { getAuthUser } from "./lib/supabaseClient.tsx";
 import { issuePinToUser } from "../_shared/pinService.ts";
+import { logInfo, logError, logOTPRequest, logDebug, generateRequestId, hashForLog } from "../_shared/logger.ts";
 
 const app = new Hono();
 
@@ -101,6 +102,8 @@ app.post('/auth/logout', (c) => {
 
 // Registration OTP endpoints
 app.post('/registration/send-otp', async (c) => {
+  const requestId = generateRequestId();
+  
   try {
     const body = await c.req.json().catch(() => ({}));
     const { phone, name, email } = body;
@@ -124,7 +127,7 @@ app.post('/registration/send-otp', async (c) => {
       });
     
     if (otpError) {
-      console.error('OTP storage error:', otpError);
+      logError('OTP storage failed', otpError, { request_id: requestId });
     }
     
     // Send SMS via Termii
@@ -149,12 +152,14 @@ app.post('/registration/send-otp', async (c) => {
         });
         
         const smsResult = await smsResponse.json();
-        console.log('Termii SMS result:', smsResult);
+        logInfo('SMS sent via Termii', { request_id: requestId, status: smsResult.message_id ? 'success' : 'unknown' });
       } catch (smsError) {
-        console.error('SMS sending failed:', smsError);
+        logError('SMS sending failed', smsError, { request_id: requestId });
       }
     } else {
-      console.log(`TEST MODE - OTP for ${phone}: ${otp}`);
+      // Safe logging: Only log in dev, sanitized in prod
+      await logOTPRequest('phone', phone, requestId);
+      logDebug('TEST MODE - OTP generated', { request_id: requestId, phone, otp });
     }
     
     return c.json({ 
@@ -163,11 +168,14 @@ app.post('/registration/send-otp', async (c) => {
       expires_in: 600
     });
   } catch (error) {
+    logError('Registration OTP failed', error, { request_id: requestId });
     return c.json({ success: false, error: 'Failed to send OTP' }, 500);
   }
 });
 
 app.post('/registration/verify-otp', async (c) => {
+  const requestId = generateRequestId();
+  
   try {
     const body = await c.req.json().catch(() => ({}));
     const { phone, otp, reg_token } = body;
@@ -180,7 +188,8 @@ app.post('/registration/verify-otp', async (c) => {
       return c.json({ success: false, error: 'Invalid OTP' }, 400);
     }
     
-    console.log(`[VerifyOTP] Attempting verification for ${phone} with token ${reg_token} and OTP ${otp}`);
+    const phoneHash = await hashForLog(phone);
+    logInfo('OTP verification attempt', { request_id: requestId, contact_hash: phoneHash });
 
     // Verify OTP from database
     const { data: otpData, error: otpError } = await supabase
@@ -195,22 +204,25 @@ app.post('/registration/verify-otp', async (c) => {
       .single();
     
     if (otpError) {
-      console.error('[VerifyOTP] Database error or no record found:', otpError);
+      logError('OTP verification - database error', otpError, { request_id: requestId, contact_hash: phoneHash });
     }
 
     if (!otpData) {
-      console.error('[VerifyOTP] No matching record found for:', { phone, reg_token, otp });
-      // Debug: Check if ANY record exists for this phone
-      const { data: anyRecord } = await supabase.from('otp_verifications').select('*').eq('phone_number', phone).limit(1);
-      console.log('[VerifyOTP] Any record for phone?', anyRecord);
+      logError('OTP verification - no record found', null, { request_id: requestId, contact_hash: phoneHash });
+      logDebug('OTP verification failed (dev only)', { request_id: requestId, phone, reg_token, provided_otp: otp });
       
       return c.json({ success: false, error: 'Invalid or expired OTP' }, 400);
     }
     
-    console.log(`[VerifyOTP] Record found. Expected: ${otpData.otp_code}, Received: ${otp}`);
+    logDebug('OTP verification - record found (dev only)', { 
+      request_id: requestId, 
+      expected: otpData.otp_code, 
+      received: otp, 
+      match: otpData.otp_code === otp 
+    });
 
     if (otpData.otp_code !== otp) {
-      console.error('[VerifyOTP] OTP mismatch');
+      logError('OTP verification - mismatch', null, { request_id: requestId, contact_hash: phoneHash });
       return c.json({ success: false, error: 'Incorrect OTP' }, 400);
     }
     
@@ -220,12 +232,15 @@ app.post('/registration/verify-otp', async (c) => {
       .update({ verified: true, verified_at: new Date().toISOString() })
       .eq('id', otpData.id);
     
+    logInfo('OTP verification successful', { request_id: requestId, contact_hash: phoneHash });
+    
     return c.json({ 
       success: true,
       phone_verified: true,
       reg_token
     });
   } catch (error) {
+    logError('OTP verification exception', error, { request_id: requestId });
     return c.json({ success: false, error: 'Verification failed' }, 500);
   }
 });

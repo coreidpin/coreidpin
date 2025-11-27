@@ -552,21 +552,29 @@ export function ProfessionalDashboard() {
           console.log('No profile data returned');
         }
 
-        // Fetch PIN
-        const { data: pinData, error: pinError } = await supabase
-          .from('professional_pins')
-          .select('pin_number')
-          .eq('user_id', session.userId)
-          .maybeSingle();
-
-        if (pinError) {
-          console.error('Error fetching PIN:', pinError);
-          setPhonePin('Error loading PIN');
-        } else if ((pinData as any)?.pin_number) {
-          setPhonePin((pinData as any).pin_number);
-        } else {
-          // No PIN found - Show options to user instead of auto-generating
-          setPhonePin(null); 
+        // Fetch PIN via Edge Function (bypasses RLS)
+        console.log('Fetching PIN for user:', session.userId);
+        try {
+          const pinResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/current`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          if (pinResponse.ok) {
+            const pinData = await pinResponse.json();
+            if (pinData.success && pinData.pin) {
+              console.log('Setting PIN:', pinData.pin);
+              setPhonePin(pinData.pin);
+            } else {
+              console.log('No PIN found');
+              setPhonePin(null);
+            }
+          } else {
+            console.log('PIN not found (404)');
+            setPhonePin(null);
+          }
+        } catch (error) {
+          console.error('Error fetching PIN:', error);
+          setPhonePin(null);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -574,16 +582,6 @@ export function ProfessionalDashboard() {
     };
     
     fetchProfile();
-
-    const handleFocus = () => {
-      fetchProfile();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
   }, []);
 
   // Fetch dashboard stats
@@ -600,9 +598,12 @@ export function ProfessionalDashboard() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.stats) {
-          setStats(data.stats);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json();
+          if (data.success && data.stats) {
+            setStats(data.stats);
+          }
         }
       }
     } catch (error) {
@@ -890,8 +891,8 @@ export function ProfessionalDashboard() {
     try {
       setPinLoading(true);
       
-      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
-      if (sessionError || !session) {
+      const token = await ensureValidSession();
+      if (!token) {
         toast.error('Session expired. Please login again.');
         return;
       }
@@ -899,7 +900,7 @@ export function ProfessionalDashboard() {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/generate`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -908,7 +909,7 @@ export function ProfessionalDashboard() {
       
       if (response.ok && data.success) {
         setPhonePin(data.pin);
-        toast.success('Random PIN generated successfully');
+        toast.success(`PIN: ${data.pin}`, { duration: 10000 });
         setShowTermsModal(false);
       } else {
         console.error('PIN generation error:', data);

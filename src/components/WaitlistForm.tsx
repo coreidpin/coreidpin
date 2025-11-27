@@ -452,7 +452,7 @@ export function WaitlistForm({ onClose }: WaitlistFormProps) {
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Label className="text-xs sm:text-sm font-medium text-gray-700">Where did you hear about CoreID / PIN? *</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-700">Where did you hear about GiDiPIN? *</Label>
                         {formData.heardAboutUs && (
                           <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex items-center gap-1 text-xs text-emerald-600">
                             <CheckCircle className="h-3 w-3" />Selected

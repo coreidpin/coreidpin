@@ -241,47 +241,9 @@ class APIClient {
   }
 
   async login(data: LoginData) {
-    // This method is now primarily for demo accounts
+    // This method is deprecated for direct usage
     // Real authentication is handled by Supabase client in LoginDialog
-    const demoAccounts = {
-      'demo.professional@swipe.work': {
-        userType: 'professional',
-        name: 'Demo Professional',
-        id: 'demo-prof-001',
-        hasCompletedOnboarding: true
-      },
-      'demo.employer@swipe.work': {
-        userType: 'employer',
-        name: 'Demo Employer',
-        id: 'demo-emp-001',
-        hasCompletedOnboarding: true
-      },
-      'demo.university@nwanne.com': {
-        userType: 'university',
-        name: 'Demo University',
-        id: 'demo-uni-001',
-        hasCompletedOnboarding: true
-      }
-    };
-
-    // Check if it's a demo account
-    const demoAccount = demoAccounts[data.email as keyof typeof demoAccounts];
-    if (demoAccount && data.password === 'demo123') {
-      return {
-        success: true,
-        accessToken: 'demo-token-' + Date.now(),
-        user: {
-          id: demoAccount.id,
-          email: data.email,
-          user_metadata: {
-            userType: demoAccount.userType,
-            name: demoAccount.name,
-            hasCompletedOnboarding: demoAccount.hasCompletedOnboarding
-          }
-        }
-      };
-    }
-
+    
     // For non-demo accounts, this should not be called
     // Authentication is handled by Supabase client
     throw new Error('Please use the Google sign-in or email/password form');
@@ -831,6 +793,36 @@ class APIClient {
     const data = await response.json();
     console.log('OTP Request Response:', data);
     return data;
+  }
+
+  async setupPIN(regToken: string, pin: string) {
+    const response = await this.fetchWithRetry(`${AUTH_PIN_URL}/setup`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ regToken, pin })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'PIN setup failed');
+    }
+    
+    return response.json();
+  }
+
+  async verifyPIN(regToken: string, pin: string) {
+    const response = await this.fetchWithRetry(`${AUTH_PIN_URL}/verify-login`, {
+      method: 'POST',
+      headers: this.getHeaders(undefined, true),
+      body: JSON.stringify({ regToken, pin })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || 'PIN verification failed');
+    }
+    
+    return response.json();
   }
 
   async verifyOTP(

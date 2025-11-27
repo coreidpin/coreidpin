@@ -277,7 +277,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                       <Phone className="h-4 w-4 text-[#32f08c]" />
                     </div>
                     <a href="tel:+2348008556226" className="text-white/60 hover:text-white transition-colors">
-                      +234 (0) 800-coreID
+                      +234 (0) 800-GiDiPIN
                     </a>
                   </div>
                   <div className="flex items-center gap-3 text-sm group cursor-pointer">
@@ -354,7 +354,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex flex-col md:flex-row items-center gap-6 text-sm text-white/60">
-              <span>© {new Date().getFullYear()} CoreID. All rights reserved.</span>
+              <span>© {new Date().getFullYear()} GiDiPIN. All rights reserved.</span>
               <div className="flex items-center gap-6">
                 <button 
                   onClick={() => handleNavigate('privacy')} 

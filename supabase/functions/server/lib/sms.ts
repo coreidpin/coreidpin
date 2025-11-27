@@ -6,7 +6,7 @@ export async function sendSMS(phone: string, message: string): Promise<{ success
   
   // Fallback to console for development
   if (!twilioSid || !twilioToken || !twilioFrom) {
-    console.log(`SMS to ${phone}: ${message}`);
+    console.log('SMS sent (test mode)');
     return { success: true };
   }
   

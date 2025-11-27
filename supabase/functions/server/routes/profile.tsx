@@ -122,18 +122,6 @@ profile.post("/analyze", async (c) => {
         console.log("Authorization error during profile analysis:", error);
         return c.json({ error: "Unauthorized - Please login again" }, 401);
       }
-      userId = user.id;
-    }
-
-    const body = await c.req.json();
-    const { linkedinUrl, githubUrl, portfolioUrl, resumeUrl, name, title } = body;
-
-    console.log("Analyzing profile for user:", userId, { name, title, linkedinUrl, githubUrl, portfolioUrl, resumeUrl });
-
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    
-    if (!openaiApiKey) {
-      console.log("OpenAI API key not found - using mock analysis");
       // Return mock analysis for testing
       const mockAnalysis = {
         yearsOfExperience: 5,

@@ -138,6 +138,31 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
 
   console.log('Token needs refresh, attempting refresh...');
 
+  // 1. Try Supabase Native Refresh first
+  // This handles standard users (Magic Link, OAuth) who have valid refresh tokens
+  try {
+    const { data, error } = await supabase.auth.refreshSession();
+    
+    if (!error && data.session) {
+      console.log('Refreshed via Supabase native auth');
+      const newSession: SessionState = {
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+        userId: data.session.user.id,
+        userType: currentSession.userType,
+        expiresAt: Date.now() + (data.session.expires_in || 3600) * 1000,
+      };
+      saveSessionState(newSession);
+      return newSession;
+    }
+    
+    console.log('Supabase native refresh failed/skipped, trying custom endpoint:', error?.message);
+  } catch (err) {
+    console.warn('Error during Supabase native refresh:', err);
+  }
+
+  // 2. Fallback to Custom Refresh Endpoint
+  // This handles custom OTP users who have a custom JWT and no standard refresh token
   try {
     // Call our custom refresh endpoint
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/refresh`, {
@@ -175,7 +200,7 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
     // Save updated session
     saveSessionState(newSession);
 
-    console.log('Token refreshed successfully');
+    console.log('Token refreshed successfully via custom endpoint');
     return newSession;
 
   } catch (error: any) {
@@ -319,12 +344,12 @@ export async function handleSessionExpiry(reason: 'token_expired' | 'inactivity'
  * Returns cleanup function to stop the interval
  */
 export function setupAutoRefresh(): () => void {
-  const intervalId = setInterval(async () => {
+  // Clear any existing interval to prevent duplicates
+  const runRefreshCheck = async () => {
     const session = getSessionState();
     
     if (!session) {
       console.log('No session found, stopping auto-refresh');
-      clearInterval(intervalId);
       return;
     }
 
@@ -332,7 +357,6 @@ export function setupAutoRefresh(): () => void {
     if (isSessionInactive()) {
       console.log('Session inactive, logging out');
       await handleSessionExpiry('inactivity');
-      clearInterval(intervalId);
       return;
     }
 
@@ -342,18 +366,31 @@ export function setupAutoRefresh(): () => void {
       const refreshedSession = await refreshTokenIfNeeded();
       
       if (!refreshedSession) {
-        console.log('Auto-refresh failed, logging out');
-        await handleSessionExpiry('token_expired');
-        clearInterval(intervalId);
+        console.warn('Auto-refresh failed');
+        
+        // If token is actually expired, then we must log out
+        if (isTokenExpired(session.expiresAt)) {
+          console.error('Token is expired and refresh failed, logging out');
+          await handleSessionExpiry('token_expired');
+        } else {
+          console.log('Token still valid for a short while, will retry soon');
+          // We don't log out yet, we'll try again on next tick or user action will trigger ensureValidSession
+        }
       }
     }
-
+    
     // Update activity timestamp
     updateActivity();
+  };
 
-  }, SESSION_CONFIG.AUTO_REFRESH_INTERVAL_MS);
+  // Run immediately on setup
+  runRefreshCheck();
 
-  console.log('Auto-refresh setup complete');
+  // Run every minute instead of 30 minutes to catch expiry closer to the time
+  // This is less efficient but safer for now
+  const intervalId = setInterval(runRefreshCheck, 60 * 1000);
+
+  console.log('Auto-refresh setup complete (1 min interval)');
 
   // Return cleanup function
   return () => {
@@ -401,36 +438,28 @@ export function setupCrossTabSync(onSessionChange: (session: SessionState | null
  * Use this before making authenticated API calls
  */
 export async function ensureValidSession(): Promise<string | null> {
-  const session = getSessionState();
+  let session = getSessionState();
 
   if (!session) {
     console.log('No session found');
     return null;
   }
 
-  // Check if token is expired
-  if (isTokenExpired(session.expiresAt)) {
-    console.log('Token expired, attempting refresh');
-    const refreshedSession = await refreshTokenIfNeeded();
-    
-    if (!refreshedSession) {
-      await handleSessionExpiry('token_expired');
-      return null;
-    }
-
-    return refreshedSession.accessToken;
-  }
-
-  // Check if token needs refresh (expires soon)
+  // Check if token needs refresh
   if (needsRefresh(session.expiresAt)) {
-    console.log('Token expires soon, refreshing proactively');
+    console.log('Token expiring soon, refreshing before request...');
     const refreshedSession = await refreshTokenIfNeeded();
     
     if (refreshedSession) {
-      return refreshedSession.accessToken;
+      session = refreshedSession;
+    } else {
+      console.warn('Failed to refresh token, clearing session');
+      // If we can't refresh, clear the session
+      clearSessionState();
+      return null;
     }
-    // If refresh fails, still return current token if it's not expired yet
   }
 
+  // Return the token
   return session.accessToken;
 }

@@ -64,7 +64,7 @@ async function generateJWT(userId: string, email: string | null) {
     ["sign"]
   );
   
-  return await create({ alg: "HS256", type: "JWT" }, payload, key);
+  return await create({ alg: "HS256", typ: "JWT" }, payload, key);
 }
 
 const handleRequest = async (c: any) => {

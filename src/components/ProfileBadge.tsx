@@ -61,7 +61,7 @@ export function ProfileBadge({
 
     try {
       // Dynamically import html2canvas
-      const html2canvas = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm').then(m => m.default);
+      const html2canvas = (await import('html2canvas')).default;
       
       const canvas = await html2canvas(badgeRef.current, {
         backgroundColor: '#ffffff',

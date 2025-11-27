@@ -102,6 +102,6 @@ serve(async (req) => {
     return json({ success: false, error_code: 'ERR_PROFILE_UPDATE', message: 'Failed to update profile' }, 500);
   }
 
-  console.log('email_verified_success', { user_id: userId, email: normalizedEmail });
+  console.log('email_verified_success', { user_id: userId });
   return json({ success: true, message: 'Email verified successfully', user_id: userId, email: normalizedEmail }, 200);
 });

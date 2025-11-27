@@ -218,18 +218,7 @@ export default function App() {
                   localStorage.setItem('emailVerified', 'true');
                   
                   // Log verification event
-                  try {
-                    await supabase.from('verification_logs').insert({
-                      user_id: result.user.id,
-                      event_type: 'email_verified',
-                      email: result.user.email,
-                      timestamp: new Date().toISOString(),
-                      user_agent: navigator.userAgent.substring(0, 255),
-                      session_id: localStorage.getItem('csrfToken')
-                    });
-                  } catch (logErr) {
-                    console.warn('Verification logging failed:', logErr);
-                  }
+                  trackEvent('Verification Success', { userId: result.user.id });
                 }
               }
             } catch (e: any) {

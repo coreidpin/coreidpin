@@ -4,6 +4,7 @@
  */
 
 import { createClient, SupabaseClient } from "npm:@supabase/supabase-js";
+import { logInfo, logError, logDebug } from "./logger.ts";
 
 /**
  * Hash data using SHA-256 with optional salt
@@ -68,21 +69,11 @@ export async function verifyOTP(
 }> {
   const currentTime = new Date().toISOString();
 
-  console.log('[verifyOTP] Searching for OTP with:', {
+  logDebug('[verifyOTP] Searching for OTP', {
     contactHash_preview: contactHash.substring(0, 20),
     currentTime,
     searching_for: 'used=false, not expired'
   });
-
-  // Debug: Check if ANY record exists for this contact
-  const { data: anyRecords } = await supabase
-    .from('otps')
-    .select('id, contact_hash, used, expires_at, created_at, attempts')
-    .eq('contact_hash', contactHash)
-    .order('created_at', { ascending: false })
-    .limit(3);
-  
-  console.log('[verifyOTP] All records for this contact:', anyRecords);
 
   // Find valid OTP
   const { data: otpRecord, error: fetchError } = await supabase
@@ -95,7 +86,7 @@ export async function verifyOTP(
     .limit(1)
     .maybeSingle();
 
-  console.log('[verifyOTP] Query result:', {
+  logDebug('[verifyOTP] Query result', {
     found: !!otpRecord,
     error: fetchError?.message,
     record_preview: otpRecord ? {
@@ -124,7 +115,7 @@ export async function verifyOTP(
   }
 
   // Verify hash
-  console.log('OTP Verification Debug:', {
+  logDebug('OTP Verification', {
     provided_hash_preview: otpHash.substring(0, 20),
     stored_hash_preview: otpRecord.otp_hash.substring(0, 20),
     hashes_match: otpRecord.otp_hash === otpHash,
@@ -191,13 +182,13 @@ export async function sendOTPEmail(
 
     if (!res.ok) {
       const errorData = await res.text();
-      console.error('Resend API error:', errorData);
+      logError('Resend API error', null, { status: res.status });
       return { success: false, error: 'Failed to send email' };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Email send error:', error);
+    logError('Email send error', error);
     return { success: false, error: String(error) };
   }
 }
@@ -231,7 +222,7 @@ export async function sendOTPSMS(
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error('Termii API error:', res.status, errorText);
+      logError('Termii API error', null, { status: res.status });
       
       let errorDetail = errorText;
       try {
@@ -248,10 +239,10 @@ export async function sendOTPSMS(
     }
 
     const responseData = await res.json();
-    console.log('Termii response:', responseData);
+    logInfo('Termii SMS sent', { message_id: responseData.message_id || 'unknown' });
     return { success: true };
   } catch (error) {
-    console.error('SMS send error:', error);
+    logError('SMS send error', error);
     return { success: false, error: String(error) };
   }
 }
