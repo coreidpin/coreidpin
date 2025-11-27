@@ -347,16 +347,8 @@ export default function App() {
       sessionStorage.setItem('selectedUserType', userType);
       localStorage.setItem('pendingUserType', userType);
       setCurrentView(userType);
-      // Navigation handled by React Router
-      window.location.href = '/get-started';
     } catch (err) {
-      console.error('Navigation to Get Started failed:', err);
-      toast.error('Navigation failed. Please try again.', {
-        action: {
-          label: 'Retry',
-          onClick: () => handleLogin(userType)
-        }
-      });
+      console.error('Failed to set user type:', err);
     }
   };
 

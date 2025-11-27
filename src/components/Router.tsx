@@ -342,7 +342,14 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/login" 
           element={
             <Layout currentPage="login" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={<LoadingSpinner />}>
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-16">
+                  <div className="text-center space-y-4">
+                    <div className="animate-spin h-8 w-8 border-2 border-[#32f08c] border-t-transparent rounded-full mx-auto" />
+                    <p className="text-white/70">Loading...</p>
+                  </div>
+                </div>
+              }>
                 <div className="flex items-center justify-center py-16">
                   <LoginPage onLoginSuccess={onLoginSuccess} />
                 </div>
@@ -355,7 +362,14 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/get-started" 
           element={
             <Layout currentPage="get-started" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={<LoadingSpinner />}>
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-16">
+                  <div className="text-center space-y-4">
+                    <div className="animate-spin h-8 w-8 border-2 border-[#32f08c] border-t-transparent rounded-full mx-auto" />
+                    <p className="text-white/70">Loading...</p>
+                  </div>
+                </div>
+              }>
                 <div className="flex items-center justify-center py-8">
                   <SimpleRegistration showChrome={false} onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
                 </div>

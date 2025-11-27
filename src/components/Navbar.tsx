@@ -103,6 +103,7 @@ export function Navbar({
   const handleLogin = (type: 'employer' | 'professional' | 'university') => {
     onLogin?.(type);
     setIsMobileMenuOpen(false);
+    navigate('/get-started');
   };
 
   const DesktopDropdown = ({ item }: { item: typeof navigationItems[0] }) => (
@@ -327,7 +328,7 @@ export function Navbar({
                     </motion.div>
                   </SheetTitle>
                   <SheetDescription className="text-left text-white/70">
-                    Navigate through swipe platform sections and features
+                    Navigate through GidiPIN platform sections and features
                   </SheetDescription>
                 </SheetHeader>
                 
