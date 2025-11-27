@@ -97,7 +97,7 @@ export function WhyWeExist() {
                           <Icon className="w-6 h-6" style={{ color: problem.color }} />
                         </div>
                         <h3 className="text-xl mb-2 text-white">{problem.title}</h3>
-                        <p className="text-sm text-white/60 leading-relaxed">
+                        <p className="text-sm text-white leading-relaxed">
                           {problem.description}
                         </p>
                       </div>
