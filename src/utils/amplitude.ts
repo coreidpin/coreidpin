@@ -1,5 +1,5 @@
 import * as amplitude from '@amplitude/analytics-browser';
-import { sessionReplayPlugin } from '@amplitude/session-replay-browser';
+import * as sessionReplay from '@amplitude/session-replay-browser';
 
 // Initialize Amplitude
 let isInitialized = false;
@@ -8,9 +8,6 @@ export const initAmplitude = () => {
   if (isInitialized) return;
   
   try {
-    // Add session replay plugin
-    amplitude.add(sessionReplayPlugin());
-    
     // Initialize Amplitude with your API key
     amplitude.init('19609ed0ddc1ee5d2d22556bd8f134b2', {
       autocapture: {
@@ -22,6 +19,11 @@ export const initAmplitude = () => {
         elementInteractions: true
       }
     });
+    
+    // Initialize session replay
+    sessionReplay.init('19609ed0ddc1ee5d2d22556bd8f134b2', {
+      sampleRate: 1
+    }).promise;
     
     isInitialized = true;
     console.log('Amplitude initialized successfully');
