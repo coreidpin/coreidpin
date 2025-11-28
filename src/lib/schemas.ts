@@ -15,9 +15,16 @@ export type ProjectFormData = z.infer<typeof projectSchema>;
 export const endorsementRequestSchema = z.object({
   endorser_name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   endorser_email: z.string().email('Invalid email address'),
-  role: z.string().min(1, 'Role is required').max(50, 'Role must be less than 50 characters'),
-  company: z.string().min(1, 'Company is required').max(100, 'Company must be less than 100 characters'),
-  endorsement_text: z.string().min(20, 'Endorsement text must be at least 20 characters').max(500, 'Endorsement text must be less than 500 characters'),
+  endorser_role: z.union([z.string(), z.undefined()]).optional(),
+  endorser_company: z.union([z.string(), z.undefined()]).optional(),
+  endorser_linkedin_url: z.union([z.string(), z.undefined()]).optional(),
+  relationship_type: z.union([z.string(), z.undefined()]).optional(),
+  company_worked_together: z.union([z.string(), z.undefined()]).optional(),
+  time_worked_together_start: z.union([z.string(), z.undefined()]).optional(),
+  time_worked_together_end: z.union([z.string(), z.undefined()]).optional(),
+  project_context: z.union([z.string(), z.undefined()]).optional(),
+  suggested_skills: z.array(z.string()).optional(),
+  custom_message: z.union([z.string(), z.undefined()]).optional(),
 });
 
 export type EndorsementRequestFormData = z.infer<typeof endorsementRequestSchema>;

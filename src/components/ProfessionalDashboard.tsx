@@ -45,6 +45,7 @@ import {
 
 import { supabase } from '../utils/supabase/client';
 import { HeroProfileCard } from './dashboard/HeroProfileCard';
+import { EndorsementRequestForm } from './dashboard/EndorsementRequestForm';
 import { PINGenerationCard } from './dashboard/PINGenerationCard';
 import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { ActivityChart } from './dashboard/ActivityChart';
@@ -56,6 +57,9 @@ import { trackEvent } from '../utils/analytics';
 import { Checkbox } from './ui/checkbox';
 import { DialogFooter, DialogDescription } from './ui/dialog';
 import { NotificationCenter, ToastContainer } from './notifications';
+import { EndorsementAPI } from '../utils/endorsementAPI';
+import { activityTracker } from '../utils/activityTracker';
+import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } from '../types/endorsement';
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
@@ -89,7 +93,7 @@ export function ProfessionalDashboard() {
 
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
-  const [endorsements, setEndorsements] = useState([]);
+  const [endorsements, setEndorsements] = useState<DisplayEndorsement[]>([]);
   const [endorsementsLoading, setEndorsementsLoading] = useState(true);
   const [projectFormErrors, setProjectFormErrors] = useState<Record<string, string>>({});
   const [endorsementFormErrors, setEndorsementFormErrors] = useState<Record<string, string>>({});
@@ -137,7 +141,7 @@ export function ProfessionalDashboard() {
   const [chartData, setChartData] = useState([
     { day: 1, actions: 0 },
     { day: 7, actions: 0 },
-    { day: 14, actions: 0 },
+   { day: 14, actions: 0 },
     { day: 21, actions: 0 },
     { day: 28, actions: 0 },
     { day: 30, actions: 0 }
@@ -158,13 +162,20 @@ export function ProfessionalDashboard() {
   });
   const [projectSaving, setProjectSaving] = useState(false);
 
-  // Endorsement form state
-  const [endorsementFormData, setEndorsementFormData] = useState({
+  // Enhanced Endorsement form state
+  const [endorsementFormData, setEndorsementFormData] = useState<RequestEndorsementForm>({
     endorser_name: '',
     endorser_email: '',
-    role: '',
-    company: '',
-    text: ''
+    endorser_role: '',
+    endorser_company: '',
+    endorser_linkedin_url: '',
+    relationship_type: undefined,
+    company_worked_together: '',
+    time_worked_together_start: '',
+    time_worked_together_end: '',
+    project_context: '',
+    suggested_skills: [],
+    custom_message: ''
   });
   const [endorsementSaving, setEndorsementSaving] = useState(false);
 
@@ -304,9 +315,16 @@ export function ProfessionalDashboard() {
     setEndorsementFormData({
       endorser_name: '',
       endorser_email: '',
-      role: '',
-      company: '',
-      text: ''
+      endorser_role: '',
+      endorser_company: '',
+      endorser_linkedin_url: '',
+      relationship_type: undefined,
+      company_worked_together: '',
+      time_worked_together_start: '',
+      time_worked_together_end: '',
+      project_context: '',
+      suggested_skills: [],
+      custom_message: ''
     });
     setShowEndorsementModal(true);
   };
@@ -322,10 +340,6 @@ export function ProfessionalDashboard() {
       errors.endorser_email = 'Please enter a valid email address';
     }
     
-    if (!endorsementFormData.text || endorsementFormData.text.trim().length < 20) {
-      errors.text = 'Endorsement text must be at least 20 characters';
-    }
-    
     setEndorsementFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -338,100 +352,57 @@ export function ProfessionalDashboard() {
 
     setEndorsementSaving(true);
     try {
-      const token = await ensureValidSession();
-      if (!token) return;
+      const result = await EndorsementAPI.requestEndorsement(endorsementFormData);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements/request`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(endorsementFormData)
-        }
-      );
-
-      if (response.ok) {
+      if (result.success) {
+        toast.success('Endorsement request sent successfully!');
         setShowEndorsementModal(false);
+        
         // Refresh endorsements list
-        const listResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (listResponse.ok) {
-          const data = await listResponse.json();
-          if (data.success) {
-            const formatted = data.endorsements.map((e: any) => ({
-              id: e.id,
-              endorserName: e.endorser_name,
-              role: e.role,
-              company: e.company,
-              text: e.text,
-              date: e.created_at,
-              verified: e.verified,
-              status: e.status
-            }));
-            setEndorsements(formatted);
-          }
+        await fetchEndorsements();
+        await fetchStats();
+        
+        // Track activity
+        if (result.endorsement) {
+          await activityTracker.endorsementRequested(endorsementFormData.endorser_name);
         }
-        fetchStats(); // Refresh stats
       } else {
-        alert('Failed to request endorsement');
+        toast.error(result.error || 'Failed to request endorsement');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error requesting endorsement:', error);
-      alert('Error requesting endorsement');
+      toast.error('Error requesting endorsement');
     } finally {
       setEndorsementSaving(false);
     }
   };
 
-  const handleRespondToEndorsement = async (endorsementId: string, status: 'accepted' | 'rejected') => {
+  const handleRespondToEndorsement = async (endorsementId: string, action: 'accept' | 'reject') => {
     try {
-      const token = await ensureValidSession();
-      if (!token) return;
+      const result = await EndorsementAPI.respondToEndorsement(endorsementId, action);
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements/${endorsementId}/respond`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ status })
-        }
-      );
-
-      if (response.ok) {
+      if (result.success) {
+        toast.success(`Endorsement ${action === 'accept' ? 'accepted' : 'rejected'} successfully`);
+        
         // Refresh endorsements list
-        const listResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (listResponse.ok) {
-          const data = await listResponse.json();
-          if (data.success) {
-            const formatted = data.endorsements.map((e: any) => ({
-              id: e.id,
-              endorserName: e.endorser_name,
-              role: e.role,
-              company: e.company,
-              text: e.text,
-              date: e.created_at,
-              verified: e.verified,
-              status: e.status
-            }));
-            setEndorsements(formatted);
+        await fetchEndorsements();
+        await fetchStats();
+        
+        // Track activity
+        const endorsement = endorsements.find(e => e.id === endorsementId);
+        if (endorsement) {
+          if (action === 'accept') {
+            await activityTracker.endorsementApproved(endorsement.endorser_name);
+          } else {
+            await activityTracker.endorsementRejected(endorsement.endorser_name);
           }
         }
-        fetchStats(); // Refresh stats
       } else {
-        alert(`Failed to ${status === 'accepted' ? 'accept' : 'reject'} endorsement`);
+        toast.error(result.error || `Failed to ${action} endorsement`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error responding to endorsement:', error);
-      alert('Error responding to endorsement');
+      toast.error('Error responding to endorsement');
     }
   };
 
@@ -439,45 +410,41 @@ export function ProfessionalDashboard() {
     if (!confirm('Are you sure you want to delete this endorsement?')) return;
 
     try {
-      const token = await ensureValidSession();
-      if (!token) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements/${endorsementId}`,
-        {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      const { error } = await supabase
+        .from('professional_endorsements_v2')
+        .delete()
+        .eq('id', endorsementId)
+        .eq('professional_id', user.id);
 
-      if (response.ok) {
-        // Refresh endorsements list
-        const listResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (listResponse.ok) {
-          const data = await listResponse.json();
-          if (data.success) {
-            const formatted = data.endorsements.map((e: any) => ({
-              id: e.id,
-              endorserName: e.endorser_name,
-              role: e.role,
-              company: e.company,
-              text: e.text,
-              date: e.created_at,
-              verified: e.verified,
-              status: e.status
-            }));
-            setEndorsements(formatted);
-          }
-        }
-        fetchStats(); // Refresh stats
-      } else {
-        alert('Failed to delete endorsement');
-      }
-    } catch (error) {
+      if (error) throw error;
+
+      toast.success('Endorsement deleted successfully');
+      
+      // Refresh endorsements list
+      await fetchEndorsements();
+      await fetchStats();
+    } catch (error: any) {
       console.error('Error deleting endorsement:', error);
-      alert('Error deleting endorsement');
+      toast.error('Failed to delete endorsement');
+    }
+  };
+
+  const handleToggleFeatured = async (endorsementId: string, featured: boolean) => {
+    try {
+      const result = await EndorsementAPI.toggleFeatured(endorsementId, featured);
+
+      if (result.success) {
+        toast.success(`Endorsement ${featured ? 'featured' : 'unfeatured'} successfully`);
+        await fetchEndorsements();
+      } else {
+        toast.error(result.error || 'Failed to update endorsement');
+      }
+    } catch (error: any) {
+      console.error('Error toggling featured:', error);
+      toast.error('Failed to update endorsement');
     }
   };
 
@@ -735,43 +702,29 @@ export function ProfessionalDashboard() {
   }, []);
 
   // Fetch endorsements
-  useEffect(() => {
-    const fetchEndorsements = async () => {
-      try {
-        const token = await ensureValidSession();
-        if (!token) return;
+  const fetchEndorsements = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/endorsements`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+      const result = await EndorsementAPI.getEndorsements(user.id, {
+        status: ['requested', 'pending_professional', 'accepted', 'rejected']
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.endorsements) {
-            // Transform backend format to match frontend expectations
-            const formattedEndorsements = data.endorsements.map((e: any) => ({
-              id: e.id,
-              endorserName: e.endorser_name,
-              role: e.role,
-              company: e.company,
-              text: e.text,
-              date: e.created_at,
-              verified: e.verified,
-              status: e.status
-            }));
-            setEndorsements(formattedEndorsements);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching endorsements:', error);
-      } finally {
-        setEndorsementsLoading(false);
+      if (result.success && result.endorsements) {
+        console.log('Fetched endorsements:', result.endorsements);
+        setEndorsements(result.endorsements);
+      } else {
+        console.log('No endorsements found or error:', result);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching endorsements:', error);
+    } finally {
+      setEndorsementsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEndorsements();
   }, []);
 
@@ -1113,7 +1066,7 @@ export function ProfessionalDashboard() {
                   { key: 'countries', label: 'Countries', color: 'purple', value: stats.countries },
                   { key: 'companies', label: 'Companies', color: 'blue', value: stats.companies },
                   { key: 'projects', label: 'Projects', color: 'purple', value: stats.projects },
-                  { key: 'endorsements', label: 'Endorsements', color: 'green', value: stats.endorsements }
+                  { key: 'endorsements', label: 'Endorsements', color: 'green', value: endorsements.length > 0 ? endorsements.length : stats.endorsements }
                 ].map((stat, index) => {
                   const trend = statsTrends[stat.key as keyof typeof statsTrends];
                   return (
@@ -1325,15 +1278,20 @@ export function ProfessionalDashboard() {
 
             {/* Status Filter Pills */}
             <div className="flex gap-2">
-              {['all', 'pending', 'accepted'].map(status => (
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'requested', label: 'Sent' },
+                { value: 'pending_professional', label: 'To Review' },
+                { value: 'accepted', label: 'Verified' }
+              ].map(filter => (
                 <Button
-                  key={status}
-                  variant={endorsementFilter === status ? 'default' : 'outline'}
+                  key={filter.value}
+                  variant={endorsementFilter === filter.value ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setEndorsementFilter(status)}
-                  className={endorsementFilter === status ? 'bg-black text-white' : ''}
+                  onClick={() => setEndorsementFilter(filter.value)}
+                  className={endorsementFilter === filter.value ? 'bg-black text-white' : ''}
                 >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {filter.label}
                 </Button>
               ))}
             </div>
@@ -1377,7 +1335,7 @@ export function ProfessionalDashboard() {
                         <Quote className="h-16 w-16 text-gray-900 transform rotate-180" />
                       </div>
                       
-                      <CardContent className="p-6 flex flex-col h-full relative z-10">
+                        <CardContent className="p-6 flex flex-col h-full relative z-10">
                         <div className="flex items-start justify-between mb-6">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 border-2 border-white shadow-sm">
@@ -1395,22 +1353,36 @@ export function ProfessionalDashboard() {
                               Verified
                             </Badge>
                           )}
-                          {endorsement.status === 'pending' && (
+                          {endorsement.status === 'pending_professional' && (
                             <Badge className="bg-yellow-50 text-yellow-600 border-yellow-100 hover:bg-yellow-100">
-                              Pending
+                              Review Needed
+                            </Badge>
+                          )}
+                          {endorsement.status === 'requested' && (
+                            <Badge className="bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100">
+                              Request Sent
+                            </Badge>
+                          )}
+                          {endorsement.status === 'rejected' && (
+                            <Badge className="bg-red-50 text-red-600 border-red-100 hover:bg-red-100">
+                              Rejected
                             </Badge>
                           )}
                         </div>
                         
                         <div className="mb-6 flex-grow">
-                          <p className="text-gray-700 italic leading-relaxed">"{endorsement.text}"</p>
+                          {endorsement.status === 'requested' ? (
+                            <p className="text-gray-400 italic text-sm">Waiting for response...</p>
+                          ) : (
+                            <p className="text-gray-700 italic leading-relaxed">"{endorsement.text}"</p>
+                          )}
                         </div>
                         
                         <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
                           <span className="text-xs text-gray-400 font-medium">{new Date(endorsement.date).toLocaleDateString()}</span>
                           
                           <div className="flex gap-2">
-                            {endorsement.status === 'pending' ? (
+                            {endorsement.status === 'pending_professional' ? (
                               <>
                                 <Button 
                                   size="sm" 
@@ -1643,111 +1615,36 @@ export function ProfessionalDashboard() {
       </Dialog>
 
       {/* Endorsement Modal */}
-      <Dialog open={showEndorsementModal} onOpenChange={setShowEndorsementModal}>
-        <DialogContent className="bg-white text-gray-900 border-gray-200 sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Request Endorsement</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="endorser_name">Endorser Name *</Label>
-              <Input
-                id="endorser_name"
-                value={endorsementFormData.endorser_name}
-                onChange={(e) => {
-                  setEndorsementFormData({ ...endorsementFormData, endorser_name: e.target.value });
-                  if (endorsementFormErrors.endorser_name) {
-                    setEndorsementFormErrors({ ...endorsementFormErrors, endorser_name: '' });
-                  }
-                }}
-                placeholder="e.g. John Doe"
-                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${endorsementFormErrors.endorser_name ? 'border-red-500' : ''}`}
-              />
-              {endorsementFormErrors.endorser_name && (
-                <p className="text-xs text-red-600 mt-1">{endorsementFormErrors.endorser_name}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endorser_email">Endorser Email *</Label>
-              <Input
-                id="endorser_email"
-                type="email"
-                value={endorsementFormData.endorser_email}
-                onChange={(e) => {
-                  setEndorsementFormData({ ...endorsementFormData, endorser_email: e.target.value });
-                  if (endorsementFormErrors.endorser_email) {
-                    setEndorsementFormErrors({ ...endorsementFormErrors, endorser_email: '' });
-                  }
-                }}
-                placeholder="e.g. john@company.com"
-                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${endorsementFormErrors.endorser_email ? 'border-red-500' : ''}`}
-              />
-              {endorsementFormErrors.endorser_email && (
-                <p className="text-xs text-red-600 mt-1">{endorsementFormErrors.endorser_email}</p>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="endorser_role">Role</Label>
-                <Input
-                  id="endorser_role"
-                  value={endorsementFormData.role}
-                  onChange={(e) => setEndorsementFormData({ ...endorsementFormData, role: e.target.value })}
-                  placeholder="e.g. CTO"
-                  className="bg-white border-gray-200 focus:border-black focus:ring-black"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endorser_company">Company</Label>
-                <Input
-                  id="endorser_company"
-                  value={endorsementFormData.company}
-                  onChange={(e) => setEndorsementFormData({ ...endorsementFormData, company: e.target.value })}
-                  placeholder="e.g. Tech Corp"
-                  className="bg-white border-gray-200 focus:border-black focus:ring-black"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endorsement_text">Endorsement Text *</Label>
-              <Textarea
-                id="endorsement_text"
-                value={endorsementFormData.text}
-                onChange={(e) => {
-                  setEndorsementFormData({ ...endorsementFormData, text: e.target.value });
-                  if (endorsementFormErrors.text) {
-                    setEndorsementFormErrors({ ...endorsementFormErrors, text: '' });
-                  }
-                }}
-                placeholder="Enter the endorsement text..."
-                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${endorsementFormErrors.text ? 'border-red-500' : ''}`}
-                maxLength={1000}
-              />
-              {endorsementFormErrors.text && (
-                <p className="text-xs text-red-600 mt-1">{endorsementFormErrors.text}</p>
-              )}
-              <div className={`text-xs text-right mt-1 ${(endorsementFormData.text?.length || 0) > 900 ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
-                {endorsementFormData.text?.length || 0}/1000 characters
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setShowEndorsementModal(false)} className="border-gray-200 text-gray-700 hover:bg-gray-50">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEndorsement} disabled={endorsementSaving} className="bg-black hover:bg-gray-800 text-white">
-              {endorsementSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                'Send Request'
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EndorsementRequestForm
+        open={showEndorsementModal}
+        onOpenChange={setShowEndorsementModal}
+        onSubmit={async (data) => {
+          setEndorsementSaving(true);
+          try {
+            const result = await EndorsementAPI.requestEndorsement(data);
+            if (result.success) {
+              if (result.error) {
+                toast.warning('Request saved, but email failed: ' + result.error);
+              } else {
+                toast.success('Endorsement request sent successfully!');
+              }
+              await fetchEndorsements();
+              await fetchStats();
+              if (result.endorsement) {
+                await activityTracker.endorsementRequested(data.endorser_name);
+              }
+            } else {
+              toast.error(result.error || 'Failed to request endorsement');
+            }
+          } catch (error) {
+            console.error('Error requesting endorsement:', error);
+            toast.error('Error requesting endorsement');
+          } finally {
+            setEndorsementSaving(false);
+          }
+        }}
+        isLoading={endorsementSaving}
+      />
       {/* Phone Number Modal */}
       <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
@@ -1953,3 +1850,4 @@ export function ProfessionalDashboard() {
     </div>
   );
 }
+

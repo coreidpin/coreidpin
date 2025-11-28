@@ -40,6 +40,8 @@ const AcceptInvitationPage = lazy(() => import('../admin/pages/AcceptInvitation'
 const IdentityManagementPage = lazy(() => import('./IdentityManagementPage').then(m => ({ default: m.IdentityManagementPage })));
 const IdentityCard = lazy(() => import('./IdentityCard').then(m => ({ default: m.IdentityCard })));
 const PublicProfile = lazy(() => import('./PublicProfile').then(m => ({ default: m.PublicProfile })));
+const SecuritySettingsPage = lazy(() => import('./SecuritySettingsPage').then(m => ({ default: m.SecuritySettingsPage })));
+const EndorsementPage = lazy(() => import('./EndorsementPage').then(m => ({ default: m.EndorsementPage })));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
 
 const LoadingSpinner: React.FC = () => (
@@ -588,13 +590,14 @@ export const AppRouter: React.FC<RouterProps> = ({
           } 
         />
 
-        {/* Public Profile - No auth required */}
         <Route 
-          path="/profile/:slug" 
+          path="/security" 
           element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <PublicProfile />
-            </Suspense>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <SecuritySettingsPage />
+              </Suspense>
+            </DashboardAuthWrapper>
           } 
         />
 
@@ -607,6 +610,18 @@ export const AppRouter: React.FC<RouterProps> = ({
             </Suspense>
           } 
         />
+
+        {/* Public Endorsement Page */}
+        <Route 
+          path="/endorse/:token" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <EndorsementPage />
+            </Suspense>
+          } 
+        />
+
+        {/* Legal Pages */}
 
         <Route 
           path="/admin" 

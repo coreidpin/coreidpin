@@ -200,6 +200,12 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
     // Save updated session
     saveSessionState(newSession);
 
+    // Sync with Supabase client
+    await supabase.auth.setSession({
+      access_token: newSession.accessToken,
+      refresh_token: newSession.refreshToken
+    });
+
     console.log('Token refreshed successfully via custom endpoint');
     return newSession;
 

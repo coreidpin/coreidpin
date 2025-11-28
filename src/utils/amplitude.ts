@@ -1,5 +1,5 @@
 import * as amplitude from '@amplitude/analytics-browser';
-import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser';
+import { sessionReplayPlugin } from '@amplitude/session-replay-browser';
 
 // Initialize Amplitude
 let isInitialized = false;

@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { Logo } from './Logo';
-import { AnnouncementBanner } from './AnnouncementBanner';
+// import { AnnouncementBanner } from './AnnouncementBanner';
 import { WaitlistForm } from './WaitlistForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { 
@@ -18,6 +18,7 @@ import {
   LogIn,
   User
 } from 'lucide-react';
+import { NotificationBell } from './notifications/NotificationBell';
 
 interface NavbarProps {
   currentPage?: string;
@@ -167,9 +168,9 @@ export function Navbar({
 
   return (
     <>
-      <AnnouncementBanner 
+      {/* <AnnouncementBanner 
         onCtaClick={() => setShowWaitlist(true)}
-      />
+      /> */}
       <Dialog open={showCookieConsent} onOpenChange={setShowCookieConsent}>
         <DialogContent className="bg-white text-black rounded-3xl border-0 shadow-2xl p-8 max-w-lg">
           <DialogHeader className="text-center">
@@ -275,6 +276,7 @@ export function Navbar({
               </>
             ) : (
               <>
+                <NotificationBell />
                 <Button 
                   variant="default" 
                   size="sm"

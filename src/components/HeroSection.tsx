@@ -85,7 +85,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
                   style={{ color: 'rgba(10,11,13,0.70)' }}
                 >
-                  Core-ID turns your phone number into a secure, universal Professional Identity Number (PIN). One identity, recognized across companies, platforms, and borders — powered by enterprise-grade infrastructure.
+                  Gidi-PIN turns your phone number into a secure, universal Professional Identity Number (PIN). One identity, recognized across companies, platforms, and borders — powered by enterprise-grade infrastructure.
                 </motion.p>
 
                 {/* CTAs */}
@@ -229,7 +229,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                         </motion.div>
                         <div className="mt-4 relative">
                           <div className="brand-gradient-overlay" />
-                          <div className="grid grid-cols-3 gap-3 relative">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative">
                             <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
                               <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
                               <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
@@ -238,7 +238,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                               <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
                               <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
                             </div>
-                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
+                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen col-span-2 sm:col-span-1">
                               <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
                               <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
                             </div>

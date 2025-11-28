@@ -24,11 +24,14 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { colors, typography, spacing, borderRadius } from '../styles/designTokens';
 import { shadows, premiumCardShadow } from '../styles/shadows';
+import { activityTracker } from '../utils/activityTracker';
 
 // Constants
 const PROFESSIONAL_ROLES = [
-  "Software Engineer", "Product Manager", "Data Scientist", "Designer", 
-  "Marketing Specialist", "Sales Representative", "HR Manager", "Financial Analyst",
+  "Software Engineer", "Senior Software Engineer", "Lead Software Engineer",
+  "Product Manager", "Senior Product Manager", "Lead Product Manager", "Chief Product Manager", "Head of Product", "Growth Product Manager",
+  "Designer", "Senior Product Designer", "Lead Product Designer",
+  "Data Scientist", "Marketing Specialist", "Sales Representative", "HR Manager", "Financial Analyst",
   "Project Manager", "Consultant", "Custom"
 ];
 
@@ -425,6 +428,18 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         return;
       }
 
+      // Ensure session is valid and synced with Supabase client
+      const token = await ensureValidSession();
+      if (token) {
+        await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: token
+        });
+      } else {
+        toast.error('Session expired. Please login again.');
+        return;
+      }
+
       // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         toast.error('Image size must be less than 2MB');
@@ -468,6 +483,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       setProfile({ ...profile, profile_picture_url: publicUrl });
       toast.dismiss(toastId);
       toast.success('Profile picture updated');
+
+      // Track activity
+      await activityTracker.profilePictureUploaded();
 
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -650,6 +668,16 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       
       setMessage({ type: 'success', text: 'Profile updated successfully' });
       toast.success('Profile updated');
+
+      // Track activity - determine what changed
+      const changedFields: string[] = [];
+      if (formData.name !== profile.name) changedFields.push('Name');
+      if (formData.role !== profile.role) changedFields.push('Role');
+      if (formData.bio !== profile.bio) changedFields.push('Bio');
+      if (formData.industry !== profile.industry) changedFields.push('Industry');
+      if (changedFields.length > 0) {
+        await activityTracker.profileUpdated(changedFields);
+      }
 
     } catch (error) {
       console.error('Error saving profile:', error);

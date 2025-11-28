@@ -18,7 +18,8 @@ export function createClient() {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'gidipin-auth',
+        storage: window.localStorage,
+        storageKey: 'sb-auth-token',
         flowType: 'pkce'
       },
       global: {

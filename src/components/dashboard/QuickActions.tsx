@@ -88,7 +88,11 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <span className="text-xs font-medium text-center leading-tight">Share PIN</span>
             </Button>
             
-            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
+            <Button 
+              onClick={() => window.location.href = '/security'}
+              variant="outline" 
+              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+            >
               <Settings className="h-6 w-6 text-blue-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">Security Settings</span>
             </Button>

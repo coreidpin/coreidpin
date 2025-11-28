@@ -5,7 +5,7 @@ const whyNowPoints = [
   {
     icon: Globe,
     title: 'Global Phone Penetration',
-    description: 'Phone adoption is near-universal in target markets',
+    description: 'Phone adoption is near-universal in target markets and others as well',
     color: '#bfa5ff',
   },
   {
@@ -97,7 +97,7 @@ export function WhyNowPage() {
                       <Icon className="w-8 h-8" style={{ color: point.color }} />
                     </div>
                     <h3 className="text-2xl mb-4 text-white">{point.title}</h3>
-                    <p className="text-white/60 leading-relaxed">{point.description}</p>
+                    <p className="text-white leading-relaxed">{point.description}</p>
                   </div>
                 </div>
               </motion.div>
