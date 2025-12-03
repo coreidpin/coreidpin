@@ -63,13 +63,14 @@ import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } fro
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
-  const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
+  const [pinVisible, setPinVisible] = useState(true);
   const [copiedPin, setCopiedPin] = useState(false);
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const location = useLocation();
 
@@ -527,6 +528,8 @@ export function ProfessionalDashboard() {
           console.log('No profile data returned');
         }
 
+        setInitialLoading(false);
+
         // Fetch PIN via Edge Function (bypasses RLS)
         console.log('Fetching PIN for user:', session.userId);
         try {
@@ -553,6 +556,7 @@ export function ProfessionalDashboard() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
+        setInitialLoading(false);
       }
     };
     
@@ -964,6 +968,17 @@ export function ProfessionalDashboard() {
   );
 
 
+
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
+          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
