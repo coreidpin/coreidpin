@@ -748,7 +748,15 @@ export const AppRouter: React.FC<RouterProps> = ({
         {/* Public PIN Routes */}
         <Route 
           path="/pin/:pinNumber" 
-          element={<Suspense fallback={<LoadingSpinner />}><PublicPINPageWrapper /></Suspense>} 
+          element={
+            <div className="min-h-screen bg-background flex flex-col">
+              <Navbar currentPage="pin" onNavigate={() => {}} onLogin={onLogin} onLogout={onLogout} isAuthenticated={isAuthenticated} userType={userType} />
+              <Suspense fallback={<LoadingSpinner />}>
+                <PublicPINPageWrapper />
+              </Suspense>
+              <Footer onNavigate={() => {}} />
+            </div>
+          } 
         />
 
         {/* 404 fallback to product */}

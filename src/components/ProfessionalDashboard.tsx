@@ -1443,15 +1443,16 @@ export function ProfessionalDashboard() {
                 }}
                 onSharePin={(platform) => {
                   if (phonePin) {
+                    const pinUrl = `${window.location.origin}/pin/${phonePin}`;
                     if (navigator.share) {
                       navigator.share({
-                        title: 'My Professional PIN',
-                        text: `Connect with me using my CoreID PIN: ${phonePin}`,
-                        url: window.location.href
+                        title: 'My Professional GidiPIN',
+                        text: `Connect with me using my GidiPIN: ${phonePin}`,
+                        url: pinUrl
                       });
                     } else {
-                      navigator.clipboard.writeText(phonePin);
-                      toast.success('PIN copied to clipboard');
+                      navigator.clipboard.writeText(pinUrl);
+                      toast.success('PIN link copied to clipboard');
                     }
                   }
                 }}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabase/client';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
@@ -100,8 +101,28 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-12 px-4">
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+    <>
+      <Helmet>
+        <title>{profile.full_name || profile.name || 'Professional'} - GidiPIN Profile</title>
+        <meta name="description" content={`View ${profile.full_name || profile.name || 'Professional'}'s verified professional profile. ${profile.role || profile.job_title || 'Professional'} ${profile.city ? `based in ${profile.city}` : ''}`} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:title" content={`${profile.full_name || profile.name || 'Professional'} - GidiPIN`} />
+        <meta property="og:description" content={`Connect with ${profile.full_name || profile.name || 'Professional'} using GidiPIN: ${pinNumber}. ${profile.role || profile.job_title || 'Professional'} ${profile.city ? `in ${profile.city}` : ''}`} />
+        <meta property="og:image" content={profile.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.name || 'User')}&size=400&background=3b82f6&color=fff`} />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={window.location.href} />
+        <meta property="twitter:title" content={`${profile.full_name || profile.name || 'Professional'} - GidiPIN`} />
+        <meta property="twitter:description" content={`Connect with ${profile.full_name || profile.name || 'Professional'} using GidiPIN: ${pinNumber}`} />
+        <meta property="twitter:image" content={profile.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.name || 'User')}&size=400&background=3b82f6&color=fff`} />
+      </Helmet>
+      
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-12 px-4">
+        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header Card */}
         <Card className="border-2 border-blue-100">
           <CardContent className="p-4 sm:p-8">
@@ -206,8 +227,8 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         {/* CTA */}
         <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <CardContent className="p-6 sm:p-8 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Want your own Professional PIN?</h2>
-            <p className="mb-4 sm:mb-6 text-sm sm:text-base text-blue-100">Join CoreID and get verified as a professional</p>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Want your own Professional GidiPIN?</h2>
+            <p className="mb-4 sm:mb-6 text-sm sm:text-base text-blue-100">Join GidiPIN and get verified as a professional</p>
             <Button 
               onClick={() => navigate('/get-started')} 
               className="bg-white text-blue-600 hover:bg-gray-100 w-full sm:w-auto"
@@ -217,7 +238,8 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
             </Button>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
