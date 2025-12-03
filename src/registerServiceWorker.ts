@@ -1,4 +1,4 @@
-// Service Worker Registration for CoreID PWA
+// Service Worker Registration for GidiPin PWA
 
 export function registerServiceWorker() {
   if ('serviceWorker' in navigator) {

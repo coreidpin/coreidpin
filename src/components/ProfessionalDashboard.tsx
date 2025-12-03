@@ -40,8 +40,7 @@ import {
   Quote,
   Activity,
   Loader2,
-  Bell,
-  HelpCircle
+  Bell
 } from 'lucide-react';
 
 import { supabase, supabaseUrl } from '../utils/supabase/client';
@@ -52,7 +51,6 @@ import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { ActivityChart } from './dashboard/ActivityChart';
 import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
-import { HelpCenter } from './dashboard/HelpCenter';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
@@ -65,14 +63,13 @@ import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } fro
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
-  const [pinVisible, setPinVisible] = useState(true);
+  const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
   const [copiedPin, setCopiedPin] = useState(false);
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-  const [initialLoading, setInitialLoading] = useState(true);
 
   const location = useLocation();
 
@@ -112,7 +109,6 @@ export function ProfessionalDashboard() {
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info' | 'warning'; message: string }>>([]);
   const [realTimeNotifications, setRealTimeNotifications] = useState<Array<any>>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
-  const [helpCenterOpen, setHelpCenterOpen] = useState(false);
   
   // Stats state - now fetched from API
   const [stats, setStats] = useState({
@@ -165,6 +161,7 @@ export function ProfessionalDashboard() {
     links: ''
   });
   const [projectSaving, setProjectSaving] = useState(false);
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
 
   // Enhanced Endorsement form state
   const [endorsementFormData, setEndorsementFormData] = useState<RequestEndorsementForm>({
@@ -182,6 +179,8 @@ export function ProfessionalDashboard() {
     custom_message: ''
   });
   const [endorsementSaving, setEndorsementSaving] = useState(false);
+  const [respondingEndorsementId, setRespondingEndorsementId] = useState<string | null>(null);
+  const [deletingEndorsementId, setDeletingEndorsementId] = useState<string | null>(null);
 
   // Project handlers
   const handleAddProject = () => {
@@ -283,6 +282,7 @@ export function ProfessionalDashboard() {
   const handleDeleteProject = async (projectId: string) => {
     if (!confirm('Are you sure you want to delete this project?')) return;
 
+    setDeletingProjectId(projectId);
     try {
       const token = await ensureValidSession();
       if (!token) return;
@@ -296,6 +296,7 @@ export function ProfessionalDashboard() {
       );
 
       if (response.ok) {
+        toast.success('Project deleted successfully');
         // Refresh projects list
         const listResponse = await fetch(`${supabaseUrl}/functions/v1/server/projects`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -306,11 +307,13 @@ export function ProfessionalDashboard() {
         }
         fetchStats(); // Refresh stats
       } else {
-        alert('Failed to delete project');
+        toast.error('Failed to delete project');
       }
     } catch (error) {
       console.error('Error deleting project:', error);
-      alert('Error deleting project');
+      toast.error('Error deleting project');
+    } finally {
+      setDeletingProjectId(null);
     }
   };
 
@@ -356,7 +359,7 @@ export function ProfessionalDashboard() {
 
     setEndorsementSaving(true);
     try {
-      const result = await EndorsementAPI.requestEndorsement(endorsementFormData);
+      const result = await requestEndorsementViaServer(endorsementFormData);
 
       if (result.success) {
         toast.success('Endorsement request sent successfully!');
@@ -382,6 +385,7 @@ export function ProfessionalDashboard() {
   };
 
   const handleRespondToEndorsement = async (endorsementId: string, action: 'accept' | 'reject') => {
+    setRespondingEndorsementId(endorsementId);
     try {
       const result = await EndorsementAPI.respondToEndorsement(endorsementId, action);
 
@@ -407,12 +411,15 @@ export function ProfessionalDashboard() {
     } catch (error: any) {
       console.error('Error responding to endorsement:', error);
       toast.error('Error responding to endorsement');
+    } finally {
+      setRespondingEndorsementId(null);
     }
   };
 
   const handleDeleteEndorsement = async (endorsementId: string) => {
     if (!confirm('Are you sure you want to delete this endorsement?')) return;
 
+    setDeletingEndorsementId(endorsementId);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -433,6 +440,8 @@ export function ProfessionalDashboard() {
     } catch (error: any) {
       console.error('Error deleting endorsement:', error);
       toast.error('Failed to delete endorsement');
+    } finally {
+      setDeletingEndorsementId(null);
     }
   };
 
@@ -531,8 +540,6 @@ export function ProfessionalDashboard() {
           console.log('No profile data returned');
         }
 
-        setInitialLoading(false);
-
         // Fetch PIN via Edge Function (bypasses RLS)
         console.log('Fetching PIN for user:', session.userId);
         try {
@@ -559,7 +566,6 @@ export function ProfessionalDashboard() {
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
-        setInitialLoading(false);
       }
     };
     
@@ -898,9 +904,9 @@ export function ProfessionalDashboard() {
         console.error('PIN generation error:', data);
         toast.error(data.error || 'Failed to generate PIN');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating random PIN:', error);
-      toast.error('Error generating PIN');
+      toast.error(`Error generating PIN: ${error.message || 'Unknown error'}`);
     } finally {
       setPinLoading(false);
     }
@@ -972,17 +978,6 @@ export function ProfessionalDashboard() {
 
 
 
-  if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
-          <p className="text-gray-600 font-medium">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -1000,25 +995,16 @@ export function ProfessionalDashboard() {
               Check what's new updates, verification status, and recent profile views.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setHelpCenterOpen(true)}
-              className="relative p-3 rounded-full bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-md transition-all group"
-              aria-label="Open help center"
-            >
-              <HelpCircle className="w-5 h-5 text-gray-700 group-hover:text-blue-600 transition-colors" />
-            </button>
-            <button
-              onClick={() => setNotificationCenterOpen(true)}
-              className="relative p-3 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-all"
-              aria-label="Open notifications"
-            >
-              <Bell className="w-5 h-5 text-gray-700" />
-              {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </button>
-          </div>
+          <button
+            onClick={() => setNotificationCenterOpen(true)}
+            className="relative p-3 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+            aria-label="Open notifications"
+          >
+            <Bell className="w-5 h-5 text-gray-700" />
+            {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            )}
+          </button>
         </div>
 
         {/* Header Profile Card */}
@@ -1244,8 +1230,13 @@ export function ProfessionalDashboard() {
                               size="icon" 
                               className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
                               onClick={() => handleDeleteProject(project.id)}
+                              disabled={deletingProjectId === project.id}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              {deletingProjectId === project.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                         </div>
@@ -1414,19 +1405,39 @@ export function ProfessionalDashboard() {
                                 <Button 
                                   size="sm" 
                                   className="bg-black hover:bg-gray-800 text-white h-8 px-3"
-                                  onClick={() => handleRespondToEndorsement(endorsement.id, 'accepted')}
+                                  onClick={() => handleRespondToEndorsement(endorsement.id, 'accept')}
+                                  disabled={respondingEndorsementId === endorsement.id}
                                 >
-                                  <Check className="h-3.5 w-3.5 mr-1.5" />
-                                  Accept
+                                  {respondingEndorsementId === endorsement.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                      Processing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="h-3.5 w-3.5 mr-1.5" />
+                                      Accept
+                                    </>
+                                  )}
                                 </Button>
                                 <Button 
                                   size="sm" 
                                   variant="outline"
                                   className="border-gray-200 text-red-600 hover:bg-red-50 h-8 px-3"
-                                  onClick={() => handleRespondToEndorsement(endorsement.id, 'rejected')}
+                                  onClick={() => handleRespondToEndorsement(endorsement.id, 'reject')}
+                                  disabled={respondingEndorsementId === endorsement.id}
                                 >
-                                  <X className="h-3.5 w-3.5 mr-1.5" />
-                                  Reject
+                                  {respondingEndorsementId === endorsement.id ? (
+                                    <>
+                                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                      Processing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="h-3.5 w-3.5 mr-1.5" />
+                                      Reject
+                                    </>
+                                  )}
                                 </Button>
                               </>
                             ) : (
@@ -1435,8 +1446,13 @@ export function ProfessionalDashboard() {
                                 size="sm" 
                                 className="text-gray-400 hover:text-red-600 hover:bg-red-50 h-8 px-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={() => handleDeleteEndorsement(endorsement.id)}
+                                disabled={deletingEndorsementId === endorsement.id}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                {deletingEndorsementId === endorsement.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
                               </Button>
                             )}
                           </div>
@@ -1470,16 +1486,15 @@ export function ProfessionalDashboard() {
                 }}
                 onSharePin={(platform) => {
                   if (phonePin) {
-                    const pinUrl = `${window.location.origin}/pin/${phonePin}`;
                     if (navigator.share) {
                       navigator.share({
-                        title: 'My Professional GidiPIN',
-                        text: `Connect with me using my GidiPIN: ${phonePin}`,
-                        url: pinUrl
+                        title: 'My Professional PIN',
+                        text: `Connect with me using my CoreID PIN: ${phonePin}`,
+                        url: window.location.href
                       });
                     } else {
-                      navigator.clipboard.writeText(pinUrl);
-                      toast.success('PIN link copied to clipboard');
+                      navigator.clipboard.writeText(phonePin);
+                      toast.success('PIN copied to clipboard');
                     }
                   }
                 }}
@@ -1649,7 +1664,7 @@ export function ProfessionalDashboard() {
         onSubmit={async (data) => {
           setEndorsementSaving(true);
           try {
-            const result = await EndorsementAPI.requestEndorsement(data);
+            const result = await requestEndorsementViaServer(data);
             if (result.success) {
               if (result.error) {
                 toast.warning('Request saved, but email failed: ' + result.error);
@@ -1874,9 +1889,6 @@ export function ProfessionalDashboard() {
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} position="bottom-right" />
-
-      {/* Help Center */}
-      <HelpCenter isOpen={helpCenterOpen} onClose={() => setHelpCenterOpen(false)} />
       </div>
     </div>
   );
