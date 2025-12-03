@@ -1,9 +1,94 @@
 import { Hono } from "npm:hono";
 import { getSupabaseClient, getAuthUser } from "../lib/supabaseClient.tsx";
+import { sendEmail } from "../lib/email.ts";
 
 const endorsements = new Hono();
 
-// Get all endorsements for the authenticated user
+// POST /endorsements/request-v2 - Request endorsement in v2 table (bypasses RLS)
+endorsements.post("/request-v2", async (c) => {
+  try {
+    const { user, error } = await getAuthUser(c);
+    
+    if (!user?.id || error) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const body = await c.req.json();
+    const {
+      endorser_name,
+      endorser_email,
+      endorser_role,
+      endorser_company,
+      endorser_linkedin_url,
+      relationship_type,
+      company_worked_together,
+      time_worked_together_start,
+      time_worked_together_end,
+      project_context,
+      suggested_skills,
+      custom_message
+    } = body;
+
+    if (!endorser_name ||!endorser_email) {
+      return c.json({ error: "Endorser name and email are required" }, 400);
+    }
+
+    const supabase = getSupabaseClient();
+
+    // Check if endorser is a platform user
+    let endorser_id: string | null = null;
+    const { data: endorserProfile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('email', endorser_email)
+      .single();
+    
+    endorser_id = endorserProfile?.user_id || null;
+
+    // Generate verification token
+    const verification_token = crypto.randomUUID();
+    const verification_expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    // Insert with service role (bypasses RLS)
+    const { data: endorsement, error: insertError } = await supabase
+      .from('professional_endorsements_v2')
+      .insert({
+        professional_id: user.id,
+        endorser_id,
+        endorser_name,
+        endorser_email,
+        endorser_role: endorser_role || null,
+        endorser_company: endorser_company || null,
+        endorser_linkedin_url: endorser_linkedin_url || null,
+        relationship_type: relationship_type || null,
+        company_worked_together: company_worked_together || null,
+        time_worked_together_start: time_worked_together_start || null,
+        time_worked_together_end: time_worked_together_end || null,
+        project_context: project_context || null,
+        skills_endorsed: suggested_skills || [],
+        status: 'requested',
+        verification_token,
+        verification_expires_at: verification_expires_at.toISOString(),
+        verification_method: endorser_id ? 'platform_user' : 'email',
+        text: custom_message || 'Endorsement request pending',
+        metadata: { custom_message }
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Endorsement insert error:', insertError);
+      return c.json({ success: false, error: insertError.message }, 400);
+    }
+
+    return c.json({ success: true, endorsement });
+  } catch (error: any) {
+    console.error('Request endorsement error:', error);
+    return c.json({ success: false, error: 'Failed to request endorsement' }, 500);
+  }
+});
+
+// GET /endorsements - List all endorsements for authenticated user
 endorsements.get("/", async (c) => {
   try {
     const { user, error } = await getAuthUser(c);
@@ -13,7 +98,7 @@ endorsements.get("/", async (c) => {
     }
 
     const supabase = getSupabaseClient();
-    const status = c.req.query('status'); // Optional filter by status
+    const status = c.req.query('status');
 
     let query = supabase
       .from('professional_endorsements')
@@ -42,11 +127,7 @@ endorsements.get("/", async (c) => {
   }
 });
 
-import { sendEmail } from "../lib/email.ts";
-
-// ... imports
-
-// Request a new endorsement
+// POST /endorsements/request - Request endorsement in v1 table
 endorsements.post("/request", async (c) => {
   try {
     const { user, error } = await getAuthUser(c);
@@ -84,28 +165,6 @@ endorsements.post("/request", async (c) => {
       return c.json({ error: `Failed to request endorsement: ${insertError.message}` }, 500);
     }
 
-    // Send email notification
-    try {
-      const emailSubject = `Endorsement Request from ${user.email}`;
-      const emailHtml = `
-        <div style="font-family: sans-serif; color: #333;">
-          <h2>Endorsement Request</h2>
-          <p>Hi ${endorser_name},</p>
-          <p><strong>${user.email}</strong> has requested an endorsement from you for their professional profile.</p>
-          <blockquote style="background: #f9f9f9; border-left: 4px solid #ccc; margin: 1.5em 10px; padding: 0.5em 10px;">
-            "${text}"
-          </blockquote>
-          <p>Please reply to this email to verify this endorsement.</p>
-        </div>
-      `;
-      const emailText = `Hi ${endorser_name}, ${user.email} has requested an endorsement: "${text}". Please reply to verify.`;
-
-      await sendEmail(endorser_email, emailSubject, emailHtml, emailText, { userId: user.id, type: 'endorsement_request' });
-    } catch (emailErr) {
-      console.error("Failed to send endorsement email:", emailErr);
-      // Don't fail the request if email fails, just log it
-    }
-
     return c.json({
       success: true,
       endorsement: data
@@ -116,7 +175,7 @@ endorsements.post("/request", async (c) => {
   }
 });
 
-// Respond to an endorsement (accept or reject)
+// PUT /endorsements/:id/respond - Respond to endorsement
 endorsements.put("/:id/respond", async (c) => {
   try {
     const { user, error } = await getAuthUser(c);
@@ -135,7 +194,6 @@ endorsements.put("/:id/respond", async (c) => {
 
     const supabase = getSupabaseClient();
 
-    // Verify this endorsement belongs to the user
     const { data: existing } = await supabase
       .from('professional_endorsements')
       .select('professional_id')
@@ -146,7 +204,6 @@ endorsements.put("/:id/respond", async (c) => {
       return c.json({ error: "Endorsement not found or access denied" }, 404);
     }
 
-    // Update endorsement status
     const { data, error: updateError } = await supabase
       .from('professional_endorsements')
       .update({ status })
@@ -169,7 +226,7 @@ endorsements.put("/:id/respond", async (c) => {
   }
 });
 
-// Delete an endorsement
+// DELETE /endorsements/:id - Delete endorsement
 endorsements.delete("/:id", async (c) => {
   try {
     const { user, error } = await getAuthUser(c);
@@ -181,7 +238,6 @@ endorsements.delete("/:id", async (c) => {
     const endorsementId = c.req.param('id');
     const supabase = getSupabaseClient();
 
-    // Verify ownership
     const { data: existing } = await supabase
       .from('professional_endorsements')
       .select('professional_id')
@@ -192,7 +248,6 @@ endorsements.delete("/:id", async (c) => {
       return c.json({ error: "Endorsement not found or access denied" }, 404);
     }
 
-    // Delete endorsement
     const { error: deleteError } = await supabase
       .from('professional_endorsements')
       .delete()

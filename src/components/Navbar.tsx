@@ -16,7 +16,8 @@ import {
   HelpCircle,
   Phone,
   LogIn,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
 
@@ -42,12 +43,13 @@ export function Navbar({
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showWaitlist, setShowWaitlist] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const isLight = currentPage === 'landing';
   const isProd = import.meta.env.PROD;
 
   useEffect(() => {
     try {
-      const existing = localStorage.getItem('cookieConsent');
+      const existing = localStorage.getItem('cookieConsent'); 
       if (!existing) setShowCookieConsent(true);
     } catch {}
   }, []);
@@ -96,15 +98,19 @@ export function Navbar({
   ];
 
   const handleNavigate = (href: string) => {
+    setIsNavigating(true);
     navigate(href);
     setIsMobileMenuOpen(false);
     setActiveDropdown(null);
+    setTimeout(() => setIsNavigating(false), 800);
   };
 
   const handleLogin = (type: 'employer' | 'professional' | 'university') => {
+    setIsNavigating(true);
     onLogin?.(type);
     setIsMobileMenuOpen(false);
     navigate('/get-started');
+    setTimeout(() => setIsNavigating(false), 800);
   };
 
   const DesktopDropdown = ({ item }: { item: typeof navigationItems[0] }) => (
@@ -280,10 +286,25 @@ export function Navbar({
                 <Button 
                   variant="default" 
                   size="sm"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => {
+                    setIsNavigating(true);
+                    navigate('/dashboard');
+                    setTimeout(() => setIsNavigating(false), 800);
+                  }}
+                  disabled={isNavigating}
+                  className="disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <Building className="h-4 w-4 mr-2" />
-                  Dashboard
+                  {isNavigating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Building className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 

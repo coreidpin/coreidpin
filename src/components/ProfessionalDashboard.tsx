@@ -43,7 +43,7 @@ import {
   Bell
 } from 'lucide-react';
 
-import { supabase } from '../utils/supabase/client';
+import { supabase, supabaseUrl } from '../utils/supabase/client';
 import { HeroProfileCard } from './dashboard/HeroProfileCard';
 import { EndorsementRequestForm } from './dashboard/EndorsementRequestForm';
 import { PINGenerationCard } from './dashboard/PINGenerationCard';
@@ -242,8 +242,8 @@ export function ProfessionalDashboard() {
       };
 
       const url = editingProject
-        ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/projects/${editingProject.id}`
-        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/projects`;
+        ? `${supabaseUrl}/functions/v1/server/projects/${editingProject.id}`
+        : `${supabaseUrl}/functions/v1/server/projects`;
 
       const response = await fetch(url, {
         method: editingProject ? 'PUT' : 'POST',
@@ -257,7 +257,7 @@ export function ProfessionalDashboard() {
       if (response.ok) {
         setShowProjectModal(false);
         // Refresh projects list
-        const listResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/projects`, {
+        const listResponse = await fetch(`${supabaseUrl}/functions/v1/server/projects`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (listResponse.ok) {
@@ -284,7 +284,7 @@ export function ProfessionalDashboard() {
       if (!token) return;
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/projects/${projectId}`,
+        `${supabaseUrl}/functions/v1/server/projects/${projectId}`,
         {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
@@ -293,7 +293,7 @@ export function ProfessionalDashboard() {
 
       if (response.ok) {
         // Refresh projects list
-        const listResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/projects`, {
+        const listResponse = await fetch(`${supabaseUrl}/functions/v1/server/projects`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (listResponse.ok) {
@@ -484,7 +484,7 @@ export function ProfessionalDashboard() {
         if (user && !isVerified) {
           console.log('User logged in but not verified. Attempting self-healing...');
           try {
-            const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/verify-email`, {
+            const response = await fetch(`${supabaseUrl}/functions/v1/server/pin/verify-email`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${token}`,
@@ -530,7 +530,7 @@ export function ProfessionalDashboard() {
         // Fetch PIN via Edge Function (bypasses RLS)
         console.log('Fetching PIN for user:', session.userId);
         try {
-          const pinResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/current`, {
+          const pinResponse = await fetch(`${supabaseUrl}/functions/v1/server/pin/current`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           
@@ -565,7 +565,7 @@ export function ProfessionalDashboard() {
       const token = await ensureValidSession();
       if (!token) return;
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/stats/dashboard`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/server/stats/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -601,7 +601,7 @@ export function ProfessionalDashboard() {
         const token = await ensureValidSession();
         if (!token) return;
 
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/stats/pin-analytics`, {
+        const response = await fetch(`${supabaseUrl}/functions/v1/server/stats/pin-analytics`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -629,7 +629,7 @@ export function ProfessionalDashboard() {
         const token = await ensureValidSession();
         if (!token) return;
 
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/stats/activity`, {
+        const response = await fetch(`${supabaseUrl}/functions/v1/server/stats/activity`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -678,7 +678,7 @@ export function ProfessionalDashboard() {
         const token = await ensureValidSession();
         if (!token) return;
 
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/projects`, {
+        const response = await fetch(`${supabaseUrl}/functions/v1/server/projects`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -787,7 +787,7 @@ export function ProfessionalDashboard() {
       const token = await ensureValidSession();
       if (!token) return;
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/request`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/auth-otp/request`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -819,7 +819,7 @@ export function ProfessionalDashboard() {
       const token = await ensureValidSession();
       if (!token) return;
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/verify`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/auth-otp/verify`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -830,7 +830,7 @@ export function ProfessionalDashboard() {
 
       if (response.ok) {
         // OTP verified, assign phone as PIN
-        const pinResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pin/issue`, {
+        const pinResponse = await fetch(`${supabaseUrl}/functions/v1/pin/issue`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -873,7 +873,7 @@ export function ProfessionalDashboard() {
         return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/generate`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/server/pin/generate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

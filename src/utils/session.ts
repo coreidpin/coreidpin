@@ -1,4 +1,4 @@
-import { supabase } from './supabase/client';
+import { supabase, supabaseUrl } from './supabase/client';
 import { toast } from 'sonner';
 
 /**
@@ -165,7 +165,7 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
   // This handles custom OTP users who have a custom JWT and no standard refresh token
   try {
     // Call our custom refresh endpoint
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-otp/refresh`, {
+    const response = await fetch(`${supabaseUrl}/functions/v1/auth-otp/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

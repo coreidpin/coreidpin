@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import { supabase } from '../utils/supabase/client';
+import { supabase, supabaseUrl } from '../utils/supabase/client';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { Button } from './ui/button';
 import { PremiumIdentityCard } from './PremiumIdentityCard';
@@ -14,6 +14,8 @@ export const IdentityCard: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [pin, setPin] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<any>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isDownloadingWallet, setIsDownloadingWallet] = useState(false);
   
   const baseUrl = window.location.origin;
   const publicProfileUrl = profile?.profile_url_slug 
@@ -75,6 +77,7 @@ export const IdentityCard: React.FC = () => {
       return;
     }
 
+    setIsSharing(true);
     try {
       if (navigator.share) {
         await navigator.share({
@@ -98,15 +101,18 @@ export const IdentityCard: React.FC = () => {
     } catch (error) {
       console.error('Share error:', error);
       toast.error('Failed to share');
+    } finally {
+      setIsSharing(false);
     }
   };
 
   const handleDownloadWallet = async () => {
+    setIsDownloadingWallet(true);
     try {
       toast.loading('Generating wallet pass...');
       
       const session = getSessionState();
-      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/identity-card/${session?.userId}/wallet`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/identity-card/${session?.userId}/wallet`, {
         headers: {
           'Authorization': `Bearer ${await ensureValidSession()}`
         }
@@ -130,6 +136,8 @@ export const IdentityCard: React.FC = () => {
       toast.dismiss();
       console.error('Wallet download error:', error);
       toast.error('Failed to download wallet pass');
+    } finally {
+      setIsDownloadingWallet(false);
     }
   };
 

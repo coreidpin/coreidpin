@@ -5,7 +5,7 @@ import { projectId, publicAnonKey } from './info';
 const envUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
 const envAnonKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-const supabaseUrl = envUrl || `https://${projectId}.supabase.co`;
+export const supabaseUrl = envUrl || `https://${projectId}.supabase.co`;
 const supabaseAnonKey = envAnonKey || publicAnonKey;
 
 // Singleton Supabase client

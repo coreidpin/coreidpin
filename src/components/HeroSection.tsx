@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { ArrowRight, CheckCircle, Shield, Play, Fingerprint, Clock, Sparkles, ChevronRight } from 'lucide-react';
+import { ArrowRight, CheckCircle, Shield, Play, Fingerprint, Clock, Sparkles, ChevronRight, Loader2 } from 'lucide-react';
 
 interface HeroSectionProps {
   onNavigate: (page: string) => void;
@@ -13,12 +13,26 @@ interface HeroSectionProps {
 
 export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: HeroSectionProps) {
   const navigate = useNavigate();
+  const [isNavigating, setIsNavigating] = useState(false);
   
   const handleNavigate = (page: string) => {
+    setIsNavigating(true);
     if (page === 'dashboard') {
       navigate('/dashboard');
     } else {
       onNavigate(page);
+    }
+    // Reset loading state after a short delay (navigation will happen before this)
+    setTimeout(() => setIsNavigating(false), 1000);
+  };
+
+  const handleDashboardOrWaitlist = () => {
+    setIsNavigating(true);
+    if (isAuthenticated) {
+      handleNavigate('dashboard');
+    } else {
+      setShowWaitlist(true);
+      setTimeout(() => setIsNavigating(false), 500);
     }
   };
 
@@ -97,13 +111,23 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                 >
                   <Button
                     size="lg"
-                    onClick={() => (isAuthenticated ? handleNavigate('dashboard') : setShowWaitlist(true))}
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200 text-white"
+                    onClick={handleDashboardOrWaitlist}
+                    disabled={isNavigating}
+                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200 text-white disabled:opacity-70 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#0A0B0D' }}
                   >
-                    <Fingerprint className="h-5 w-5 mr-2" />
-                    {isAuthenticated ? 'Dashboard' : 'Join the Waitlist'}
-                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    {isNavigating ? (
+                      <>
+                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <Fingerprint className="h-5 w-5 mr-2" />
+                        {isAuthenticated ? 'Dashboard' : 'Join the Waitlist'}
+                        <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
                   </Button>
                   <Button
                     size="lg"
