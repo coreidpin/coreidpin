@@ -110,6 +110,76 @@ export const IdentityManagementPage: React.FC = () => {
   const [toolInput, setToolInput] = useState('');
   const [industryInput, setIndustryInput] = useState('');
 
+  // Load profile data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const session = getSessionState();
+        if (!session?.userId) {
+          navigate('/login');
+          return;
+        }
+
+        // Fetch profile data
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.userId)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+          setFormData({
+            name: profileData.full_name || '',
+            email: profileData.email || '',
+            phone: profileData.phone || '',
+            role: profileData.job_title || '',
+            bio: profileData.bio || '',
+            years_of_experience: profileData.years_of_experience || '',
+            industry: profileData.industry || '',
+            work_preference: profileData.work_preference || '',
+            nationality: profileData.nationality || '',
+            city: profileData.city || '',
+            date_of_birth: profileData.date_of_birth || '',
+            gender: profileData.gender || '',
+            recovery_email: profileData.recovery_email || '',
+            linkedin: profileData.linkedin_url || '',
+            website: profileData.website || '',
+            work_experience: profileData.work_experience || [],
+            skills: profileData.skills || [],
+            tools: profileData.tools || [],
+            industry_tags: profileData.industry_tags || [],
+            certifications: profileData.certifications || []
+          });
+
+          // Calculate profile completeness
+          const fields = [profileData.full_name, profileData.email, profileData.phone, profileData.bio, profileData.city];
+          setProfileCompleteness(Math.round((fields.filter(f => f).length / fields.length) * 100));
+        }
+
+        // Fetch PIN data
+        const token = await ensureValidSession();
+        if (token) {
+          const pinRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/server/pin/current`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (pinRes.ok) {
+            const pinResult = await pinRes.json();
+            if (pinResult.success && pinResult.pin) {
+              setPinData({ pin_number: pinResult.pin });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [navigate]);
+
   // Helper functions for Work Identity
   const handleAddTag = (field: 'skills' | 'tools' | 'industry_tags', value: string, setInput: (val: string) => void) => {
     if (!value.trim()) return;

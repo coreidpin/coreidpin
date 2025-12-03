@@ -511,45 +511,64 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/help" 
           element={
-            <Layout currentPage="help" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <PlaceholderPage 
-                  title="Help Center"
-                  description="Find answers to common questions and get support for using the CoreID platform."
-                  onNavigate={() => {}}
-                />
-              </Suspense>
-            </Layout>
+            <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center">
+              <div className="text-center">
+                <h1 className="text-4xl font-bold text-white mb-4">Help Center</h1>
+                <p className="text-gray-300">Find answers to common questions and get support for using the CoreID platform.</p>
+              </div>
+            </div>
           } 
         />
 
         <Route 
           path="/contact" 
           element={
-            <Layout currentPage="contact" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <PlaceholderPage 
-                  title="Contact Us"
-                  description="Get in touch with our team for partnerships, support, or general inquiries."
-                  onNavigate={() => {}}
-                />
-              </Suspense>
-            </Layout>
+            <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
+              <Navbar 
+                currentPage="contact" 
+                onNavigate={() => {}} 
+                onLogin={onLogin} 
+                onLogout={onLogout} 
+                isAuthenticated={isAuthenticated} 
+                userType={userType} 
+              />
+              <main className="flex-1">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PlaceholderPage 
+                    title="Contact Us"
+                    description="Get in touch with our team for partnerships, support, or general inquiries."
+                    onNavigate={() => {}}
+                  />
+                </Suspense>
+              </main>
+              <Footer onNavigate={() => {}} />
+            </div>
           } 
         />
 
         <Route 
           path="/docs" 
           element={
-            <Layout currentPage="docs" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={<LoadingSpinner />}>
-                <PlaceholderPage 
-                  title="Documentation"
-                  description="Access technical documentation, API references, and integration guides for developers."
-                  onNavigate={() => {}}
-                />
-              </Suspense>
-            </Layout>
+            <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
+              <Navbar 
+                currentPage="docs" 
+                onNavigate={() => {}} 
+                onLogin={onLogin} 
+                onLogout={onLogout} 
+                isAuthenticated={isAuthenticated} 
+                userType={userType} 
+              />
+              <main className="flex-1">
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PlaceholderPage 
+                    title="Documentation"
+                    description="Access technical documentation, API references, and integration guides for developers."
+                    onNavigate={() => {}}
+                  />
+                </Suspense>
+              </main>
+              <Footer onNavigate={() => {}} />
+            </div>
           } 
         />
 

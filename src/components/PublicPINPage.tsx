@@ -13,8 +13,16 @@ import {
   Calendar,
   ExternalLink,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Award,
+  Globe,
+  Linkedin,
+  Twitter,
+  QrCode,
+  Download,
+  Share2
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 
 interface PublicPINPageProps {
   pinNumber: string;
@@ -26,6 +34,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -100,146 +109,281 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
     );
   }
 
+  const profileUrl = window.location.href;
+
   return (
     <>
       <Helmet>
         <title>{profile.full_name || profile.name || 'Professional'} - GidiPIN Profile</title>
         <meta name="description" content={`View ${profile.full_name || profile.name || 'Professional'}'s verified professional profile. ${profile.role || profile.job_title || 'Professional'} ${profile.city ? `based in ${profile.city}` : ''}`} />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="profile" />
-        <meta property="og:url" content={window.location.href} />
-        <meta property="og:title" content={`${profile.full_name || profile.name || 'Professional'} - GidiPIN`} />
-        <meta property="og:description" content={`Connect with ${profile.full_name || profile.name || 'Professional'} using GidiPIN: ${pinNumber}. ${profile.role || profile.job_title || 'Professional'} ${profile.city ? `in ${profile.city}` : ''}`} />
-        <meta property="og:image" content={profile.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.name || 'User')}&size=400&background=3b82f6&color=fff`} />
-        
-        {/* Twitter */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={window.location.href} />
-        <meta property="twitter:title" content={`${profile.full_name || profile.name || 'Professional'} - GidiPIN`} />
-        <meta property="twitter:description" content={`Connect with ${profile.full_name || profile.name || 'Professional'} using GidiPIN: ${pinNumber}`} />
-        <meta property="twitter:image" content={profile.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name || profile.name || 'User')}&size=400&background=3b82f6&color=fff`} />
       </Helmet>
       
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 sm:py-12 px-4">
-        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-        {/* Header Card */}
-        <Card className="border-2 border-blue-100">
-          <CardContent className="p-4 sm:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold flex-shrink-0">
-                  {(profile.full_name || profile.name || 'U').charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 break-words">
-                    {profile.full_name || profile.name || 'Professional User'}
-                  </h1>
-                  <p className="text-base sm:text-lg text-gray-600">
-                    {profile.role || profile.job_title || 'Professional'}
-                  </p>
-                  {profile.email_verified && (
-                    <Badge className="mt-2 bg-green-100 text-green-700 border-green-200 text-xs">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="text-left sm:text-right flex-shrink-0">
-                <div className="text-xs sm:text-sm text-gray-500 mb-1">Professional PIN</div>
-                <div className="text-base sm:text-xl font-mono font-bold text-blue-600 break-all">{pinNumber}</div>
-              </div>
-            </div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Background */}
+        <div className="h-48 sm:h-64 bg-gradient-to-r from-blue-600 to-purple-700 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
+        </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t">
-              {profile.city && (
-                <div className="flex items-center gap-2 text-sm sm:text-base text-gray-600">
-                  <MapPin className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{profile.city}</span>
-                </div>
-              )}
-              {profile.email && (
-                <div className="flex items-center gap-2 text-sm sm:text-base text-gray-600">
-                  <Mail className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{profile.email}</span>
-                </div>
-              )}
-              {profile.created_at && (
-                <div className="flex items-center gap-2 text-sm sm:text-base text-gray-600">
-                  <Calendar className="h-4 w-4 flex-shrink-0" />
-                  <span>Member since {new Date(profile.created_at).getFullYear()}</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative pb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Left Column: Main Profile Info */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="border-none shadow-lg overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="p-6 sm:p-8">
+                    <div className="flex flex-col sm:flex-row gap-6 items-start">
+                      {/* Avatar */}
+                      <div className="relative">
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl bg-white p-1 shadow-md">
+                          {profile.profile_picture_url ? (
+                            <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full object-cover rounded-lg" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg flex items-center justify-center text-blue-600 text-4xl font-bold">
+                              {(profile.full_name || profile.name || 'U').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        {profile.email_verified && (
+                          <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-1.5 rounded-full border-2 border-white shadow-sm" title="Verified Identity">
+                            <Shield className="h-4 w-4" />
+                          </div>
+                        )}
+                      </div>
 
-        {/* Bio Section */}
-        {profile.bio && (
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">About</h2>
-              <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{profile.bio}</p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Skills Section */}
-        {profile.skills && profile.skills.length > 0 && (
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Skills</h2>
-              <div className="flex flex-wrap gap-2">
-                {profile.skills.map((skill: string, index: number) => (
-                  <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-700 text-xs sm:text-sm">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Work Experience */}
-        {profile.work_experience && profile.work_experience.length > 0 && (
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Experience</h2>
-              <div className="space-y-4">
-                {profile.work_experience.map((exp: any, index: number) => (
-                  <div key={index} className="flex gap-3 sm:gap-4 pb-4 border-b last:border-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+                      {/* Name & Title */}
+                      <div className="flex-1 min-w-0 pt-2">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                            {profile.full_name || profile.name || 'Professional User'}
+                          </h1>
+                          {profile.email_verified && (
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-lg text-gray-600 font-medium mb-3">
+                          {profile.role || profile.job_title || 'Professional'}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-y-2 gap-x-8 text-sm text-gray-600 mt-4 items-center">
+                          {profile.city && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gray-400" />
+                              <span>{profile.city}</span>
+                            </div>
+                          )}
+                          {profile.city && profile.industry && (
+                            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
+                          )}
+                          {profile.industry && (
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="h-4 w-4 text-gray-400" />
+                              <span>{profile.industry}</span>
+                            </div>
+                          )}
+                          {profile.industry && profile.years_of_experience && (
+                            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
+                          )}
+                          {profile.years_of_experience && (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-gray-400" />
+                              <span>{profile.years_of_experience} Years Exp.</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-900">{exp.title || exp.role}</h3>
-                      <p className="text-sm sm:text-base text-gray-600 truncate">{exp.company}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">{exp.duration || exp.timeline}</p>
+
+                    {/* Action Buttons */}
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Contact Me
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowQR(true)}>
+                        <QrCode className="h-4 w-4 mr-2" />
+                        Share Profile
+                      </Button>
+                      {/* Social Links */}
+                      <div className="flex items-center gap-2 ml-auto pl-2 border-l border-gray-200">
+                        {profile.linkedin_url && (
+                          <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-[#0077b5] hover:bg-blue-50 rounded-full transition-colors">
+                            <Linkedin className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.twitter && (
+                          <a href={profile.twitter} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
+                            <Twitter className="h-5 w-5" />
+                          </a>
+                        )}
+                        {profile.website && (
+                          <a href={profile.website} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
+                            <Globe className="h-5 w-5" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </CardContent>
+              </Card>
 
-        {/* CTA */}
-        <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <CardContent className="p-6 sm:p-8 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Want your own Professional GidiPIN?</h2>
-            <p className="mb-4 sm:mb-6 text-sm sm:text-base text-blue-100">Join GidiPIN and get verified as a professional</p>
-            <Button 
-              onClick={() => navigate('/get-started')} 
-              className="bg-white text-blue-600 hover:bg-gray-100 w-full sm:w-auto"
-            >
-              Get Started
-              <ExternalLink className="h-4 w-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
+              {/* About Section */}
+              {profile.bio && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6 sm:p-8">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <UserIcon className="h-5 w-5 text-blue-600" />
+                      About
+                    </h2>
+                    <p className="text-gray-600 leading-relaxed whitespace-pre-line">{profile.bio}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Experience Section */}
+              {profile.work_experience && profile.work_experience.length > 0 && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6 sm:p-8">
+                    <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-blue-600" />
+                      Work Experience
+                    </h2>
+                    <div className="space-y-8">
+                      {profile.work_experience.map((exp: any, index: number) => (
+                        <div key={index} className="relative pl-10 border-l-2 border-gray-100 last:border-0 pb-1">
+                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-600"></div>
+                          <div className="mb-1">
+                            <h3 className="font-bold text-gray-900 text-lg">{exp.title || exp.role}</h3>
+                            <div className="text-blue-600 font-medium">{exp.company}</div>
+                          </div>
+                          <div className="text-sm text-gray-500 mb-3">{exp.duration || exp.timeline || `${exp.start_date} - ${exp.current ? 'Present' : exp.end_date}`}</div>
+                          {exp.description && (
+                            <p className="text-gray-600 text-sm leading-relaxed">{exp.description}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Right Column: Sidebar Info */}
+            <div className="space-y-6">
+              
+              {/* PIN Card - Fixed Visibility */}
+              <Card className="border-none shadow-sm bg-white overflow-hidden relative border border-gray-100">
+                <div className="absolute top-0 right-0 p-4 opacity-5">
+                  <Shield className="h-24 w-24 text-blue-600" />
+                </div>
+                <CardContent className="p-6">
+                  <div className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Professional PIN</div>
+                  <div className="text-2xl font-mono font-bold text-blue-600 tracking-wide mb-4">{pinNumber}</div>
+                  <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 p-2 rounded-lg border border-green-100">
+                    <CheckCircle2 className="h-3 w-3 text-green-600" />
+                    <span>Identity Verified by GidiPIN</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Skills */}
+              {profile.skills && profile.skills.length > 0 && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4">Skills</h2>
+                    <div className="flex flex-wrap gap-2">
+                      {profile.skills.map((skill: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent px-3 py-1">
+                          {skill}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Certifications */}
+              {profile.certifications && profile.certifications.length > 0 && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Award className="h-5 w-5 text-blue-600" />
+                      Certifications
+                    </h2>
+                    <div className="space-y-4">
+                      {profile.certifications.map((cert: any, index: number) => (
+                        <div key={index} className="flex gap-3 items-start">
+                          <div className="mt-1">
+                            <Award className="h-4 w-4 text-gray-400" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 text-sm">{cert.name}</div>
+                            <div className="text-xs text-gray-500">{cert.issuer} • {cert.date}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* CTA */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 text-center border border-blue-100">
+                <h3 className="font-bold text-gray-900 mb-2">Get Your Own PIN</h3>
+                <p className="text-sm text-gray-600 mb-4">Join thousands of professionals verifying their identity.</p>
+                <Button 
+                  onClick={() => navigate('/get-started')} 
+                  variant="outline"
+                  className="w-full bg-white hover:bg-gray-50 text-blue-600 border-blue-200"
+                >
+                  Get Started
+                </Button>
+              </div>
+
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* QR Code Modal */}
+      <Dialog open={showQR} onOpenChange={setShowQR}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">Share Profile</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-6 space-y-6">
+            <div className="bg-white p-4 rounded-xl shadow-inner border border-gray-100">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}`} 
+                alt="Profile QR Code" 
+                className="w-48 h-48"
+              />
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-sm font-medium text-gray-900">Scan to view profile</p>
+              <p className="text-xs text-gray-500 break-all">{profileUrl}</p>
+            </div>
+            <Button className="w-full" onClick={() => {
+              navigator.clipboard.writeText(profileUrl);
+              // You might want to add a toast here
+            }}>
+              <Share2 className="h-4 w-4 mr-2" />
+              Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
+
+// Helper Icon
+const UserIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+

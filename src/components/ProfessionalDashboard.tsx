@@ -40,7 +40,8 @@ import {
   Quote,
   Activity,
   Loader2,
-  Bell
+  Bell,
+  HelpCircle
 } from 'lucide-react';
 
 import { supabase, supabaseUrl } from '../utils/supabase/client';
@@ -51,6 +52,7 @@ import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { ActivityChart } from './dashboard/ActivityChart';
 import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
+import { HelpCenter } from './dashboard/HelpCenter';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
@@ -110,6 +112,7 @@ export function ProfessionalDashboard() {
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info' | 'warning'; message: string }>>([]);
   const [realTimeNotifications, setRealTimeNotifications] = useState<Array<any>>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [helpCenterOpen, setHelpCenterOpen] = useState(false);
   
   // Stats state - now fetched from API
   const [stats, setStats] = useState({
@@ -997,16 +1000,25 @@ export function ProfessionalDashboard() {
               Check what's new updates, verification status, and recent profile views.
             </p>
           </div>
-          <button
-            onClick={() => setNotificationCenterOpen(true)}
-            className="relative p-3 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-all"
-            aria-label="Open notifications"
-          >
-            <Bell className="w-5 h-5 text-gray-700" />
-            {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setHelpCenterOpen(true)}
+              className="relative p-3 rounded-full bg-white hover:bg-blue-50 border border-gray-200 hover:border-blue-300 shadow-sm hover:shadow-md transition-all group"
+              aria-label="Open help center"
+            >
+              <HelpCircle className="w-5 h-5 text-gray-700 group-hover:text-blue-600 transition-colors" />
+            </button>
+            <button
+              onClick={() => setNotificationCenterOpen(true)}
+              className="relative p-3 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+              aria-label="Open notifications"
+            >
+              <Bell className="w-5 h-5 text-gray-700" />
+              {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Header Profile Card */}
@@ -1862,6 +1874,9 @@ export function ProfessionalDashboard() {
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} position="bottom-right" />
+
+      {/* Help Center */}
+      <HelpCenter isOpen={helpCenterOpen} onClose={() => setHelpCenterOpen(false)} />
       </div>
     </div>
   );
