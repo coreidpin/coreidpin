@@ -109,7 +109,7 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
             </motion.div>
 
             {/* Experience Cards for this year */}
-            <div className="space-y-6 ml-24">
+            <div className="space-y-6 ml-14 md:ml-24">
               {groupedByYear[year].map((exp, expIndex) => (
                 <motion.div
                   key={exp.id}
@@ -131,12 +131,12 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                   <Card className={`overflow-hidden transition-all hover:shadow-xl ${
                     exp.is_current ? 'border-2 border-green-500 bg-gradient-to-br from-green-50 to-white' : 'border-slate-200 bg-white'
                   }`}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        {/* Company Logo */}
-                        <div className="flex-shrink-0">
+                    <CardContent className="p-4 md:p-6">
+                      <div className="flex items-start gap-3 md:gap-5">
+                        {/* Company Logo - Smaller on mobile */}
+                        <div className="flex-shrink-0 pt-1">
                           {exp.company_logo_url ? (
-                            <div className="w-16 h-16 rounded-lg border-2 border-gray-200 bg-white p-2 flex items-center justify-center overflow-hidden">
+                            <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl border border-gray-100 bg-white p-2 flex items-center justify-center overflow-hidden shadow-sm">
                               <img 
                                 src={exp.company_logo_url} 
                                 alt={`${exp.company_name} logo`}
@@ -144,8 +144,8 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                               />
                             </div>
                           ) : (
-                            <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
-                              <span className="text-lg font-bold text-gray-400">
+                            <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+                              <span className="text-sm md:text-xl font-bold text-gray-400">
                                 {getCompanyInitials(exp.company_name)}
                               </span>
                             </div>
@@ -153,78 +153,81 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          {/* Header */}
-                          <div className="flex items-start justify-between gap-4 mb-3">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-lg font-bold text-gray-900">
-                                {exp.job_title}
-                              </h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Building2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                                <p className="text-blue-600 font-medium">{exp.company_name}</p>
-                              </div>
-                            </div>
-
-                            {/* Current Badge */}
-                            {exp.is_current && (
-                              <Badge className="bg-green-500 text-white border-green-600">
-                                Current
-                              </Badge>
-                            )}
+                        <div className="flex-1 min-w-0 space-y-3">
+                          
+                          {/* 1. Job Title & Badge (Side-by-Side) - Clean minimal */}
+                          <div className="flex items-baseline gap-2">
+                             <h3 className="text-base md:text-xl font-semibold text-gray-900 leading-tight truncate">
+                               {exp.job_title}
+                             </h3>
+                             {exp.is_current && (
+                               <Badge className="bg-green-500 hover:bg-green-600 text-white border-none px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm flex-shrink-0 translate-y-[-1px]">
+                                 Current
+                               </Badge>
+                             )}
                           </div>
 
-                          {/* Meta Information */}
-                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="h-4 w-4" />
-                              <span>
+                          {/* 2. Company Name - Clean minimal */}
+                          <div className="flex items-center gap-2 -mt-1">
+                             <Building2 className="h-4 w-4 md:h-5 md:w-5 text-gray-600 flex-shrink-0" />
+                             <span className="text-sm md:text-base font-medium text-gray-600 truncate">
+                               {exp.company_name}
+                             </span>
+                          </div>
+
+                          {/* 3. Date & Duration */}
+                          <div className="flex flex-nowrap items-center gap-x-2 text-xs md:text-sm text-gray-500 overflow-hidden">
+                            <div className="flex items-center gap-1.5 whitespace-nowrap min-w-0">
+                              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="truncate">
                                 {formatDate(exp.start_date)} - {exp.is_current ? 'Present' : formatDate(exp.end_date!)}
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-gray-400 flex-shrink-0">
                                 ({calculateDuration(exp.start_date, exp.end_date, exp.is_current)})
                               </span>
                             </div>
 
                             {exp.location && (
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="h-4 w-4" />
-                                <span>{exp.location}</span>
-                              </div>
+                               <div className="flex items-center gap-1.5 whitespace-nowrap hidden sm:flex">
+                                 <span className="text-gray-300">|</span>
+                                 <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                                 <span className="truncate">{exp.location}</span>
+                               </div>
                             )}
+                          </div>
 
-                            {showProofBadges && exp.proof_documents && exp.proof_documents.length > 0 && (
-                              <div className="flex items-center gap-1.5">
+                          {/* Proof Badges */}
+                           {showProofBadges && exp.proof_documents && exp.proof_documents.length > 0 && (
+                              <div className="flex items-center gap-1.5 pt-0.5">
                                 <Shield className="h-4 w-4 text-green-600" />
-                                <span className="text-green-600 font-medium">
+                                <span className="text-green-600 font-medium text-sm">
                                   {exp.proof_documents.length} proof{exp.proof_documents.length > 1 ? 's' : ''}
                                 </span>
                               </div>
                             )}
-                          </div>
 
-                          {/* Description */}
+                          {/* 4. Description */}
                           {exp.description && (
-                            <p className="text-gray-700 text-sm leading-relaxed">
+                            <p className="text-gray-700 text-sm leading-relaxed pt-1">
                               {exp.description}
                             </p>
                           )}
 
-                          {/* Duration Bar */}
-                          <div className="mt-4">
-                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          {/* 5. Progress Bar */}
+                          <div className="pt-3">
+                            <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                               <motion.div
-                                initial={{ width: 0 }}
+                                initial={{ width: '100%' }}
                                 animate={{ width: '100%' }}
-                                transition={{ duration: 0.8, delay: (yearIndex * 0.1) + (expIndex * 0.05) + 0.3 }}
                                 className={`h-full rounded-full ${
                                   exp.is_current 
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+                                    ? 'bg-green-600' 
                                     : 'bg-gradient-to-r from-blue-500 to-purple-600'
                                 }`}
-                              />
+                                />
                             </div>
                           </div>
+                          
                         </div>
                       </div>
                     </CardContent>

@@ -123,8 +123,8 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
       </Helmet>
       
       <div className="min-h-screen bg-gray-50">
-        {/* Hero Background */}
-        <div className="h-48 sm:h-64 bg-gradient-to-r from-blue-600 to-purple-700 relative overflow-hidden">
+        {/* Hero Background - Black gradient */}
+        <div className="h-48 sm:h-64 bg-gradient-to-r from-gray-900 via-black to-gray-900 relative overflow-hidden">
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
         </div>
@@ -136,102 +136,115 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
             <div className="lg:col-span-2 space-y-6">
               <Card className="border-none shadow-lg overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="p-6 sm:p-8">
+                  <div className="p-3 sm:p-10">
                     <div className="flex flex-col sm:flex-row gap-6 items-start">
-                      {/* Avatar */}
-                      <div className="relative">
-                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl bg-white p-1 shadow-md">
+                      {/* Avatar - Compact on mobile */}
+                      <div className="relative mx-auto sm:mx-0">
+                        <div className="w-20 h-20 sm:w-36 sm:h-36 rounded-2xl bg-white p-1 sm:p-1.5 shadow-lg">
                           {profile.profile_picture_url ? (
-                            <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full object-cover rounded-lg" />
+                            <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full object-cover rounded-xl" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg flex items-center justify-center text-blue-600 text-4xl font-bold">
+                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-3xl sm:text-6xl font-bold">
                               {(profile.full_name || profile.name || 'U').charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
-                        {profile.email_verified && (
-                          <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-1.5 rounded-full border-2 border-white shadow-sm" title="Verified Identity">
-                            <Shield className="h-4 w-4" />
-                          </div>
-                        )}
                       </div>
 
-                      {/* Name & Title */}
-                      <div className="flex-1 min-w-0 pt-2">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                            {profile.full_name || profile.name || 'Professional User'}
-                          </h1>
-                          {profile.email_verified && (
-                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 h-6">
-                              <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
-                            </Badge>
-                          )}
-                          <BetaBadge className="h-6" />
-                          <TopTalentBadge className="h-6" />
+                      {/* Name & Title - Compact mobile */}
+                      <div className="flex-1 min-w-0 pt-1 sm:pt-2 text-center sm:text-left">
+                        <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
+                          {profile.full_name || profile.name || 'Professional User'}
+                        </h1>
+                        
+                        {/* Horizontal Scrolling Badge Carousel - Compact mobile */}
+                        <div className="relative mb-2 sm:mb-4">
+                          <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1 sm:pb-2">
+                            <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2.5 min-w-max px-1">
+                              {profile.email_verified && (
+                                <Badge variant="secondary" className="snap-start bg-blue-50 text-blue-700 border-blue-100 text-[10px] sm:text-sm px-2 sm:px-4 py-1 sm:py-2 rounded-full flex-shrink-0">
+                                  <CheckCircle2 className="h-2.5 w-2.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" /> Verified
+                                </Badge>
+                              )}
+                              <div className="snap-start flex-shrink-0 text-[10px] sm:text-sm">
+                                <BetaBadge />
+                              </div>
+                              <div className="snap-start flex-shrink-0 text-[10px] sm:text-sm">
+                                <TopTalentBadge />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Scroll indicator gradient - mobile only */}
+                          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden"></div>
                         </div>
-                        <p className="text-lg text-gray-600 font-medium mb-3">
+                        
+                        <p className="text-base sm:text-xl text-gray-600 font-medium mb-2 sm:mb-4">
                           {profile.role || profile.job_title || 'Professional'}
                         </p>
                         
-                        <div className="flex flex-wrap gap-y-2 gap-x-8 text-sm text-gray-600 mt-4 items-center">
-                          {profile.city && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-gray-400" />
-                              <span>{profile.city}</span>
+                        {/* Horizontal Scrolling Info Chips - Compact mobile */}
+                        <div className="relative mt-3 sm:mt-5">
+                          <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+                            <div className="flex gap-2 sm:gap-2.5 min-w-max px-1 pb-1">
+                              {profile.city && (
+                                <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+                                  <MapPin className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
+                                  <span className="whitespace-nowrap font-medium">{profile.city}</span>
+                                </div>
+                              )}
+                              {profile.industry && (
+                                <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+                                  <Briefcase className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
+                                  <span className="whitespace-nowrap font-medium">{profile.industry}</span>
+                                </div>
+                              )}
+                              {profile.years_of_experience && (
+                                <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
+                                  <Calendar className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
+                                  <span className="whitespace-nowrap font-medium">{profile.years_of_experience} Years Exp.</span>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          {profile.city && profile.industry && (
-                            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
-                          )}
-                          {profile.industry && (
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="h-4 w-4 text-gray-400" />
-                              <span>{profile.industry}</span>
-                            </div>
-                          )}
-                          {profile.industry && profile.years_of_experience && (
-                            <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
-                          )}
-                          {profile.years_of_experience && (
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              <span>{profile.years_of_experience} Years Exp.</span>
-                            </div>
-                          )}
+                          </div>
+                          {/* Scroll indicator - mobile only */}
+                          <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden"></div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="mt-8 flex flex-wrap gap-3">
-                      <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200">
-                        <Mail className="h-4 w-4 mr-2" />
+                    {/* Social Links - Desktop only */}
+                    <div className="hidden sm:flex items-center gap-3 mt-6 justify-center sm:justify-start">
+                      {profile.linkedin_url && (
+                        <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-3 text-gray-400 hover:text-[#0077b5] hover:bg-blue-50 rounded-xl transition-all hover:scale-110">
+                          <Linkedin className="h-6 w-6" />
+                        </a>
+                      )}
+                      {profile.twitter && (
+                        <a href={profile.twitter} target="_blank" rel="noopener noreferrer" className="p-3 text-gray-400 hover:text-black hover:bg-gray-100 rounded-xl transition-all hover:scale-110">
+                          <Twitter className="h-6 w-6" />
+                        </a>
+                      )}
+                      {profile.website && (
+                        <a href={profile.website} target="_blank" rel="noopener noreferrer" className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-110">
+                          <Globe className="h-6 w-6" />
+                        </a>
+                      )}
+                    </div>
+                    
+                    {/* Desktop Action Buttons - Inside card */}
+                    <div className="hidden sm:flex items-center gap-4 mt-8">
+                      <Button className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl h-14 px-10 text-base font-semibold hover:scale-105 transition-transform">
+                        <Mail className="h-5 w-5 mr-2" />
                         Contact Me
                       </Button>
-                      <Button variant="outline" onClick={() => setShowQR(true)}>
-                        <QrCode className="h-4 w-4 mr-2" />
+                      <Button variant="outline" onClick={() => setShowQR(true)} className="flex-1 sm:flex-none border-2 border-gray-300 hover:border-gray-400 rounded-xl h-14 px-10 text-base font-semibold hover:scale-105 transition-transform">
+                        <QrCode className="h-5 w-5 mr-2" />
                         Share Profile
                       </Button>
-                      {/* Social Links */}
-                      <div className="flex items-center gap-2 ml-auto pl-2 border-l border-gray-200">
-                        {profile.linkedin_url && (
-                          <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-[#0077b5] hover:bg-blue-50 rounded-full transition-colors">
-                            <Linkedin className="h-5 w-5" />
-                          </a>
-                        )}
-                        {profile.twitter && (
-                          <a href={profile.twitter} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition-colors">
-                            <Twitter className="h-5 w-5" />
-                          </a>
-                        )}
-                        {profile.website && (
-                          <a href={profile.website} target="_blank" rel="noopener noreferrer" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors">
-                            <Globe className="h-5 w-5" />
-                          </a>
-                        )}
-                      </div>
                     </div>
+                    
+                    {/* Floating Action Bar - Mobile (hidden on desktop, buttons moved to bottom) */}
+                    <div className="sm:hidden h-24"></div>
                   </div>
                 </CardContent>
               </Card>
@@ -252,7 +265,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
               {/* Experience Section */}
               {profile.work_experience && profile.work_experience.length > 0 && (
                 <Card className="border-none shadow-sm">
-                  <CardContent className="p-6 sm:p-8">
+                  <CardContent className="p-3 sm:p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                       <Briefcase className="h-5 w-5 text-blue-600" />
                       Work Experience
@@ -350,6 +363,20 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
               </div>
 
             </div>
+          </div>
+        </div>
+        
+        {/* Floating Action Bar - Fixed at bottom on mobile */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg sm:hidden z-50">
+          <div className="max-w-lg mx-auto flex gap-3">
+            <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 rounded-xl h-12 text-base font-semibold">
+              <Mail className="h-5 w-5 mr-2" />
+              Contact Me
+            </Button>
+            <Button variant="outline" onClick={() => setShowQR(true)} className="flex-1 border-gray-300 rounded-xl h-12 text-base font-semibold">
+              <QrCode className="h-5 w-5 mr-2" />
+              Share
+            </Button>
           </div>
         </div>
       </div>

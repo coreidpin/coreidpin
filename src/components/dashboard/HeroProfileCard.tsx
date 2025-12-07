@@ -15,7 +15,7 @@ interface HeroProfileCardProps {
 }
 
 export function HeroProfileCard({
- name,
+  name,
   role,
   country,
   isVerified = false,
@@ -29,7 +29,7 @@ export function HeroProfileCard({
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="relative w-full overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)',
         borderRadius: '16px',
         minHeight: '200px',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
