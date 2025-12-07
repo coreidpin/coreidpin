@@ -59,48 +59,76 @@ export function InviteCard() {
   };
 
   return (
-    <Card className="bg-gradient-to-br from-primary/5 to-purple-500/5 border-primary/20 overflow-hidden relative">
-      <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-primary/10 rounded-full blur-2xl animate-pulse" />
-      
-      <CardHeader>
+    <div 
+      className="relative overflow-hidden w-full"
+      style={{
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+      }}
+    >
+      {/* Premium Background Overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="bg-primary/10 text-primary mb-2">
+          <Badge variant="secondary" className="bg-blue-500/10 text-blue-400 border-blue-500/20 mb-2">
             <Sparkles className="h-3 w-3 mr-1" />
             Grow the Community
           </Badge>
         </div>
-        <CardTitle className="text-xl">Invite Professionals</CardTitle>
-        <CardDescription>
-          Share your unique link. When they join and verify, you both earn reputation badges.
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {loading ? (
-          <div className="h-10 w-full bg-gray-100 animate-pulse rounded-md" />
-        ) : (
-          <div className="flex items-center space-x-2">
-            <Input 
-              value={referralLink} 
-              readOnly 
-              className="bg-white/50 font-mono text-xs md:text-sm"
-            />
-            <Button size="icon" variant="outline" onClick={copyToClipboard} className="shrink-0">
-              {copied ? <CheckCircle className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-            </Button>
-            <Button size="icon" onClick={shareLink} className="shrink-0">
-              <Share2 className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+        
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2">Invite Professionals</h3>
+          <p className="text-gray-400 text-sm">
+            Share your unique link. When they join and verify, you both earn reputation badges.
+          </p>
+        </div>
+        
+        <div className="space-y-4">
+          {loading ? (
+            <div className="h-10 w-full bg-white/5 animate-pulse rounded-md" />
+          ) : (
+            <div className="flex items-center space-x-2">
+              <Input 
+                value={referralLink} 
+                readOnly 
+                className="bg-white/5 border-white/10 text-white font-mono text-xs md:text-sm h-11 focus-visible:ring-blue-500/50"
+              />
+              <Button 
+                size="icon" 
+                variant="outline" 
+                onClick={copyToClipboard} 
+                className="shrink-0 h-11 w-11 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white"
+              >
+                {copied ? <CheckCircle className="h-4 w-4 text-green-400" /> : <Copy className="h-4 w-4" />}
+              </Button>
+              <Button 
+                size="icon" 
+                onClick={shareLink} 
+                className="shrink-0 h-11 w-11 bg-blue-600 hover:bg-blue-500 text-white border-none"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
-        <div className="flex items-center gap-4 text-xs text-muted-foreground bg-white/50 p-3 rounded-lg border border-primary/5">
-          <div className="flex items-center gap-2">
-            <Gift className="h-4 w-4 text-primary" />
-            <span>Earn "Community Builder" badge</span>
+          <div className="flex items-center gap-4 text-xs text-gray-400 bg-white/5 p-3 rounded-lg border border-white/10">
+            <div className="flex items-center gap-2">
+              <Gift className="h-4 w-4 text-blue-400" />
+              <span>Earn "Community Builder" badge</span>
+            </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

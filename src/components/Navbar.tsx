@@ -269,6 +269,7 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
+                  disabled={true}
                   onClick={() => navigate('/login')}
                   className={cn(
                     "transition-colors",
@@ -281,6 +282,7 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
+                  disabled={true}
                   onClick={() => handleLogin('professional')}
                   className={cn(
                     isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : ""
@@ -458,6 +460,7 @@ export function Navbar({
                           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                             <Button 
                               variant="outline" 
+                              disabled={true}
                               className="relative w-full justify-start h-12 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#32f08c]/50 overflow-hidden group"
                               onClick={() => {
                                 setIsMobileMenuOpen(false);
@@ -485,6 +488,7 @@ export function Navbar({
                             >
                               <Button 
                                 variant="default" 
+                                disabled={true}
                                 className="relative w-full justify-between h-14 px-4 bg-gradient-to-r from-[#32f08c] to-[#28d97a] hover:from-[#28d97a] hover:to-[#32f08c] text-black shadow-lg shadow-[#32f08c]/20 hover:shadow-[#32f08c]/40 overflow-hidden group"
                                 onClick={() => handleLogin('professional')}
                               >

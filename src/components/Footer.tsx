@@ -160,7 +160,9 @@ export function Footer({ onNavigate }: FooterProps = {}) {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] hover:from-[#a88fe6] hover:to-[#6aa5e6] text-white border-0"
+                  disabled={true}
+                  className="bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] hover:from-[#a88fe6] hover:to-[#6aa5e6] text-white border-0 disabled:opacity-50"
+                  onClick={() => handleNavigate('get-started')}
                 >
                   Get Your PIN
                   <ArrowRight className="ml-2 h-5 w-5" />
