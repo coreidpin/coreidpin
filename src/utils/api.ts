@@ -68,7 +68,7 @@ class APIClient {
     return headers;
   }
 
-  private async fetchWithRetry(url: string, options: RequestInit, retries = 2): Promise<Response> {
+  public async fetchWithRetry(url: string, options: RequestInit = {}, retries = 2): Promise<Response> {
     let attempt = 0;
     let lastError: any = null;
     while (attempt <= retries) {

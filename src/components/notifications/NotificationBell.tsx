@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { useActivities } from '../../hooks/useActivities';
 import { formatDistanceToNow } from 'date-fns';

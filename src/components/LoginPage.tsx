@@ -154,6 +154,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
               </>
             )}
           </Button>
+          
+          <p className="text-center text-white/40 text-[10px] sm:text-xs mt-6 px-4 leading-relaxed">
+            By creating an account, you agree to the <a href="/terms" className="underline hover:text-white/60">Terms of Service</a>. For more information about GidiPIN's privacy practices, see the <a href="/privacy" className="underline hover:text-white/60">GidiPIN Privacy Statement</a>. We'll occasionally send you account-related emails.
+          </p>
         </>
       )}
     </div>

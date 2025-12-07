@@ -19,14 +19,14 @@ export const emailTemplates = {
    * Sent after successful registration
    */
   welcome: {
-    subject: 'Welcome to swipe - Let\'s Get You Started! 🎉',
+    subject: 'Welcome to GidiPIN - Let\'s Get You Started! 🎉',
     html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to swipe</title>
+  <title>Welcome to GidiPIN</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #fafbfd;">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fafbfd; padding: 40px 20px;">
@@ -39,7 +39,7 @@ export const emailTemplates = {
           <tr>
             <td style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-                🤝 swipe
+                🤝 GidiPIN
               </h1>
               <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
                 Bridging African Talent with Global Opportunities
@@ -56,7 +56,7 @@ export const emailTemplates = {
               </h2>
               
               <p style="margin: 0 0 16px; color: #475569; font-size: 16px; line-height: 1.6;">
-                <strong>My chief, you don dey inside!</strong> We're thrilled to have you join the swipe family. You've just taken the first step towards {{.UserTypeDescription}}.
+                <strong>My chief, you don dey inside!</strong> We're thrilled to have you join the GidiPIN family. You've just taken the first step towards {{.UserTypeDescription}}.
               </p>
 
               <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
@@ -124,7 +124,7 @@ export const emailTemplates = {
           <tr>
             <td style="padding: 32px 40px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                © 2025 nwanne. All rights reserved.
+                © 2025 GidiPIN. All rights reserved.
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 Building bridges between African talent and global opportunities
@@ -146,9 +146,9 @@ export const emailTemplates = {
 </html>
     `,
     text: `
-Welcome to swipe, {{.UserName}}!
+Welcome to GidiPIN, {{.UserName}}!
 
-My chief, you don dey inside! We're thrilled to have you join the swipe family.
+My chief, you don dey inside! We're thrilled to have you join the GidiPIN family.
 
 Here's what you can do next:
 
@@ -165,7 +165,7 @@ Go to Dashboard: {{.DashboardURL}}
 
 Need help? Our support team is here for you. Reply to this email or visit our Help Center.
 
-© 2025 swipe. All rights reserved.
+© 2025 GidiPIN. All rights reserved.
     `
   },
 
@@ -174,7 +174,7 @@ Need help? Our support team is here for you. Reply to this email or visit our He
    * Used by Supabase Auth for email verification
    */
   emailConfirmation: {
-    subject: 'Confirm Your swipe Email Address',
+    subject: 'Confirm Your GidiPIN Email Address',
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -194,7 +194,7 @@ Need help? Our support team is here for you. Reply to this email or visit our He
           <tr>
             <td style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-                🤝 swipe
+                🤝 GidiPIN
               </h1>
               <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
                 Verify Your Email Address
@@ -245,7 +245,7 @@ Need help? Our support team is here for you. Reply to this email or visit our He
               <!-- Security Note -->
               <div style="margin-top: 32px; padding: 16px; background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 6px;">
                 <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-                  <strong>🔒 Security note:</strong> This link will expire in 24 hours. If you didn't create an account with swipe, you can safely ignore this email.
+                  <strong>🔒 Security note:</strong> This link will expire in 24 hours. If you didn't create an account with GidiPIN, you can safely ignore this email.
                 </p>
               </div>
             </td>
@@ -255,7 +255,7 @@ Need help? Our support team is here for you. Reply to this email or visit our He
           <tr>
             <td style="padding: 32px 40px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                © 2025 nwanne. All rights reserved.
+                © 2025 GidiPIN. All rights reserved.
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 This is an automated message. Please do not reply to this email.
@@ -277,7 +277,7 @@ Need help? Our support team is here for you. Reply to this email or visit our He
 </html>
     `,
     text: `
-Confirm Your Email - swipe
+Confirm Your Email - GidiPIN
 
 Thanks for signing up! Please confirm your email address to complete your registration.
 
@@ -285,9 +285,9 @@ Click here to confirm: {{ .ConfirmationURL }}
 
 This link will expire in 24 hours.
 
-If you didn't create an account with swipe, you can safely ignore this email.
+If you didn't create an account with GidiPIN, you can safely ignore this email.
 
-© 2025 swipe. All rights reserved.
+© 2025 GidiPIN. All rights reserved.
     `
   },
 
@@ -296,7 +296,7 @@ If you didn't create an account with swipe, you can safely ignore this email.
    * Used by Supabase Auth for password recovery
    */
   passwordReset: {
-    subject: 'Reset Your swipe Password',
+    subject: 'Reset Your GidiPIN Password',
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -316,7 +316,7 @@ If you didn't create an account with swipe, you can safely ignore this email.
           <tr>
             <td style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-                🤝 swipe
+                🤝 GidiPIN
               </h1>
               <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
                 Password Reset Request
@@ -340,7 +340,7 @@ If you didn't create an account with swipe, you can safely ignore this email.
               </h2>
               
               <p style="margin: 0 0 16px; color: #475569; font-size: 16px; line-height: 1.6; text-align: center;">
-                We received a request to reset your password for your swipe account.
+                We received a request to reset your password for your GidiPIN account.
               </p>
 
               <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6; text-align: center;">
@@ -381,7 +381,7 @@ If you didn't create an account with swipe, you can safely ignore this email.
               <!-- Help Section -->
               <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                 <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;">
-                  <strong>Having trouble?</strong> Contact our support team at support@swipe.work
+                  <strong>Having trouble?</strong> Contact our support team at support@gidipin.work
                 </p>
               </div>
             </td>
@@ -391,7 +391,7 @@ If you didn't create an account with swipe, you can safely ignore this email.
           <tr>
             <td style="padding: 32px 40px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                © 2025 nwanne. All rights reserved.
+                © 2025 GidiPIN. All rights reserved.
               </p>
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 This is an automated message. Please do not reply to this email.
@@ -413,9 +413,9 @@ If you didn't create an account with swipe, you can safely ignore this email.
 </html>
     `,
     text: `
-Reset Your Password - swipe
+Reset Your Password - GidiPIN
 
-We received a request to reset your password for your swipe account.
+We received a request to reset your password for your GidiPIN account.
 
 Click here to reset your password: {{ .ConfirmationURL }}
 
@@ -423,7 +423,7 @@ This link will expire in 1 hour for security reasons.
 
 If you didn't request a password reset, please ignore this email or contact our support team.
 
-© 2025 swipe. All rights reserved.
+© 2025 GidiPIN. All rights reserved.
     `
   },
 
@@ -432,14 +432,14 @@ If you didn't request a password reset, please ignore this email or contact our 
    * Used by Supabase Auth for passwordless login
    */
   magicLink: {
-    subject: 'Your swipe Sign-In Link',
+    subject: 'Your GidiPIN Sign-In Link',
     html: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In to swipe</title>
+  <title>Sign In to GidiPIN</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #fafbfd;">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fafbfd; padding: 40px 20px;">
@@ -450,7 +450,7 @@ If you didn't request a password reset, please ignore this email or contact our 
           <tr>
             <td style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 40px 40px 30px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-                🤝 swipe
+                🤝 GidiPIN
               </h1>
               <p style="margin: 10px 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
                 Your Secure Sign-In Link
@@ -465,7 +465,7 @@ If you didn't request a password reset, please ignore this email or contact our 
               </div>
 
               <h2 style="margin: 0 0 20px; color: #1a1d24; font-size: 24px; font-weight: 600; text-align: center;">
-                Sign In to swipe
+                Sign In to GidiPIN
               </h2>
               
               <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6; text-align: center;">
@@ -493,7 +493,7 @@ If you didn't request a password reset, please ignore this email or contact our 
           <tr>
             <td style="padding: 32px 40px; background-color: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 12px; color: #475569; font-size: 14px;">
-                © 2025 swipe. All rights reserved.
+                © 2025 GidiPIN. All rights reserved.
               </p>
             </td>
           </tr>

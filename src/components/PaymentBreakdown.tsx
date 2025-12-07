@@ -22,7 +22,10 @@ import {
 } from 'lucide-react';
 
 interface PaymentBreakdownProps {
-  userType: 'employer' | 'professional';
+  userType?: 'employer' | 'professional';
+  baseSalary?: number;
+  allowances?: number;
+  onApprove?: (breakdown: any) => void;
 }
 
 export function PaymentBreakdown({ userType }: PaymentBreakdownProps) {

@@ -52,8 +52,8 @@ export const IdentityCard: React.FC = () => {
       setProfile(profileData);
 
       // Fetch PIN
-      const { data: pinData } = await supabase
-        .from('professional_pins')
+      const { data: pinData } = await (supabase
+        .from('professional_pins') as any)
         .select('pin_number, verification_status')
         .eq('user_id', session.userId)
         .maybeSingle();
@@ -87,7 +87,7 @@ export const IdentityCard: React.FC = () => {
         });
 
         // Log share event
-        await supabase.from('profile_shares').insert({
+        await (supabase.from('profile_shares') as any).insert({
           user_id: profile.user_id,
           shared_via: 'link'
         });

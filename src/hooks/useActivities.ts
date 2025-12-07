@@ -14,8 +14,8 @@ export function useActivities(limit: number = 10) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error: fetchError } = await supabase
-        .from('user_activities')
+      const { data, error: fetchError } = await (supabase
+        .from('user_activities') as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -36,8 +36,8 @@ export function useActivities(limit: number = 10) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { count, error: countError } = await supabase
-        .from('user_activities')
+      const { count, error: countError } = await (supabase
+        .from('user_activities') as any)
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('read', false);
@@ -51,8 +51,8 @@ export function useActivities(limit: number = 10) {
 
   const markAsRead = useCallback(async (activityId: string) => {
     try {
-      const { error: updateError } = await supabase
-        .from('user_activities')
+      const { error: updateError } = await (supabase
+        .from('user_activities') as any)
         .update({ read: true })
         .eq('id', activityId);
 
@@ -74,8 +74,8 @@ export function useActivities(limit: number = 10) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error: updateError } = await supabase
-        .from('user_activities')
+      const { error: updateError } = await (supabase
+        .from('user_activities') as any)
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false);

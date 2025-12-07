@@ -24,8 +24,8 @@ class ActivityTracker {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from('user_activities')
+      const { error } = await (supabase
+        .from('user_activities') as any)
         .insert({
           user_id: user.id,
           activity_type: params.type,

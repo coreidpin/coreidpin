@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
 import { shadows } from '../../styles/shadows';
 

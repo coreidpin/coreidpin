@@ -1,15 +1,33 @@
 import { z } from 'zod';
 
-// Project schema
+// Project schema with optional case study fields
 export const projectSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters').max(500, 'Description must be less than 500 characters'),
   role: z.string().min(1, 'Role is required').max(50, 'Role must be less than 50 characters'),
   timeline: z.string().min(1, 'Timeline is required').max(50, 'Timeline must be less than 50 characters'),
   skills: z.array(z.string()).min(1, 'At least one skill is required'),
+  links: z.array(z.string().url('Invalid URL')).optional(),
+  
+  // Optional case study fields
+  challenge: z.string().max(1000, 'Challenge must be less than 1000 characters').optional(),
+  solution: z.string().max(1000, 'Solution must be less than 1000 characters').optional(),
+  result: z.string().max(1000, 'Result must be less than 1000 characters').optional(),
+  media_urls: z.array(z.string().url('Invalid media URL')).optional(),
+  featured_image_url: z.string().url('Invalid image URL').optional(),
+  is_portfolio_visible: z.boolean().optional().default(true),
+  project_type: z.enum(['case_study', 'portfolio_item', 'basic']).optional().default('basic'),
 });
 
 export type ProjectFormData = z.infer<typeof projectSchema>;
+
+// Case study specific schema with required structured fields
+export const caseStudySchema = projectSchema.extend({
+  challenge: z.string().min(50, 'Challenge must be at least 50 characters').max(1000, 'Challenge must be less than 1000 characters'),
+  solution: z.string().min(50, 'Solution must be at least 50 characters').max(1000, 'Solution must be less than 1000 characters'),
+  result: z.string().min(50, 'Result must be at least 50 characters').max(1000, 'Result must be less than 1000 characters'),
+  project_type: z.literal('case_study'),
+});
 
 // Endorsement request schema
 export const endorsementRequestSchema = z.object({
@@ -28,3 +46,5 @@ export const endorsementRequestSchema = z.object({
 });
 
 export type EndorsementRequestFormData = z.infer<typeof endorsementRequestSchema>;
+
+export type CaseStudyFormData = z.infer<typeof caseStudySchema>;

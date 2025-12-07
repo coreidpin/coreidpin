@@ -12,10 +12,10 @@ export default function MaintenanceDashboard() {
   useEffect(() => {
     const run = async () => {
       try { setHealth(await api.checkHealth()) } catch {}
-      try { setFlags(await api.getFlags(token)) } catch {}
-      try { setSummary(await api.getDiagnosticsSummary(token)) } catch {}
-      try { setKv(await api.getKVUsage(token)) } catch {}
-      try { setParts(await api.getDBPartitions(token)) } catch {}
+      try { setFlags(await (api as any).getFlags(token)) } catch {}
+      try { setSummary(await (api as any).getDiagnosticsSummary(token)) } catch {}
+      try { setKv(await (api as any).getKVUsage(token)) } catch {}
+      try { setParts(await (api as any).getDBPartitions(token)) } catch {}
     }
     run()
   }, [])

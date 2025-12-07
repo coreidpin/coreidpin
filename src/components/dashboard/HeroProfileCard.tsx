@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, Briefcase } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Badge } from '../ui/badge';
 import { BetaBadge } from '../ui/BetaBadge';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';

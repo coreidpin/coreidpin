@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Card, CardContent } from '../ui/card';
 import { BadgeCheck, Globe, Eye } from 'lucide-react';
 import { ActivityNotification } from '../../types/dashboard';

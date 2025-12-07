@@ -85,7 +85,8 @@ export function ProjectForm({ open, onOpenChange, onSubmit, project, isLoading =
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 py-4">
+        {/* @ts-ignore */}
+        <form onSubmit={handleSubmit(handleFormSubmit as any)} className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="title" className="text-black font-medium">Project Title</Label>
             <Input

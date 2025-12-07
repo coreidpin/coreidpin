@@ -7,6 +7,15 @@ export interface Project {
   skills: string[];
   links: string[];
   created_at?: string;
+  
+  // Case study fields
+  challenge?: string;
+  solution?: string;
+  result?: string;
+  media_urls?: string[];
+  featured_image_url?: string;
+  is_portfolio_visible?: boolean;
+  project_type?: 'case_study' | 'portfolio_item' | 'basic';
 }
 
 export interface Endorsement {
@@ -50,9 +59,32 @@ export interface UserProfile {
   recovery_email?: string;
   linkedin?: string;
   website?: string;
-  work_experience?: any[];
+  work_experience?: {
+    company: string;
+    role: string;
+    start_date: string;
+    end_date: string;
+    current: boolean;
+    description: string;
+    company_logo_url?: string;
+    proof_documents?: Array<{
+      url: string;
+      filename: string;
+      type: 'certificate' | 'offer_letter' | 'reference' | 'other';
+      uploaded_at: string;
+      size?: number;
+    }>;
+  }[];
   skills?: string[];
   tools?: string[];
   industry_tags?: string[];
   certifications?: any[];
+}
+
+// Case study type with required structured fields
+export interface CaseStudy extends Project {
+  challenge: string;
+  solution: string;
+  result: string;
+  project_type: 'case_study';
 }

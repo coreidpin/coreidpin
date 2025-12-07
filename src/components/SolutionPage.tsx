@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Smartphone, Key, Lock, Webhook, LayoutDashboard, Shield } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';

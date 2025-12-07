@@ -55,7 +55,7 @@ import { defineConfig, loadEnv } from 'vite';
         },
       },
       optimizeDeps: {
-        include: ['react', 'react-dom'],
+        include: ['react', 'react-dom', 'react-fast-compare'],
       },
       build: {
         target: 'esnext',

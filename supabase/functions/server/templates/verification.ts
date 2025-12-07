@@ -1,7 +1,7 @@
 export function buildVerificationEmail(name: string | undefined, email: string, link: string, siteUrl: string) {
   const subject = 'Verify your PIN account'
   const displayName = name || 'There'
-  const support = 'support@swipe.work'
+  const support = 'support@gidipin.work'
   const html = `
   <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#fafbfd;color:#111">
     <h1 style="font-size:22px;margin:0 0 12px">Verify your email</h1>

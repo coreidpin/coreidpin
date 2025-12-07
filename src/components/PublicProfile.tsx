@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import {
   Shield, Phone, Mail, Briefcase, MapPin, Calendar,
-  CheckCircle2, ExternalLink, Globe
+  CheckCircle2, ExternalLink, Globe, FolderOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -11,6 +11,11 @@ import { supabase } from '../utils/supabase/client';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
+import { CaseStudyViewer } from './portfolio/CaseStudyViewer';
+import { WorkTimeline } from './portfolio/WorkTimeline';
+import { BetaBadge } from './ui/BetaBadge';
+import { TopTalentBadge } from './ui/TopTalentBadge';
+import { ContributionBadge } from './ui/ContributionBadge';
 
 export const PublicProfile: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -19,6 +24,8 @@ export const PublicProfile: React.FC = () => {
   const [profile, setProfile] = useState<any>(null);
   const [pin, setPin] = useState<any>(null);
   const [workExperiences, setWorkExperiences] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [selectedProject, setSelectedProject] = useState<any | null>(null);
 
   useEffect(() => {
     if (slug) {
@@ -31,26 +38,29 @@ export const PublicProfile: React.FC = () => {
       setLoading(true);
 
       // Fetch public profile by slug
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await (supabase
         .from('profiles')
-        .select('*')
+        .select('*') as any)
         .eq('profile_url_slug', slug)
         .eq('public_profile_enabled', true)
         .single();
 
-      if (profileError || !profileData) {
+      // Cast to any to avoid TS inference errors
+      const profileInfo = profileData as any;
+
+      if (profileError || !profileInfo) {
         toast.error('Profile not found');
         navigate('/');
         return;
       }
 
-      setProfile(profileData);
+      setProfile(profileInfo);
 
       // Fetch PIN if verified
       const { data: pinData } = await supabase
         .from('professional_pins')
         .select('pin_number, verification_status, trust_score')
-        .eq('user_id', profileData.user_id)
+        .eq('user_id', profileInfo.user_id)
         .eq('verification_status', 'verified')
         .single();
 
@@ -70,9 +80,22 @@ export const PublicProfile: React.FC = () => {
         setWorkExperiences(experiences);
       }
 
+      // Fetch portfolio projects
+      const { data: projectsData } = await supabase
+        .from('professional_projects')
+        .select('*')
+        .eq('user_id', profileData.user_id)
+        .eq('is_portfolio_visible', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (projectsData) {
+        setProjects(projectsData);
+      }
+
       // Log view analytics
-      await supabase.from('profile_shares').insert({
-        user_id: profileData.user_id,
+      await (supabase.from('profile_shares') as any).insert({
+        user_id: profileInfo.user_id,
         shared_via: 'link',
         viewer_ip: null
       });
@@ -139,11 +162,13 @@ export const PublicProfile: React.FC = () => {
                     <div className="flex items-center gap-3 mb-2">
                       <h1 className="text-3xl font-bold text-white">{profile.name}</h1>
                       {pin && (
-                        <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30">
+                        <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30 h-6">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Verified
                         </Badge>
                       )}
+                      <BetaBadge className="h-6" />
+                      <TopTalentBadge className="h-6" />
                     </div>
                     <p className="text-xl text-white/90">{profile.role}</p>
                   </div>
@@ -197,46 +222,101 @@ export const PublicProfile: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Achievements & Badges */}
+          <Card className="bg-[#0e0f12]/80 border-[#1a1b1f]/50">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                <Shield className="h-5 w-5 text-[#32f08c]" />
+                Achievements & Badges
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                 <ContributionBadge type="streak" count={12} />
+                 <ContributionBadge type="endorsement" count={8} />
+                 <ContributionBadge type="upload" count={24} />
+                 <ContributionBadge type="activity" count={150} />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Work Experience */}
           {workExperiences.length > 0 && (
             <Card className="bg-[#0e0f12]/80 border-[#1a1b1f]/50">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-[#32f08c]" />
                   Work Experience
                 </h2>
-                <div className="space-y-4">
-                  {workExperiences.map((exp, index) => (
-                    <div key={exp.id}>
-                      {index > 0 && <Separator className="my-4 bg-white/10" />}
-                      <div>
-                        <h3 className="font-semibold text-white">{exp.job_title}</h3>
-                        <p className="text-white/80">{exp.company_name}</p>
-                        <div className="flex items-center gap-2 mt-1 text-sm text-white/60">
-                          <Calendar className="h-3 w-3" />
-                          <span>
-                            {new Date(exp.start_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                            {' - '}
-                            {exp.is_current ? 'Present' : new Date(exp.end_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                          </span>
-                          {exp.location && (
-                            <>
-                              <span>•</span>
-                              <MapPin className="h-3 w-3" />
-                              <span>{exp.location}</span>
-                            </>
+                <WorkTimeline 
+                  experiences={workExperiences} 
+                  showProofBadges={true} 
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Portfolio & Case Studies Section */}
+          {projects.length > 0 && (
+            <Card className="bg-[#0e0f12]/80 border-[#1a1b1f]/50">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5 text-[#32f08c]" />
+                  Portfolio & Case Studies
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {projects.map((project) => (
+                    <div
+                      key={project.id}
+                      onClick={() => setSelectedProject(project)}
+                      className="group cursor-pointer"
+                    >
+                      <Card className="bg-white/5 border-white/10 hover:border-[#32f08c]/30 transition-all h-full">
+                        <CardContent className="p-4">
+                          {project.featured_image_url && (
+                            <img
+                              src={project.featured_image_url}
+                              alt={project.title}
+                              className="w-full h-32 object-cover rounded-lg mb-3"
+                            />
                           )}
-                        </div>
-                        {exp.description && (
-                          <p className="mt-2 text-white/80 text-sm">{exp.description}</p>
-                        )}
-                      </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-white group-hover:text-[#32f08c] transition line-clamp-1">
+                              {project.title}
+                            </h3>
+                            {project.project_type === 'case_study' && (
+                              <Badge className="bg-purple-500/20 text-purple-300 text-xs border-0 shrink-0">
+                                Case Study
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-white/70 line-clamp-2 mb-2">{project.description}</p>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {(project.skills || []).slice(0, 3).map((skill: string, i: number) => (
+                              <Badge key={i} variant="secondary" className="text-xs bg-white/10 text-white/80 border-0">
+                                {skill}
+                              </Badge>
+                            ))}
+                            {(project.skills || []).length > 3 && (
+                              <Badge variant="secondary" className="text-xs bg-white/10 text-white/60 border-0">
+                                +{project.skills.length - 3}
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Case Study Viewer Modal */}
+          <CaseStudyViewer
+            project={selectedProject}
+            open={selectedProject !== null}
+            onClose={() => setSelectedProject(null)}
+          />
+
 
           {/* Footer */}
           <div className="text-center text-sm text-white/60 py-6">

@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Users, TrendingUp, Briefcase, Heart, Shield, Zap, ArrowRight } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';

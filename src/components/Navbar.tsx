@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
@@ -17,7 +18,8 @@ import {
   Phone,
   LogIn,
   User,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
 
@@ -44,7 +46,8 @@ export function Navbar({
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
-  const isLight = currentPage === 'landing';
+  // Consider dashboard pages as "light" theme if they are rendering on white background
+  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers';
   const isProd = import.meta.env.PROD;
 
   useEffect(() => {
@@ -227,7 +230,12 @@ export function Navbar({
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b bg-[#0a0b0d]/95 text-white backdrop-blur-md sticky top-0 z-50 shadow-sm border-white/10"
+        className={cn(
+          "border-b backdrop-blur-md sticky top-0 z-50 shadow-sm transition-colors duration-200",
+          isLight 
+            ? "bg-white/80 border-slate-200 text-slate-900" 
+            : "bg-[#0a0b0d]/95 border-white/10 text-white"
+        )}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-18">
@@ -262,8 +270,10 @@ export function Navbar({
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/login')}
-                  className={isLight ? "hover:bg-white/10 transition-colors" : "hover:bg-primary/10 transition-colors"}
-                  style={isLight ? { color: '#69798f' } : undefined}
+                  className={cn(
+                    "transition-colors",
+                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : "hover:bg-white/10 text-white"
+                  )}
                 >
                   Login
                 </Button>
@@ -272,8 +282,9 @@ export function Navbar({
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
                   onClick={() => handleLogin('professional')}
-                  className={isLight ? "hover:bg-white/10 transition-colors" : ""}
-                  style={isLight ? { color: '#69798f' } : undefined}
+                  className={cn(
+                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : ""
+                  )}
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
                   <span className="hidden xl:inline">Get Started</span>
@@ -324,7 +335,12 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="lg:hidden flex-shrink-0 bg-white text-black hover:bg-white hover:text-black"
+                  className={cn(
+                    "lg:hidden flex-shrink-0",
+                    isLight 
+                      ? "bg-transparent text-slate-900 hover:bg-slate-100" 
+                      : "bg-white text-black hover:bg-white hover:text-black"
+                  )}
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
@@ -556,6 +572,20 @@ export function Navbar({
                           {userType === 'employer' && 'Employer Dashboard'}
                           {userType === 'professional' && 'Professional Dashboard'}
                         </p>
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start h-12 hover:bg-white/10"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            navigate('/referrals');
+                          }}
+                        >
+                          <Users className="h-5 w-5 mr-3" />
+                          Invite & Earn
+                          <span className="ml-auto bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse shadow-lg shadow-blue-500/20">NEW</span>
+                        </Button>
                       </motion.div>
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                         <Button 

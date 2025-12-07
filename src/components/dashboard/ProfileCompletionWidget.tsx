@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
 import { shadows } from '../../styles/shadows';
 

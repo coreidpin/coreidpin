@@ -45,8 +45,8 @@ export class EndorsementAPI {
       // Check if endorser is a platform user
       let endorser_id: string | null = null;
       if (data.endorser_email) {
-        const { data: endorserProfile } = await supabase
-          .from('profiles')
+        const { data: endorserProfile } = await (supabase
+          .from('profiles') as any)
           .select('user_id')
           .eq('email', data.endorser_email)
           .single();
@@ -58,8 +58,8 @@ export class EndorsementAPI {
       const verification_token = crypto.randomUUID();
       const verification_expires_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-      const { data: endorsement, error } = await supabase
-        .from('professional_endorsements_v2')
+      const { data: endorsement, error } = await (supabase
+        .from('professional_endorsements_v2') as any)
         .insert({
           professional_id: userId,
           endorser_id,
@@ -152,8 +152,8 @@ export class EndorsementAPI {
       const { data: { user } } = await supabase.auth.getUser();
 
       // Verify token and get endorsement request
-      const { data: endorsement, error: fetchError } = await supabase
-        .from('professional_endorsements_v2')
+      const { data: endorsement, error: fetchError } = await (supabase
+        .from('professional_endorsements_v2') as any)
         .select()
         .eq('verification_token', token)
         .single();
@@ -168,8 +168,8 @@ export class EndorsementAPI {
       }
 
       // Update endorsement
-      const { data: updated, error: updateError } = await supabase
-        .from('professional_endorsements_v2')
+      const { data: updated, error: updateError } = await (supabase
+        .from('professional_endorsements_v2') as any)
         .update({
           headline: data.headline,
           text: data.text,
@@ -202,8 +202,8 @@ export class EndorsementAPI {
     filters?: EndorsementFilters
   ): Promise<{ success: boolean; endorsements?: DisplayEndorsement[]; error?: string }> {
     try {
-      let query = supabase
-        .from('professional_endorsements_v2')
+      let query = (supabase
+        .from('professional_endorsements_v2') as any)
         .select(`
           *,
           endorser_profile:endorser_id(
@@ -272,8 +272,8 @@ export class EndorsementAPI {
         updates.rejected_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from('professional_endorsements_v2')
+      const { error } = await (supabase
+        .from('professional_endorsements_v2') as any)
         .update(updates)
         .eq('id', endorsementId)
         .eq('professional_id', user.id);
@@ -295,8 +295,8 @@ export class EndorsementAPI {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('professional_endorsements_v2')
+      const { error } = await (supabase
+        .from('professional_endorsements_v2') as any)
         .update({ featured })
         .eq('id', endorsementId)
         .eq('professional_id', user.id);
@@ -330,8 +330,8 @@ export class EndorsementAPI {
         throw new Error('Cannot endorse your own skills');
       }
 
-      const { error } = await supabase
-        .from('skill_endorsements')
+      const { error } = await (supabase
+        .from('skill_endorsements') as any)
         .insert({
           professional_id: professionalId,
           endorser_id: user.id,
@@ -363,8 +363,8 @@ export class EndorsementAPI {
     error?: string 
   }> {
     try {
-      const { data, error } = await supabase
-        .from('skill_endorsement_counts')
+      const { data, error } = await (supabase
+        .from('skill_endorsement_counts') as any)
         .select()
         .eq('professional_id', professionalId);
 
@@ -386,8 +386,8 @@ export class EndorsementAPI {
    */
   static async getTemplates(): Promise<{ success: boolean; templates?: EndorsementTemplate[]; error?: string }> {
     try {
-      const { data, error } = await supabase
-        .from('endorsement_templates')
+      const { data, error } = await (supabase
+        .from('endorsement_templates') as any)
         .select()
         .eq('active', true)
         .order('category');

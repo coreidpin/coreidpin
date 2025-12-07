@@ -22,7 +22,8 @@ serve(async (req) => {
     });
   }
 
-  return json({ success: false, error_code: 'ERR_DEPRECATED', message: 'Deprecated. Use /server/auth/email/verify/send' }, 410);
+  // Deprecated endpoint check
+  // return json({ success: false, error_code: 'ERR_DEPRECATED', message: 'Deprecated. Use /server/auth/email/verify/send' }, 410);
 
   if (req.method !== 'POST') {
     return json({ success: false, error_code: 'ERR_METHOD', message: 'Method not allowed' }, 405);
@@ -127,7 +128,7 @@ serve(async (req) => {
             </div>
             <div class="content">
               <p>Hi${name ? ` ${name}` : ''},</p>
-              <p>Thank you for registering with <strong>usepin</strong>! To complete your Professional Identity Number (PIN) registration, click the button below:</p>
+              <p>Thank you for registering with <strong>GidiPIN</strong>! To complete your Professional Identity Number (PIN) registration, click the button below:</p>
               <div style="text-align: center;">
                 <a href="${SITE_URL}/auth/verify-email?code=${verificationCode}&email=${encodeURIComponent(normalizedEmail)}" class="verify-btn">Verify Email Address</a>
               </div>
@@ -142,12 +143,12 @@ serve(async (req) => {
               <p>If you didn't request this code, please ignore this email or contact our support team.</p>
               <p style="margin-top: 30px;">
                 Best regards,<br>
-                <strong>The usepin Team</strong><br>
+                <strong>The GidiPIN Team</strong><br>
                 🇳🇬 Built with pride in Nigeria
               </p>
             </div>
             <div class="footer">
-              <p>© 2025 usepin. All rights reserved.</p>
+              <p>© 2025 GidiPIN. All rights reserved.</p>
               <p>Professional Identity Network | Blockchain-Secured | AI-Verified</p>
             </div>
           </div>
@@ -158,7 +159,7 @@ serve(async (req) => {
   const resendResponse = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM_EMAIL, to: email, subject: 'Your usepin Verification Code', html: emailHtml }),
+    body: JSON.stringify({ from: FROM_EMAIL, to: email, subject: 'Your GidiPIN Verification Code', html: emailHtml }),
   });
   const resendData = await resendResponse.json();
   if (!resendResponse.ok) {

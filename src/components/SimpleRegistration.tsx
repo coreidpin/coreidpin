@@ -1,5 +1,5 @@
 import React from 'react'
-import { motion } from 'motion/react'
+import { motion } from 'framer-motion'
 import { Card, CardContent } from './ui/card'
 import { Navbar } from './Navbar'
 import { Sparkles } from 'lucide-react'
@@ -42,8 +42,8 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
       {showChrome && (
         <Navbar 
           currentPage="registration" 
-          onNavigate={(page) => console.log('Navigate to:', page)}
-          onLogin={(userType) => console.log('Login as:', userType)}
+          onNavigate={() => {}}
+          onLogin={() => {}}
         />
       )}
       
@@ -111,8 +111,8 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
             </CardContent>
           </Card>
           
-          <p className="text-center text-white/40 text-xs mt-8">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
+          <p className="text-center text-white/40 text-[10px] sm:text-xs mt-8 px-4 leading-relaxed">
+            By creating an account, you agree to the <a href="/terms" className="underline hover:text-white/60">Terms of Service</a>. For more information about GidiPIN's privacy practices, see the <a href="/privacy" className="underline hover:text-white/60">GidiPIN Privacy Statement</a>. We'll occasionally send you account-related emails.
           </p>
         </motion.div>
       </main>

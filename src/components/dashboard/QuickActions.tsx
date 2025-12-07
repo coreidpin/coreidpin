@@ -1,19 +1,21 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import { Fingerprint, Eye, Download, Phone, Share2, Settings, Plus, UserPlus } from 'lucide-react';
+import { Fingerprint, Eye, Download, Phone, Share2, Settings, Plus, UserPlus, FileText, Users } from 'lucide-react';
 
 interface QuickActionsProps {
   onAddProject?: () => void;
   onRequestEndorsement?: () => void;
+  onAddCaseStudy?: () => void;
   reducedMotion?: boolean;
   userPin?: string;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ 
   onAddProject, 
-  onRequestEndorsement, 
+  onRequestEndorsement,
+  onAddCaseStudy, 
   reducedMotion = false,
   userPin 
 }) => {
@@ -35,6 +37,17 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               >
                 <Plus className="h-6 w-6 text-black mb-1" />
                 <span className="text-xs font-medium text-center leading-tight">Add Project</span>
+              </Button>
+            )}
+
+            {onAddCaseStudy && (
+              <Button 
+                onClick={onAddCaseStudy}
+                variant="outline" 
+                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+              >
+                <FileText className="h-6 w-6 text-purple-600 mb-1" />
+                <span className="text-xs font-medium text-center leading-tight">Create Case Study</span>
               </Button>
             )}
 
@@ -87,6 +100,24 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <Share2 className="h-6 w-6 text-green-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">Share PIN</span>
             </Button>
+
+            <div className="relative group w-full">
+              <div className="absolute top-2 right-2 z-20 pointer-events-none">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+                <div className="absolute top-0 right-3 bg-red-100 text-red-600 text-[8px] px-1.5 py-0.5 rounded-full font-medium shadow-sm whitespace-nowrap">NEW</div>
+              </div>
+              <Button 
+                onClick={() => window.location.href = '/referrals'}
+                variant="outline" 
+                className="w-full h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal relative overflow-hidden"
+              >
+                <Users className="h-6 w-6 text-green-600 mb-2" />
+                <span className="text-xs font-medium text-center leading-tight">Invite & Earn</span>
+              </Button>
+            </div>
             
             <Button 
               onClick={() => window.location.href = '/security'}

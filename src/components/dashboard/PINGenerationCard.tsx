@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Fingerprint, Phone, Globe, Shield, ChevronRight, Copy, Eye, EyeOff, Share2, Check } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
 import { shadows } from '../../styles/shadows';
 
@@ -102,15 +102,21 @@ export function PINGenerationCard({
                 className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl font-mono font-bold tracking-widest text-white my-4 px-4 sm:px-6 md:px-8 py-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm"
                 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}
               >
-                {pinVisible ? currentPin : '••••••'}
+                {isLoading || currentPin === 'Loading...' ? (
+                  <span className="animate-pulse opacity-70">Loading...</span>
+                ) : (
+                  pinVisible ? currentPin : '••••••'
+                )}
               </div>
               
-              <button
-                onClick={onTogglePinVisibility}
-                className="absolute -right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
-              >
-                {pinVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
+              {!(isLoading || currentPin === 'Loading...') && (
+                <button
+                  onClick={onTogglePinVisibility}
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
+                >
+                  {pinVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              )}
             </div>
 
             <div className="flex gap-3 mt-4 w-full justify-center">

@@ -7,7 +7,7 @@ type State = { hasError: boolean; err?: any }
 export default class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, State> {
   state: State = { hasError: false }
   static getDerivedStateFromError(err: any) { return { hasError: true, err } }
-  componentDidCatch(error: any, info: any) { try { recordClientError('render', String(error?.message || error), info?.componentStack || '') } catch {} }
+  componentDidCatch(error: any, info: any) { try { recordClientError(error instanceof Error ? error : new Error(String(error)), { source: 'render', componentStack: info?.componentStack || '' }) } catch {} }
   render() {
     if (this.state.hasError) {
       return (

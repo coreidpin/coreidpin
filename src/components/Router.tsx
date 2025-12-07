@@ -1,12 +1,24 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { supabase } from '../utils/supabase/client';
 
 // Wrapper for PublicPINPage to handle URL parameters
 const PublicPINPageWrapper: React.FC = () => {
   const { pinNumber } = useParams<{ pinNumber: string }>();
-  return <PublicPINPage pinNumber={pinNumber || ''} onNavigate={() => {}} />;
+  
+  if (!pinNumber) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Invalid PIN</h1>
+          <p className="text-gray-600">No PIN number provided in the URL</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return <PublicPINPage pinNumber={pinNumber} onNavigate={() => {}} />;
 };
 const LandingPage = lazy(() => import('./LandingPage').then(m => ({ default: m.LandingPage })));
 const OurStoryPage = lazy(() => import('./OurStoryPage').then(m => ({ default: m.OurStoryPage })));
@@ -19,10 +31,10 @@ const CookiesPolicy = lazy(() => import('./CookiesPolicy').then(m => ({ default:
 const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ default: m.GDPRCompliance })));
 const EmployerDashboard = lazy(() => import('./EmployerDashboard').then(m => ({ default: m.EmployerDashboard })));
 const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
-const Navbar = lazy(() => import('./Navbar').then(m => ({ default: m.Navbar })));
-const Footer = lazy(() => import('./Footer').then(m => ({ default: m.Footer })));
+import { Navbar } from './Navbar';
+import { Footer } from './Footer';
 const LoginPage = lazy(() => import('./LoginPage'));
-const SimpleRegistration = lazy(() => import('./SimpleRegistration'));
+import SimpleRegistration from './SimpleRegistration';
 const AuthVerifyEmail = lazy(() => import('./AuthVerifyEmail'));
 const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
 const PublicPINPage = lazy(() => import('./PublicPINPage'));
@@ -43,6 +55,7 @@ const PublicProfile = lazy(() => import('./PublicProfile').then(m => ({ default:
 const SecuritySettingsPage = lazy(() => import('./SecuritySettingsPage').then(m => ({ default: m.SecuritySettingsPage })));
 const EndorsementPage = lazy(() => import('./EndorsementPage').then(m => ({ default: m.EndorsementPage })));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
+const ReferralDashboard = lazy(() => import('./referrals/ReferralDashboard').then(m => ({ default: m.ReferralDashboard })));
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center py-16">
@@ -364,18 +377,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           path="/get-started" 
           element={
             <Layout currentPage="get-started" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-16">
-                  <div className="text-center space-y-4">
-                    <div className="animate-spin h-8 w-8 border-2 border-[#32f08c] border-t-transparent rounded-full mx-auto" />
-                    <p className="text-white/70">Loading...</p>
-                  </div>
-                </div>
-              }>
-                <div className="flex items-center justify-center py-8">
-                  <SimpleRegistration showChrome={false} onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
-                </div>
-              </Suspense>
+              <div className="flex items-center justify-center py-8">
+                <SimpleRegistration showChrome={false} onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
+              </div>
             </Layout>
           } 
         />
@@ -615,6 +619,17 @@ export const AppRouter: React.FC<RouterProps> = ({
             <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 <SecuritySettingsPage />
+              </Suspense>
+            </DashboardAuthWrapper>
+          } 
+        />
+
+        <Route 
+          path="/referrals" 
+          element={
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ReferralDashboard />
               </Suspense>
             </DashboardAuthWrapper>
           } 

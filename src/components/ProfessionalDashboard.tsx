@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -42,6 +42,7 @@ import {
   Loader2,
   Bell
 } from 'lucide-react';
+import { requestEndorsementViaServer } from '@/utils/requestEndorsementServer';
 
 import { supabase, supabaseUrl } from '../utils/supabase/client';
 import { HeroProfileCard } from './dashboard/HeroProfileCard';
@@ -51,6 +52,9 @@ import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { ActivityChart } from './dashboard/ActivityChart';
 import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
+import { CaseStudyForm } from './dashboard/CaseStudyForm';
+
+import { WelcomeModal } from './onboarding/WelcomeModal'; // Import WelcomeModal
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
@@ -68,7 +72,9 @@ export function ProfessionalDashboard() {
   const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showCaseStudyModal, setShowCaseStudyModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for Welcome Modal
   const [userProfile, setUserProfile] = useState(null);
 
   const location = useLocation();
@@ -80,6 +86,16 @@ export function ProfessionalDashboard() {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  // Onboarding Check
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
+    if (!hasSeenWelcome) {
+      // Small delay to allow initial render/animations to settle
+      const timer = setTimeout(() => setShowWelcomeModal(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   // PIN Generation State
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -317,6 +333,48 @@ export function ProfessionalDashboard() {
     }
   };
 
+  // Case Study handler
+  const handleAddCaseStudy = () => {
+    setShowCaseStudyModal(true);
+  };
+
+  const handleCaseStudySubmit = async (data: any) => {
+    try {
+      const token = await ensureValidSession();
+      if (!token) return;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/server/projects`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        toast.success('Case study created successfully!');
+        setShowCaseStudyModal(false);
+        
+        // Refresh projects list
+        const listResponse = await fetch(`${supabaseUrl}/functions/v1/server/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (listResponse.ok) {
+          const responseData = await listResponse.json();
+          if (responseData.success) setProjects(responseData.projects);
+        }
+        fetchStats();
+      } else {
+        toast.error('Failed to create case study');
+      }
+    } catch (error) {
+      console.error('Error creating case study:', error);
+      toast.error('Error creating case study');
+    }
+  };
+
+
   // Endorsement handlers
   const handleRequestEndorsement = () => {
     setEndorsementFormData({
@@ -518,13 +576,13 @@ export function ProfessionalDashboard() {
         console.log('Profile fetch result:', { profile, profileError, isVerified });
         console.log('Profile data fields:', profile ? Object.keys(profile) : 'none');
         console.log('Location-related fields:', {
-          location: profile?.location,
-          country: profile?.country,
-          city: profile?.city,
-          state: profile?.state,
-          address: profile?.address,
-          residence: profile?.residence,
-          nationality: profile?.nationality
+          location: (profile as any)?.location,
+          country: (profile as any)?.country,
+          city: (profile as any)?.city,
+          state: (profile as any)?.state,
+          address: (profile as any)?.address,
+          residence: (profile as any)?.residence,
+          nationality: (profile as any)?.nationality
         });
         console.log('All profile data:', profile);
         
@@ -533,8 +591,8 @@ export function ProfessionalDashboard() {
         } else if (profile) {
           console.log('Setting profile with data:', profile);
           setUserProfile({
-            ...profile,
-            email_verified: isVerified || profile.email_verified
+            ...(profile as any),
+            email_verified: isVerified || (profile as any).email_verified
           });
         } else {
           console.log('No profile data returned');
@@ -753,7 +811,7 @@ export function ProfessionalDashboard() {
   // IntersectionObserver to detect chart visibility and lazy-load Recharts
   const chartRef = React.useRef<HTMLDivElement | null>(null);
   const [chartVisible, setChartVisible] = useState(false);
-  const [Recharts, setRecharts] = useState<null | typeof RechartsTypes>(null);
+  const [Recharts, setRecharts] = useState<null | any>(null);
 
   useEffect(() => {
     const el = chartRef.current;
@@ -983,17 +1041,23 @@ export function ProfessionalDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Welcome Section */}
-        <div className="mb-2 flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+        <div className="mb-6 flex items-start justify-between border-b border-gray-100 pb-6">
+          <div className="space-y-4">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               Welcome back, <span className="text-slate-500">{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
             </h1>
-            <p className="text-slate-500 mt-1 text-sm sm:text-base">
-              Ah, you don show! Your identity dey active.
-            </p>
-            <p className="text-slate-500 mt-1 text-sm sm:text-base">
-              Check what's new updates, verification status, and recent profile views.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 border border-green-100 w-fit">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                <span className="text-sm font-medium text-green-700">Identity Active</span>
+              </div>
+              <p className="text-slate-400 text-sm">
+                Here's what's happening with your profile today.
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setNotificationCenterOpen(true)}
@@ -1048,9 +1112,9 @@ export function ProfessionalDashboard() {
             >
               <div className="flex items-center gap-2">
                 Endorsements
-                {endorsements.filter(e => e.status === 'pending').length > 0 && (
+                {endorsements.filter(e => (e.status as any) === 'pending').length > 0 && (
                   <Badge className="bg-red-500 text-white h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-                    {endorsements.filter(e => e.status === 'pending').length}
+                    {endorsements.filter(e => (e.status as any) === 'pending').length}
                   </Badge>
                 )}
               </div>
@@ -1062,6 +1126,7 @@ export function ProfessionalDashboard() {
             <QuickActions 
               onAddProject={handleAddProject}
               onRequestEndorsement={handleRequestEndorsement}
+              onAddCaseStudy={handleAddCaseStudy}
               reducedMotion={reducedMotion}
               userPin={phonePin || undefined}
             />
@@ -1132,10 +1197,25 @@ export function ProfessionalDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
                 <p className="text-gray-500 text-sm mt-1">Showcase your professional work and contributions</p>
               </div>
-              <Button onClick={handleAddProject} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105" aria-label="Add new project">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Project
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleAddProject} 
+                  variant="outline"
+                  className="bg-white hover:bg-gray-100 text-black border-2 border-black shadow-sm transition-all hover:scale-105" 
+                  aria-label="Add new project"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Project
+                </Button>
+                <Button 
+                  onClick={handleAddCaseStudy} 
+                  className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105" 
+                  aria-label="Create case study"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Case Study
+                </Button>
+              </div>
             </div>
 
             {/* Search and Filter */}
@@ -1664,7 +1744,7 @@ export function ProfessionalDashboard() {
         onSubmit={async (data) => {
           setEndorsementSaving(true);
           try {
-            const result = await requestEndorsementViaServer(data);
+            const result = await requestEndorsementViaServer(data as any);
             if (result.success) {
               if (result.error) {
                 toast.warning('Request saved, but email failed: ' + result.error);
@@ -1889,7 +1969,23 @@ export function ProfessionalDashboard() {
 
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} position="bottom-right" />
+      <CaseStudyForm open={showCaseStudyModal} onOpenChange={setShowCaseStudyModal} onSubmit={handleCaseStudySubmit} userId={userProfile?.user_id || ''} isLoading={false} caseStudy={null} />
       </div>
+      <WelcomeModal 
+        open={showWelcomeModal}
+        onOpenChange={setShowWelcomeModal}
+        onStartTour={() => {
+          setShowWelcomeModal(false);
+          // Trigger tour logic here (can be added later)
+          toast.info('Quick tour starting...', { duration: 2000 }); // Placeholder
+          localStorage.setItem('has_seen_welcome', 'true');
+        }}
+        onSkip={() => {
+          setShowWelcomeModal(false);
+          localStorage.setItem('has_seen_welcome', 'true');
+        }}
+        userName={userProfile?.full_name?.split(' ')[0]}
+      />
     </div>
   );
 }

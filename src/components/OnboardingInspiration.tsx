@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from './ui/card';
 import { Quote, Sparkles, Star, Heart, Zap } from 'lucide-react';
 

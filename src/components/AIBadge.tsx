@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Sparkles, Award, TrendingUp, Star } from 'lucide-react';

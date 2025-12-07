@@ -53,7 +53,7 @@ export function EmailVerificationModal({ isOpen, onClose, userEmail }: Props) {
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="bg-black/60 border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle>Email Verification</DialogTitle>
+          <DialogTitle>GidiPIN</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">

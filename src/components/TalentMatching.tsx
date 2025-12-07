@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -12,7 +12,7 @@ import { Slider } from './ui/slider';
 import { Separator } from './ui/separator';
 import { Progress } from './ui/progress';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { VerificationBadge, VerificationStatus } from './VerificationBadge';
+import { VerificationBadge, VerificationStatus, QuickVerificationStatus } from './VerificationBadge';
 import { 
   Search, 
   Upload, 
@@ -500,7 +500,7 @@ export function TalentMatching() {
                           <div className="flex-1 text-center sm:text-left">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                               <h3 className="text-xl font-semibold">{talent.name}</h3>
-                              <VerificationBadge status={talent.verificationStatus} size="sm" />
+                              <QuickVerificationStatus status={talent.verificationStatus} size="sm" />
                             </div>
                             
                             <p className="text-lg text-muted-foreground mb-2">{talent.role}</p>
@@ -576,7 +576,7 @@ export function TalentMatching() {
                                     <div>
                                       <div className="flex items-center gap-2">
                                         {talent.name}
-                                        <VerificationBadge status={talent.verificationStatus} size="sm" />
+                                        <QuickVerificationStatus status={talent.verificationStatus} size="sm" />
                                       </div>
                                       <p className="text-base font-normal text-muted-foreground">{talent.role}</p>
                                     </div>

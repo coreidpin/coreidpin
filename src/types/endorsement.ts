@@ -139,6 +139,10 @@ export interface WriteEndorsementForm {
   template_used?: string;
   skills_endorsed: string[];
   confirm_relationship: boolean;
+  endorser_name?: string;
+  endorser_role?: string;
+  endorser_company?: string;
+  endorser_linkedin_url?: string;
 }
 
 export interface EndorsementFilters {

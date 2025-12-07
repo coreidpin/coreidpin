@@ -23,6 +23,10 @@ import {
   Share2
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { WorkTimeline } from './portfolio/WorkTimeline';
+import { BetaBadge } from './ui/BetaBadge';
+import { TopTalentBadge } from './ui/TopTalentBadge';
+
 
 interface PublicPINPageProps {
   pinNumber: string;
@@ -42,8 +46,8 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         setLoading(true);
         
         // Get user_id from PIN
-        const { data: pinData, error: pinError } = await supabase
-          .from('professional_pins')
+        const { data: pinData, error: pinError } = await (supabase
+          .from('professional_pins') as any)
           .select('user_id')
           .eq('pin_number', pinNumber)
           .single();
@@ -54,9 +58,9 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         }
 
         // Get profile data
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await (supabase
           .from('profiles')
-          .select('*')
+          .select('*') as any)
           .eq('user_id', pinData.user_id)
           .single();
 
@@ -159,10 +163,12 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                             {profile.full_name || profile.name || 'Professional User'}
                           </h1>
                           {profile.email_verified && (
-                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 h-6">
                               <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
                             </Badge>
                           )}
+                          <BetaBadge className="h-6" />
+                          <TopTalentBadge className="h-6" />
                         </div>
                         <p className="text-lg text-gray-600 font-medium mb-3">
                           {profile.role || profile.job_title || 'Professional'}
@@ -251,21 +257,21 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                       <Briefcase className="h-5 w-5 text-blue-600" />
                       Work Experience
                     </h2>
-                    <div className="space-y-8">
-                      {profile.work_experience.map((exp: any, index: number) => (
-                        <div key={index} className="relative pl-10 border-l-2 border-gray-100 last:border-0 pb-1">
-                          <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-600"></div>
-                          <div className="mb-1">
-                            <h3 className="font-bold text-gray-900 text-lg">{exp.title || exp.role}</h3>
-                            <div className="text-blue-600 font-medium">{exp.company}</div>
-                          </div>
-                          <div className="text-sm text-gray-500 mb-3">{exp.duration || exp.timeline || `${exp.start_date} - ${exp.current ? 'Present' : exp.end_date}`}</div>
-                          {exp.description && (
-                            <p className="text-gray-600 text-sm leading-relaxed">{exp.description}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    <WorkTimeline 
+                      experiences={profile.work_experience.map((exp: any) => ({
+                        id: exp.id || `${exp.company}-${exp.start_date}`,
+                        job_title: exp.title || exp.role,
+                        company_name: exp.company,
+                        company_logo_url: exp.company_logo_url,
+                        start_date: exp.start_date,
+                        end_date: exp.end_date,
+                        is_current: exp.current || false,
+                        location: exp.location,
+                        description: exp.description,
+                        proof_documents: exp.proof_documents || []
+                      }))}
+                      showProofBadges={true}
+                    />
                   </CardContent>
                 </Card>
               )}

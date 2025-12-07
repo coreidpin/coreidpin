@@ -1,4 +1,4 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Globe, TrendingUp, Scale, Cpu, CheckCircle, ArrowRight } from 'lucide-react';
 
 const whyNowPoints = [

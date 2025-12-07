@@ -192,3 +192,5 @@ export const AuthVerifyEmail: React.FC = () => {
     </div>
   );
 };
+
+export default AuthVerifyEmail;

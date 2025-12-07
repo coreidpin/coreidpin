@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -31,7 +31,10 @@ import {
   Palette,
   Database,
   Smartphone,
-  Settings
+
+  Settings,
+  FileText,
+  GraduationCap
 } from 'lucide-react';
 
 interface TalentProfileProps {

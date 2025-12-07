@@ -4,7 +4,6 @@ import { toast, Toaster } from 'sonner';
 import { AppRouter } from './components/Router';
 
 import { AdminLoginDialog } from './components/AdminLoginDialog';
-import { WelcomeToast } from './components/WelcomeToast';
 import PasswordResetDialog from './components/PasswordResetDialog';
 import { VerificationSuccessModal } from './components/VerificationSuccessModal';
 import { supabase } from './utils/supabase/client';
@@ -36,7 +35,7 @@ export default function App() {
   const [userData, setUserData] = useState<any>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
-  const [showWelcomeToast, setShowWelcomeToast] = useState(false);
+
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [passwordRecoveryEmail, setPasswordRecoveryEmail] = useState<string | null>(null);
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
@@ -405,7 +404,7 @@ export default function App() {
     });
     trackEvent('User Logged In', { userType });
     
-    setShowWelcomeToast(true);
+
     
     // Navigate to dashboard
     window.location.href = '/dashboard';
@@ -446,7 +445,7 @@ export default function App() {
     }
 
     setIsAuthenticated(true);
-    setShowWelcomeToast(true);
+
     window.location.href = '/dashboard';
   };
 
@@ -545,15 +544,7 @@ export default function App() {
         onReset={handlePasswordResetConfirm}
       />
       
-      {/* Welcome Toast */}
-      {currentView !== 'landing' && (
-        <WelcomeToast
-          userType={currentView as 'employer' | 'professional' | 'university'}
-          userName={userData?.user_metadata?.name}
-          show={showWelcomeToast}
-          onDismiss={() => setShowWelcomeToast(false)}
-        />
-      )}
+
       
       {/* Verification Success Modal */}
       <VerificationSuccessModal

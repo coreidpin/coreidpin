@@ -62,7 +62,15 @@ projects.post("/", async (c) => {
         role,
         timeline,
         skills: skills || [],
-        links: links || []
+        links: links || [],
+        // New case study fields
+        challenge: body.challenge,
+        solution: body.solution,
+        result: body.result,
+        media_urls: body.media_urls || [],
+        featured_image_url: body.featured_image_url,
+        is_portfolio_visible: body.is_portfolio_visible ?? true,
+        project_type: body.project_type || 'basic',
       })
       .select()
       .single();
@@ -116,6 +124,14 @@ projects.put("/:id", async (c) => {
     if (timeline !== undefined) updateData.timeline = timeline;
     if (skills !== undefined) updateData.skills = skills;
     if (links !== undefined) updateData.links = links;
+    // New fields
+    if (body.challenge !== undefined) updateData.challenge = body.challenge;
+    if (body.solution !== undefined) updateData.solution = body.solution;
+    if (body.result !== undefined) updateData.result = body.result;
+    if (body.media_urls !== undefined) updateData.media_urls = body.media_urls;
+    if (body.featured_image_url !== undefined) updateData.featured_image_url = body.featured_image_url;
+    if (body.is_portfolio_visible !== undefined) updateData.is_portfolio_visible = body.is_portfolio_visible;
+    if (body.project_type !== undefined) updateData.project_type = body.project_type;
 
     const { data, error: updateError } = await supabase
       .from('professional_projects')

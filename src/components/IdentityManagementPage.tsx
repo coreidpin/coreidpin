@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { 
   Shield, User, Phone, Mail, Briefcase, CheckCircle2, 
   ArrowLeft, Save, Loader2, X, Camera, Upload 
@@ -25,6 +25,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { colors, typography, spacing, borderRadius } from '../styles/designTokens';
 import { shadows, premiumCardShadow } from '../styles/shadows';
 import { activityTracker } from '../utils/activityTracker';
+import type { ProofDocument } from './dashboard/ProofDocumentUpload';
+import { CompanyLogoUpload } from './dashboard/CompanyLogoUpload';
+import { ProofDocumentUpload } from './dashboard/ProofDocumentUpload';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -76,6 +79,7 @@ export const IdentityManagementPage: React.FC = () => {
     recovery_email: '',
     linkedin: '',
     website: '',
+    twitter: '',
     work_experience: [] as any[],
     skills: [] as string[],
     tools: [] as string[],
@@ -95,7 +99,9 @@ export const IdentityManagementPage: React.FC = () => {
     start_date: '',
     end_date: '',
     current: false,
-    description: ''
+    description: '',
+    company_logo_url: '' as string | null | undefined,
+    proof_documents: [] as ProofDocument[]
   });
 
   const [showCertModal, setShowCertModal] = useState(false);
@@ -121,8 +127,8 @@ export const IdentityManagementPage: React.FC = () => {
         }
 
         // Fetch profile data
-        const { data: profileData } = await supabase
-          .from('profiles')
+        const { data: profileData } = await (supabase
+          .from('profiles') as any)
           .select('*')
           .eq('user_id', session.userId)
           .single();
@@ -145,6 +151,7 @@ export const IdentityManagementPage: React.FC = () => {
             recovery_email: profileData.recovery_email || '',
             linkedin: profileData.linkedin_url || '',
             website: profileData.website || '',
+            twitter: '',
             work_experience: profileData.work_experience || [],
             skills: profileData.skills || [],
             tools: profileData.tools || [],
@@ -219,7 +226,16 @@ export const IdentityManagementPage: React.FC = () => {
     
     setShowWorkModal(false);
     setEditingWorkIndex(null);
-    setTempWork({ company: '', role: '', start_date: '', end_date: '', current: false, description: '' });
+    setTempWork({ 
+      company: '', 
+      role: '', 
+      start_date: '', 
+      end_date: '', 
+      current: false, 
+      description: '',
+      company_logo_url: null,
+      proof_documents: []
+    });
   };
 
   const handleRemoveWork = (index: number) => {
@@ -405,8 +421,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       }
 
       // 3. Get Profile
-      let { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+      let { data: profileData, error: profileError } = await (supabase
+        .from('profiles') as any)
         .select('*')
         .eq('user_id', session.userId)
         .single();
@@ -421,7 +437,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           phone: '',
           role: '',
           profile_complete: false
-        };
+        } as any;
         profileError = null;
       }
 
@@ -429,30 +445,31 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
       setProfile(profileData);
       setFormData({
-        name: profileData.name || '',
-        email: profileData.email || '',
-        phone: profileData.phone || '',
-        role: profileData.role || '',
-        bio: profileData.bio || '',
-        years_of_experience: profileData.years_of_experience || '',
-        industry: profileData.industry || '',
-        work_preference: profileData.work_preference || '',
-        nationality: profileData.nationality || '',
-        city: profileData.city || '',
-        date_of_birth: profileData.date_of_birth || '',
-        gender: profileData.gender || '',
-        recovery_email: profileData.recovery_email || '',
-        linkedin: profileData.linkedin || '',
-        website: profileData.website || '',
-        work_experience: profileData.work_experience || [],
-        skills: profileData.skills || [],
-        tools: profileData.tools || [],
-        industry_tags: profileData.industry_tags || [],
-        certifications: profileData.certifications || []
+        name: (profileData as any)?.name || '',
+        email: (profileData as any)?.email || '',
+        phone: (profileData as any)?.phone || '',
+        role: (profileData as any)?.role || '',
+        bio: (profileData as any)?.bio || '',
+        years_of_experience: (profileData as any)?.years_of_experience || '',
+        industry: (profileData as any)?.industry || '',
+        work_preference: (profileData as any)?.work_preference || '',
+        nationality: (profileData as any)?.nationality || '',
+        city: (profileData as any)?.city || '',
+        date_of_birth: (profileData as any)?.date_of_birth || '',
+        gender: (profileData as any)?.gender || '',
+        recovery_email: (profileData as any)?.recovery_email || '',
+        linkedin: (profileData as any)?.linkedin || '',
+        website: (profileData as any)?.website || '',
+        twitter: '',
+        work_experience: (profileData as any)?.work_experience || [],
+        skills: (profileData as any)?.skills || [],
+        tools: (profileData as any)?.tools || [],
+        industry_tags: (profileData as any)?.industry_tags || [],
+        certifications: (profileData as any)?.certifications || []
       });
 
       // Handle custom role
-      if (profileData.role && !PROFESSIONAL_ROLES.includes(profileData.role)) {
+      if (profileData?.role && !PROFESSIONAL_ROLES.includes(profileData.role)) {
         setIsCustomRole(true);
         setCustomRoleText(profileData.role);
         setFormData(prev => ({ ...prev, role: 'Custom' }));
@@ -539,8 +556,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         .getPublicUrl(filePath);
 
       // Update Profile
-      const { error: updateError } = await supabase
-        .from('profiles')
+      const { error: updateError } = await (supabase
+        .from('profiles') as any)
         .update({ profile_picture_url: publicUrl })
         .eq('user_id', profile.user_id);
 
@@ -1259,8 +1276,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                       </div>
                       <Input 
-                        value={formData.twitter || ''}
-                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        value={(formData as any).twitter || ''}
+                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value } as any)}
                         className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
                         placeholder="Twitter Profile URL"
                       />
@@ -1725,6 +1742,31 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
                   className="bg-white border-slate-200 text-slate-900 min-h-[100px]"
                   placeholder="Describe your responsibilities and achievements..."
+                />
+              </div>
+
+              {/* Company Logo Upload */}
+              <div>
+                <Label>Company Logo (Optional)</Label>
+                <CompanyLogoUpload
+                  companyName={tempWork.company}
+                  currentLogoUrl={tempWork.company_logo_url || null}
+                  onChange={(url) => setTempWork({ ...tempWork, company_logo_url: url })}
+                  userId={profile?.user_id || ''}
+                />
+              </div>
+
+              {/* Proof of Work Documents */}
+              <div>
+                <Label>Proof of Work (Optional)</Label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Upload certificates, offer letters, or references
+                </p>
+                <ProofDocumentUpload
+                  documents={tempWork.proof_documents || []}
+                  onChange={(docs) => setTempWork({ ...tempWork, proof_documents: docs })}
+                  userId={profile?.user_id || ''}
+                  maxFiles={5}
                 />
               </div>
             </div>

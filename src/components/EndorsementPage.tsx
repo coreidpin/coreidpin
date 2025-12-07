@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle, AlertCircle, User, Briefcase, Star, Send } from 'lucide-react';
 import { Button } from './ui/button';
@@ -44,8 +44,8 @@ export function EndorsementPage() {
 
       try {
         // Fetch endorsement details by token
-        const { data, error } = await supabase
-          .from('professional_endorsements_v2')
+        const { data, error } = await (supabase
+          .from('professional_endorsements_v2') as any)
           .select(`
             *,
             professional:professional_id (
@@ -111,7 +111,9 @@ export function EndorsementPage() {
         endorser_name: formData.endorser_name,
         endorser_role: formData.endorser_role,
         endorser_company: formData.endorser_company,
-        endorser_linkedin_url: formData.endorser_linkedin_url
+        endorser_linkedin_url: formData.endorser_linkedin_url,
+        skills_endorsed: endorsement.skills_endorsed || [],
+        confirm_relationship: true
       });
 
       if (result.success) {
