@@ -123,8 +123,8 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
       </Helmet>
       
       <div className="min-h-screen bg-gray-50">
-        {/* Hero Background - Black gradient */}
-        <div className="h-48 sm:h-64 bg-gradient-to-r from-gray-900 via-black to-gray-900 relative overflow-hidden">
+        {/* Hero Background */}
+        <div className="h-48 sm:h-64 bg-gradient-to-r from-blue-600 to-purple-700 relative overflow-hidden">
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
         </div>
@@ -185,7 +185,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         {/* Horizontal Scrolling Info Chips - Compact mobile */}
                         <div className="relative mt-3 sm:mt-5">
                           <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-                            <div className="flex gap-2 sm:gap-2.5 min-w-max px-1 pb-1">
+                            <div className="flex gap-2 sm:gap-2.5 min-w-max px-1 pb-1 justify-center">
                               {profile.city && (
                                 <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
                                   <MapPin className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
