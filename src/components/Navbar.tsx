@@ -269,7 +269,7 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  disabled={true}
+                  disabled={import.meta.env.PROD}
                   onClick={() => navigate('/login')}
                   className={cn(
                     "transition-colors",
@@ -282,7 +282,7 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
-                  disabled={true}
+                  disabled={import.meta.env.PROD}
                   onClick={() => handleLogin('professional')}
                   className={cn(
                     isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : ""

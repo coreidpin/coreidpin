@@ -56,6 +56,7 @@ import { ActivityChart } from './dashboard/ActivityChart';
 import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
+import { MarketValueCard } from './dashboard/MarketValueCard';
 
 import { WelcomeModal } from './onboarding/WelcomeModal'; // Import WelcomeModal
 import { getSessionState, ensureValidSession } from '../utils/session';
@@ -1122,6 +1123,9 @@ export function ProfessionalDashboard() {
             </Card>
           </motion.div>
         )}
+
+        {/* Market Value Card */}
+        <MarketValueCard />
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content Area */}

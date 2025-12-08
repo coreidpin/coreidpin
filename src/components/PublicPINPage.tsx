@@ -28,6 +28,7 @@ import { WorkTimeline } from './portfolio/WorkTimeline';
 import { BetaBadge } from './ui/BetaBadge';
 import { TopTalentBadge } from './ui/TopTalentBadge';
 import { activityTracker } from '../utils/activityTracker';
+import { trackProfileView } from '../utils/demandAnalytics';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 
@@ -74,6 +75,11 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         }
 
         setProfile(profileData);
+        
+        // Track profile view for demand scoring
+        if (profileData.user_id) {
+          trackProfileView(profileData.user_id, 'anonymous');
+        }
       } catch (err) {
         console.error('Error fetching profile:', err);
         setError('Failed to load profile');
