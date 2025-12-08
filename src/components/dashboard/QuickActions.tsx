@@ -3,21 +3,28 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Fingerprint, Eye, Download, Phone, Share2, Settings, Plus, UserPlus, FileText, Users } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 interface QuickActionsProps {
   onAddProject?: () => void;
   onRequestEndorsement?: () => void;
   onAddCaseStudy?: () => void;
+  onDownloadBadge?: () => void;
   reducedMotion?: boolean;
   userPin?: string;
+  isVerified?: boolean; // User is verified professional
+  jobTitle?: string;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ 
   onAddProject, 
   onRequestEndorsement,
-  onAddCaseStudy, 
+  onAddCaseStudy,
+  onDownloadBadge,
   reducedMotion = false,
-  userPin 
+  userPin,
+  isVerified = false,
+  jobTitle
 }) => {
   return (
     <motion.div
@@ -86,10 +93,43 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <span className="text-xs font-medium text-center leading-tight">View Public Profile</span>
             </Button>
             
-            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
-              <Download className="h-6 w-6 text-blue-600 mb-1" />
-              <span className="text-xs font-medium text-center leading-tight">Download Badge</span>
-            </Button>
+            
+            {/* Download Badge - Only enabled if verified */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={isVerified ? onDownloadBadge : undefined}
+                    variant="outline" 
+                    className={`h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal ${
+                      !isVerified ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                    disabled={!isVerified}
+                  >
+                    <Download className={`h-6 w-6 mb-1 ${isVerified ? 'text-blue-600' : 'text-gray-400'}`} />
+                    <span className="text-xs font-medium text-center leading-tight">
+                      Download Badge
+                      {!isVerified && <span className="block text-[10px] text-gray-500 mt-0.5">Complete Profile</span>}
+                    </span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  {isVerified ? (
+                    <p className="text-sm">
+                      <strong>Download your verification badge!</strong><br />
+                      Share your verified professional status on LinkedIn, Twitter, and other social platforms.
+                    </p>
+                  ) : (
+                    <p className="text-sm">
+                      <strong>Complete your profile to unlock:</strong><br />
+                      ✓ Verify your email<br />
+                      ✓ Add your job title<br />
+                      ✓ Add at least 1 work experience
+                    </p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             
             <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
               <Phone className="h-6 w-6 text-purple-600 mb-1" />

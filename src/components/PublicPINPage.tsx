@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../utils/supabase/client';
+import { getProfileAvatar } from '../utils/avatarUtils';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -123,13 +124,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
       </Helmet>
       
       <div className="min-h-screen bg-gray-50">
-        {/* Hero Background */}
-        <div className="h-48 sm:h-64 bg-gradient-to-r from-blue-600 to-purple-700 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
-        </div>
-
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative pb-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Left Column: Main Profile Info */}
@@ -137,22 +132,32 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
               <Card className="border-none shadow-lg overflow-hidden">
                 <CardContent className="p-0">
                   <div className="p-3 sm:p-10">
-                    <div className="flex flex-col sm:flex-row gap-6 items-start">
+                    <div className="flex flex-col items-center gap-6">
                       {/* Avatar - Compact on mobile */}
-                      <div className="relative mx-auto sm:mx-0">
-                        <div className="w-20 h-20 sm:w-36 sm:h-36 rounded-2xl bg-white p-1 sm:p-1.5 shadow-lg">
-                          {profile.profile_picture_url ? (
-                            <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full object-cover rounded-xl" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-3xl sm:text-6xl font-bold">
-                              {(profile.full_name || profile.name || 'U').charAt(0).toUpperCase()}
-                            </div>
-                          )}
+                      <div className="relative">
+                        <div className="w-20 h-20 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 p-1 sm:p-1.5 shadow-lg overflow-hidden">
+                          <img 
+                            src={getProfileAvatar(profile)} 
+                            alt={profile.full_name || profile.name || 'Profile'} 
+                            className="w-full h-full object-cover rounded-xl"
+                            onError={(e) => {
+                              // Fallback to initials if avatar fails to load
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                parent.innerHTML = `
+                                  <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-3xl sm:text-6xl font-bold">
+                                    ${(profile.full_name || profile.name || 'U').charAt(0).toUpperCase()}
+                                  </div>
+                                `;
+                              }
+                            }}
+                          />
                         </div>
                       </div>
 
                       {/* Name & Title - Compact mobile */}
-                      <div className="flex-1 min-w-0 pt-1 sm:pt-2 text-center sm:text-left">
+                      <div className="flex-1 min-w-0 pt-1 sm:pt-2 text-center">
                         <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
                           {profile.full_name || profile.name || 'Professional User'}
                         </h1>
