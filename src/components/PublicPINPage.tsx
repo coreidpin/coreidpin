@@ -27,6 +27,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { WorkTimeline } from './portfolio/WorkTimeline';
 import { BetaBadge } from './ui/BetaBadge';
 import { TopTalentBadge } from './ui/TopTalentBadge';
+import { activityTracker } from '../utils/activityTracker';
+import type { AvailabilityStatus, WorkPreference } from '../types/availability';
+import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 
 
 interface PublicPINPageProps {
@@ -186,6 +189,33 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         <p className="text-base sm:text-xl text-gray-600 font-medium mb-2 sm:mb-4">
                           {profile.role || profile.job_title || 'Professional'}
                         </p>
+
+                        {/* Availability Status Banner - Simple & Clean */}
+                        {profile.availability_status && (
+                          <div className="w-full max-w-2xl mx-auto mb-4 bg-white rounded-lg border border-gray-200 p-4 sm:p-5">
+                            <div className="flex items-center gap-3">
+                              {/* Simple colored dot indicator */}
+                              <div className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${
+                                profile.availability_status === 'actively_working' ? 'bg-blue-500' :
+                                profile.availability_status === 'open_to_work_fulltime' ? 'bg-green-500' :
+                                profile.availability_status === 'open_to_contract' ? 'bg-purple-500' :
+                                'bg-gray-400'
+                              }`}></div>
+                              
+                              <div className="flex-1 min-w-0">
+                                <p className="text-gray-900 font-medium text-sm sm:text-base">
+                                  {AVAILABILITY_LABELS[profile.availability_status as AvailabilityStatus]}
+                                  {profile.work_preference && (
+                                    <span className="text-gray-900 font-normal">
+                                      {' • '}
+                                      {WORK_PREFERENCE_LABELS[profile.work_preference as WorkPreference]}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         
                         {/* Horizontal Scrolling Info Chips - Compact mobile */}
                         <div className="relative mt-3 sm:mt-5">

@@ -97,9 +97,9 @@ export function PINGenerationCard({
           <div className="flex flex-col items-center text-center mb-6">
             <div className="mb-2 text-sm font-medium text-gray-400 uppercase tracking-wider">Your Professional PIN</div>
             
-            <div className="relative group w-full">
+            <div className="relative group w-full flex items-center gap-3">
               <div 
-                className="text-2xl sm:text-3xl md:text-3xl lg:text-3xl font-mono font-bold tracking-widest text-white my-4 px-4 sm:px-6 md:px-8 py-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm"
+                className="flex-1 text-2xl sm:text-3xl md:text-3xl lg:text-3xl font-mono font-bold tracking-widest text-white my-4 px-4 sm:px-6 md:px-8 py-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm text-center"
                 style={{ textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}
               >
                 {isLoading || currentPin === 'Loading...' ? (
@@ -112,9 +112,10 @@ export function PINGenerationCard({
               {!(isLoading || currentPin === 'Loading...') && (
                 <button
                   onClick={onTogglePinVisibility}
-                  className="absolute -right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors"
+                  className="flex-shrink-0 p-3 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+                  aria-label={pinVisible ? "Hide PIN" : "Show PIN"}
                 >
-                  {pinVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {pinVisible ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
                 </button>
               )}
             </div>

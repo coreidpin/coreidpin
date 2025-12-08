@@ -28,6 +28,8 @@ import { activityTracker } from '../utils/activityTracker';
 import type { ProofDocument } from './dashboard/ProofDocumentUpload';
 import { CompanyLogoUpload } from './dashboard/CompanyLogoUpload';
 import { ProofDocumentUpload } from './dashboard/ProofDocumentUpload';
+import type { AvailabilityStatus, WorkPreference } from '../types/availability';
+import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -71,7 +73,6 @@ export const IdentityManagementPage: React.FC = () => {
     bio: '',
     years_of_experience: '',
     industry: '',
-    work_preference: '',
     nationality: '',
     city: '',
     date_of_birth: '',
@@ -80,6 +81,8 @@ export const IdentityManagementPage: React.FC = () => {
     linkedin: '',
     website: '',
     twitter: '',
+    availability_status: 'actively_working' as string,
+    work_preference: 'remote' as string,
     work_experience: [] as any[],
     skills: [] as string[],
     tools: [] as string[],
@@ -143,7 +146,6 @@ export const IdentityManagementPage: React.FC = () => {
             bio: profileData.bio || '',
             years_of_experience: profileData.years_of_experience || '',
             industry: profileData.industry || '',
-            work_preference: profileData.work_preference || '',
             nationality: profileData.nationality || '',
             city: profileData.city || '',
             date_of_birth: profileData.date_of_birth || '',
@@ -152,6 +154,8 @@ export const IdentityManagementPage: React.FC = () => {
             linkedin: profileData.linkedin_url || '',
             website: profileData.website || '',
             twitter: '',
+            availability_status: profileData.availability_status || 'actively_working',
+            work_preference: profileData.work_preference || 'remote',
             work_experience: profileData.work_experience || [],
             skills: profileData.skills || [],
             tools: profileData.tools || [],
@@ -452,7 +456,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         bio: (profileData as any)?.bio || '',
         years_of_experience: (profileData as any)?.years_of_experience || '',
         industry: (profileData as any)?.industry || '',
-        work_preference: (profileData as any)?.work_preference || '',
         nationality: (profileData as any)?.nationality || '',
         city: (profileData as any)?.city || '',
         date_of_birth: (profileData as any)?.date_of_birth || '',
@@ -461,6 +464,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         linkedin: (profileData as any)?.linkedin || '',
         website: (profileData as any)?.website || '',
         twitter: '',
+        availability_status: (profileData as any)?.availability_status || 'actively_working',
+        work_preference: (profileData as any)?.work_preference || 'remote',
         work_experience: (profileData as any)?.work_experience || [],
         skills: (profileData as any)?.skills || [],
         tools: (profileData as any)?.tools || [],
@@ -1284,6 +1289,95 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Availability & Work Preferences */}
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-green-600" />
+                  Availability & Work Preferences
+                </CardTitle>
+                <CardDescription className="text-slate-500">
+                  Let employers know your current status and preferred work arrangement
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Availability Status */}
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-medium">Current Status</Label>
+                    <Select 
+                      value={formData.availability_status} 
+                      onValueChange={(value) => setFormData({ 
+                        ...formData, 
+                        availability_status: value 
+                      })}
+                    >
+                      <SelectTrigger className="bg-white border-slate-200">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="actively_working">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                            Actively Working
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="open_to_work_fulltime">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                            Open to Work (Full-Time)
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="open_to_contract">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+                            Open to Contract Roles
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="career_break">
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 rounded-full bg-gray-400"></div>
+                            Career Break
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Work Preference */}
+                  <div className="space-y-2">
+                    <Label className="text-slate-700 font-medium">Work Arrangement</Label>
+                    <Select 
+                      value={formData.work_preference} 
+                      onValueChange={(value) => setFormData({ 
+                        ...formData, 
+                        work_preference: value 
+                      })}
+                    >
+                      <SelectTrigger className="bg-white border-slate-200">
+                        <SelectValue placeholder="Select preference" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="remote">🏠 Remote</SelectItem>
+                        <SelectItem value="hybrid">🔄 Hybrid</SelectItem>
+                        <SelectItem value="onsite">🏢 Onsite</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Info Banner based on selection */}
+                {formData.availability_status === 'open_to_work_fulltime' && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      <CheckCircle2 className="inline h-4 w-4 mr-1" />
+                      Your profile will be highlighted to employers seeking full-time talent
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

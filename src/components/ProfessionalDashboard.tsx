@@ -40,9 +40,12 @@ import {
   Quote,
   Activity,
   Loader2,
-  Bell
+  Bell,
+  Edit
 } from 'lucide-react';
 import { requestEndorsementViaServer } from '@/utils/requestEndorsementServer';
+import type { AvailabilityStatus, WorkPreference } from '../types/availability';
+import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 
 import { supabase, supabaseUrl } from '../utils/supabase/client';
 import { HeroProfileCard } from './dashboard/HeroProfileCard';
@@ -1084,6 +1087,41 @@ export function ProfessionalDashboard() {
             isBetaTester={true}
           />
         </motion.div>
+
+        {/* Availability Status Card */}
+        {userProfile && (userProfile as any)?.availability_status && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-3 w-3 rounded-full ${
+                      (userProfile as any).availability_status === 'actively_working' ? 'bg-blue-500' :
+                      (userProfile as any).availability_status === 'open_to_work_fulltime' ? 'bg-green-500 animate-pulse' :
+                      (userProfile as any).availability_status === 'open_to_contract' ? 'bg-purple-500' :
+                      'bg-gray-400'
+                    }`}></div>
+                    <div>
+                      <p className="text-sm text-slate-600">Current Status</p>
+                      <p className="font-semibold text-slate-900">
+                        {AVAILABILITY_LABELS[(userProfile as any).availability_status as AvailabilityStatus] || 'Actively Working'}
+                      </p>
+                    </div>
+                  </div>
+                  {(userProfile as any).work_preference && (
+                    <Badge variant="outline" className="bg-white text-gray-900 border-gray-300">
+                      {WORK_PREFERENCE_LABELS[(userProfile as any).work_preference as WorkPreference] || 'Remote'}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content Area */}
