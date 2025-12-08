@@ -1569,7 +1569,7 @@ export function ProfessionalDashboard() {
                     if (navigator.share) {
                       navigator.share({
                         title: 'My Professional PIN',
-                        text: `Connect with me using my CoreID PIN: ${phonePin}`,
+                        text: `Connect with me using my GidiPIN PIN: ${phonePin}`,
                         url: window.location.href
                       });
                     } else {

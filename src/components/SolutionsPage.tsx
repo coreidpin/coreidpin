@@ -45,7 +45,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
     {
       icon: Target,
       title: 'Verified Profiles You Can Trust',
-      description: 'Access comprehensive professional data backed by CoreID Infrastructure Layer verification.',
+      description: 'Access comprehensive professional data backed by GidiPIN Infrastructure Layer verification.',
       color: 'text-green-600',
       bgColor: 'bg-green-50'
     },
@@ -66,7 +66,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
     {
       icon: DollarSign,
       title: 'Reduced Hiring Time and Cost',
-      description: 'CoreID gives companies confidence from the very first interaction, eliminating verification delays.',
+      description: 'GidiPIN gives companies confidence from the very first interaction, eliminating verification delays.',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
     },
@@ -255,7 +255,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
               <span className="block mt-2" style={{ color: '#32f08c' }}>Infinite Possibilities.</span>
             </h1>
             <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto px-4">
-              CoreID's unified identity infrastructure serves professionals, employers, and platforms with a single API-driven standard that creates trust-first interactions.
+              GidiPIN's unified identity infrastructure serves professionals, employers, and platforms with a single API-driven standard that creates trust-first interactions.
             </p>
           </motion.div>
 
@@ -441,7 +441,7 @@ export function SolutionsPage({ onNavigate, onLogin }: SolutionsPageProps) {
               Ready to Build the Future of Identity?
             </h2>
             <p className="text-base sm:text-lg text-black/80 mb-6 sm:mb-8 px-4">
-              CoreID is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
+              GidiPIN is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Button 

@@ -41,7 +41,7 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
     {
       year: '2024',
       title: 'Infrastructure Layer Built',
-      description: 'Developed the CoreID Infrastructure Layer (CIL) — a scalable identity API that businesses and platforms integrate in minutes.',
+      description: 'Developed the GidiPIN Infrastructure Layer (CIL) — a scalable identity API that businesses and platforms integrate in minutes.',
       icon: Globe,
       color: 'bg-purple-500'
     },
@@ -68,7 +68,7 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
     {
       icon: Target,
       title: 'Global Compliance',
-      description: 'CoreID is compliant with GDPR, NDPR, CCPA, and ISO security standards with transparent, fair, and open practices.'
+      description: 'GidiPIN is compliant with GDPR, NDPR, CCPA, and ISO security standards with transparent, fair, and open practices.'
     },
     {
       icon: Heart,
@@ -127,7 +127,7 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
             Professional Identity Online is Broken
           </h1>
           <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-            CoreID was founded with a simple observation: People create multiple profiles across platforms. Employers struggle to trust resumes. Identity fraud is rising. And professionals lack portable proof of who they are and what they can do.
+            GidiPIN was founded with a simple observation: People create multiple profiles across platforms. Employers struggle to trust resumes. Identity fraud is rising. And professionals lack portable proof of who they are and what they can do.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -229,7 +229,7 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
               Our Story is Just Beginning
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              Today, CoreID is building the underlying infrastructure that will power trusted identity for 1 billion professionals worldwide. But the foundation we're building will power the next generation of work, trust, and opportunity.
+              Today, GidiPIN is building the underlying infrastructure that will power trusted identity for 1 billion professionals worldwide. But the foundation we're building will power the next generation of work, trust, and opportunity.
             </p>
           </motion.div>
 
@@ -329,7 +329,7 @@ export function OurStoryPage({ onNavigate }: OurStoryPageProps) {
               The Future We Are Building
             </h2>
             <p className="text-lg text-gray-300 mb-8">
-              CoreID is creating the professional identity layer the world needs: Global, Portable, Verified, Interoperable, and Scalable.
+              GidiPIN is creating the professional identity layer the world needs: Global, Portable, Verified, Interoperable, and Scalable.
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

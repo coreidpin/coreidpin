@@ -205,7 +205,7 @@ export function TermsOfService() {
                 For questions about these Terms of Service, please contact us:
               </p>
               <ul className="space-y-1 text-sm">
-                <li><strong>Email:</strong> legal@CoreID.com</li>
+                <li><strong>Email:</strong> legal@GidiPIN.com</li>
                 <li><strong>Address:</strong> Lagos, Nigeria</li>
                 <li><strong>Phone:</strong> +234 XXX XXX XXXX</li>
               </ul>

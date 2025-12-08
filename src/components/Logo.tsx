@@ -37,7 +37,7 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
       <motion.img
         key={logoSrc} // Ensure re-render on source change
         src={logoSrc}
-        alt="CoreID logo"
+        alt="GidiPIN logo"
         className={`${sizes[size].icon} object-contain`}
         whileHover={{ scale: 1.05 }}
         transition={{ duration: 0.3, type: 'spring' }}

@@ -190,23 +190,23 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         {/* Horizontal Scrolling Info Chips - Compact mobile */}
                         <div className="relative mt-3 sm:mt-5">
                           <div className="overflow-x-auto scrollbar-hide snap-x snap-mandatory">
-                            <div className="flex gap-2 sm:gap-2.5 min-w-max px-1 pb-1 justify-center">
+                            <div className="flex gap-2 sm:gap-3 min-w-max px-1 pb-1 justify-center">
                               {profile.city && (
-                                <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
-                                  <MapPin className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
-                                  <span className="whitespace-nowrap font-medium">{profile.city}</span>
+                                <div className="snap-start flex items-center gap-1.5 sm:gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md border border-gray-200 text-xs sm:text-sm text-gray-600 flex-shrink-0">
+                                  <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
+                                  <span className="whitespace-nowrap font-normal">{profile.city}</span>
                                 </div>
                               )}
                               {profile.industry && (
-                                <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
-                                  <Briefcase className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
-                                  <span className="whitespace-nowrap font-medium">{profile.industry}</span>
+                                <div className="snap-start flex items-center gap-1.5 sm:gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md border border-gray-200 text-xs sm:text-sm text-gray-600 flex-shrink-0">
+                                  <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
+                                  <span className="whitespace-nowrap font-normal">{profile.industry}</span>
                                 </div>
                               )}
                               {profile.years_of_experience && (
-                                <div className="snap-start flex items-center gap-1 sm:gap-2 bg-gray-50 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-base text-gray-700 border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex-shrink-0">
-                                  <Calendar className="h-3 w-3 sm:h-5 sm:w-5 text-gray-400" />
-                                  <span className="whitespace-nowrap font-medium">{profile.years_of_experience} Years Exp.</span>
+                                <div className="snap-start flex items-center gap-1.5 sm:gap-2 bg-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md border border-gray-200 text-xs sm:text-sm text-gray-600 flex-shrink-0">
+                                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-500" />
+                                  <span className="whitespace-nowrap font-normal">{profile.years_of_experience} Years Exp.</span>
                                 </div>
                               )}
                             </div>

@@ -320,7 +320,7 @@ export const PublicProfile: React.FC = () => {
 
           {/* Footer */}
           <div className="text-center text-sm text-white/60 py-6">
-            <p>Powered by <span className="text-[#32f08c] font-semibold">CoreID</span></p>
+            <p>Powered by <span className="text-[#32f08c] font-semibold">GidiPIN</span></p>
             <p className="mt-2">Verified professional identity you can trust</p>
           </div>
         </motion.div>

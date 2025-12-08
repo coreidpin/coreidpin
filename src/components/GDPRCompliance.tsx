@@ -34,7 +34,7 @@ export function GDPRCompliance() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-  CoreID is committed to protecting the privacy and personal data of all users, including those in the European Union. We comply with the General Data Protection Regulation (GDPR) and have implemented comprehensive measures to ensure your data rights are respected and protected.
+  GidiPIN is committed to protecting the privacy and personal data of all users, including those in the European Union. We comply with the General Data Protection Regulation (GDPR) and have implemented comprehensive measures to ensure your data rights are respected and protected.
               </p>
             </CardContent>
           </Card>
@@ -371,11 +371,11 @@ export function GDPRCompliance() {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <strong>Email:</strong>
-            <span className="text-muted-foreground">dpo@CoreID.work</span>
+            <span className="text-muted-foreground">dpo@GidiPIN.work</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <strong>Address:</strong>
-            <span className="text-muted-foreground">Data Protection Officer, CoreID, Lagos, Nigeria</span>
+            <span className="text-muted-foreground">Data Protection Officer, GidiPIN, Lagos, Nigeria</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <strong>Response Time:</strong>

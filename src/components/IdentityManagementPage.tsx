@@ -925,7 +925,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="relative overflow-hidden rounded-xl"
+              className="relative overflow-hidden rounded-xl -mx-3 sm:mx-0"
               style={{
                 background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',

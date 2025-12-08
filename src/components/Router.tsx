@@ -504,7 +504,7 @@ export const AppRouter: React.FC<RouterProps> = ({
               <Suspense fallback={<LoadingSpinner />}>
                 <PlaceholderPage 
                   title="Trust & Safety"
-                  description="Trust is the core of CoreID — it's in our name. We build infrastructure designed to protect users, secure data, and enable safe interactions."
+                  description="Trust is the core of GidiPIN — it's in our name. We build infrastructure designed to protect users, secure data, and enable safe interactions."
                   onNavigate={() => {}}
                 />
               </Suspense>
@@ -518,7 +518,7 @@ export const AppRouter: React.FC<RouterProps> = ({
             <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center">
               <div className="text-center">
                 <h1 className="text-4xl font-bold text-white mb-4">Help Center</h1>
-                <p className="text-gray-300">Find answers to common questions and get support for using the CoreID platform.</p>
+                <p className="text-gray-300">Find answers to common questions and get support for using the GidiPIN platform.</p>
               </div>
             </div>
           } 

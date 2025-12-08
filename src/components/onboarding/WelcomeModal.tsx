@@ -49,7 +49,7 @@ export function WelcomeModal({
             transition={{ delay: 0.3 }}
             className="text-2xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400"
           >
-            Welcome to CoreID{userName ? `, ${userName}` : ''}!
+            Welcome to GidiPIN{userName ? `, ${userName}` : ''}!
           </motion.h2>
 
           <motion.p

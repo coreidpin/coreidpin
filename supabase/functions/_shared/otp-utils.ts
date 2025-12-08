@@ -167,7 +167,7 @@ export async function sendOTPEmail(
       body: JSON.stringify({
         from: `Seun from CoreID <${fromEmail}>`,
         to: email,
-        subject: 'Your CoreID Verification Code',
+        subject: 'Your GidiPIN Verification Code',
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
             <h2>Verification Code</h2>

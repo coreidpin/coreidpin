@@ -43,15 +43,15 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
     },
     {
       icon: FileCheck,
-      title: 'CoreID Infrastructure Layer Powers Everything',
-      description: 'The PIN connects directly to our CoreID Infrastructure Layer — a scalable identity API.',
+      title: 'GidiPIN Infrastructure Layer Powers Everything',
+      description: 'The PIN connects directly to our GidiPIN Infrastructure Layer — a scalable identity API.',
       details: 'CIL handles identity verification, profile enrichment, credential validation, trust scoring, consent management, and real-time updates.'
     },
     {
       icon: Search,
       title: 'Professionals Build Verified Identity Once',
       description: 'Your achievements, roles, credentials, and reputation follow you across platforms.',
-      details: 'Every job you apply for. Every company you join. Every product that integrates CoreID.'
+      details: 'Every job you apply for. Every company you join. Every product that integrates GidiPIN.'
     },
     {
       icon: Building,
@@ -216,7 +216,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             Your Phone Number Becomes Your PIN
           </h1>
           <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-            Discover how CoreID creates a unified professional identity layer that powers trust, verification, and opportunity across the global workforce.
+            Discover how GidiPIN creates a unified professional identity layer that powers trust, verification, and opportunity across the global workforce.
           </p>
         </motion.div>
       </section>
@@ -231,10 +231,10 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             className="text-center mb-12"
           >
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-white">
-              How CoreID Infrastructure Layer Powers Everything
+              How GidiPIN Infrastructure Layer Powers Everything
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              Our PIN connects directly to the CoreID Infrastructure Layer — a scalable identity API that businesses and platforms integrate in minutes.
+              Our PIN connects directly to the GidiPIN Infrastructure Layer — a scalable identity API that businesses and platforms integrate in minutes.
             </p>
           </motion.div>
 
@@ -288,7 +288,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
             Solutions for Every User
           </h2>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            Explore how CoreID's unified identity infrastructure serves professionals, employers, and platforms.
+            Explore how GidiPIN's unified identity infrastructure serves professionals, employers, and platforms.
           </p>
         </motion.div>
 
@@ -442,7 +442,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
               The Future We Are Building
             </h2>
             <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              CoreID is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
+              GidiPIN is creating the professional identity layer the world needs — global, portable, verified, interoperable, and scalable.
             </p>
           </motion.div>
 
@@ -524,7 +524,7 @@ export function HowItWorksPage({ onNavigate, onLogin }: HowItWorksPageProps) {
               Ready to Build the Future?
             </h2>
             <p className="text-lg text-gray-300 mb-8">
-              The future of professional identity will not be fragmented. It will be unified, trusted, and API-driven — and CoreID is leading the way.
+              The future of professional identity will not be fragmented. It will be unified, trusted, and API-driven — and GidiPIN is leading the way.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 

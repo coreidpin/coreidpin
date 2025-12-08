@@ -61,7 +61,7 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
             <h1 className="text-2xl font-bold text-white mb-2">
               {stage === 'basic' && 'Create your account'}
               {stage === 'otp-verification' && 'Verify your identity'}
-              {stage === 'success' && 'Welcome to CoreID'}
+              {stage === 'success' && 'Welcome to GidiPIN'}
             </h1>
             <p className="text-white/60 text-sm">
               {stage === 'basic' && 'Start your professional identity journey today.'}
@@ -119,7 +119,7 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
       
       {showChrome && (
         <div className="py-6 text-center text-white/20 text-xs">
-          &copy; {new Date().getFullYear()} CoreID. All rights reserved.
+          &copy; {new Date().getFullYear()} GidiPIN. All rights reserved.
         </div>
       )}
     </div>

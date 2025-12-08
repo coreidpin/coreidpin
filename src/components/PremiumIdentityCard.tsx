@@ -62,7 +62,7 @@ export function PremiumIdentityCard({
     if (navigator.share && pinNumber) {
       navigator.share({
         title: `${name}'s Professional Identity`,
-        text: `Connect with me using CoreID PIN: ${pinNumber}`,
+        text: `Connect with me using GidiPIN PIN: ${pinNumber}`,
         url: `${window.location.origin}/pin/${pinNumber}`
       });
     } else {
@@ -116,7 +116,7 @@ export function PremiumIdentityCard({
                 <Fingerprint className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight">CoreID</h3>
+                <h3 className="text-sm font-bold text-slate-900 tracking-tight">GidiPIN</h3>
                 <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Professional Identity</p>
               </div>
             </div>

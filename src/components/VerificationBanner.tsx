@@ -129,7 +129,7 @@ export default function VerificationBanner({ userEmail, onDismiss }: Verificatio
             localStorage.removeItem('tempSession');
             sessionStorage.removeItem('verificationModalDismissed');
             clearInterval(checkVerification);
-            toast.success('Email verified successfully! Welcome to CoreID.');
+            toast.success('Email verified successfully! Welcome to GidiPIN.');
             window.location.reload(); // Refresh to update UI
           }
         } catch {}

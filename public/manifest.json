@@ -1,6 +1,6 @@
 {
-  "name": "CoreID - Your Global Professional Identity",
-  "short_name": "CoreID",
+  "name": "GidiPIN - Your Global Professional Identity",
+  "short_name": "GidiPIN",
   "description": "Your phone number as your global professional identity. Verify credentials, build trust, connect globally.",
   "start_url": "/",
   "scope": "/",

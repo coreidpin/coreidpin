@@ -305,7 +305,12 @@ export function Navbar({
                     setTimeout(() => setIsNavigating(false), 800);
                   }}
                   disabled={isNavigating}
-                  className="disabled:opacity-70 disabled:cursor-not-allowed"
+                  className={cn(
+                    "disabled:opacity-70 disabled:cursor-not-allowed",
+                    isLight 
+                      ? "bg-slate-800 text-white hover:bg-slate-700"
+                      : "bg-[#f5f5dc] text-slate-900 hover:bg-[#e8e8cf]"
+                  )}
                 >
                   {isNavigating ? (
                     <>
@@ -323,7 +328,12 @@ export function Navbar({
                   variant="outline" 
                   onClick={onLogout} 
                   size="sm"
-                  className="border-[var(--brand-primary)] text-[var(--brand-primary)] hover:bg-[var(--brand-primary)] hover:text-[var(--brand-primary-contrast)] transition-colors"
+                  className={cn(
+                    "transition-colors",
+                    isLight
+                      ? "border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                      : "border-[#f5f5dc]/50 text-[#f5f5dc] hover:bg-[#f5f5dc]/10 hover:border-[#f5f5dc]"
+                  )}
                 >
                   Logout
                 </Button>

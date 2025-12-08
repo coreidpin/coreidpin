@@ -222,7 +222,7 @@ export function PINGenerationCard({
               lineHeight: typography.lineHeight.tight,
             }}
           >
-            Generate Your CoreID PIN
+            Generate Your GidiPIN PIN
           </h2>
           <p
             className="text-gray-400"

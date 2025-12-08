@@ -81,8 +81,8 @@ export const IdentityCard: React.FC = () => {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${profile.name} - CoreID`,
-          text: `Check out my professional identity on CoreID`,
+          title: `${profile.name} - GidiPIN`,
+          text: `Check out my professional identity on GidiPIN`,
           url: publicProfileUrl
         });
 
@@ -124,7 +124,7 @@ export const IdentityCard: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'coreid.pkpass';
+      a.download = 'GidiPIN.pkpass';
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

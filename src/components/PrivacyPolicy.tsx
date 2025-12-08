@@ -33,7 +33,7 @@ export function PrivacyPolicy() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-At CoreID, we are committed to protecting your privacy and personal data. This Privacy Policy explains how we collect, use, share, and protect your information when you use our platform. We comply with the Nigeria Data Protection Regulation (NDPR), GDPR, and other applicable data protection laws.
+At GidiPIN, we are committed to protecting your privacy and personal data. This Privacy Policy explains how we collect, use, share, and protect your information when you use our platform. We comply with the Nigeria Data Protection Regulation (NDPR), GDPR, and other applicable data protection laws.
               </p>
             </CardContent>
           </Card>
@@ -278,8 +278,8 @@ At CoreID, we are committed to protecting your privacy and personal data. This P
                 For privacy-related questions or to exercise your rights:
               </p>
               <ul className="space-y-1 text-sm">
-            <li><strong>Email:</strong> dpo@CoreID.work</li>
-            <li><strong>Address:</strong> Data Protection Officer, CoreID, Lagos, Nigeria</li>
+            <li><strong>Email:</strong> dpo@GidiPIN.work</li>
+            <li><strong>Address:</strong> Data Protection Officer, GidiPIN, Lagos, Nigeria</li>
                 <li><strong>Phone:</strong> +234 XXX XXX XXXX</li>
               </ul>
             </CardContent>

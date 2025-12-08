@@ -133,7 +133,7 @@ const handleRequest = async (c: any) => {
         body: JSON.stringify({
           from: `CoreID <${FROM_EMAIL}>`,
           to: contact,
-          subject: 'Your CoreID Verification Code',
+          subject: 'Your GidiPIN Verification Code',
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
               <h2>Verification Code</h2>
