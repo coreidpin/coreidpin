@@ -433,25 +433,53 @@ const handleVerify = async (c: any) => {
       }
       
     } else {
-      // Existing user - fetch email and type
+      // Existing user - fetch email and current metadata
       const { data: userData } = await supabase.auth.admin.getUserById(userId);
       userEmail = userData?.user?.email || null;
-      const currentUserType = userData?.user?.user_metadata?.userType;
+      let currentUserType = userData?.user?.user_metadata?.userType;
       
-      // Update profile if new data provided
-      if (name || email || phone) {
-        if (currentUserType === 'business') {
-             const updateData: any = { updated_at: new Date().toISOString() };
-             if (name) updateData.company_name = name;
-             if (email) updateData.company_email = email;
-             await supabase.from('business_profiles').update(updateData).eq('user_id', userId);
-        } else {
-             const updateData: any = { updated_at: new Date().toISOString() };
-             if (name) updateData.name = name;
-             if (email) updateData.email = email;
-             if (phone) updateData.phone = phone;
-             await supabase.from('profiles').update(updateData).eq('user_id', userId);
-        }
+      // CRITICAL FIX: If userType is provided in request, update metadata and use it
+      // This allows users to "fix" their account type if it was set incorrectly or defaulted
+      if (userType && userType !== currentUserType) {
+        console.log(`Updating userType from ${currentUserType} to ${userType}`);
+        const newMetadata = { ...userData?.user?.user_metadata, userType };
+        await supabase.auth.admin.updateUserById(userId, { user_metadata: newMetadata });
+        currentUserType = userType;
+      }
+      
+      // Ensure specific profile exists and update it
+      if (currentUserType === 'business') {
+        const businessData: any = {
+           user_id: userId,
+           updated_at: new Date().toISOString()
+        };
+        if (name) businessData.company_name = name;
+        if (email) businessData.company_email = email;
+        if (website) businessData.website = website;
+        if (industry) businessData.industry = industry;
+
+        // Upsert to ensure it exists
+        const { error: busError } = await supabase
+          .from('business_profiles')
+          .upsert(businessData, { onConflict: 'user_id' });
+          
+        if (busError) console.error('Business profile update error:', busError);
+        
+      } else {
+         // Default to Professional
+         const profileData: any = {
+           user_id: userId,
+           updated_at: new Date().toISOString()
+         };
+         if (name) profileData.name = name;
+         if (email) profileData.email = email;
+         if (phone) profileData.phone = phone;
+
+         const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(profileData, { onConflict: 'user_id' });
+          
+         if (profileError) console.error('Profile update error:', profileError);
       }
     }
 

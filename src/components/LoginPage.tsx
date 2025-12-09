@@ -30,13 +30,16 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   };
 
   const handleLoginSuccess = (accessToken: string, user: any) => {
-    // Extract userType from metadata or default to professional
-    const userType = user?.user_metadata?.userType || 'professional';
+    // Priority:
+    // 1. userType state (what they selected in the UI)
+    // 2. Metadata from user object
+    // 3. Default to 'professional'
+    const finalUserType = userType || user?.user_metadata?.userType || 'professional';
     
     if (onLoginSuccess) {
-      onLoginSuccess(userType, user);
+      onLoginSuccess(finalUserType, user);
     } else {
-      defaultOnLoginSuccess(userType);
+      defaultOnLoginSuccess(finalUserType);
     }
   };
 
@@ -58,6 +61,14 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
       access_token: accessToken,
       refresh_token: accessToken
     });
+    
+    // Pass the userType from the state, not extracting from response potentially
+    // The previous implementation was extracting from user.user_metadata, which might be stale or unset if it's a new user
+    // We should respect the type chosen in the UI
+    const finalUserType = user?.user_metadata?.userType || userType;
+    
+    // Update local storage with intended user type
+    localStorage.setItem('userType', finalUserType);
     
     handleLoginSuccess(accessToken, user);
   };

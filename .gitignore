@@ -4,7 +4,7 @@ node_modules/
 build/
 .vercel
 .sql
-
+.md
 *.txt
 
 

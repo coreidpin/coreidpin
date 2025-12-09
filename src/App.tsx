@@ -19,7 +19,7 @@ import {
 } from './utils/session';
 import { initAmplitude, identifyUser, resetAmplitude, trackEvent } from './utils/amplitude';
 
-type UserType = 'landing' | 'employer' | 'professional' | 'university';
+type UserType = 'landing' | 'employer' | 'professional' | 'university' | 'business';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('professional');
@@ -366,7 +366,7 @@ export default function App() {
     window.location.href = '/admin';
   };
 
-  const handleLoginSuccess = async (userType: 'employer' | 'professional' | 'university', user: any) => {
+  const handleLoginSuccess = async (userType: 'employer' | 'professional' | 'university' | 'business', user: any) => {
     setIsAuthenticated(true);
     setCurrentView(userType);
     setUserData(user);
@@ -406,8 +406,14 @@ export default function App() {
     
 
     
-    // Navigate to dashboard
-    window.location.href = '/dashboard';
+    // Navigate to correct dashboard based on user type
+    if (userType === 'business') {
+      window.location.href = '/developer';
+    } else if (userType === 'employer') {
+      window.location.href = '/employers';
+    } else {
+      window.location.href = '/dashboard';
+    }
   };
 
   const handleOnboardingComplete = async () => {
@@ -424,7 +430,8 @@ export default function App() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
-        await supabase.from('profiles').update({ onboarding_complete: true }).eq('user_id', user.id);
+        // @ts-ignore
+        await supabase.from('profiles').update({ onboarding_complete: true } as any).eq('user_id', user.id);
       }
     } catch (err) {
       console.error('Error syncing onboarding_complete to profiles:', err);
@@ -554,7 +561,7 @@ export default function App() {
           // Navigate to dashboard after closing modal
           window.location.href = '/dashboard';
         }}
-        userType={currentView as 'employer' | 'professional' | 'university'}
+        userType={currentView as 'employer' | 'professional' | 'university' | 'business'}
       />
       <Toaster />
     </>

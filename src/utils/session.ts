@@ -15,7 +15,7 @@ export interface SessionState {
   accessToken: string;
   refreshToken: string;
   userId: string;
-  userType: 'employer' | 'professional' | 'university';
+  userType: 'employer' | 'professional' | 'university' | 'business';
   expiresAt: number; // Unix timestamp
 }
 

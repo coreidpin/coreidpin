@@ -6,7 +6,7 @@ import { CheckCircle } from 'lucide-react'
 type Props = {
   open: boolean
   onClose: () => void
-  userType: 'employer' | 'professional' | 'university'
+  userType: 'employer' | 'professional' | 'university' | 'business'
 }
 
 export function VerificationSuccessModal({ open, onClose, userType }: Props) {
