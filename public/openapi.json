@@ -1,0 +1,208 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "GidiPIN API",
+    "version": "1.0.0",
+    "description": "Official API documentation for GidiPIN - The Professional Identity Platform. Integrate professional verification and instant sign-in into your applications."
+  },
+  "servers": [
+    {
+      "url": "https://api.gidipin.com/api/v1",
+      "description": "Production API Gateway"
+    },
+    {
+      "url": "https://<your-project-ref>.supabase.co/functions/v1",
+      "description": "Direct Edge Functions (Development)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Your business API Key found in the Developer Console"
+      }
+    },
+    "schemas": {
+      "ProfessionalProfile": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string", "format": "uuid" },
+          "full_name": { "type": "string" },
+          "pin": { "type": "string" },
+          "profession": { "type": "string" },
+          "is_verified": { "type": "boolean" },
+          "photo_url": { "type": "string", "nullable": true }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "error_code": { "type": "string" }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    { "name": "Verification", "description": "Verify professional identities using PINs" },
+    { "name": "Instant Sign-In", "description": "Passwordless authentication flow" }
+  ],
+  "paths": {
+    "/verify": {
+      "post": {
+        "tags": ["Verification"],
+        "summary": "Verify a PIN",
+        "description": "Checks if a professional PIN is valid and active.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pin": { "type": "string", "example": "123456" }
+                },
+                "required": ["pin"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verification result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "valid": { "type": "boolean" },
+                    "professional": { "$ref": "#/components/schemas/ProfessionalProfile" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "PIN not found" },
+          "401": { "description": "Invalid API Key" }
+        }
+      }
+    },
+    "/professional/{pin}": {
+      "get": {
+        "tags": ["Verification"],
+        "summary": "Get Professional Profile",
+        "description": "Retrieve public details of a professional by their PIN.",
+        "parameters": [
+          {
+            "name": "pin",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Professional profile data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfessionalProfile" }
+              }
+            }
+          },
+          "404": { "description": "Professional not found" }
+        }
+      }
+    },
+    "/signin/initiate": {
+      "post": {
+        "tags": ["Instant Sign-In"],
+        "summary": "Initiate Sign-In Flow",
+        "description": "Start an Instant Sign-In process. Returns a consent URL to redirect the user to.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pin": { "type": "string", "description": "The professional's PIN" },
+                  "redirect_uri": { "type": "string", "format": "uri", "description": "Where to redirect after consent" },
+                  "state": { "type": "string", "description": "Random string for CSRF protection" },
+                  "scopes": { 
+                    "type": "array", 
+                    "items": { "type": "string" },
+                    "default": ["basic"]
+                  }
+                },
+                "required": ["pin", "redirect_uri"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Flow initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "consent_url": { "type": "string", "description": "Redirect user here" },
+                    "consent_token": { "type": "string" },
+                    "expires_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signin/exchange": {
+      "post": {
+        "tags": ["Instant Sign-In"],
+        "summary": "Exchange Auth Code",
+        "description": "Exchange the authorization code received at the redirect_uri for an access token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": { "type": "string", "description": "The authorization code" }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access Token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "token_type": { "type": "string", "example": "Bearer" },
+                    "expires_in": { "type": "integer" },
+                    "professional": { "$ref": "#/components/schemas/ProfessionalProfile" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

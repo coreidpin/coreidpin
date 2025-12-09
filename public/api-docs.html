@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GidiPIN API Documentation</title>
+  <meta name="description" content="Interactive API reference for GidiPIN Platform" />
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+  <style>
+    body { margin: 0; padding: 0; background: #f8f9fa; }
+    #swagger-ui { max-width: 1400px; margin: 0 auto; background: white; min-height: 100vh; }
+    .swagger-ui .topbar { background-color: #111827; }
+    .swagger-ui .info .title small.version-stamp { background-color: #7c3aed; }
+    .swagger-ui .btn.authorize { color: #7c3aed; border-color: #7c3aed; }
+    .swagger-ui .btn.authorize svg { fill: #7c3aed; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js" crossorigin></script>
+  <script>
+    window.onload = () => {
+      window.ui = SwaggerUIBundle({
+        url: '/openapi.json',
+        dom_id: '#swagger-ui',
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout",
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 1,
+        docExpansion: 'list',
+        filter: true
+      });
+    };
+  </script>
+</body>
+</html>
