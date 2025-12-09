@@ -6,6 +6,9 @@ import { Badge } from './ui/badge';
 import { supabase } from '../utils/supabase/client';
 import { APIKeysManager } from './developer/APIKeysManager';
 import { APIUsageDashboard } from './developer/APIUsageDashboard';
+import { TeamManager } from './developer/TeamManager';
+import { WebhooksManager } from './developer/WebhooksManager';
+import { BusinessSettings } from './developer/BusinessSettings';
 import {
   Key,
   BarChart3,
@@ -15,7 +18,8 @@ import {
   Settings,
   Sparkles,
   Zap,
-  LayoutDashboard
+  LayoutDashboard,
+  Users
 } from 'lucide-react';
 
 export function DeveloperConsole() {
@@ -136,6 +140,10 @@ export function DeveloperConsole() {
               <Key className="w-4 h-4" />
               API Keys
             </TabsTrigger>
+            <TabsTrigger value="team" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+              <Users className="w-4 h-4" />
+              Team
+            </TabsTrigger>
             <TabsTrigger value="docs" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <BookOpen className="w-4 h-4" />
               Documentation
@@ -158,6 +166,11 @@ export function DeveloperConsole() {
           {/* API Keys Tab */}
           <TabsContent value="api-keys">
             <APIKeysManager />
+          </TabsContent>
+
+          {/* Team Tab */}
+          <TabsContent value="team">
+            <TeamManager businessId={businessProfile?.id} />
           </TabsContent>
 
           {/* Documentation Tab */}
@@ -200,32 +213,12 @@ export function DeveloperConsole() {
 
           {/* Webhooks Tab */}
           <TabsContent value="webhooks">
-            <Card className="bg-white border-gray-200 shadow-sm">
-              <CardContent className="p-12 text-center">
-                <Webhook className="w-16 h-16 text-purple-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Webhooks
-                </h3>
-                <p className="text-gray-500">
-                  Configure webhooks to receive real-time notifications (Coming Soon)
-                </p>
-              </CardContent>
-            </Card>
+            <WebhooksManager businessId={businessProfile?.id} />
           </TabsContent>
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <Card className="bg-white border-gray-200 shadow-sm">
-              <CardContent className="p-12 text-center">
-                <Settings className="w-16 h-16 text-purple-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Settings
-                </h3>
-                <p className="text-gray-500">
-                  Configure your business profile and API preferences (Coming Soon)
-                </p>
-              </CardContent>
-            </Card>
+            <BusinessSettings businessId={businessProfile?.id} initialProfile={businessProfile} />
           </TabsContent>
         </Tabs>
       </div>
