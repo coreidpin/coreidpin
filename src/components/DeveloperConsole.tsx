@@ -126,24 +126,24 @@ export function DeveloperConsole() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-gray-800/50 border border-gray-700 p-1">
-            <TabsTrigger value="overview" className="gap-2">
+          <TabsList className="bg-white border border-gray-200 p-1">
+            <TabsTrigger value="overview" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <BarChart3 className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="api-keys" className="gap-2">
+            <TabsTrigger value="api-keys" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <Key className="w-4 h-4" />
               API Keys
             </TabsTrigger>
-            <TabsTrigger value="docs" className="gap-2">
+            <TabsTrigger value="docs" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <BookOpen className="w-4 h-4" />
               Documentation
             </TabsTrigger>
-            <TabsTrigger value="webhooks" className="gap-2">
+            <TabsTrigger value="webhooks" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <Webhook className="w-4 h-4" />
               Webhooks
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
+            <TabsTrigger value="settings" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <Settings className="w-4 h-4" />
               Settings
             </TabsTrigger>
