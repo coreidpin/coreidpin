@@ -41,6 +41,7 @@ const BusinessRegistration = lazy(() => import('./business/BusinessRegistration'
 const BusinessLogin = lazy(() => import('./business/BusinessLogin').then(m => ({ default: m.BusinessLogin })));
 const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
 const PublicPINPage = lazy(() => import('./PublicPINPage'));
+const ConsentPage = lazy(() => import('./ConsentPage').then(m => ({ default: m.ConsentPage })));
 
 // Legal & Policy Pages
 const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
@@ -792,6 +793,16 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <Suspense fallback={<LoadingSpinner />}>
               <PublicPINPageWrapper />
+            </Suspense>
+          } 
+        />
+
+        {/* Consent/Authorization Routes */}
+        <Route 
+          path="/consent/:consent_token" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <ConsentPage />
             </Suspense>
           } 
         />
