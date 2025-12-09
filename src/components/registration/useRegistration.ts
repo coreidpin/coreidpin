@@ -188,6 +188,27 @@ export function useRegistration() {
         
         // Initialize auth state
         await initAuth()
+
+        // FAIL-SAFE: Explicitly create business profile if needed
+        // This ensures that if the backend trigger missed it, we catch it here.
+        if (formData.userType === 'business' && result.user?.id) {
+            try {
+                const { error: upsertError } = await supabase
+                    .from('business_profiles')
+                    .upsert({
+                        user_id: result.user.id,
+                        company_name: formData.name || 'My Business',
+                        company_email: formData.email,
+                        industry: formData.industry,
+                        website: formData.website,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                
+                if (upsertError) console.warn('Frontend business profile sync warning:', upsertError);
+            } catch (err) {
+                console.warn('Frontend business profile sync failed', err);
+            }
+        }
         
         RegistrationStateManager.markCompleted()
         setStage('success')

@@ -52,8 +52,28 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
         });
     } else if (businessId) {
         fetchProfile();
+    } else {
+        // Fallback: Try to prefill from Auth Metadata if no business profile exists yet
+        prefillFromAuth();
     }
   }, [businessId, initialProfile]);
+
+  const prefillFromAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.user_metadata) {
+        const meta = user.user_metadata;
+        // Use 'companyName' if available, otherwise 'name' (common in basic registration)
+        const nameToUse = meta.companyName || meta.name || '';
+        
+        setProfile(prev => ({
+            ...prev,
+            company_name: nameToUse,
+            company_email: meta.email || user.email || '',
+            industry: meta.industry || '',
+            website: meta.website || ''
+        }));
+    }
+  };
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -102,7 +122,12 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
         }
 
         if (!user) {
-            toast.error('Session expired. Please refresh the page or log in again.');
+            toast.error('Session expired. Redirecting to login...');
+            // clear invalid tokens
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('isAuthenticated');
+            setTimeout(() => window.location.href = '/login', 2000);
             return;
         }
 

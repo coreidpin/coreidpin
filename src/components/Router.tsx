@@ -603,7 +603,9 @@ export const AppRouter: React.FC<RouterProps> = ({
           element={
             <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
-                <ProfessionalDashboard />
+                {userType === 'business' ? <Navigate to="/developer" replace /> :
+                 userType === 'employer' ? <Navigate to="/employers" replace /> :
+                 <ProfessionalDashboard />}
               </Suspense>
             </DashboardAuthWrapper>
           } 
