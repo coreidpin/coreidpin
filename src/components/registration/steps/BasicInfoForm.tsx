@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from '../../ui/button'
 import { Label } from '../../ui/label'
-import { Users, Mail, Loader2, ArrowLeft, Chrome } from 'lucide-react'
+import { Users, Mail, Loader2, ArrowLeft, Chrome, Briefcase, Globe } from 'lucide-react'
 import { CountryCodeSelect } from '../../ui/country-code-select'
 import { FormData } from '../useRegistration'
 
@@ -61,6 +61,38 @@ export function BasicInfoForm({
         </div>
         {errors.name && <p className="text-xs text-red-400 ml-1">{errors.name}</p>}
       </div>
+
+      {formData.userType === 'business' && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="industry" className="text-sm font-medium text-white/80 ml-1">Industry</Label>
+            <div className="flex items-center h-14 px-4 bg-white/5 border border-white/10 rounded-xl focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all group">
+              <Briefcase className="h-5 w-5 text-white/40 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+              <input
+                id="industry"
+                placeholder="Fintech, Health, etc."
+                value={formData.industry || ''}
+                onChange={(e) => updateField('industry', e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 h-full w-full text-base"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="website" className="text-sm font-medium text-white/80 ml-1">Website</Label>
+            <div className="flex items-center h-14 px-4 bg-white/5 border border-white/10 rounded-xl focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all group">
+              <Globe className="h-5 w-5 text-white/40 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+              <input
+                id="website"
+                placeholder="https://example.com"
+                value={formData.website || ''}
+                onChange={(e) => updateField('website', e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 h-full w-full text-base"
+              />
+            </div>
+          </div>
+        </>
+      )}
       
       <div className="space-y-2">
         <Label htmlFor="quick-phone" className="text-sm font-medium text-white/80 ml-1">Phone Number</Label>

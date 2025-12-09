@@ -136,78 +136,78 @@ export function APIUsageDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-100">API Usage & Analytics</h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <h2 className="text-2xl font-bold text-gray-900">API Usage & Analytics</h2>
+        <p className="text-sm text-gray-500 mt-1">
           Monitor your API requests and performance metrics
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 border-purple-500/50">
+        <Card className="bg-white border-purple-100 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Total Requests</p>
-                <p className="text-3xl font-bold text-gray-100 mt-1">
+                <p className="text-sm text-gray-500">Total Requests</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.total_requests.toLocaleString()}
                 </p>
               </div>
-              <Activity className="w-10 h-10 text-purple-400" />
+              <Activity className="w-10 h-10 text-purple-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-900/50 to-green-800/30 border-green-500/50">
+        <Card className="bg-white border-green-100 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Success Rate</p>
-                <p className="text-3xl font-bold text-gray-100 mt-1">
+                <p className="text-sm text-gray-500">Success Rate</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.total_requests > 0 
                     ? Math.round((stats.successful_requests / stats.total_requests) * 100)
                     : 0}%
                 </p>
               </div>
-              <CheckCircle className="w-10 h-10 text-green-400" />
+              <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 border-blue-500/50">
+        <Card className="bg-white border-blue-100 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Avg Response Time</p>
-                <p className="text-3xl font-bold text-gray-100 mt-1">
+                <p className="text-sm text-gray-500">Avg Response Time</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.avg_response_time}ms
                 </p>
               </div>
-              <Clock className="w-10 h-10 text-blue-400" />
+              <Clock className="w-10 h-10 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 border-orange-500/50">
+        <Card className="bg-white border-orange-100 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-400">Today's Requests</p>
-                <p className="text-3xl font-bold text-gray-100 mt-1">
+                <p className="text-sm text-gray-500">Today's Requests</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
                   {stats.requests_today.toLocaleString()}
                 </p>
               </div>
-              <TrendingUp className="w-10 h-10 text-orange-400" />
+              <TrendingUp className="w-10 h-10 text-orange-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Monthly Quota */}
-      <Card className="bg-gray-800/50 border-gray-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-gray-100 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-purple-400" />
+          <CardTitle className="text-gray-900 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-purple-600" />
             Monthly Quota Usage
           </CardTitle>
           <CardDescription>
@@ -237,13 +237,13 @@ export function APIUsageDashboard() {
       </Card>
 
       {/* Recent Requests */}
-      <Card className="bg-gray-800/50 border-gray-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-gray-100 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-purple-400" />
+          <CardTitle className="text-gray-900 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-purple-600" />
             Recent API Requests
           </CardTitle>
-          <CardDescription>Latest 10 requests to your API endpoints</CardDescription>
+          <CardDescription className="text-gray-500">Latest 10 requests to your API endpoints</CardDescription>
         </CardHeader>
         <CardContent>
           {recentRequests.length === 0 ? (
@@ -257,14 +257,14 @@ export function APIUsageDashboard() {
               {recentRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="font-mono text-xs">
+                      <Badge variant="outline" className="font-mono text-xs text-gray-700">
                         {request.method}
                       </Badge>
-                      <code className="text-sm text-gray-300">{request.endpoint}</code>
+                      <code className="text-sm text-gray-700">{request.endpoint}</code>
                     </div>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                       <span>{new Date(request.created_at).toLocaleString()}</span>

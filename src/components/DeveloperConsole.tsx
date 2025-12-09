@@ -14,7 +14,8 @@ import {
   Webhook,
   Settings,
   Sparkles,
-  Zap
+  Zap,
+  LayoutDashboard
 } from 'lucide-react';
 
 export function DeveloperConsole() {
@@ -46,7 +47,7 @@ export function DeveloperConsole() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -56,17 +57,17 @@ export function DeveloperConsole() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-100 flex items-center gap-3">
-                <Code2 className="w-8 h-8 text-purple-400" />
-                Developer Console
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <LayoutDashboard className="w-8 h-8 text-purple-600" />
+                Business Console
               </h1>
-              <p className="text-gray-400 mt-2">
+              <p className="text-gray-500 mt-2">
                 {businessProfile?.company_name || 'Welcome to GidiPIN API'}
               </p>
             </div>
             <Badge 
               variant="outline" 
-              className="text-lg px-4 py-2 border-purple-500 text-purple-400"
+              className="text-lg px-4 py-2 border-purple-200 text-purple-700 bg-purple-50"
             >
               {businessProfile?.api_tier?.toUpperCase() || 'FREE'} Tier
             </Badge>
@@ -74,15 +75,15 @@ export function DeveloperConsole() {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border-purple-500/30">
+            <Card className="bg-white border-purple-100 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <Zap className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Zap className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Monthly Quota</p>
-                    <p className="text-lg font-semibold text-gray-100">
+                    <p className="text-xs text-gray-500">Monthly Quota</p>
+                    <p className="text-lg font-semibold text-gray-900">
                       {businessProfile?.monthly_api_quota?.toLocaleString() || '1,000'}
                     </p>
                   </div>
@@ -90,15 +91,15 @@ export function DeveloperConsole() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-blue-500/30">
+            <Card className="bg-white border-blue-100 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/20 rounded-lg">
-                    <BarChart3 className="w-5 h-5 text-blue-400" />
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <BarChart3 className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">This Month</p>
-                    <p className="text-lg font-semibold text-gray-100">
+                    <p className="text-xs text-gray-500">This Month</p>
+                    <p className="text-lg font-semibold text-gray-900">
                       {businessProfile?.current_month_usage?.toLocaleString() || '0'} requests
                     </p>
                   </div>
@@ -106,15 +107,15 @@ export function DeveloperConsole() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-900/30 to-green-800/20 border-green-500/30">
+            <Card className="bg-white border-green-100 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-500/20 rounded-lg">
-                    <Sparkles className="w-5 h-5 text-green-400" />
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Sparkles className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400">Status</p>
-                    <p className="text-lg font-semibold text-green-400">
+                    <p className="text-xs text-gray-500">Status</p>
+                    <p className="text-lg font-semibold text-green-600">
                       {businessProfile?.is_verified ? 'Verified' : 'Active'}
                     </p>
                   </div>
@@ -161,34 +162,34 @@ export function DeveloperConsole() {
 
           {/* Documentation Tab */}
           <TabsContent value="docs">
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-12 text-center">
-                <BookOpen className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-100 mb-2">
+                <BookOpen className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   API Documentation
                 </h3>
-                <p className="text-gray-400 mb-6">
+                <p className="text-gray-500 mb-6">
                   Complete reference for integrating GidiPIN into your application
                 </p>
                 <div className="space-y-4 max-w-2xl mx-auto text-left">
-                  <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-                    <h4 className="font-semibold text-gray-100 mb-2">PIN Verification API</h4>
-                    <code className="text-sm text-purple-400">POST /api/v1/verify</code>
-                    <p className="text-sm text-gray-400 mt-2">
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-2">PIN Verification API</h4>
+                    <code className="text-sm text-purple-600">POST /api/v1/verify</code>
+                    <p className="text-sm text-gray-500 mt-2">
                       Verify if a PIN exists and get basic professional information
                     </p>
                   </div>
-                  <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-                    <h4 className="font-semibold text-gray-100 mb-2">Professional Data API</h4>
-                    <code className="text-sm text-purple-400">GET /api/v1/professional/:pin</code>
-                    <p className="text-sm text-gray-400 mt-2">
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-2">Professional Data API</h4>
+                    <code className="text-sm text-purple-600">GET /api/v1/professional/:pin</code>
+                    <p className="text-sm text-gray-500 mt-2">
                       Access detailed professional data with consent
                     </p>
                   </div>
-                  <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-                    <h4 className="font-semibold text-gray-100 mb-2">Instant Sign-In</h4>
-                    <code className="text-sm text-purple-400">POST /api/v1/signin/initiate</code>
-                    <p className="text-sm text-gray-400 mt-2">
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-2">Instant Sign-In</h4>
+                    <code className="text-sm text-purple-600">POST /api/v1/signin/initiate</code>
+                    <p className="text-sm text-gray-500 mt-2">
                       OAuth-like flow for user authentication
                     </p>
                   </div>
@@ -199,13 +200,13 @@ export function DeveloperConsole() {
 
           {/* Webhooks Tab */}
           <TabsContent value="webhooks">
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-12 text-center">
-                <Webhook className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-100 mb-2">
+                <Webhook className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Webhooks
                 </h3>
-                <p className="text-gray-400">
+                <p className="text-gray-500">
                   Configure webhooks to receive real-time notifications (Coming Soon)
                 </p>
               </CardContent>
@@ -214,13 +215,13 @@ export function DeveloperConsole() {
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <Card className="bg-gray-800/50 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-12 text-center">
-                <Settings className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-100 mb-2">
+                <Settings className="w-16 h-16 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Settings
                 </h3>
-                <p className="text-gray-400">
+                <p className="text-gray-500">
                   Configure your business profile and API preferences (Coming Soon)
                 </p>
               </CardContent>

@@ -197,8 +197,8 @@ export function APIKeysManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-100">API Keys</h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <h2 className="text-2xl font-bold text-gray-900">API Keys</h2>
+          <p className="text-sm text-gray-500 mt-1">
             Manage your API authentication keys for accessing GidiPIN services
           </p>
         </div>
@@ -216,23 +216,23 @@ export function APIKeysManager() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/50 rounded-lg p-6"
+          className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6"
         >
           <div className="flex items-start gap-3">
             <CheckCircle2 className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-100 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 API Key Created Successfully!
               </h3>
-              <p className="text-sm text-gray-300 mb-4">
+              <p className="text-sm text-gray-600 mb-4">
                 Save these credentials securely. You won't be able to see the secret again.
               </p>
               
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs text-gray-400">API Key</Label>
+                  <Label className="text-xs text-gray-500">API Key</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="flex-1 bg-black/30 px-3 py-2 rounded text-sm text-gray-100 font-mono">
+                    <code className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded text-sm text-gray-900 font-mono">
                       {newlyCreatedKey.api_key}
                     </code>
                     <Button
@@ -246,9 +246,9 @@ export function APIKeysManager() {
                 </div>
                 
                 <div>
-                  <Label className="text-xs text-gray-400">API Secret</Label>
+                  <Label className="text-xs text-gray-500">API Secret</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="flex-1 bg-black/30 px-3 py-2 rounded text-sm text-gray-100 font-mono">
+                    <code className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded text-sm text-gray-900 font-mono">
                       {newlyCreatedKey.api_secret}
                     </code>
                     <Button
@@ -277,10 +277,10 @@ export function APIKeysManager() {
 
       {/* Create Key Form */}
       {showCreateModal && (
-        <Card className="bg-gray-800/50 border-gray-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-gray-100">Create New API Key</CardTitle>
-            <CardDescription>Generate a new key for API authentication</CardDescription>
+            <CardTitle className="text-gray-900">Create New API Key</CardTitle>
+            <CardDescription className="text-gray-500">Generate a new key for API authentication</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -290,7 +290,7 @@ export function APIKeysManager() {
                 placeholder="e.g., Production Server, Development Testing"
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
-                className="bg-gray-900 border-gray-700 text-gray-100"
+                className="bg-white border-gray-200 text-gray-900 focus:ring-purple-500"
               />
             </div>
 
@@ -343,10 +343,10 @@ export function APIKeysManager() {
 
       {/* API Keys List */}
       {apiKeys.length === 0 ? (
-        <Card className="bg-gray-800/30 border-gray-700">
+        <Card className="bg-gray-50 border-dashed border-gray-200">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Key className="w-16 h-16 text-gray-600 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-300 mb-2">No API Keys Yet</h3>
+            <Key className="w-16 h-16 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No API Keys Yet</h3>
             <p className="text-sm text-gray-500 text-center mb-4">
               Create your first API key to start integrating GidiPIN
             </p>
@@ -359,11 +359,11 @@ export function APIKeysManager() {
       ) : (
         <div className="grid gap-4">
           {apiKeys.map((key) => (
-            <Card key={key.id} className="bg-gray-800/50 border-gray-700">
+            <Card key={key.id} className="bg-white border-gray-200 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-100">{key.key_name}</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">{key.key_name}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant={key.environment === 'production' ? 'default' : 'secondary'}>
                         {key.environment}
@@ -396,9 +396,9 @@ export function APIKeysManager() {
 
                 <div className="space-y-3">
                   <div>
-                    <Label className="text-xs text-gray-400">API Key</Label>
+                    <Label className="text-xs text-gray-500">API Key</Label>
                     <div className="flex items-center gap-2 mt-1">
-                      <code className="flex-1 bg-black/30 px-3 py-2 rounded text-sm text-gray-100 font-mono">
+                      <code className="flex-1 bg-gray-50 border border-gray-200 px-3 py-2 rounded text-sm text-gray-900 font-mono">
                         {revealedKeys.has(key.id) ? key.api_key : maskKey(key.api_key)}
                       </code>
                       <Button

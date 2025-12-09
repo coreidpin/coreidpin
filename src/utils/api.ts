@@ -828,7 +828,7 @@ class APIClient {
   async verifyOTP(
     contact: string, 
     otp: string,
-    metadata?: { name?: string; email?: string; phone?: string; userType?: string },
+    metadata?: { name?: string; email?: string; phone?: string; userType?: string; website?: string; industry?: string },
     createAccount: boolean = false
   ) {
     const requestBody: any = { contact, otp, create_account: createAccount };
@@ -839,6 +839,8 @@ class APIClient {
       if (metadata.email) requestBody.email = metadata.email;
       if (metadata.phone) requestBody.phone = metadata.phone;
       if (metadata.userType) requestBody.userType = metadata.userType;
+      if (metadata.website) requestBody.website = metadata.website;
+      if (metadata.industry) requestBody.industry = metadata.industry;
     }
     
     const response = await this.fetchWithRetry(`${AUTH_OTP_URL}/verify`, {

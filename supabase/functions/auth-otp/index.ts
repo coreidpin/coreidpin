@@ -227,7 +227,7 @@ const handleRequest = async (c: any) => {
 const handleVerify = async (c: any) => {
   try {
     const body = await c.req.json().catch(() => ({}));
-    let { contact, otp, name, email, phone, create_account, userType } = body;
+    let { contact, otp, name, email, phone, create_account, userType, website, industry } = body;
 
     if (!contact || !otp) {
       return c.json({ error: 'Contact and OTP required' }, 400);
@@ -343,6 +343,8 @@ const handleVerify = async (c: any) => {
           user_id: userId,
           company_name: name || 'Business Name',
           company_email: email,
+          website: website,
+          industry: industry,
           updated_at: new Date().toISOString()
         };
         

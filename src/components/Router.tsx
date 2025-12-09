@@ -179,22 +179,36 @@ const Layout: React.FC<{
   userType: string;
   onLogin: (userType: 'employer' | 'professional' | 'university') => void;
   onLogout: () => void;
-}> = ({ children, currentPage, isAuthenticated, userType, onLogin, onLogout }) => (
-  <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#0a0b0d' }}>
-    <Navbar 
-      currentPage={currentPage}
-      onNavigate={() => {}} // Navigation handled by React Router
-      onLogin={onLogin}
-      onLogout={onLogout}
-      isAuthenticated={isAuthenticated}
-      userType={userType}
-    />
-    <main className="flex-1">
-      {children}
-    </main>
-    {currentPage !== 'login' && currentPage !== 'get-started' && <Footer onNavigate={() => {}} />}
-  </div>
-);
+}> = ({ children, currentPage, isAuthenticated, userType, onLogin, onLogout }) => {
+  // Use fixed height and hidden overflow for auth pages to prevent blank space/scrolling
+  const isAuthPage = currentPage === 'login' || currentPage === 'get-started';
+  const isWhitePage = currentPage === 'developer';
+  
+  const containerClass = isAuthPage 
+    ? "h-[100dvh] overflow-hidden flex flex-col" 
+    : "min-h-screen flex flex-col";
+
+  const containerStyle = isWhitePage 
+    ? { backgroundColor: '#ffffff', color: '#0f172a' }
+    : { backgroundColor: '#0a0b0d' };
+
+  return (
+    <div className={containerClass} style={containerStyle}>
+      <Navbar 
+        currentPage={currentPage}
+        onNavigate={() => {}} // Navigation handled by React Router
+        onLogin={onLogin}
+        onLogout={onLogout}
+        isAuthenticated={isAuthenticated}
+        userType={userType}
+      />
+      <main className="flex-1">
+        {children}
+      </main>
+      {currentPage !== 'login' && currentPage !== 'get-started' && <Footer onNavigate={() => {}} />}
+    </div>
+  );
+};
 
 import { ensureValidSession } from '../utils/session';
 
@@ -206,7 +220,8 @@ const DashboardAuthWrapper: React.FC<{
   isAuthenticated: boolean;
   userType: string;
   onLogout: () => void;
-}> = ({ children, isAuthenticated, userType, onLogout }) => {
+  currentPage?: string;
+}> = ({ children, isAuthenticated, userType, onLogout, currentPage = 'dashboard' }) => {
   const [authChecked, setAuthChecked] = React.useState(false);
   const [isValidAuth, setIsValidAuth] = React.useState(false);
 
@@ -255,7 +270,7 @@ const DashboardAuthWrapper: React.FC<{
     return (
       <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
         <Navbar 
-          currentPage="dashboard"
+          currentPage={currentPage}
           onNavigate={() => {}}
           onLogout={onLogout}
           isAuthenticated={isAuthenticated}
@@ -275,10 +290,12 @@ const DashboardAuthWrapper: React.FC<{
     return <Navigate to="/login" replace />;
   }
 
+  const isWhitePage = currentPage === 'developer';
+  
   return (
-    <div className="min-h-screen bg-[#0a0b0d] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: isWhitePage ? '#ffffff' : '#0a0b0d' }}>
       <Navbar 
-        currentPage="dashboard"
+        currentPage={currentPage}
         onNavigate={() => {}}
         onLogout={onLogout}
         isAuthenticated={isAuthenticated}
@@ -595,7 +612,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/developer" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} currentPage="developer">
               <Suspense fallback={<DashboardSkeleton />}>
                 <DeveloperConsole />
               </Suspense>

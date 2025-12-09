@@ -47,7 +47,7 @@ export function Navbar({
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   // Consider dashboard pages as "light" theme if they are rendering on white background
-  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers';
+  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
   const isProd = import.meta.env.PROD;
 
   useEffect(() => {

@@ -11,13 +11,15 @@ export type FormData = {
   email: string
   phone: string
   userType?: string
+  website?: string
+  industry?: string
 }
 
 export type RegistrationStage = 'basic' | 'otp-verification' | 'success'
 
 export function useRegistration() {
   const [formData, setFormData] = useState<FormData>({
-    name: '', email: '', phone: '', userType: 'professional'
+    name: '', email: '', phone: '', userType: 'professional', website: '', industry: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -171,7 +173,9 @@ export function useRegistration() {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        userType: formData.userType
+        userType: formData.userType,
+        website: formData.website,
+        industry: formData.industry
       }, true)
       
       if (result.access_token) {
