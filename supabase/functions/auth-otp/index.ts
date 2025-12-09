@@ -518,6 +518,25 @@ app.post('/refresh', handleRefresh);
 app.post('/auth-otp/refresh', handleRefresh);
 app.post('/functions/v1/auth-otp/refresh', handleRefresh);
 
+// Root path handler for Supabase client invocations
+app.post('/', async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  
+  // Route based on body content
+  if (body.otp) {
+    // Has OTP, so this is a verify request
+    return handleVerify(c);
+  } else if (body.contact || body.contact_type) {
+    // Has contact info, so this is a request
+    return handleRequest(c);
+  } else {
+    return c.json({ 
+      error: 'Invalid request. Include either contact/contact_type (to send OTP) or otp (to verify)',
+      received: Object.keys(body)
+    }, 400);
+  }
+});
+
 // Debug catch-all
 app.all('*', (c) => {
   console.log('Catch-all hit. Path:', c.req.path);

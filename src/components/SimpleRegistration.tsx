@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Card, CardContent } from './ui/card'
 import { Navbar } from './Navbar'
@@ -7,6 +8,7 @@ import { useRegistration } from './registration/useRegistration'
 import { BasicInfoForm } from './registration/steps/BasicInfoForm'
 import { OTPVerification } from './registration/steps/OTPVerification'
 import { SuccessView } from './registration/steps/SuccessView'
+import { UserTypeSelector } from './UserTypeSelector'
 
 type SimpleRegistrationProps = {
   onComplete?: () => void
@@ -15,6 +17,8 @@ type SimpleRegistrationProps = {
 }
 
 export default function SimpleRegistration({ onComplete, onBack, showChrome = true }: SimpleRegistrationProps) {
+  const navigate = useNavigate();
+  const [userType, setUserType] = useState<'professional' | 'business'>('professional');
   const {
     formData,
     errors,
@@ -36,6 +40,14 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
     handleVerifyOTP,
     handleGoogleSignIn
   } = useRegistration()
+
+  // Handle user type change - redirect to business registration if business selected
+  const handleUserTypeChange = (type: 'professional' | 'business') => {
+    setUserType(type);
+    if (type === 'business') {
+      navigate('/business/register');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0b0d] text-white flex flex-col">
@@ -75,19 +87,27 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
               <div className="space-y-6">
                 
                 {stage === 'basic' && (
-                  <BasicInfoForm
-                    formData={formData}
-                    errors={errors}
-                    isLoading={isLoading}
-                    countryCode={countryCode}
-                    countryError={countryError}
-                    setCountryCode={setCountryCode}
-                    setCountryError={setCountryError}
-                    updateField={updateField}
-                    onSubmit={handleStartRegistration}
-                    onGoogleSignIn={handleGoogleSignIn}
-                    onBack={onBack}
-                  />
+                  <>
+                    {/* User Type Selector - Only show at start of registration */}
+                    <UserTypeSelector 
+                      selectedType={userType}
+                      onTypeChange={handleUserTypeChange}
+                    />
+                    
+                    <BasicInfoForm
+                      formData={formData}
+                      errors={errors}
+                      isLoading={isLoading}
+                      countryCode={countryCode}
+                      countryError={countryError}
+                      setCountryCode={setCountryCode}
+                      setCountryError={setCountryError}
+                      updateField={updateField}
+                      onSubmit={handleStartRegistration}
+                      onGoogleSignIn={handleGoogleSignIn}
+                      onBack={onBack}
+                    />
+                  </>
                 )}
 
                 {stage === 'otp-verification' && (

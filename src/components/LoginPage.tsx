@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { Loader2, Chrome, Shield } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { OTPRequestForm } from '../features/auth/OTPRequestForm';
 import { OTPVerifyForm } from '../features/auth/OTPVerifyForm';
+import { UserTypeSelector } from './UserTypeSelector';
 
 interface LoginPageProps {
   onLoginSuccess?: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
@@ -13,6 +15,8 @@ interface LoginPageProps {
 type AuthStep = 'request' | 'verify_otp';
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
+  const navigate = useNavigate();
+  const [userType, setUserType] = useState<'professional' | 'business'>('professional');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -92,6 +96,14 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     }
   };
 
+  // Handle user type change - redirect to business login if business selected
+  const handleUserTypeChange = (type: 'professional' | 'business') => {
+    setUserType(type);
+    if (type === 'business') {
+      navigate('/business/login');
+    }
+  };
+
   return (
     <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
       {step === 'request' && (
@@ -100,6 +112,12 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
             <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
             <p className="text-sm text-white/70">Sign in to your account</p>
           </div>
+
+          {/* User Type Selector */}
+          <UserTypeSelector 
+            selectedType={userType}
+            onTypeChange={handleUserTypeChange}
+          />
 
           {error && (
             <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50/10 text-sm text-red-400">

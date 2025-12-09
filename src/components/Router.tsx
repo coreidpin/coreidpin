@@ -24,27 +24,6 @@ const LandingPage = lazy(() => import('./LandingPage').then(m => ({ default: m.L
 const OurStoryPage = lazy(() => import('./OurStoryPage').then(m => ({ default: m.OurStoryPage })));
 const HowItWorksPage = lazy(() => import('./HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
 const SolutionsPage = lazy(() => import('./SolutionsPage').then(m => ({ default: m.SolutionsPage })));
-const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ default: m.PlaceholderPage })));
-const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
-const PrivacyPolicy = lazy(() => import('./PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
-const CookiesPolicy = lazy(() => import('./CookiesPolicy').then(m => ({ default: m.CookiesPolicy })));
-const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ default: m.GDPRCompliance })));
-const EmployerDashboard = lazy(() => import('./EmployerDashboard').then(m => ({ default: m.EmployerDashboard })));
-const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
-import { Navbar } from './Navbar';
-import { Footer } from './Footer';
-const LoginPage = lazy(() => import('./LoginPage'));
-import SimpleRegistration from './SimpleRegistration';
-const AuthVerifyEmail = lazy(() => import('./AuthVerifyEmail'));
-const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
-const PublicPINPage = lazy(() => import('./PublicPINPage'));
-const UniversityDashboard = lazy(() => import('./UniversityDashboard').then(m => ({ default: m.UniversityDashboard })));
-const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
-const UsersPage = lazy(() => import('../admin/pages/Users').then(m => ({ default: m.UsersPage })));
-const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
-const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
-const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
-const PINLoginLogsPage = lazy(() => import('../admin/pages/logs/PINLoginLogs').then(m => ({ default: m.PINLoginLogsPage })));
 const EmailVerificationLogsPage = lazy(() => import('../admin/pages/logs/EmailVerificationLogs').then(m => ({ default: m.EmailVerificationLogsPage })));
 const APIKeysPage = lazy(() => import('../admin/pages/integrations/APIKeys').then(m => ({ default: m.APIKeysPage })));
 const SettingsPage = lazy(() => import('../admin/pages/Settings'));
@@ -56,6 +35,30 @@ const SecuritySettingsPage = lazy(() => import('./SecuritySettingsPage').then(m 
 const EndorsementPage = lazy(() => import('./EndorsementPage').then(m => ({ default: m.EndorsementPage })));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
 const ReferralDashboard = lazy(() => import('./referrals/ReferralDashboard').then(m => ({ default: m.ReferralDashboard })));
+const LoginPage = lazy(() => import('./LoginPage'));
+const SimpleRegistration = lazy(() => import('./SimpleRegistration'));
+const BusinessRegistration = lazy(() => import('./business/BusinessRegistration').then(m => ({ default: m.BusinessRegistration })));
+const BusinessLogin = lazy(() => import('./business/BusinessLogin').then(m => ({ default: m.BusinessLogin })));
+const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
+const PublicPINPage = lazy(() => import('./PublicPINPage'));
+
+// Legal & Policy Pages
+const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
+const PrivacyPolicy = lazy(() => import('./PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const CookiesPolicy = lazy(() => import('./CookiesPolicy').then(m => ({ default: m.CookiesPolicy })));
+const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ default: m.GDPRCompliance })));
+const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ default: m.PlaceholderPage })));
+
+// Admin Pages
+const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const UsersPage = lazy(() => import('../admin/pages/Users').then(m => ({ default: m.UsersPage })));
+const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
+const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
+const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
+const PINLoginLogsPage = lazy(() => import('../admin/pages/logs/PINLoginLogs').then(m => ({ default: m.PINLoginLogsPage })));
+
+import { Navbar } from './Navbar';
+import { Footer } from './Footer';
 
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center py-16">
@@ -384,6 +387,25 @@ export const AppRouter: React.FC<RouterProps> = ({
           } 
         />
 
+        {/* Business Authentication Routes */}
+        <Route 
+          path="/business/register" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <BusinessRegistration />
+            </Suspense>
+          } 
+        />
+
+        <Route 
+          path="/business/login" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <BusinessLogin />
+            </Suspense>
+          } 
+        />
+
         <Route path="/verify-email" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
         <Route path="/email-verification" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
 
@@ -574,21 +596,6 @@ export const AppRouter: React.FC<RouterProps> = ({
               <Footer onNavigate={() => {}} />
             </div>
           } 
-        />
-
-        {/* Dashboard Routes - Protected */}
-        <Route
-          path="/dashboard"
-          element={
-            <Suspense fallback={<DashboardSkeleton />}>
-              <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
-                {userType === 'professional' && <ProfessionalDashboard />}
-                {userType === 'employer' && <EmployerDashboard />}
-                {userType === 'university' && <UniversityDashboard />}
-                {userType === 'admin' && <AdminDashboard />}
-              </DashboardAuthWrapper>
-            </Suspense>
-          }
         />
 
         <Route 
