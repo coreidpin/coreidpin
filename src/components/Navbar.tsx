@@ -301,7 +301,8 @@ export function Navbar({
                   size="sm"
                   onClick={() => {
                     setIsNavigating(true);
-                    navigate('/dashboard');
+                    const target = userType === 'business' ? '/developer' : '/dashboard';
+                    navigate(target);
                     setTimeout(() => setIsNavigating(false), 800);
                   }}
                   disabled={isNavigating}
@@ -629,9 +630,9 @@ export function Navbar({
         >
           <nav className="flex items-center justify-around px-2 py-3">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(userType === 'business' ? '/developer' : '/dashboard')}
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
-                currentPage.includes('dashboard') 
+                (currentPage.includes('dashboard') || currentPage.includes('developer')) 
                   ? 'text-[#32f08c] bg-[#32f08c]/10' 
                   : 'text-white/60 hover:text-white'
               }`}

@@ -25,8 +25,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   const [contact, setContact] = useState('');
   const [contactType, setContactType] = useState<'phone' | 'email'>('phone');
 
-  const defaultOnLoginSuccess = () => {
-    window.location.href = '/dashboard';
+  const defaultOnLoginSuccess = (userType: string) => {
+    window.location.href = userType === 'business' ? '/developer' : '/dashboard';
   };
 
   const handleLoginSuccess = (accessToken: string, user: any) => {
@@ -36,7 +36,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     if (onLoginSuccess) {
       onLoginSuccess(userType, user);
     } else {
-      defaultOnLoginSuccess();
+      defaultOnLoginSuccess(userType);
     }
   };
 
@@ -52,7 +52,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     localStorage.setItem('refreshToken', accessToken); // Using access token as refresh token
     localStorage.setItem('isAuthenticated', 'true');
     localStorage.setItem('userId', user?.id || '');
-    
+    localStorage.setItem('userType', user?.user_metadata?.userType || 'professional');
+
     await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: accessToken
@@ -96,12 +97,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     }
   };
 
-  // Handle user type change - redirect to business login if business selected
+  // Handle user type change
   const handleUserTypeChange = (type: 'professional' | 'business') => {
     setUserType(type);
-    if (type === 'business') {
-      navigate('/business/login');
-    }
   };
 
   return (
@@ -143,7 +141,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         )}
       </div>
 
-      {step === 'request' && (
+      {step === 'request' && userType !== 'business' && (
         <>
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">

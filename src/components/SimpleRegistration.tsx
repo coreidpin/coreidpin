@@ -41,12 +41,10 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
     handleGoogleSignIn
   } = useRegistration()
 
-  // Handle user type change - redirect to business registration if business selected
+  // Handle user type change
   const handleUserTypeChange = (type: 'professional' | 'business') => {
     setUserType(type);
-    if (type === 'business') {
-      navigate('/business/register');
-    }
+    updateField('userType', type);
   };
 
   return (

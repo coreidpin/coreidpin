@@ -13,7 +13,10 @@ export function SuccessView() {
         <p className="text-white/60">Your secure digital identity is ready.</p>
       </div>
       <Button
-        onClick={() => window.location.href = '/dashboard'}
+        onClick={() => {
+          const userType = localStorage.getItem('userType');
+          window.location.href = userType === 'business' ? '/developer' : '/dashboard';
+        }}
         className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium text-base shadow-lg shadow-green-900/20 transition-all"
       >
         Go to Dashboard

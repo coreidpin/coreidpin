@@ -37,11 +37,11 @@ const MonitoringPage = lazy(() => import('../pages/Monitoring'));
 const ReferralDashboard = lazy(() => import('./referrals/ReferralDashboard').then(m => ({ default: m.ReferralDashboard })));
 const LoginPage = lazy(() => import('./LoginPage'));
 const SimpleRegistration = lazy(() => import('./SimpleRegistration'));
-const BusinessRegistration = lazy(() => import('./business/BusinessRegistration').then(m => ({ default: m.BusinessRegistration })));
-const BusinessLogin = lazy(() => import('./business/BusinessLogin').then(m => ({ default: m.BusinessLogin })));
 const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback'));
 const PublicPINPage = lazy(() => import('./PublicPINPage'));
 const ConsentPage = lazy(() => import('./ConsentPage').then(m => ({ default: m.ConsentPage })));
+const DeveloperConsole = lazy(() => import('./DeveloperConsole').then(m => ({ default: m.DeveloperConsole })));
+const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
 
 // Legal & Policy Pages
 const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
@@ -389,24 +389,6 @@ export const AppRouter: React.FC<RouterProps> = ({
         />
 
         {/* Business Authentication Routes */}
-        <Route 
-          path="/business/register" 
-          element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <BusinessRegistration />
-            </Suspense>
-          } 
-        />
-
-        <Route 
-          path="/business/login" 
-          element={
-            <Suspense fallback={<LoadingSpinner />}>
-              <BusinessLogin />
-            </Suspense>
-          } 
-        />
-
         <Route path="/verify-email" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
         <Route path="/email-verification" element={<Suspense fallback={<LoadingSpinner />}><EmailVerificationCallback /></Suspense>} />
 
@@ -596,6 +578,28 @@ export const AppRouter: React.FC<RouterProps> = ({
               </main>
               <Footer onNavigate={() => {}} />
             </div>
+          } 
+        />
+
+        <Route 
+          path="/dashboard" 
+          element={
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ProfessionalDashboard />
+              </Suspense>
+            </DashboardAuthWrapper>
+          } 
+        />
+
+        <Route 
+          path="/developer" 
+          element={
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <DeveloperConsole />
+              </Suspense>
+            </DashboardAuthWrapper>
           } 
         />
 

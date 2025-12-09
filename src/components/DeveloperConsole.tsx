@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { supabase } from '../utils/supabase/client';
-import { APIKeysManager } from './developer/APIKeys Manager';
+import { APIKeysManager } from './developer/APIKeysManager';
 import { APIUsageDashboard } from './developer/APIUsageDashboard';
 import {
   Key,

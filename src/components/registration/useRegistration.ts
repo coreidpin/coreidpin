@@ -170,7 +170,8 @@ export function useRegistration() {
       const result = await api.verifyOTP(activeContact, otp, {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone
+        phone: formData.phone,
+        userType: formData.userType
       }, true)
       
       if (result.access_token) {

@@ -36,7 +36,8 @@ function generateOTP(): string {
 }
 
 // Helper to generate Supabase JWT
-async function generateJWT(userId: string, email: string | null) {
+// Helper to generate Supabase JWT
+async function generateJWT(userId: string, email: string | null, metadata: any = {}) {
   const jwtSecret = Deno.env.get('JWT_SECRET') || Deno.env.get('SUPABASE_JWT_SECRET');
   
   if (!jwtSecret || jwtSecret.trim() === '') {
@@ -53,7 +54,7 @@ async function generateJWT(userId: string, email: string | null) {
     email: email || "",
     role: "authenticated",
     app_metadata: { provider: "email", providers: ["email"] },
-    user_metadata: {}
+    user_metadata: metadata
   };
   
   const key = await crypto.subtle.importKey(
@@ -226,7 +227,7 @@ const handleRequest = async (c: any) => {
 const handleVerify = async (c: any) => {
   try {
     const body = await c.req.json().catch(() => ({}));
-    let { contact, otp, name, email, phone, create_account } = body;
+    let { contact, otp, name, email, phone, create_account, userType } = body;
 
     if (!contact || !otp) {
       return c.json({ error: 'Contact and OTP required' }, 400);
@@ -332,89 +333,132 @@ const handleVerify = async (c: any) => {
       });
       
       // Create profile with registration data
-      const profileData: any = {
-        user_id: userId,
-        user_type: 'professional',
-        email_verified: true, // Mark as verified since they passed OTP
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      if (name) profileData.name = name;
-      if (email) profileData.email = email;
-      if (phone) profileData.phone = phone;
-      
-      // Fallbacks
-      if (!profileData.phone && contact.startsWith('+')) profileData.phone = contact;
-      if (!profileData.email && contact.includes('@')) profileData.email = contact;
-      
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert(profileData, { onConflict: 'user_id' });
-        
-      if (profileError) console.error('Profile creation error:', profileError);
+      // Update user metadata in Supabase Auth
+      const metadata = { userType: userType || 'professional' };
+      await supabase.auth.admin.updateUserById(userId, { user_metadata: metadata });
 
-      // Send Welcome Email
-      const recipientEmail = email || (contact.includes('@') ? contact : null);
-      if (recipientEmail) {
-        const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-        const FROM_EMAIL = Deno.env.get('FROM_EMAIL');
+      if (userType === 'business') {
+        // Create business profile
+        const businessData: any = {
+          user_id: userId,
+          company_name: name || 'Business Name',
+          company_email: email,
+          updated_at: new Date().toISOString()
+        };
         
-        if (RESEND_API_KEY && FROM_EMAIL) {
-          try {
-            const { subject, html, text } = buildWelcomeEmail(name || 'Professional', 'https://coreid.app');
-            
-            await fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${RESEND_API_KEY}`
-              },
-              body: JSON.stringify({
-                from: `CoreID <${FROM_EMAIL}>`,
-                to: recipientEmail,
-                subject: subject,
-                html: html,
-                text: text
-              })
-            });
-            console.log('Welcome email sent to:', recipientEmail);
-          } catch (emailError) {
-            console.error('Failed to send welcome email:', emailError);
+        // Only set created_at on insert
+        const { data: existingProfile } = await supabase.from('business_profiles').select('id').eq('user_id', userId).single();
+        if (!existingProfile) {
+          businessData.created_at = new Date().toISOString();
+        }
+
+        const { error: busError } = await supabase
+          .from('business_profiles')
+          .upsert(businessData, { onConflict: 'user_id' });
+          
+        if (busError) console.error('Business profile creation error:', busError);
+
+      } else {
+        // Professional Profile Logic
+        const profileData: any = {
+          user_id: userId,
+          user_type: 'professional',
+          email_verified: true,
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: existingProfile } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
+        if (!existingProfile) {
+          profileData.created_at = new Date().toISOString();
+        }
+        
+        if (name) profileData.name = name;
+        if (email) profileData.email = email;
+        if (phone) profileData.phone = phone;
+        
+        // Fallbacks
+        if (!profileData.phone && contact.startsWith('+')) profileData.phone = contact;
+        if (!profileData.email && contact.includes('@')) profileData.email = contact;
+        
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert(profileData, { onConflict: 'user_id' });
+          
+        if (profileError) console.error('Profile creation error:', profileError);
+
+        // Send Welcome Email
+        const recipientEmail = email || (contact.includes('@') ? contact : null);
+        if (recipientEmail) {
+          const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+          const FROM_EMAIL = Deno.env.get('FROM_EMAIL');
+          
+          if (RESEND_API_KEY && FROM_EMAIL) {
+            try {
+              const { subject, html, text } = buildWelcomeEmail(name || 'Professional', 'https://coreid.app');
+              
+              await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${RESEND_API_KEY}`
+                },
+                body: JSON.stringify({
+                  from: `CoreID <${FROM_EMAIL}>`,
+                  to: recipientEmail,
+                  subject: subject,
+                  html: html,
+                  text: text
+                })
+              });
+              console.log('Welcome email sent to:', recipientEmail);
+            } catch (emailError) {
+              console.error('Failed to send welcome email:', emailError);
+            }
           }
         }
-      }
 
-      // Auto-generate PIN (Use phone number if available, otherwise random)
-      try {
-        // If contact is a phone number (digits/plus), use it as PIN
-        const isPhone = /^\+?[0-9]+$/.test(contact);
-        const pinToUse = isPhone ? contact : undefined;
-        
-        await issuePinToUser(userId, pinToUse);
-        console.log(`Auto-generated PIN for user ${userId}. Custom: ${!!pinToUse}`);
-      } catch (pinError) {
-        console.error('Failed to auto-generate PIN:', pinError);
+        // Auto-generate PIN (Use phone number if available, otherwise random)
+        try {
+          // If contact is a phone number (digits/plus), use it as PIN
+          const isPhone = /^\+?[0-9]+$/.test(contact);
+          const pinToUse = isPhone ? contact : undefined;
+          
+          await issuePinToUser(userId, pinToUse);
+          console.log(`Auto-generated PIN for user ${userId}. Custom: ${!!pinToUse}`);
+        } catch (pinError) {
+          console.error('Failed to auto-generate PIN:', pinError);
+        }
       }
       
     } else {
-      // Existing user - fetch email
+      // Existing user - fetch email and type
       const { data: userData } = await supabase.auth.admin.getUserById(userId);
       userEmail = userData?.user?.email || null;
+      const currentUserType = userData?.user?.user_metadata?.userType;
       
       // Update profile if new data provided
       if (name || email || phone) {
-        const updateData: any = { updated_at: new Date().toISOString() };
-        if (name) updateData.name = name;
-        if (email) updateData.email = email;
-        if (phone) updateData.phone = phone;
-        
-        await supabase.from('profiles').update(updateData).eq('user_id', userId);
+        if (currentUserType === 'business') {
+             const updateData: any = { updated_at: new Date().toISOString() };
+             if (name) updateData.company_name = name;
+             if (email) updateData.company_email = email;
+             await supabase.from('business_profiles').update(updateData).eq('user_id', userId);
+        } else {
+             const updateData: any = { updated_at: new Date().toISOString() };
+             if (name) updateData.name = name;
+             if (email) updateData.email = email;
+             if (phone) updateData.phone = phone;
+             await supabase.from('profiles').update(updateData).eq('user_id', userId);
+        }
       }
     }
 
     // 7. Generate JWT
-    const jwt = await generateJWT(userId, userEmail);
+    // Fetch latest metadata to ensure we have the correct userType
+    const { data: finalUserData } = await supabase.auth.admin.getUserById(userId);
+    const finalMetadata = finalUserData?.user?.user_metadata || { userType: 'professional' };
+    
+    const jwt = await generateJWT(userId, userEmail, finalMetadata);
 
     // 8. Log audit
     await supabase.from('audit_events').insert({
@@ -427,7 +471,7 @@ const handleVerify = async (c: any) => {
       status: 'ok',
       access_token: jwt,
       expires_in: 2592000, // 30 days in seconds
-      user: { id: userId, email: userEmail }
+      user: { id: userId, email: userEmail, user_metadata: finalMetadata }
     });
 
   } catch (error) {
@@ -488,24 +532,22 @@ const handleRefresh = async (c: any) => {
     const userEmail = payload.email as string || null;
 
     // Check if user still exists
-    const { data: user } = await supabase
-      .from('identity_users')
-      .select('user_id')
-      .eq('user_id', userId)
-      .single();
-
-    if (!user) {
-      return c.json({ error: 'User not found' }, 404);
+    const { data: userData } = await supabase.auth.admin.getUserById(userId);
+    
+    if (!userData || !userData.user) {
+        return c.json({ error: 'User not found in auth' }, 404);
     }
+    
+    const userMetadata = userData.user.user_metadata || {};
 
     // Generate new token
-    const newToken = await generateJWT(userId, userEmail);
+    const newToken = await generateJWT(userId, userEmail, userMetadata);
 
     return c.json({
       status: 'ok',
       access_token: newToken,
       expires_in: 2592000, // 30 days in seconds
-      user: { id: userId, email: userEmail }
+      user: { id: userId, email: userEmail, user_metadata: userMetadata }
     });
 
   } catch (error) {
