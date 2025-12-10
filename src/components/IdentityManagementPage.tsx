@@ -119,6 +119,13 @@ export const IdentityManagementPage: React.FC = () => {
   const [toolInput, setToolInput] = useState('');
   const [industryInput, setIndustryInput] = useState('');
 
+  // Verification State
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [emailInput, setEmailInput] = useState('');
+  const [codeInput, setCodeInput] = useState('');
+  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [actionLoading, setActionLoading] = useState(false);
+
   // Load profile data on component mount
   useEffect(() => {
     const loadData = async () => {
@@ -212,41 +219,93 @@ export const IdentityManagementPage: React.FC = () => {
     }));
   };
 
-  const handleSaveWork = () => {
+  const handleSaveWork = async () => {
     if (!tempWork.company || !tempWork.role) {
       toast.error('Company and Role are required');
       return;
     }
+
+    if (!tempWork.start_date) {
+        toast.error('Start Date is required');
+        return;
+    }
     
-    setFormData(prev => {
-      const newWork = [...prev.work_experience];
-      if (editingWorkIndex !== null) {
-        newWork[editingWorkIndex] = tempWork;
-      } else {
-        newWork.push(tempWork);
-      }
-      return { ...prev, work_experience: newWork };
-    });
-    
-    setShowWorkModal(false);
-    setEditingWorkIndex(null);
-    setTempWork({ 
-      company: '', 
-      role: '', 
-      start_date: '', 
-      end_date: '', 
-      current: false, 
-      description: '',
-      company_logo_url: null,
-      proof_documents: []
-    });
+    try {
+        setSaving(true);
+        const session = getSessionState();
+        if (!session?.userId) return;
+
+        // Format dates: input type="month" gives "YYYY-MM", Postgres needs "YYYY-MM-DD"
+        const formatDate = (dateString: string) => {
+             if (!dateString) return null;
+             return dateString.length === 7 ? `${dateString}-01` : dateString;
+        };
+
+        const workData = {
+            user_id: session.userId,
+            company_name: tempWork.company,
+            job_title: tempWork.role,
+            start_date: formatDate(tempWork.start_date),
+            end_date: (tempWork.current || !tempWork.end_date) ? null : formatDate(tempWork.end_date),
+            is_current: tempWork.current,
+            description: tempWork.description,
+            company_logo_url: tempWork.company_logo_url,
+        };
+
+        if (editingWorkIndex !== null && workExperienceList[editingWorkIndex]) {
+            // Update
+            const { error } = await supabase
+                .from('work_experiences')
+                .update(workData)
+                .eq('id', workExperienceList[editingWorkIndex].id);
+            if (error) throw error;
+            toast.success('Experience updated');
+        } else {
+            // Insert
+            const { error } = await supabase
+                .from('work_experiences')
+                .insert(workData);
+            if (error) throw error;
+            toast.success('Experience added');
+        }
+
+        fetchWorkExperiences();
+        setShowWorkModal(false);
+        setEditingWorkIndex(null);
+        setTempWork({ 
+            company: '', 
+            role: '', 
+            start_date: '', 
+            end_date: '', 
+            current: false, 
+            description: '',
+            company_logo_url: null,
+            proof_documents: []
+        });
+    } catch (error: any) {
+        console.error('Error saving work:', error);
+        toast.error(`Failed to save experience: ${error.message || 'Unknown error'}`);
+    } finally {
+        setSaving(false);
+    }
   };
 
-  const handleRemoveWork = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      work_experience: prev.work_experience.filter((_, i) => i !== index)
-    }));
+  const handleRemoveWork = async (index: number) => {
+    if (!workExperienceList[index]) return;
+    
+    try {
+        const { error } = await supabase
+            .from('work_experiences')
+            .delete()
+            .eq('id', workExperienceList[index].id);
+            
+        if (error) throw error;
+        toast.success('Experience removed');
+        fetchWorkExperiences();
+    } catch (error) {
+        console.error('Error removing work:', error);
+        toast.error('Failed to remove experience');
+    }
   };
 
   const handleSaveCert = () => {
@@ -400,9 +459,102 @@ Return ONLY the JSON object, no markdown, no explanations.`;
     }
   };
 
+  const [workExperienceList, setWorkExperienceList] = useState<any[]>([]);
+
+  const fetchWorkExperiences = async () => {
+    try {
+        const session = getSessionState();
+        if (!session?.userId) return;
+
+        const { data, error } = await supabase
+            .from('work_experiences')
+            .select('*')
+            .eq('user_id', session.userId)
+            .order('is_current', { ascending: false })
+            .order('start_date', { ascending: false });
+
+        if (error) throw error;
+        setWorkExperienceList(data || []);
+    } catch (error) {
+        console.error('Error fetching work experiences:', error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchWorkExperiences();
   }, []);
+
+  const startVerification = (expId: string) => {
+    setVerifyingId(expId);
+    setStep('email');
+    setEmailInput('');
+    setCodeInput('');
+  };
+
+  const handleSendCode = async () => {
+    if (!emailInput.includes('@')) {
+      toast.error('Please enter a valid email');
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('work-verification', {
+        body: {
+          action: 'send-code',
+          experienceId: verifyingId,
+          email: emailInput
+        }
+      });
+
+      if (error) throw error;
+      
+      const result = data;
+      if (result.success) {
+        toast.success(`Code sent! (Debug: ${result.debug_code})`);
+        setStep('code');
+      } else {
+        toast.error(result.error || 'Failed to send code');
+      }
+    } catch (error: any) {
+        console.error('Error sending code:', error);
+      toast.error(error.message || 'Network error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setActionLoading(true);
+    try {
+       const { data, error } = await supabase.functions.invoke('work-verification', {
+        body: {
+          action: 'verify-code',
+          experienceId: verifyingId,
+          email: emailInput,
+          code: codeInput
+        }
+      });
+
+      if (error) throw error;
+
+      const result = data;
+      if (result.success) {
+        toast.success('Work verification successful!');
+        setVerifyingId(null);
+        fetchWorkExperiences(); // Refresh list
+      } else {
+        toast.error(result.error || 'Verification failed');
+      }
+    } catch (error: any) {
+        console.error('Error verifying code:', error);
+      toast.error(error.message || 'Network error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
 
   const fetchData = async () => {
     try {
@@ -1541,26 +1693,58 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                {formData.work_experience.length === 0 ? (
+                {workExperienceList.length === 0 ? (
                   <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
                     <p className="text-slate-500 text-sm">No work experience added yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {formData.work_experience.map((work, index) => (
-                      <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
+                    {workExperienceList.map((work, index) => (
+                      <div key={work.id || index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="text-slate-900 font-semibold">{work.role}</h4>
-                            <p className="text-blue-600 text-sm">{work.company}</p>
+                            <h4 className="text-slate-900 font-semibold">{work.job_title}</h4>
+                            <p className="text-blue-600 text-sm">{work.company_name}</p>
                             <p className="text-slate-500 text-xs mt-1">
-                              {work.start_date} - {work.current ? 'Present' : work.end_date}
+                              {work.start_date} - {work.is_current ? 'Present' : work.end_date}
                             </p>
+                            
+                            {/* Verification Status */}
+                            <div className="mt-2">
+                                {work.verification_status === 'verified' ? (
+                                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 gap-1 pl-1 pr-2">
+                                        <CheckCircle2 className="h-3 w-3" /> Verified Employee
+                                    </Badge>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="text-slate-500 border-slate-200">
+                                            Unverified
+                                        </Badge>
+                                        <Button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            className="h-6 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2"
+                                            onClick={() => startVerification(work.id)}
+                                        >
+                                            Verify Work Email
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                           </div>
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button 
                               onClick={() => {
-                                setTempWork(work);
+                                setTempWork({
+                                    company: work.company_name,
+                                    role: work.job_title,
+                                    start_date: work.start_date,
+                                    end_date: work.end_date || '',
+                                    current: work.is_current,
+                                    description: work.description || '',
+                                    company_logo_url: work.company_logo_url,
+                                    proof_documents: []
+                                });
                                 setEditingWorkIndex(index);
                                 setShowWorkModal(true);
                               }}
@@ -1590,6 +1774,69 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
                 )}
               </CardContent>
+
+              {/* Verification Modal */}
+              <Dialog open={!!verifyingId} onOpenChange={(open) => !open && setVerifyingId(null)}>
+                <DialogContent className="sm:max-w-md bg-white text-slate-900 border-slate-200">
+                    <DialogHeader>
+                        <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                            <Mail className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <DialogTitle className="text-center text-slate-900">Verify Work Email</DialogTitle>
+                        <div className="text-center text-slate-500 text-sm">
+                            {step === 'email' 
+                                ? 'Enter your work email address to receive a verification code.' 
+                                : 'Enter the 6-digit code sent to your email.'}
+                        </div>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        {step === 'email' ? (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">Company Email</label>
+                                <Input 
+                                    placeholder="you@company.com" 
+                                    value={emailInput}
+                                    onChange={(e) => setEmailInput(e.target.value)}
+                                    className="bg-white border-slate-200 text-slate-900"
+                                />
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">Verification Code</label>
+                                <Input 
+                                    placeholder="123456" 
+                                    className="text-center text-lg tracking-widest bg-white border-slate-200 text-slate-900"
+                                    maxLength={6}
+                                    value={codeInput}
+                                    onChange={(e) => setCodeInput(e.target.value)}
+                                />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter>
+                        {step === 'email' ? (
+                            <Button onClick={handleSendCode} disabled={actionLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Code'}
+                            </Button>
+                        ) : (
+                            <div className="flex gap-2 w-full">
+                                <Button variant="ghost" onClick={() => setStep('email')} disabled={actionLoading} className="text-slate-600">
+                                    Back
+                                </Button>
+                                <Button onClick={handleVerifyCode} disabled={actionLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                                    {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Verify Code'}
+                                </Button>
+                            </div>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </Card>
 
             {/* Skills & Tools */}
@@ -1775,98 +2022,109 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
+          <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[500px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 py-4 border-b border-slate-100">
+              <DialogTitle className="text-lg">{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Company</Label>
+            
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</Label>
                   <Input 
                     value={tempWork.company}
                     onChange={(e) => setTempWork({ ...tempWork, company: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                    placeholder="e.g. Acme Corp"
                   />
                 </div>
-                <div>
-                  <Label>Role/Title</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Role/Title</Label>
                   <Input 
                     value={tempWork.role}
                     onChange={(e) => setTempWork({ ...tempWork, role: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                    placeholder="e.g. Senior Engineer"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Start Date</Label>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Date</Label>
                   <Input 
                     type="month"
                     value={tempWork.start_date}
                     onChange={(e) => setTempWork({ ...tempWork, start_date: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
                   />
                 </div>
-                <div>
-                  <Label>End Date</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">End Date</Label>
                   <Input 
                     type="month"
                     value={tempWork.end_date}
                     onChange={(e) => setTempWork({ ...tempWork, end_date: e.target.value })}
                     disabled={tempWork.current}
-                    className="bg-white border-slate-200 text-slate-900 disabled:opacity-50"
+                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm disabled:opacity-50"
                   />
                 </div>
               </div>
+              
               <div className="flex items-center gap-2">
                 <input 
                   type="checkbox" 
                   id="current-role"
                   checked={tempWork.current}
                   onChange={(e) => setTempWork({ ...tempWork, current: e.target.checked })}
-                  className="rounded border-slate-300 text-blue-600"
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
                 />
-                <Label htmlFor="current-role" className="text-slate-900">I currently work here</Label>
+                <Label htmlFor="current-role" className="text-sm text-slate-700 font-medium">I currently work here</Label>
               </div>
-              <div>
-                <Label>Description</Label>
+              
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</Label>
                 <Textarea 
                   value={tempWork.description}
                   onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 min-h-[100px]"
-                  placeholder="Describe your responsibilities and achievements..."
+                  className="bg-white border-slate-200 text-slate-900 min-h-[80px] text-sm resize-none"
+                  placeholder="Briefly describe your responsibilities..."
                 />
               </div>
 
               {/* Company Logo Upload */}
-              <div>
-                <Label>Company Logo (Optional)</Label>
-                <CompanyLogoUpload
-                  companyName={tempWork.company}
-                  currentLogoUrl={tempWork.company_logo_url || null}
-                  onChange={(url) => setTempWork({ ...tempWork, company_logo_url: url })}
-                  userId={profile?.user_id || ''}
-                />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Logo</Label>
+                <div className="scale-90 origin-left">
+                    <CompanyLogoUpload
+                    companyName={tempWork.company}
+                    currentLogoUrl={tempWork.company_logo_url || null}
+                    onChange={(url) => setTempWork({ ...tempWork, company_logo_url: url })}
+                    userId={profile?.user_id || ''}
+                    />
+                </div>
               </div>
 
               {/* Proof of Work Documents */}
-              <div>
-                <Label>Proof of Work (Optional)</Label>
-                <p className="text-xs text-gray-500 mb-2">
-                  Upload certificates, offer letters, or references
-                </p>
-                <ProofDocumentUpload
-                  documents={tempWork.proof_documents || []}
-                  onChange={(docs) => setTempWork({ ...tempWork, proof_documents: docs })}
-                  userId={profile?.user_id || ''}
-                  maxFiles={5}
-                />
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Proof of Work</Label>
+                    <span className="text-[10px] text-slate-400">Optional</span>
+                </div>
+                <div className="scale-95 origin-top-left">
+                    <ProofDocumentUpload
+                    documents={tempWork.proof_documents || []}
+                    onChange={(docs) => setTempWork({ ...tempWork, proof_documents: docs })}
+                    userId={profile?.user_id || ''}
+                    maxFiles={5}
+                    />
+                </div>
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</Button>
-              <Button onClick={handleSaveWork} className="bg-slate-900 text-white hover:bg-slate-800">Save Position</Button>
+
+            <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-sm">Cancel</Button>
+              <Button onClick={handleSaveWork} className="h-9 bg-slate-900 text-white hover:bg-slate-800 text-sm px-6">Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

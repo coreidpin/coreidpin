@@ -1135,12 +1135,18 @@ export function ProfessionalDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-xl">
             <TabsTrigger 
               value="overview" 
               className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
             >
               Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="work_identity" 
+              className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
+            >
+              Work Identity
             </TabsTrigger>
             <TabsTrigger 
               value="projects" 
@@ -1152,18 +1158,10 @@ export function ProfessionalDashboard() {
               value="endorsements" 
               className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
             >
-              <div className="flex items-center gap-2">
-                Endorsements
-                {endorsements.filter(e => (e.status as any) === 'pending').length > 0 && (
-                  <Badge className="bg-red-500 text-white h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
-                    {endorsements.filter(e => (e.status as any) === 'pending').length}
-                  </Badge>
-                )}
-              </div>
+              Endorsements
             </TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
             <QuickActions 
               onAddProject={handleAddProject}
