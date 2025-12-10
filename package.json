@@ -108,6 +108,7 @@
             "audit:backend": "node scripts/audit-backend.mjs",
             "audit:resend": "node scripts/validate-resend.mjs",
             "audit:all": "npm run audit:backend && npm run audit:resend",
+            "lint:functions": "tsc -p supabase/functions/auth-otp",
             "verify:flow": "node scripts/verification-e2e.mjs"
       }
 }

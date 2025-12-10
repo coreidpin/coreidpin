@@ -1,16 +1,21 @@
-﻿import { Hono } from "npm:hono";
+﻿// @ts-ignore
+import { Hono } from "npm:hono";
+// @ts-ignore
 import { cors } from "npm:hono/cors";
+// @ts-ignore
 import { createClient } from "npm:@supabase/supabase-js";
 
-import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
+// Deno globals (runtime provides them, but TS needs a declaration)
+declare const Deno: any;
+
 import { buildWelcomeEmail } from "../server/templates/welcome.ts";
-import { issuePinToUser } from "../_shared/pinService.ts";
+import { issuePinToUser, verifyPin } from "../_shared/pinService.ts";
 
 const app = new Hono();
 
 const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  Deno.env.get('SUPABASE_URL') ?? 'http://missing-env-var.com',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? 'missing-key'
 );
 
 app.use("/*", cors({
@@ -661,13 +666,131 @@ const handleAssignPin = async (c: any) => {
   }
 };
 
-app.post('/admin/assign-pin', handleAssignPin);
-app.post('/auth-otp/admin/assign-pin', handleAssignPin);
-app.post('/functions/v1/auth-otp/admin/assign-pin', handleAssignPin);
+// app.post('/admin/assign-pin', handleAssignPin);
+// app.post('/auth-otp/admin/assign-pin', handleAssignPin);
+// app.post('/functions/v1/auth-otp/admin/assign-pin', handleAssignPin);
 
 app.post('/refresh', handleRefresh);
 app.post('/auth-otp/refresh', handleRefresh);
 app.post('/functions/v1/auth-otp/refresh', handleRefresh);
+
+// Identity Verification Route
+const handleIdentityVerification = async (c: any) => {
+  try {
+    const { pin_number, verifier_id } = await c.req.json();
+    
+    if (!pin_number) {
+        return c.json({ error: 'PIN required' }, 400);
+    }
+
+    // 1. Verify PIN (This tracks usage and fires webhooks)
+    const result = await verifyPin(pin_number, 'business', verifier_id || 'anonymous');
+
+    if (!result.success || !result.userId) {
+        console.error('Verification failed result:', result);
+        return c.json({ 
+          error: result.error || 'Verification failed',
+          details: result
+        }, 400);
+    }
+
+    // 2. Fetch Professional Public Profile (Best Effort)
+    let profileData = {
+        name: 'Verified Professional',
+        job_title: 'Professional',
+        city: null,
+        email_verified: false,
+        avatar_url: null
+    };
+
+    // Attempt 1: Profiles Table - Select * to be safe against schema variations
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('*') // Select all columns to ensure we get whatever is available
+        .eq('user_id', result.userId)
+        .single();
+    
+    if (profile) {
+        // Map whatever fields we found
+        profileData.name = profile.name || profile.full_name || profile.first_name || profileData.name;
+        profileData.job_title = profile.job_title || profile.role || profileData.job_title;
+        profileData.city = profile.city || profile.location || profileData.city;
+        profileData.avatar_url = profile.avatar_url || profile.avatar || profileData.avatar_url;
+        profileData.email_verified = profile.email_verified || false;
+    } else {
+        console.warn('Profile row missing for user:', result.userId);
+
+        // Attempt 2: Auth User Metadata (Service Role)
+        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(result.userId);
+        if (!userError && user) {
+            const meta = user.user_metadata || {};
+            console.log('Found user metadata:', meta);
+            
+            // Try all possible name combinations
+            profileData.name = meta.full_name || meta.name || 
+                              (meta.first_name ? `${meta.first_name} ${meta.last_name || ''}`.trim() : null) || 
+                              profileData.name;
+                              
+            profileData.job_title = meta.job_title || meta.role || meta.position || profileData.job_title;
+            profileData.city = meta.city || meta.location || profileData.city;
+            profileData.avatar_url = meta.avatar_url || meta.picture || meta.avatar || profileData.avatar_url;
+            profileData.email_verified = !!user.email_confirmed_at;
+        }
+    }
+
+    // 3. Fetch Work Experience (Top 3)
+    let workExperiences = [];
+    try {
+        const { data: weData, error: weError } = await supabase
+            .from('work_experiences')
+            .select('*')
+            .eq('user_id', result.userId)
+            .order('start_date', { ascending: false })
+            .limit(3);
+        
+        if (weError) {
+             console.error('Work experience fetch error:', weError);
+        }
+
+        if (weData && weData.length > 0) {
+            console.log(`Found ${weData.length} work experiences`);
+            // Map to ensure consistent shape if needed, but select * should cover it
+            workExperiences = weData.map(exp => ({
+                ...exp,
+                // Ensure field compatibility 
+                job_title: exp.job_title || exp.title || exp.role,
+                company_name: exp.company_name || exp.company,
+                start_date: exp.start_date || exp.startDate,
+                end_date: exp.end_date || exp.endDate,
+                is_current: exp.is_current ?? exp.current ?? (!exp.end_date && !exp.endDate)
+            }));
+        } else {
+             console.log('No work experience records found in database for user', result.userId);
+        }
+    } catch (e) {
+        console.warn('Failed to fetch work experiences:', e);
+    }
+
+    // Return success regardless of profile fetch result
+    return c.json({
+        success: true,
+        data: {
+            ...profileData,
+            work_experiences: workExperiences,
+            pin_status: 'active',
+            verified_at: new Date().toISOString()
+        }
+    });
+
+  } catch (error: any) {
+    console.error('Identity verification error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+};
+
+app.post('/verify-identity', handleIdentityVerification);
+app.post('/auth-otp/verify-identity', handleIdentityVerification);
+app.post('/functions/v1/auth-otp/verify-identity', handleIdentityVerification);
 
 // Root path handler for Supabase client invocations
 app.post('/', async (c) => {

@@ -1,14 +1,22 @@
-import { createClient } from "npm:@supabase/supabase-js";
+// @ts-ignore
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js";
 
+declare const Deno: any;
 
-// Helper to get Supabase Client with Service Role
-function getSupabaseClient() {
-  const url = Deno.env.get('SUPABASE_URL') ?? '';
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_KEY') ?? '';
-  return createClient(url, serviceKey);
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase() {
+  if (_supabase) return _supabase;
+  const url = Deno.env.get('SUPABASE_URL');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_KEY');
+  
+  if (!url || !serviceKey) {
+    console.error('Missing Supabase Environment Variables');
+    throw new Error('Supabase Config Missing');
+  }
+  _supabase = createClient(url, serviceKey);
+  return _supabase;
 }
-
-const supabase = getSupabaseClient();
 
 export interface PinGenerationResult {
   success: boolean;
@@ -36,7 +44,7 @@ export async function generatePin(): Promise<string> {
     pin = `PIN-NG-${year}-${hex}`;
     
     // Check uniqueness
-    const { data } = await supabase
+    const { data } = await getSupabase()
       .from('professional_pins')
       .select('id')
       .eq('pin_number', pin)
@@ -67,7 +75,7 @@ export async function createPinHash(userId: string, pin: string, phone: string):
 export async function issuePinToUser(userId: string, customPin?: string): Promise<PinGenerationResult> {
   try {
     // Check if PIN already exists in professional_pins
-    const { data: existingPin, error: fetchError } = await supabase
+    const { data: existingPin, error: fetchError } = await getSupabase()
       .from('professional_pins')
       .select('pin_number')
       .eq('user_id', userId)
@@ -81,7 +89,7 @@ export async function issuePinToUser(userId: string, customPin?: string): Promis
     const pin = customPin || await generatePin();
     
     // Insert PIN into professional_pins
-    const { error: insertError } = await supabase
+    const { error: insertError } = await getSupabase()
       .from('professional_pins')
       .insert({
         user_id: userId,
@@ -112,7 +120,7 @@ export async function issuePinToUser(userId: string, customPin?: string): Promis
 export async function verifyPin(pin: string, verifierType: string, verifierId: string): Promise<PinVerificationResult> {
   try {
     // Find user by PIN
-    const { data: pinRecord, error: pinError } = await supabase
+    const { data: pinRecord, error: pinError } = await getSupabase()
       .from('professional_pins')
       .select('user_id')
       .eq('pin_number', pin)
@@ -133,7 +141,7 @@ export async function verifyPin(pin: string, verifierType: string, verifierId: s
     const verificationHash = await sha256(`${userId}:${pin}:${verifierType}:${verifierId}:${Date.now()}`);
 
     // Record verification
-    const { error: verifyError } = await supabase
+    const { error: verifyError } = await getSupabase()
       .from('pin_verifications')
       .insert({
         user_id: userId,
@@ -144,7 +152,12 @@ export async function verifyPin(pin: string, verifierType: string, verifierId: s
       });
 
     if (verifyError) {
-      return { success: false, error: 'Failed to record verification' };
+      console.error('Verify DB Error:', verifyError);
+      return { 
+          success: false, 
+          error: `Failed to record verification: ${verifyError.message}`,
+          details: verifyError
+      };
     }
 
     // Log verification
@@ -153,6 +166,53 @@ export async function verifyPin(pin: string, verifierType: string, verifierId: s
       verifierId,
       verificationHash
     });
+
+    // 1. Increment API Usage for the business (if verifier is a business)
+    // We assume verifierId corresponds to the business user_id if verifierType is 'business'
+    if (verifierType === 'business') {
+        const { error: usageError } = await getSupabase().rpc('increment_api_usage', { 
+            p_user_id: verifierId 
+        });
+        if (usageError) console.error('Failed to increment API usage:', usageError);
+
+        // 2. Dispatch Webhooks
+        // Fetch active webhooks for this business
+        const { data: busProfile } = await getSupabase()
+            .from('business_profiles')
+            .select('id')
+            .eq('user_id', verifierId)
+            .single();
+
+        if (busProfile) {
+            const { data: webhooks } = await getSupabase()
+                .from('webhooks')
+                .select('*')
+                .eq('business_id', busProfile.id)
+                .contains('events', ['pin.verified'])
+                .eq('is_active', true);
+
+            if (webhooks && webhooks.length > 0) {
+                const payload = {
+                    event: 'pin.verified',
+                    timestamp: new Date().toISOString(),
+                    data: {
+                        pin,
+                        verified_at: new Date().toISOString(),
+                        verification_hash: verificationHash
+                    }
+                };
+
+                // Fire and forget webhooks
+                for (const hook of webhooks) {
+                    fetch(hook.url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).catch(err => console.error(`Webhook failed for ${hook.url}:`, err));
+                }
+            }
+        }
+    }
 
     return { success: true, userId };
   } catch (error: any) {
@@ -168,7 +228,7 @@ export async function logPinEvent(
   meta: Record<string, any> = {}
 ): Promise<void> {
   try {
-    await supabase
+    await getSupabase()
       .from('pin_audit_logs')
       .insert({
         user_id: userId,

@@ -78,8 +78,11 @@ export function APIKeysManager() {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        toast.error('Session expired. Please log out and back in.');
+        return;
+      }
 
       // Generate API key and secret
       const { data: generatedKey, error: keyError } = await supabase

@@ -32,6 +32,7 @@ interface WebhookEndpoint {
 
 interface WebhooksManagerProps {
   businessId?: string;
+  isLoading?: boolean;
 }
 
 const AVAILABLE_EVENTS = [
@@ -41,9 +42,9 @@ const AVAILABLE_EVENTS = [
   { id: 'quota.warning', label: 'Quota Warning' }
 ];
 
-export function WebhooksManager({ businessId }: WebhooksManagerProps) {
+export function WebhooksManager({ businessId, isLoading }: WebhooksManagerProps) {
   const [endpoints, setEndpoints] = useState<WebhookEndpoint[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newUrl, setNewUrl] = useState('');
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
@@ -57,7 +58,6 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
 
   const fetchWebhooks = async () => {
     try {
-      // NOTE: Assuming table name 'webhooks' exists as per schema description
       const { data, error } = await supabase
         .from('webhooks')
         .select('*')
@@ -65,8 +65,7 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
         .order('created_at', { ascending: false });
 
       if (error) {
-        // Fallback for demo if table doesn't exist yet
-        if (error.code === '42P01') { // undefined_table
+        if (error.code === '42P01') { 
             setEndpoints([]);
             return;
         }
@@ -75,9 +74,9 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
       setEndpoints(data || []);
     } catch (error: any) {
       console.error('Error fetching webhooks:', error);
-      // Don't show toast on 404/missing table to avoid noise during dev
+      toast.error('Failed to load webhooks: ' + error.message);
     } finally {
-      setLoading(false);
+      setFetching(false);
     }
   };
 
@@ -91,6 +90,11 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
 
     setCreating(true);
     try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+         throw new Error('Session expired. Please log in again.');
+      }
+
       const secret = 'whsec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
       const { data, error } = await supabase
@@ -114,7 +118,7 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
       toast.success('Webhook endpoint added');
     } catch (error: any) {
       console.error('Error creating webhook:', error);
-      toast.error('Failed to create webhook');
+      toast.error(error.message || 'Failed to create webhook');
     } finally {
       setCreating(false);
     }
@@ -160,7 +164,27 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
     }
   };
 
-  if (!businessId) return null;
+  if (isLoading) {
+    return (
+        <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+        </div>
+    );
+  }
+
+  if (!businessId) {
+    return (
+        <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="flex flex-col items-center justify-center py-8">
+                <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
+                <h3 className="text-lg font-semibold text-yellow-900 mb-2">Profile Required</h3>
+                <p className="text-sm text-yellow-700 text-center mb-4">
+                    Please complete your Business Profile in the Settings tab to enable Webhooks.
+                </p>
+            </CardContent>
+        </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -232,7 +256,7 @@ export function WebhooksManager({ businessId }: WebhooksManagerProps) {
 
       {/* List */}
       <div className="space-y-4">
-        {endpoints.length === 0 && !loading ? (
+        {endpoints.length === 0 && !fetching ? (
              <Card className="bg-gray-50 border-dashed border-gray-200">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                     <Webhook className="w-16 h-16 text-gray-300 mb-4" />

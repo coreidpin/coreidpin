@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { supabase } from '../utils/supabase/client';
+import { toast } from 'sonner';
+import { ensureValidSession, getSessionState } from '../utils/session';
 import { APIKeysManager } from './developer/APIKeysManager';
 import { APIUsageDashboard } from './developer/APIUsageDashboard';
 import { TeamManager } from './developer/TeamManager';
@@ -34,6 +36,27 @@ export function DeveloperConsole() {
 
   const fetchBusinessProfile = async () => {
     try {
+      // Ensure valid session and sync to supabase client
+      const token = await ensureValidSession();
+      if (!token) {
+        // Session invalid, redirect or show error handled by ensureValidSession usually
+        return;
+      }
+      
+      // 2. Sync Supabase client if needed
+      if (token) {
+        const localSession = getSessionState();
+        if (localSession) {
+            const { error: setSessionError } = await supabase.auth.setSession({
+                access_token: localSession.accessToken,
+                refresh_token: localSession.refreshToken
+            });
+            if (setSessionError) {
+                console.warn('Supabase setSession warning:', setSessionError);
+            }
+        }
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -47,6 +70,7 @@ export function DeveloperConsole() {
       setBusinessProfile(data);
     } catch (error: any) {
       console.error('Error fetching business profile:', error);
+      toast.error('Failed to load profile. Please refresh.');
     } finally {
       setLoading(false);
     }
@@ -133,32 +157,32 @@ export function DeveloperConsole() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-white border border-gray-200 p-1">
-            <TabsTrigger value="overview" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+          <TabsList className="bg-white border border-gray-200 p-1 w-full justify-start overflow-x-auto flex-nowrap h-auto">
+            <TabsTrigger value="overview" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <BarChart3 className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="api-keys" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+            <TabsTrigger value="api-keys" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <Key className="w-4 h-4" />
               API Keys
             </TabsTrigger>
-            <TabsTrigger value="Team" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+            <TabsTrigger value="team" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <Users className="w-4 h-4" />
               Team
             </TabsTrigger>
-             <TabsTrigger value="verify" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+             <TabsTrigger value="verify" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <Shield className="w-4 h-4" />
               Verify Identity
             </TabsTrigger>
-            <TabsTrigger value="docs" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+            <TabsTrigger value="docs" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <BookOpen className="w-4 h-4" />
               Documentation
             </TabsTrigger>
-            <TabsTrigger value="webhooks" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+            <TabsTrigger value="webhooks" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <Webhook className="w-4 h-4" />
               Webhooks
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+            <TabsTrigger value="settings" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <Settings className="w-4 h-4" />
               Settings
             </TabsTrigger>
@@ -219,7 +243,7 @@ export function DeveloperConsole() {
 
           {/* Webhooks Tab */}
           <TabsContent value="webhooks">
-            <WebhooksManager businessId={businessProfile?.id} />
+            <WebhooksManager businessId={businessProfile?.id} isLoading={loading} />
           </TabsContent>
 
           {/* Settings Tab */}
