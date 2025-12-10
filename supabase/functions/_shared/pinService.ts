@@ -22,15 +22,20 @@ export interface PinVerificationResult {
   error?: string;
 }
 
-// Generate unique 8-digit PIN
+// Generate unique PIN format: PIN-NG-YYYY-XXXXXX
 export async function generatePin(): Promise<string> {
   let pin: string;
   let isUnique = false;
   let attempts = 0;
   
+  const year = new Date().getFullYear();
+  
   while (!isUnique && attempts < 10) {
-    pin = Math.floor(10000000 + Math.random() * 90000000).toString();
+    // Generate 6 random hex characters
+    const hex = Math.floor(Math.random() * 16777215).toString(16).toUpperCase().padStart(6, '0');
+    pin = `PIN-NG-${year}-${hex}`;
     
+    // Check uniqueness
     const { data } = await supabase
       .from('professional_pins')
       .select('id')

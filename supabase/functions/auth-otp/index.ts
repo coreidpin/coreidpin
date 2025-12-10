@@ -586,6 +586,85 @@ const handleRefresh = async (c: any) => {
   }
 };
 
+// Temporary Admin Route to fix PINs
+const handleAssignPin = async (c: any) => {
+  try {
+    const { pin } = await c.req.json();
+    if (!pin) return c.json({ error: 'Pin required' }, 400);
+
+    let userId: string;
+    let message: string;
+
+    // 1. Check if PIN already exists
+    const { data: existingPin } = await supabase
+      .from('professional_pins')
+      .select('user_id')
+      .eq('pin_number', pin)
+      .maybeSingle();
+
+    if (existingPin) {
+      userId = existingPin.user_id;
+      message = `PIN ${pin} already belongs to user ${userId}. Ensured profile exists.`;
+    } else {
+      // 2. Fetch latest user to assign to
+      const { data: users, error: userError } = await supabase
+        .from('identity_users')
+        .select('user_id')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (userError || !users?.length) {
+        return c.json({ error: 'No users found to assign PIN to' }, 404);
+      }
+      userId = users[0].user_id;
+
+      // 3. Assign PIN
+      const { error: upsertError } = await supabase
+        .from('professional_pins')
+        .upsert({
+          user_id: userId,
+          pin_number: pin,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+
+      if (upsertError) {
+         // Handle edge case where we tried to assign to a user who already has a DIFFERENT PIN, 
+         // but we want them to have THIS PIN.
+         // Or if someone else took this PIN in the meantime (unlikely).
+         throw upsertError;
+      }
+      message = `Assigned ${pin} to user ${userId}`;
+    }
+
+    // 4. CRITICAL: Ensure Profile Exists
+    // The verification tool fails if no profile is found.
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        user_id: userId,
+        name: 'Test Professional', // Default name if missing
+        full_name: 'Test Professional',
+        job_title: 'Software Engineer',
+        city: 'Lagos, Nigeria',
+        email_verified: true, 
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' }); // This will update timestamp if exists, or insert if missing.
+
+    if (profileError) {
+      console.error('Failed to ensure profile:', profileError);
+    }
+
+    return c.json({ success: true, message, userId });
+
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+};
+
+app.post('/admin/assign-pin', handleAssignPin);
+app.post('/auth-otp/admin/assign-pin', handleAssignPin);
+app.post('/functions/v1/auth-otp/admin/assign-pin', handleAssignPin);
+
 app.post('/refresh', handleRefresh);
 app.post('/auth-otp/refresh', handleRefresh);
 app.post('/functions/v1/auth-otp/refresh', handleRefresh);

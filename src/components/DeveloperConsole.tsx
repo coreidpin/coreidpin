@@ -9,6 +9,7 @@ import { APIUsageDashboard } from './developer/APIUsageDashboard';
 import { TeamManager } from './developer/TeamManager';
 import { WebhooksManager } from './developer/WebhooksManager';
 import { BusinessSettings } from './developer/BusinessSettings';
+import { IdentityVerificationTool } from './developer/IdentityVerificationTool';
 import {
   Key,
   BarChart3,
@@ -19,7 +20,8 @@ import {
   Sparkles,
   Zap,
   LayoutDashboard,
-  Users
+  Users,
+  Shield
 } from 'lucide-react';
 
 export function DeveloperConsole() {
@@ -140,9 +142,13 @@ export function DeveloperConsole() {
               <Key className="w-4 h-4" />
               API Keys
             </TabsTrigger>
-            <TabsTrigger value="team" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+            <TabsTrigger value="Team" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <Users className="w-4 h-4" />
               Team
+            </TabsTrigger>
+             <TabsTrigger value="verify" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
+              <Shield className="w-4 h-4" />
+              Verify Identity
             </TabsTrigger>
             <TabsTrigger value="docs" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100">
               <BookOpen className="w-4 h-4" />
@@ -219,6 +225,11 @@ export function DeveloperConsole() {
           {/* Settings Tab */}
           <TabsContent value="settings">
             <BusinessSettings businessId={businessProfile?.id} initialProfile={businessProfile} />
+          </TabsContent>
+
+          {/* Verify Identity Tab */}
+          <TabsContent value="verify">
+             <IdentityVerificationTool />
           </TabsContent>
         </Tabs>
       </div>
