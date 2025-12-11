@@ -69,7 +69,26 @@ export function APIUsageDashboard() {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (error) throw error;
+    // Handle missing table gracefully
+    if (error) {
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.warn('API usage logs table does not exist yet. Usage tracking not enabled.');
+        // Set default stats
+        setStats({
+          total_requests: 0,
+          successful_requests: 0,
+          failed_requests: 0,
+          avg_response_time: 0,
+          requests_today: 0,
+          monthly_usage: profile?.current_month_usage || 0,
+          monthly_quota: profile?.monthly_api_quota || 1000
+        });
+        setRecentRequests([]);
+        setLoading(false);
+        return;
+      }
+      throw error;
+    }
 
       // Calculate stats
       const now = new Date();

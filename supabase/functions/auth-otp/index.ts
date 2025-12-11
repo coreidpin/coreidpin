@@ -680,11 +680,47 @@ app.post('/functions/v1/auth-otp/refresh', handleRefresh);
 
 // Identity Verification Route
 const handleIdentityVerification = async (c: any) => {
+  const startTime = Date.now();
+  let statusCode = 200;
+  let errorMessage: string | null = null;
+  let businessUserId: string | null = null;
+  let apiKeyId: string | null = null;
+
   try {
     const { pin_number, verifier_id } = await c.req.json();
     
+    // Get API key from Authorization header
+    const authHeader = c.req.header('Authorization');
+    const apiKey = authHeader?.replace('Bearer ', '');
+    
+    // Verify API key and get business user
+    if (apiKey) {
+      const { data: keyData } = await supabase
+        .from('api_keys')
+        .select('id, user_id, is_active')
+        .eq('key', apiKey)
+        .single();
+      
+      if (keyData && keyData.is_active) {
+        businessUserId = keyData.user_id;
+        apiKeyId = keyData.id;
+        
+        // Check quota before processing
+        const { data: hasQuota } = await supabase.rpc('check_api_quota', { p_user_id: businessUserId });
+        if (!hasQuota) {
+          statusCode = 429;
+          errorMessage = 'Monthly API quota exceeded';
+          await logUsage();
+          return c.json({ error: 'Monthly API quota exceeded' }, 429);
+        }
+      }
+    }
+    
     if (!pin_number) {
-        return c.json({ error: 'PIN required' }, 400);
+      statusCode = 400;
+      errorMessage = 'PIN required';
+      await logUsage();
+      return c.json({ error: 'PIN required' }, 400);
     }
 
     // 1. Verify PIN (This tracks usage and fires webhooks)
@@ -775,6 +811,9 @@ const handleIdentityVerification = async (c: any) => {
         console.warn('Failed to fetch work experiences:', e);
     }
 
+    // Log successful request
+    await logUsage();
+
     // Return success regardless of profile fetch result
     return c.json({
         success: true,
@@ -788,7 +827,37 @@ const handleIdentityVerification = async (c: any) => {
 
   } catch (error: any) {
     console.error('Identity verification error:', error);
-    return c.json({ error: error.message, stack: error.stack }, 500);
+    statusCode = 500;
+    errorMessage = error.message;
+    await logUsage();
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+
+  // Helper function to log API usage
+  async function logUsage() {
+    if (!businessUserId) return; // Only log if we have a business user
+
+    try {
+      const responseTime = Date.now() - startTime;
+      const requestIp = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown';
+      const userAgent = c.req.header('user-agent') || 'unknown';
+
+      await supabase.rpc('log_api_usage', {
+        p_user_id: businessUserId,
+        p_api_key_id: apiKeyId,
+        p_endpoint: '/auth-otp/verify-identity',
+        p_method: 'POST',
+        p_status_code: statusCode,
+        p_response_time_ms: responseTime,
+        p_request_ip: requestIp,
+        p_user_agent: userAgent,
+        p_error_message: errorMessage,
+        p_metadata: {}
+      });
+    } catch (logError) {
+      console.error('Failed to log API usage:', logError);
+      // Don't fail the request if logging fails
+    }
   }
 };
 
