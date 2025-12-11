@@ -1,32 +1,18 @@
 import React, { useState } from 'react';
 import { X, Bell, Megaphone, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-
-interface Notification {
-  id: string;
-  type: 'success' | 'alert' | 'info' | 'warning';
-  title: string;
-  message: string;
-  timestamp: string;
-  isNew: boolean;
-  category: 'notification' | 'announcement';
-}
+import { useNotifications, Notification } from '../../hooks/useNotifications';
 
 interface NotificationCenterProps {
   isOpen: boolean;
   onClose: () => void;
-  notifications: Notification[];
-  onNotificationClick: (notification: Notification) => void;
-  onMarkAsRead: (id: string) => void;
 }
 
 const NotificationCenter: React.FC<NotificationCenterProps> = ({
   isOpen,
   onClose,
-  notifications,
-  onNotificationClick,
-  onMarkAsRead,
 }) => {
   const [activeTab, setActiveTab] = useState<'notifications' | 'announcements'>('notifications');
+  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -41,6 +27,19 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     n => activeTab === 'notifications' ? n.category === 'notification' : n.category === 'announcement'
   );
 
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+    
+    // Navigate if action_url exists
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    } else if (notification.metadata?.link) {
+      window.location.href = notification.metadata.link;
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -50,9 +49,19 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       <div className="fixed top-0 right-0 w-full md:w-[420px] h-full bg-white dark:bg-gray-900 shadow-2xl z-50 animate-slide-in-right">
         <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Notifications</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
+          <div className="flex items-center gap-2">
+            {filteredNotifications.some(n => !n.is_read) && (
+              <button
+                onClick={() => markAllAsRead()}
+                className="text-xs text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50"
+              >
+                Mark all read
+              </button>
+            )}
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            </button>
+          </div>
         </div>
 
         <div className="flex border-b border-gray-200 dark:border-gray-800">
@@ -81,7 +90,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         </div>
 
         <div className="overflow-y-auto h-[calc(100vh-140px)]">
-          {filteredNotifications.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
               <div className="w-24 h-24 mb-4 rounded-full bg-gradient-to-br from-[#D4A574]/20 to-[#D4A574]/5 flex items-center justify-center">
                 <Bell className="w-12 h-12 text-[#D4A574]/40" />
@@ -90,7 +103,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 You're all caught up—no wahala!
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                No new notifications at the moment
+                No new {activeTab} at the moment
               </p>
             </div>
           ) : (
@@ -98,12 +111,9 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
               {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => {
-                    onNotificationClick(notification);
-                    onMarkAsRead(notification.id);
-                  }}
+                  onClick={() => handleNotificationClick(notification)}
                   className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${
-                    notification.isNew ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
+                    notification.is_new ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
                   }`}
                 >
                   <div className="flex gap-3">
@@ -113,7 +123,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         <h4 className="text-sm font-medium text-gray-900 dark:text-white">
                           {notification.title}
                         </h4>
-                        {notification.isNew && (
+                        {notification.is_new && (
                           <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
                         )}
                       </div>
@@ -121,7 +131,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         {notification.message}
                       </p>
                       <span className="text-xs text-gray-500 dark:text-gray-500 mt-2 block">
-                        {notification.timestamp}
+                        {new Date(notification.created_at).toLocaleString()}
                       </span>
                     </div>
                   </div>
