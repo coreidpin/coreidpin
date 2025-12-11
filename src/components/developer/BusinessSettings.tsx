@@ -6,6 +6,7 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { supabase } from '../../utils/supabase/client';
 import { toast } from 'sonner';
+import { ensureValidSession } from '../../utils/session';
 import {
   Building2,
   Globe,
@@ -116,28 +117,27 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
     
     setSaving(true);
     try {
-        // Try getting user from server first (more secure)
-        let { data: { user }, error: authError } = await supabase.auth.getUser();
+        // Get token directly from localStorage or Supabase
+        const storedToken = localStorage.getItem('accessToken');
         
-        // Fallback to local session if server check fails (e.g. network issue)
-        if (authError || !user) {
-            console.warn('getUser failed, trying getSession', authError);
-            const { data: { session } } = await supabase.auth.getSession();
-            user = session?.user ?? null;
+         if (!storedToken) {
+            // Try ensuring valid session as fallback
+            const token = await ensureValidSession();
+            if (!token) {
+                toast.error('Please log in to save settings');
+                return;
+            }
         }
 
-        if (!user) {
-            toast.error('Session expired. Redirecting to login...');
-            // clear invalid tokens
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('isAuthenticated');
-            setTimeout(() => window.location.href = '/login', 2000);
+        // Get userId directly from localStorage (custom OTP auth stores it there)
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            toast.error('User ID not found. Please log in again.');
             return;
         }
 
         const updates = {
-            user_id: user.id,
+            user_id: userId,
             company_name: profile.company_name,
             company_email: profile.company_email,
             website: profile.website,
