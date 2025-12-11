@@ -87,10 +87,22 @@ export function APIKeysManager() {
     }
 
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
+      // Get userId directly from localStorage (works with custom OTP)
+      const userId = localStorage.getItem('userId');
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (!userId || !accessToken) {
         toast.error('Session expired. Please log out and back in.');
         return;
+      }
+
+      // Sync Supabase client with stored session
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
       }
 
       // Generate API key and secret
@@ -106,7 +118,7 @@ export function APIKeysManager() {
       const { data, error } = await supabase
         .from('api_keys')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           key_name: newKeyName.trim(),
           api_key: generatedKey,
           api_secret: generatedSecret,
