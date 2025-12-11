@@ -10,6 +10,7 @@ declare const Deno: any;
 
 import { buildWelcomeEmail } from "../server/templates/welcome.ts";
 import { issuePinToUser, verifyPin } from "../_shared/pinService.ts";
+import { create, getNumericDate } from "https://deno.land/x/djwt@v2.9.1/mod.ts";
 
 const app = new Hono();
 
@@ -225,7 +226,7 @@ const handleRequest = async (c: any) => {
 
   } catch (error) {
     console.error('OTP request error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    return c.json({ error: error.message, stack: error.stack }, 500);
   }
 };
 
@@ -267,11 +268,14 @@ const handleVerify = async (c: any) => {
 
     const otpRecord = otpRecords?.[0];
 
+    // Detailed Debugging for OTP Failure
     if (fetchError || !otpRecord) {
-      console.error('OTP Verification Failed:', { 
+      console.error('[OTP Verify Failure] Record not found', { 
         fetchError, 
-        contactHash: contactHash.substring(0, 10),
-        found: !!otpRecord 
+        contact: contact.replace(/.(?=.{4})/g, '*'), // Masked
+        contactHashPreview: contactHash.substring(0, 10),
+        queryTime: currentTime,
+        foundRecords: otpRecords?.length || 0
       });
       return c.json({ error: 'Invalid or expired OTP' }, 400);
     }
@@ -511,7 +515,7 @@ const handleVerify = async (c: any) => {
 
   } catch (error) {
     console.error('OTP verify error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    return c.json({ error: error.message, stack: error.stack }, 500);
   }
 };
 
@@ -784,7 +788,7 @@ const handleIdentityVerification = async (c: any) => {
 
   } catch (error: any) {
     console.error('Identity verification error:', error);
-    return c.json({ error: 'Internal server error' }, 500);
+    return c.json({ error: error.message, stack: error.stack }, 500);
   }
 };
 

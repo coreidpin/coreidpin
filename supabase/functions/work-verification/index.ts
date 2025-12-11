@@ -54,7 +54,13 @@ serve(async (req) => {
         
         if (error || !data) throw new Error('Experience not found');
 
-        if (data.company_verification_code !== code) {
+        // Sanitize inputs
+        const submittedCode = String(code).trim();
+        const storedCode = String(data.company_verification_code || '').trim();
+
+        console.log(`[Verification Debug] Exp: ${experienceId} | Submitted: '${submittedCode}' | Stored: '${storedCode}'`);
+
+        if (storedCode !== submittedCode) {
              return new Response(
                 JSON.stringify({ success: false, error: 'Invalid verification code' }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

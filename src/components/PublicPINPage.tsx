@@ -42,6 +42,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
+  const [workExperiences, setWorkExperiences] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
 
@@ -79,6 +80,17 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         // Track profile view for demand scoring
         if (profileData.user_id) {
           trackProfileView(profileData.user_id, 'anonymous');
+
+          // Fetch work experiences from table (source of truth for verification)
+          const { data: experiences } = await supabase
+            .from('work_experiences')
+            .select('*')
+            .eq('user_id', profileData.user_id)
+            .order('start_date', { ascending: false });
+          
+          if (experiences) {
+            setWorkExperiences(experiences);
+          }
         }
       } catch (err) {
         console.error('Error fetching profile:', err);
@@ -304,7 +316,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
               )}
 
               {/* Experience Section */}
-              {profile.work_experience && profile.work_experience.length > 0 && (
+              {((workExperiences && workExperiences.length > 0) || (profile.work_experience && profile.work_experience.length > 0)) && (
                 <Card className="border-none shadow-sm">
                   <CardContent className="p-3 sm:p-6">
                     <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -312,7 +324,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                       Work Experience
                     </h2>
                     <WorkTimeline 
-                      experiences={profile.work_experience.map((exp: any) => ({
+                      experiences={workExperiences.length > 0 ? workExperiences : profile.work_experience.map((exp: any) => ({
                         id: exp.id || `${exp.company}-${exp.start_date}`,
                         job_title: exp.title || exp.role,
                         company_name: exp.company,
@@ -322,6 +334,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         is_current: exp.current || false,
                         location: exp.location,
                         description: exp.description,
+                        verification_status: exp.verification_status,
                         proof_documents: exp.proof_documents || []
                       }))}
                       showProofBadges={true}

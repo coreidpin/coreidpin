@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Building2, Shield, Briefcase } from 'lucide-react';
+import { Calendar, MapPin, Building2, Shield, Briefcase, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
 import type { ProofDocument } from '../dashboard/ProofDocumentUpload';
@@ -15,6 +15,7 @@ export interface WorkExperience {
   is_current: boolean;
   location?: string;
   description?: string;
+  verification_status?: string | boolean;
   proof_documents?: ProofDocument[];
 }
 
@@ -194,7 +195,19 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                                  <span className="truncate">{exp.location}</span>
                                </div>
                             )}
-                          </div>
+                            </div>
+
+                            {/* Verified Employee Badge */}
+                            {(exp.verification_status === 'verified' || exp.verification_status === true) && (
+                               <div className="pt-2">
+                                 <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 gap-1 pl-1 pr-2.5 py-1 w-fit">
+                                    <div className="bg-green-500 rounded-full p-0.5">
+                                      <CheckCircle2 className="h-3 w-3 text-white" />
+                                    </div>
+                                    Verified Employee
+                                 </Badge>
+                               </div>
+                            )}
 
                           {/* Proof Badges */}
                            {showProofBadges && exp.proof_documents && exp.proof_documents.length > 0 && (

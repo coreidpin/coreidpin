@@ -43,6 +43,15 @@ export function APIKeysManager() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
   const [newKeyEnvironment, setNewKeyEnvironment] = useState<'sandbox' | 'production'>('sandbox');
+  const [newKeyPermissions, setNewKeyPermissions] = useState({
+    verify_pin: true,
+    read_profile: false,
+    instant_signin: false,
+  });
+  const [newKeyRateLimits, setNewKeyRateLimits] = useState({
+    per_minute: 60,
+    per_day: 10000,
+  });
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set());
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<APIKey | null>(null);
 

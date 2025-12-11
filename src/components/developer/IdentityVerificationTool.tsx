@@ -7,6 +7,7 @@ import { Badge } from '../ui/badge';
 import { Search, Loader2, CheckCircle2, AlertCircle, Shield, MapPin, Briefcase } from 'lucide-react';
 import { supabase, supabaseUrl } from '../../utils/supabase/client';
 import { getProfileAvatar } from '../../utils/avatarUtils';
+import { ensureValidSession } from '../../utils/session';
 
 export function IdentityVerificationTool() {
   const [pin, setPin] = useState('');
@@ -26,7 +27,13 @@ export function IdentityVerificationTool() {
     const toastId = toast.loading('Verifying PIN...');
 
     try {
-      // Get current user ID to act as verifier_id
+      // Use the utility function that handles all session management
+      const sessionToken = await ensureValidSession();
+      
+      if (!sessionToken) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       const verifierId = user?.id;
 
@@ -36,7 +43,7 @@ export function IdentityVerificationTool() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${sessionToken}`
         },
         body: JSON.stringify({
             pin_number: pin.trim(),
