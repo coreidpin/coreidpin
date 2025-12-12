@@ -17,12 +17,16 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
   
   const handleNavigate = (page: string) => {
     setIsNavigating(true);
+    // Use React Router for all navigation
     if (page === 'dashboard') {
       navigate('/dashboard');
+    } else if (page === 'how-it-works') {
+      navigate('/how-it-works');
     } else {
+      // Fallback to onNavigate for other pages
       onNavigate(page);
     }
-    // Reset loading state after a short delay (navigation will happen before this)
+    // Reset loading state after a short delay
     setTimeout(() => setIsNavigating(false), 1000);
   };
 
