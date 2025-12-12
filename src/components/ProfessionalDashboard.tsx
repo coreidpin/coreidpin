@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import CountUp from 'react-countup';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -1041,16 +1042,16 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white scroll-smooth">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
-        {/* Welcome Section */}
-        <div className="mb-6 flex items-start justify-between border-b border-gray-100 pb-6">
-          <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+        {/* Welcome Section - Mobile: Stack, Desktop: Side-by-side */}
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-100 pb-6">
+          <div className="space-y-2 sm:space-y-4 flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight break-words">
               Welcome back, <span className="text-slate-500">{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
             </h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 border border-green-100 w-fit">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -1135,18 +1136,12 @@ export function ProfessionalDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-xl">
             <TabsTrigger 
               value="overview" 
               className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
             >
               Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="work_identity" 
-              className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
-            >
-              Work Identity
             </TabsTrigger>
             <TabsTrigger 
               value="projects" 
@@ -1162,76 +1157,106 @@ export function ProfessionalDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-8">
-            <QuickActions 
-              onAddProject={handleAddProject}
-              onRequestEndorsement={handleRequestEndorsement}
-              onAddCaseStudy={handleAddCaseStudy}
-              reducedMotion={reducedMotion}
-              userPin={phonePin || undefined}
-            />
-            
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {statsLoading ? (
-                Array(8).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
-              ) : (
-                [
-                  { key: 'profileViews', label: 'Profile Views', color: 'purple', value: stats.profileViews },
-                  { key: 'pinUsage', label: 'PIN Usage', color: 'green', value: stats.pinUsage },
-                  { key: 'verifications', label: 'Verifications', color: 'blue', value: stats.verifications },
-                  { key: 'apiCalls', label: 'API Calls', color: 'purple', value: stats.apiCalls },
-                  { key: 'countries', label: 'Countries', color: 'purple', value: stats.countries },
-                  { key: 'companies', label: 'Companies', color: 'blue', value: stats.companies },
-                  { key: 'projects', label: 'Projects', color: 'purple', value: stats.projects },
-                  { key: 'endorsements', label: 'Endorsements', color: 'green', value: endorsements.length > 0 ? endorsements.length : stats.endorsements }
-                ].map((stat, index) => {
-                  const trend = statsTrends[stat.key as keyof typeof statsTrends];
-                  return (
-                    <motion.div
-                      key={stat.key}
-                      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
-                      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-                      whileHover={reducedMotion ? undefined : { scale: 1.02 }}
-                      transition={reducedMotion ? undefined : { delay: index * 0.05 }}
-                    >
-                      <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                        <CardContent className="p-6 text-center relative">
-                          <button
-                            className="absolute top-3 right-3 opacity-40 hover:opacity-100 transition-opacity"
-                            title={statTooltips[stat.key as keyof typeof statTooltips]}
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div
+                key="overview"
+                initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+                animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+                exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+                transition={reducedMotion ? undefined : { duration: 0.2 }}
+              >
+                <TabsContent value="overview" className="space-y-8">
+                  <QuickActions 
+                    onAddProject={handleAddProject}
+                    onRequestEndorsement={handleRequestEndorsement}
+                    onAddCaseStudy={handleAddCaseStudy}
+                    reducedMotion={reducedMotion}
+                    userPin={phonePin || undefined}
+                  />
+                  
+                  {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                    {statsLoading ? (
+                      Array(8).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
+                    ) : (
+                      [
+                        { key: 'profileViews', label: 'Profile Views', color: 'purple', value: stats.profileViews },
+                        { key: 'pinUsage', label: 'PIN Usage', color: 'green', value: stats.pinUsage },
+                        { key: 'verifications', label: 'Verifications', color: 'blue', value: stats.verifications },
+                        { key: 'apiCalls', label: 'API Calls', color: 'purple', value: stats.apiCalls },
+                        { key: 'countries', label: 'Countries', color: 'purple', value: stats.countries },
+                        { key: 'companies', label: 'Companies', color: 'blue', value: stats.companies },
+                        { key: 'projects', label: 'Projects', color: 'purple', value: stats.projects },
+                        { key: 'endorsements', label: 'Endorsements', color: 'green', value: endorsements.length > 0 ? endorsements.length : stats.endorsements }
+                      ].map((stat, index) => {
+                        const trend = statsTrends[stat.key as keyof typeof statsTrends];
+                        return (
+                          <motion.div
+                            key={stat.key}
+                            initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
+                            animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+                            whileHover={reducedMotion ? undefined : { y: -4, transition: { duration: 0.2 } }}
+                            transition={reducedMotion ? undefined : { delay: index * 0.1, duration: 0.3 }}
                           >
-                            <div className="h-4 w-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">i</div>
-                          </button>
-                          <div className={`text-4xl font-bold mb-2 ${stat.color === 'purple' ? 'text-purple-600' : stat.color === 'green' ? 'text-green-600' : 'text-blue-600'}`}>
-                            {stat.value}
-                          </div>
-                          <div className={`flex items-center justify-center gap-1 text-xs font-medium mb-2 ${
-                            trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {trend.direction === 'up' ? (
-                              <TrendingUp className="h-3 w-3" />
-                            ) : (
-                              <TrendingDown className="h-3 w-3" />
-                            )}
-                            <span>{trend.change}%</span>
-                          </div>
-                          <div className="text-sm text-gray-600 font-medium">{stat.label}</div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })
-              )}
-            </div>
-            
-            <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
-              <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
-            </motion.div>
-          </TabsContent>
+                            <Card className="bg-white border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-200 group">
+                              <CardContent className="p-4 md:p-6 text-center relative">
+                                <button
+                                  className="absolute top-2 md:top-3 right-2 md:right-3 opacity-40 hover:opacity-100 transition-opacity"
+                                  title={statTooltips[stat.key as keyof typeof statTooltips]}
+                                >
+                                  <div className="h-4 w-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">i</div>
+                                </button>
+                                <div className={`text-2xl md:text-3xl lg:text-4xl font-bold mb-2 ${stat.color === 'purple' ? 'text-purple-600' : stat.color === 'green' ? 'text-green-600' : 'text-blue-600'}`}>
+                                  {reducedMotion ? (
+                                    stat.value
+                                  ) : (
+                                    <CountUp
+                                      end={stat.value}
+                                      duration={1.5}
+                                      separator=","
+                                      delay={index * 0.1}
+                                    />
+                                  )}
+                                </div>
+                                <div className={`flex items-center justify-center gap-1 text-xs font-medium mb-2 ${
+                                  trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {trend.direction === 'up' ? (
+                                    <TrendingUp className="h-3 w-3" />
+                                  ) : (
+                                    <TrendingDown className="h-3 w-3" />
+                                  )}
+                                  <span>{trend.change}%</span>
+                                </div>
+                                <div className="text-xs md:text-sm text-gray-600 font-medium">{stat.label}</div>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })
+                    )}
+                  </div>
+                  
+                  <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
+                    <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
+                  </motion.div>
+                </TabsContent>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Projects Tab */}
-          <TabsContent value="projects" className="space-y-6">
+          <AnimatePresence mode="wait">
+            {activeTab === 'projects' && (
+              <motion.div
+                key="projects"
+                initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+                animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+                exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+                transition={reducedMotion ? undefined : { duration: 0.2 }}
+              >
+                <TabsContent value="projects" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
@@ -1400,9 +1425,21 @@ export function ProfessionalDashboard() {
               </div>
             )}
           </TabsContent>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
           {/* Endorsements Tab */}
-          <TabsContent value="endorsements" className="space-y-6">
+          <AnimatePresence mode="wait">
+            {activeTab === 'endorsements' && (
+              <motion.div
+                key="endorsements"
+                initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+                animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+                exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+                transition={reducedMotion ? undefined : { duration: 0.2 }}
+              >
+                <TabsContent value="endorsements" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Endorsements</h2>
@@ -1584,8 +1621,11 @@ export function ProfessionalDashboard() {
               </div>
             )}
           </TabsContent>
-        </Tabs>
-      </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </Tabs>
+</div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">

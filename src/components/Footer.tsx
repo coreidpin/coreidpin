@@ -132,7 +132,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
       <div className="relative">
         {/* PIN Showcase Section - The Centerpiece */}
         <div className="border-b border-white/10">
-          <div className="container mx-auto px-4 py-16">
+          <div className="container mx-auto px-4 py-8 md:py-12 lg:py-16">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -147,38 +147,47 @@ export function Footer({ onNavigate }: FooterProps = {}) {
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-4xl md:text-5xl font-medium text-white">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white leading-tight">
                   Your Career Passport,<br />Verified & Trusted Globally
                 </h2>
-                <p className="text-lg text-white/60 max-w-2xl mx-auto">
+                <p className="text-base md:text-lg text-white/60 max-w-2xl mx-auto">
                   Join 50,000+ verified professionals using PIN as their digital career identity. 
                   Blockchain-secured, AI-verified, globally recognized.
                 </p>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              {/* CTA Buttons - Mobile First: Stack vertically, inline on tablet+ */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 md:pt-4">
                 <Button 
-                  size="lg"
+                  className="
+                    w-full sm:w-auto
+                    h-12 px-6
+                    bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] 
+                    hover:from-[#a88fe6] hover:to-[#6aa5e6] 
+                    text-white border-0 disabled:opacity-50
+                  "
                   disabled={true}
-                  className="bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] hover:from-[#a88fe6] hover:to-[#6aa5e6] text-white border-0 disabled:opacity-50"
                   onClick={() => handleNavigate('get-started')}
                 >
                   Get Your PIN
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
-                  size="lg"
                   variant="outline"
-                  className="border-surface text-white hover:bg-surface hover:border-surface"
+                  className="
+                    w-full sm:w-auto
+                    h-12 px-6
+                    border-surface text-white 
+                    hover:bg-surface hover:border-surface
+                  "
                 >
                   Verify a PIN
                   <Shield className="ml-2 h-5 w-5" />
                 </Button>
               </div>
 
-              {/* Trust Metrics with Glassmorphism */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
+              {/* Trust Metrics - Mobile: 2 cols, Desktop: 4 cols */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 pt-6 md:pt-8">
                 {pinMetrics.map((metric, index) => (
                   <motion.div
                     key={metric.label}
@@ -188,14 +197,14 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                     transition={{ delay: index * 0.1 }}
                     className="relative group"
                   >
-                    <div className="relative p-6 rounded-2xl bg-surface border border-surface backdrop-blur-xl hover:bg-surface transition-all duration-300">
+                    <div className="relative p-4 md:p-6 rounded-2xl bg-surface border border-surface backdrop-blur-xl hover:bg-surface transition-all duration-300">
                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <metric.icon 
                         className="h-8 w-8 mx-auto mb-3 transition-transform group-hover:scale-110" 
                         style={{ color: metric.color }}
                       />
-                      <div className="text-2xl font-medium text-white">{metric.value}</div>
-                      <div className="text-sm text-white/60 mt-1">{metric.label}</div>
+                      <div className="text-xl md:text-2xl font-medium text-white">{metric.value}</div>
+                      <div className="text-xs md:text-sm text-white/60 mt-1">{metric.label}</div>
                     </div>
                   </motion.div>
                 ))}
@@ -206,8 +215,8 @@ export function Footer({ onNavigate }: FooterProps = {}) {
 
         {/* Main Footer Content */}
         <div className="border-b border-white/10">
-          <div className="container mx-auto px-4 py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="container mx-auto px-4 py-8 md:py-12 lg:py-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 md:gap-10 lg:gap-12">
               {/* Brand Section */}
               <div className="lg:col-span-4 space-y-6">
                 <div>

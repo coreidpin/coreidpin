@@ -238,7 +238,7 @@ export function Navbar({
         )}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-18">
+        <div className="flex items-center justify-between h-14 md:h-16 lg:h-18">
           {/* Logo */}
           <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
 
@@ -263,7 +263,7 @@ export function Navbar({
           </nav>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
             {!isAuthenticated ? (
               <>
                 <Button 
@@ -342,20 +342,23 @@ export function Navbar({
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Mobile First: Larger touch target */}
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  size="sm" 
                   className={cn(
                     "lg:hidden flex-shrink-0",
+                    // Mobile: 44px minimum touch target
+                    "h-11 w-11 p-0",
+                    // Desktop: Smaller
+                    "lg:h-9 lg:w-auto lg:px-3",
                     isLight 
                       ? "bg-transparent text-slate-900 hover:bg-slate-100" 
                       : "bg-white text-black hover:bg-white hover:text-black"
                   )}
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-6 w-6 lg:h-5 lg:w-5" />
                 </Button>
             </SheetTrigger>
             <SheetContent 
@@ -369,7 +372,7 @@ export function Navbar({
                 transition={{ duration: 0.3 }}
                 className="h-full flex flex-col"
               >
-                <SheetHeader className="px-6 py-4 border-b border-white/10 backdrop-blur-sm bg-white/5">
+                <SheetHeader className="px-4 py-3 md:px-6 md:py-4 border-b border-white/10 backdrop-blur-sm bg-white/5">
                   <SheetTitle className="flex items-center gap-2 text-left text-white">
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
@@ -384,7 +387,7 @@ export function Navbar({
                   </SheetDescription>
                 </SheetHeader>
                 
-                  <div className="px-4 py-6 space-y-6 overflow-y-auto flex-1">
+                  <div className="px-3 py-4 md:px-4 md:py-6 space-y-4 md:space-y-6 overflow-y-auto flex-1">
                   {!isAuthenticated ? (
                     <>
                       {/* Mobile Navigation - Enhanced Card Style with Glassmorphism */}

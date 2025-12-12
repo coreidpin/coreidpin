@@ -38,8 +38,8 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
 
   return (
     <>
-      {/* HERO SECTION - Modern Light */}
-      <section className="relative min-h-[85vh] sm:min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-slate-50">
+      {/* HERO SECTION - Modern Light, Mobile-First */}
+      <section className="relative min-h-[85vh] sm:min-h-[90vh] lg:min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-white to-slate-50">
         {/* Animated gradient overlay */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -56,10 +56,10 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
             ease: 'easeInOut',
           }}
         />
-        <div className="container mx-auto px-4 py-12 sm:py-20 relative z-10">
+        <div className="container mx-auto px-4 py-8 sm:py-12 md:py-16 lg:py-20 relative z-10">
           <div className="max-w-7xl mx-auto">
-            {/* Hero Content */}
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center hero-grid">
+            {/* Hero Content - Mobile: Stack, Desktop: 2-col */}
+            <div className="grid gap-6 md:gap-8 lg:grid-cols-2 lg:gap-12 items-center hero-grid">
               {/* Left: Text Content */}
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -85,7 +85,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl mb-6 leading-snug md:leading-tight break-words"
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 sm:mb-5 md:mb-6 leading-tight font-bold"
                   style={{ color: '#0A0B0D' }}
                 >
                   Your Phone Number. Your Global Identity.
@@ -96,7 +96,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-lg sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+                  className="text-base sm:text-lg md:text-xl mb-6 sm:mb-7 md:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
                   style={{ color: 'rgba(10,11,13,0.70)' }}
                 >
                   Gidi-PIN turns your phone number into a secure, universal Professional Identity Number (PIN). One identity, recognized across companies, platforms, and borders — powered by enterprise-grade infrastructure.
@@ -110,10 +110,15 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8"
                 >
                   <Button
-                    size="lg"
                     onClick={handleDashboardOrWaitlist}
                     disabled={isNavigating}
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 group hover:scale-105 transition-all duration-200 text-white disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="
+                      w-full sm:w-auto
+                      h-12 sm:h-auto
+                      text-base px-6 py-3 sm:text-lg sm:px-8 sm:py-6 
+                      group hover:scale-105 transition-all duration-200 
+                      text-white disabled:opacity-70 disabled:cursor-not-allowed
+                    "
                     style={{ backgroundColor: '#0A0B0D' }}
                   >
                     {isNavigating ? (
@@ -130,10 +135,14 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                     )}
                   </Button>
                   <Button
-                    size="lg"
                     onClick={() => handleNavigate('how-it-works')}
                     variant="outline"
-                    className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 hover:scale-105 transition-all duration-200"
+                    className="
+                      w-full sm:w-auto
+                      h-12 sm:h-auto
+                      text-base px-6 py-3 sm:text-lg sm:px-8 sm:py-6 
+                      hover:scale-105 transition-all duration-200
+                    "
                     style={{ borderColor: '#BFA5FF', color: '#0A0B0D' }}
                   >
                     <Play className="h-5 w-5 mr-2" />
@@ -196,7 +205,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                 </div>
 
                 <motion.div 
-                  className="relative rounded-3xl bg-white shadow-2xl border border-slate-200 p-8 cursor-pointer"
+                  className="relative rounded-2xl md:rounded-3xl bg-white shadow-2xl border border-slate-200 p-6 md:p-8 cursor-pointer"
                   whileHover={{ 
                     scale: 1.02,
                     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"

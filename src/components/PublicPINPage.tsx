@@ -152,22 +152,35 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
             <div className="lg:col-span-2 space-y-6">
               <Card className="border-none shadow-lg overflow-hidden">
                 <CardContent className="p-0">
-                  <div className="p-3 sm:p-10">
-                    <div className="flex flex-col items-center gap-6">
-                      {/* Avatar - Compact on mobile */}
-                      <div className="relative">
-                        <div className="w-20 h-20 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-br from-blue-50 to-purple-50 p-1 sm:p-1.5 shadow-lg overflow-hidden">
+                  {/* Cover Image Section */}
+                  <div className="relative h-32 sm:h-48 md:h-56 w-full overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500">
+                    {profile.cover_image ? (
+                      <img 
+                        src={profile.cover_image} 
+                        alt="Cover" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500" />
+                    )}
+                  </div>
+
+                  {/* Profile Content - Avatar overlaps cover */}
+                  <div className="relative px-4 sm:px-10 pb-6">
+                    <div className="flex flex-col items-center gap-4">
+                      {/* Avatar - Overlapping cover */}
+                      <div className="relative -mt-12 sm:-mt-16">
+                        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden">
                           <img 
                             src={getProfileAvatar(profile)} 
                             alt={profile.full_name || profile.name || 'Profile'} 
-                            className="w-full h-full object-cover rounded-xl"
+                            className="w-full h-full object-cover"
                             onError={(e) => {
-                              // Fallback to initials if avatar fails to load
                               e.currentTarget.style.display = 'none';
                               const parent = e.currentTarget.parentElement;
                               if (parent) {
                                 parent.innerHTML = `
-                                  <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center text-blue-600 text-3xl sm:text-6xl font-bold">
+                                  <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center text-blue-600 text-3xl sm:text-5xl font-bold">
                                     ${(profile.full_name || profile.name || 'U').charAt(0).toUpperCase()}
                                   </div>
                                 `;
@@ -204,9 +217,20 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden"></div>
                         </div>
                         
-                        <p className="text-base sm:text-xl text-gray-600 font-medium mb-2 sm:mb-4">
-                          {profile.role || profile.job_title || 'Professional'}
-                        </p>
+                        {/* Professional Title with CoreIDPin Logo Badge */}
+                        <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4">
+                          <p className="text-base sm:text-xl text-gray-600 font-medium">
+                            {profile.role || profile.job_title || 'Professional'}
+                          </p>
+                          {/* CoreIDPin Logo Badge - LinkedIn style */}
+                          <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <img 
+                              src="/logos/gidipin-logo-color.svg" 
+                              alt="CoreIDPin" 
+                              className="h-3 w-auto sm:h-4"
+                            />
+                          </div>
+                        </div>
 
                         {/* Availability Status Banner - Simple & Clean */}
                         {profile.availability_status && (

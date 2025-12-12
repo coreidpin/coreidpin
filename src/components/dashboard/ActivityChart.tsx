@@ -21,9 +21,25 @@ export function ActivityChart({
   onPeriodChange,
 }: ActivityChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+  const [containerWidth, setContainerWidth] = React.useState(300);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Update chart width based on container
+  React.useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth;
+        setContainerWidth(width); // Use full container width
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   // Calculate chart dimensions
-  const chartWidth = 300;
+  const chartWidth = containerWidth;
   const chartHeight = 120;
   const padding = { top: 10, right: 10, bottom: 20, left: 10 };
   const innerWidth = chartWidth - padding.left - padding.right;
@@ -147,7 +163,7 @@ export function ActivityChart({
         </div>
 
         {/* Chart */}
-        <div className="relative" style={{ width: chartWidth, height: chartHeight }}>
+        <div ref={containerRef} className="relative w-full" style={{ height: chartHeight }}>
           <svg width={chartWidth} height={chartHeight} className="overflow-visible">
             {/* Grid lines */}
             {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {

@@ -185,19 +185,19 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <form onSubmit={handleSave} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSave} className="space-y-4 md:space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="company_name">Company Name</Label>
                         <div className="relative">
                             <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                            <Input
-                                id="company_name"
-                                value={profile.company_name}
-                                onChange={e => handleChange('company_name', e.target.value)}
-                                className="pl-9 bg-white border-gray-200 text-gray-900"
-                                required
-                            />
+                        <Input
+                            id="company_name"
+                            value={profile.company_name}
+                            onChange={e => handleChange('company_name', e.target.value)}
+                            className="pl-9 h-11 bg-white border-gray-200 text-gray-900"
+                            required
+                        />
                         </div>
                     </div>
 
@@ -208,7 +208,7 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
                             placeholder="e.g. Fintech, E-commerce"
                             value={profile.industry || ''}
                             onChange={e => handleChange('industry', e.target.value)}
-                            className="bg-white border-gray-200 text-gray-900"
+                            className="h-11 bg-white border-gray-200 text-gray-900"
                         />
                     </div>
 
@@ -221,7 +221,7 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
                                 type="email"
                                 value={profile.company_email || ''}
                                 onChange={e => handleChange('company_email', e.target.value)}
-                                className="pl-9 bg-white border-gray-200 text-gray-900"
+                                className="pl-9 h-11 bg-white border-gray-200 text-gray-900"
                             />
                         </div>
                     </div>
@@ -236,7 +236,7 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
                                 placeholder="https://..."
                                 value={profile.website || ''}
                                 onChange={e => handleChange('website', e.target.value)}
-                                className="pl-9 bg-white border-gray-200 text-gray-900"
+                                className="pl-9 h-11 bg-white border-gray-200 text-gray-900"
                             />
                         </div>
                     </div>
