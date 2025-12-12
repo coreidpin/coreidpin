@@ -401,7 +401,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
           <div className="mt-6 pt-6 border-t border-white/10">
             <div className="text-center">
               <p className="text-sm text-white/40">
-                🇳🇬 Built with pride in Nigeria · Serving the world
+
               </p>
             </div>
           </div>
