@@ -1110,7 +1110,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {profile?.profile_picture_url ? (
-                        <img src={profile.profile_picture_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                        <img src={profile.profile_picture_url} alt="Profile" loading="lazy" className="w-full h-full rounded-full object-cover" />
                       ) : (
                         <div className="text-center">
                           <User className="h-12 w-12 text-gray-600 mx-auto mb-2" />
