@@ -289,8 +289,7 @@ export function Navbar({
                   )}
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
-                  <span className="hidden xl:inline">Get Started</span>
-                  <span className="xl:hidden">Join</span>
+                  Get Started
                 </Button>
               </>
             ) : (

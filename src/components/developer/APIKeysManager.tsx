@@ -256,13 +256,14 @@ export function APIKeysManager() {
                 <div>
                   <Label className="text-xs text-gray-500">API Key</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded text-sm text-gray-900 font-mono">
+                    <code className="flex-1 overflow-x-auto bg-white border border-gray-200 px-3 py-2 rounded text-xs sm:text-sm text-gray-900 font-mono whitespace-nowrap">
                       {newlyCreatedKey.api_key}
                     </code>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => copyToClipboard(newlyCreatedKey.api_key, 'API Key')}
+                      className="min-h-[44px] min-w-[44px]"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -272,13 +273,14 @@ export function APIKeysManager() {
                 <div>
                   <Label className="text-xs text-gray-500">API Secret</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <code className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded text-sm text-gray-900 font-mono">
+                    <code className="flex-1 overflow-x-auto bg-white border border-gray-200 px-3 py-2 rounded text-xs sm:text-sm text-gray-900 font-mono whitespace-nowrap">
                       {newlyCreatedKey.api_secret}
                     </code>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => copyToClipboard(newlyCreatedKey.api_secret, 'API Secret')}
+                      className="min-h-[44px] min-w-[44px]"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>

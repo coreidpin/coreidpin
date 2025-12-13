@@ -973,7 +973,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 py-4 sm:py-8 selection:bg-blue-500/30">
+    <div className="min-h-screen bg-white text-slate-900 py-4 sm:py-8 selection:bg-blue-500/30">
       <div className="container mx-auto px-3 sm:px-4 max-w-6xl">
         {/* Header */}
         <motion.div 
@@ -1056,20 +1056,20 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           <TabsList className="flex flex-wrap w-full bg-slate-100 border border-slate-200 p-1 rounded-xl gap-1">
             <TabsTrigger 
               value="overview" 
-              className="flex-1 min-w-[100px] py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="details" 
-              className="flex-1 min-w-[120px] py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base text-center data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base text-center data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
             >
               <span className="hidden sm:inline">Personal & Professional</span>
               <span className="sm:hidden">Personal & Prof.</span>
             </TabsTrigger>
             <TabsTrigger 
               value="work" 
-              className="flex-1 min-w-[100px] py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base whitespace-nowrap data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
             >
               Work Identity
             </TabsTrigger>
@@ -2022,7 +2022,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[500px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[500px] max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
             <DialogHeader className="px-6 py-4 border-b border-slate-100">
               <DialogTitle className="text-lg">{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
             </DialogHeader>
@@ -2131,7 +2131,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Certification Modal */}
         <Dialog open={showCertModal} onOpenChange={setShowCertModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 sm:max-w-[400px]">
+          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>Add Certification</DialogTitle>
             </DialogHeader>

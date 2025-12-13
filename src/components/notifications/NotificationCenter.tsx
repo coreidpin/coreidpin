@@ -47,7 +47,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={onClose} />
       
       <div className="fixed top-0 right-0 w-full md:w-[420px] h-full bg-white dark:bg-gray-900 shadow-2xl z-50 animate-slide-in-right">
-        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between p-5 pt-safe-or-5 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Notifications</h2>
           <div className="flex items-center gap-2">
             {filteredNotifications.some(n => !n.is_read) && (
