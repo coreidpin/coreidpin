@@ -51,21 +51,26 @@ export function APIUsageDashboard() {
 
   const fetchUsageData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      // Get userId from localStorage (custom OTP auth)
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        console.log('No userId found');
+        setLoading(false);
+        return;
+      }
 
       // Fetch business profile for quota
       const { data: profile } = await supabase
         .from('business_profiles')
         .select('current_month_usage, monthly_api_quota')
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', userId)
+        .maybeSingle();
 
       // Fetch usage logs
       const { data: logs, error } = await supabase
         .from('api_usage_logs')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(100);
 
