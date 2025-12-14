@@ -57,24 +57,32 @@ export function WebhooksManager({ businessId, isLoading }: WebhooksManagerProps)
   }, [businessId]);
 
   const fetchWebhooks = async () => {
+    if (!businessId) {
+      setFetching(false);
+      return;
+    }
+
     try {
+      // Use database function to fetch webhooks (bypasses RLS but validates ownership)
       const { data, error } = await supabase
-        .from('webhooks')
-        .select('*')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false });
+        .rpc('get_webhooks_for_business', {
+          p_business_id: businessId
+        });
 
       if (error) {
-        if (error.code === '42P01') { 
-            setEndpoints([]);
-            return;
+        // Check if function doesn't exist (migration not applied)
+        if (error.code === '42883') {
+          console.warn('Webhook function not found. Please apply migration.');
+          setEndpoints([]);
+          return;
         }
         throw error;
       }
+      
       setEndpoints(data || []);
     } catch (error: any) {
       console.error('Error fetching webhooks:', error);
-      toast.error('Failed to load webhooks: ' + error.message);
+      toast.error('Failed to load webhooks');
     } finally {
       setFetching(false);
     }
@@ -88,37 +96,49 @@ export function WebhooksManager({ businessId, isLoading }: WebhooksManagerProps)
         return;
     }
 
+    if (!businessId) {
+      toast.error('Business profile required. Please save your profile in Settings first.');
+      return;
+    }
+
     setCreating(true);
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-         throw new Error('Session expired. Please log in again.');
-      }
-
+      // Generate webhook secret
       const secret = 'whsec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       
+      // Use database function to create webhook (bypasses RLS but validates ownership)
       const { data, error } = await supabase
-        .from('webhooks')
-        .insert({
-          business_id: businessId,
-          url: newUrl,
-          events: selectedEvents,
-          secret: secret,
-          is_active: true
-        })
-        .select()
-        .single();
+        .rpc('create_webhook_for_business', {
+          p_business_id: businessId,
+          p_url: newUrl,
+          p_events: selectedEvents,
+          p_secret: secret
+        });
 
       if (error) throw error;
 
-      setEndpoints([data, ...endpoints]);
+      // The function returns an array with one row
+      const webhookData = Array.isArray(data) ? data[0] : data;
+
+      if (!webhookData) {
+        throw new Error('Failed to create webhook');
+      }
+
+      setEndpoints([webhookData, ...endpoints]);
       setNewUrl('');
       setSelectedEvents([]);
       setShowCreateForm(false);
       toast.success('Webhook endpoint added');
     } catch (error: any) {
       console.error('Error creating webhook:', error);
-      toast.error(error.message || 'Failed to create webhook');
+      
+      if (error.message?.includes('not found or unauthorized')) {
+        toast.error('Business profile not found. Please save your profile in Settings first.');
+      } else if (error.message?.includes('row-level security')) {
+        toast.error('Permission denied. Please refresh the page and try again.');
+      } else {
+        toast.error(error.message || 'Failed to create webhook');
+      }
     } finally {
       setCreating(false);
     }

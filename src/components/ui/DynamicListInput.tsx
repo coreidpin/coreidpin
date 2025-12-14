@@ -19,6 +19,7 @@ interface DynamicListInputProps {
 /**
  * DynamicListInput Component - For adding multiple text items (e.g., achievements)
  * Each item can be a multi-line text entry
+ * Mobile-optimized with proper touch targets and text sizes
  */
 export function DynamicListInput({ 
   label, 
@@ -84,27 +85,29 @@ export function DynamicListInput({
       
       {/* Existing items */}
       {items.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 sm:space-y-2">
           {items.map((item, idx) => (
             <div key={idx} className="flex items-start gap-2 group">
-              <div className="mt-2 flex-shrink-0">
+              <div className="mt-2 flex-shrink-0 hidden sm:block">
                 <GripVertical className="h-5 w-5 text-gray-300 group-hover:text-gray-400 cursor-move" />
               </div>
               <Textarea
                 value={item}
                 onChange={(e) => updateItem(idx, e.target.value)}
-                className="flex-1 resize-none"
+                className="flex-1 resize-none text-base sm:text-sm"
                 rows={minRows}
                 maxLength={maxLength}
+                enterKeyHint="enter"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={() => removeItem(idx)}
-                className="mt-2 flex-shrink-0 hover:bg-red-50 hover:text-red-600"
+                className="mt-2 flex-shrink-0 hover:bg-red-50 hover:text-red-600 min-w-[44px] min-h-[44px] w-11 h-11 sm:w-9 sm:h-9"
+                aria-label={`Remove item ${idx + 1}`}
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
             </div>
           ))}
@@ -114,7 +117,7 @@ export function DynamicListInput({
       {/* Add new item section */}
       {items.length < maxItems && (
         <div className="space-y-2">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Textarea
               value={newItem}
               onChange={(e) => {
@@ -122,20 +125,21 @@ export function DynamicListInput({
                 setError(null);
               }}
               placeholder={placeholder}
-              className={`flex-1 resize-none ${error ? 'border-red-500' : ''}`}
+              className={`flex-1 resize-none text-base sm:text-sm ${error ? 'border-red-500' : ''}`}
               rows={minRows}
               onKeyDown={handleKeyDown}
               maxLength={maxLength}
+              enterKeyHint="enter"
             />
             <Button
               type="button"
               onClick={addItem}
               variant="outline"
-              size="icon"
-              className="flex-shrink-0 h-[76px]"
+              className="flex-shrink-0 min-h-[44px] sm:h-[76px] w-full sm:w-auto px-4 sm:px-3"
               disabled={!newItem.trim()}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 sm:mr-0" />
+              <span className="ml-2 sm:hidden">Add Achievement</span>
             </Button>
           </div>
           
@@ -144,7 +148,8 @@ export function DynamicListInput({
           )}
           
           <p className="text-xs text-gray-500">
-            Press Cmd+Enter (Mac) or Ctrl+Enter (Windows) to add • {items.length} / {maxItems} items
+            <span className="hidden sm:inline">Press Cmd+Enter (Mac) or Ctrl+Enter (Windows) to add • </span>
+            {items.length} / {maxItems} items
           </p>
         </div>
       )}

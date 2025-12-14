@@ -34,6 +34,7 @@ import { CompanyLogoUpload } from './dashboard/CompanyLogoUpload';
 import { ProofDocumentUpload } from './dashboard/ProofDocumentUpload';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
+import { validators } from '../utils/validation';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -113,6 +114,9 @@ export const IdentityManagementPage: React.FC = () => {
     skills: [] as string[],
     achievements: [] as string[]
   });
+
+  // Validation states for work experience form
+  const [workErrors, setWorkErrors] = useState<Record<string, string>>({});
 
   const [showCertModal, setShowCertModal] = useState(false);
   const [tempCert, setTempCert] = useState({
@@ -229,16 +233,138 @@ export const IdentityManagementPage: React.FC = () => {
     }));
   };
 
-  const handleSaveWork = async () => {
-    if (!tempWork.company || !tempWork.role) {
-      toast.error('Company and Role are required');
-      return;
+  // Validate work experience form
+  const validateWorkExperience = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+
+    // Required: Company (2-100 chars)
+    const companyError = validators.required(tempWork.company, 'Company name');
+    if (companyError) {
+      errors.company = companyError;
+    } else {
+      const lengthError = validators.stringLength(tempWork.company, 2, 100, 'Company name');
+      if (lengthError) errors.company = lengthError;
     }
 
-    if (!tempWork.start_date) {
-        toast.error('Start Date is required');
-        return;
+    // Required: Role (2-100 chars)
+    const roleError = validators.required(tempWork.role, 'Job title');
+    if (roleError) {
+      errors.role = roleError;
+    } else {
+      const lengthError = validators.stringLength(tempWork.role, 2, 100, 'Job title');
+      if (lengthError) errors.role = lengthError;
     }
+
+    // Required: Start date
+    const startError = validators.required(tempWork.start_date, 'Start date');
+    if (startError) {
+      errors.start_date = startError;
+    } else {
+      // Valid date check
+      const validError = validators.date.valid(tempWork.start_date, 'Start date');
+      if (validError) {
+        errors.start_date = validError;
+      } else {
+        // Not in future (allow current month)
+        const futureError = validators.date.notFuture(tempWork.start_date + '-01', 'Start date');
+        if (futureError) errors.start_date = futureError;
+        
+        // Work history range check
+        const rangeError = validators.date.workHistoryRange(tempWork.start_date + '-01', 'Start date');
+        if (rangeError) errors.start_date = rangeError;
+      }
+    }
+
+    // End date logic
+    if (tempWork.current && tempWork.end_date && tempWork.end_date.trim()) {
+      errors.end_date = 'Current role cannot have an end date';
+    } else if (!tempWork.current && tempWork.end_date) {
+      // Validate end date format
+      const validError = validators.date.valid(tempWork.end_date, 'End date');
+      if (validError) {
+        errors.end_date = validError;
+      } else {
+        // End date should be after start date
+        const afterError = validators.date.isAfter(
+          tempWork.start_date + '-01',
+          tempWork.end_date + '-01',
+          'Start date',
+          'End date'
+        );
+        if (afterError) errors.end_date = afterError;
+      }
+    }
+
+    // Optional: Description (max 1000 chars)
+    if (tempWork.description) {
+      const lengthError = validators.stringLength(tempWork.description, 0, 1000, 'Description');
+      if (lengthError) errors.description = lengthError;
+    }
+
+    // Optional: Skills array (max 20 items, each 2-50 chars)
+    if (tempWork.skills && tempWork.skills.length > 0) {
+      const arrayError = validators.array.maxLength(tempWork.skills, 20, 'Skills');
+      if (arrayError) {
+        errors.skills = arrayError;
+      } else {
+        // Validate each skill length
+        for (let idx = 0; idx < tempWork.skills.length; idx++) {
+          const skill = tempWork.skills[idx];
+          const skillError = validators.stringLength(skill, 2, 50, `Skill #${idx + 1}`);
+          if (skillError) {
+            errors.skills = `Skill "${skill}": must be 2-50 characters`;
+            break; // Stop at first error
+          }
+        }
+      }
+    }
+
+    // Optional: Achievements array (max 10 items, each 10-500 chars)
+    if (tempWork.achievements && tempWork.achievements.length > 0) {
+      const arrayError = validators.array.maxLength(tempWork.achievements, 10, 'Achievements');
+      if (arrayError) {
+        errors.achievements = arrayError;
+      } else {
+        // Validate each achievement length
+        for (let idx = 0; idx < tempWork.achievements.length; idx++) {
+          const achievement = tempWork.achievements[idx];
+          const achError = validators.stringLength(achievement, 10, 500, `Achievement #${idx + 1}`);
+          if (achError) {
+            errors.achievements = `Achievement ${idx + 1}: must be 10-500 characters`;
+            break; // Stop at first error
+          }
+        }
+      }
+    }
+
+    // Optional: Company logo URL
+    if (tempWork.company_logo_url) {
+      const urlError = validators.url(tempWork.company_logo_url, 'Company logo URL');
+      if (urlError) errors.company_logo_url = urlError;
+    }
+
+    return errors;
+  };
+
+  const handleSaveWork = async () => {
+    // VALIDATE FIRST - comprehensive validation
+    const errors = validateWorkExperience();
+    
+    // Check if there are validation errors
+    if (Object.keys(errors).length > 0) {
+      setWorkErrors(errors);
+      
+      // Show first error in toast for user feedback
+      const firstErrorField = Object.keys(errors)[0];
+      const firstError = errors[firstErrorField];
+      toast.error(firstError);
+      
+      console.log('Validation errors:', errors);
+      return; // STOP - don't proceed with save
+    }
+
+    // Clear any previous errors
+    setWorkErrors({});
     
     try {
         setSaving(true);
@@ -298,6 +424,7 @@ export const IdentityManagementPage: React.FC = () => {
             skills: [],
             achievements: []
         });
+        setWorkErrors({}); // Clear errors on successful save
     } catch (error: any) {
         console.error('Error saving work:', error);
         toast.error(`Failed to save experience: ${error.message || 'Unknown error'}`);
@@ -2052,28 +2179,28 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[500px] max-h-[75vh] sm:max-h-[85vh] flex flex-col p-0 gap-0">
-            <DialogHeader className="px-6 py-4 border-b border-slate-100 flex-shrink-0">
-              <DialogTitle className="text-lg">{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
+          <DialogContent className="w-full h-full sm:h-auto sm:max-w-[500px] sm:max-h-[85vh] flex flex-col p-0 gap-0 bg-white border-slate-200 text-slate-900">
+            <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex-shrink-0">
+              <DialogTitle className="text-base sm:text-lg">{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
             </DialogHeader>
             
             {/* Tabbed Content */}
-            <Tabs value={workModalTab} onValueChange={setWorkModalTab} className="flex-1 flex flex-col min-h-0">
-              <TabsList className="grid w-full grid-cols-3 mx-6 mt-4 mb-2 flex-shrink-0">
-                <TabsTrigger value="basic" className="text-xs sm:text-sm text-black font-semibold">Basic Info</TabsTrigger>
-                <TabsTrigger value="details" className="text-xs sm:text-sm text-black font-semibold">Details</TabsTrigger>
-                <TabsTrigger value="proof" className="text-xs sm:text-sm text-black font-semibold">Proof</TabsTrigger>
+            <Tabs value={workModalTab} onValueChange={setWorkModalTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <TabsList className="grid w-full grid-cols-3 mx-4 sm:mx-6 mt-2 sm:mt-4 mb-2 flex-shrink-0">
+                <TabsTrigger value="basic" className="text-[10px] sm:text-sm text-black font-semibold">Basic Info</TabsTrigger>
+                <TabsTrigger value="details" className="text-[10px] sm:text-sm text-black font-semibold">Details</TabsTrigger>
+                <TabsTrigger value="proof" className="text-[10px] sm:text-sm text-black font-semibold">Proof</TabsTrigger>
               </TabsList>
 
               {/* Tab 1: Basic Info */}
-              <TabsContent value="basic" className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 mt-2 min-h-0">
-                <div className="grid grid-cols-2 gap-3">
+              <TabsContent value="basic" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-3 sm:space-y-4 mt-2 min-h-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</Label>
                     <Input 
                       value={tempWork.company}
                       onChange={(e) => setTempWork({ ...tempWork, company: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm"
                       placeholder="e.g. Acme Corp"
                     />
                   </div>
@@ -2082,20 +2209,20 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     <Input 
                       value={tempWork.role}
                       onChange={(e) => setTempWork({ ...tempWork, role: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm"
                       placeholder="e.g. Senior Engineer"
                     />
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Date</Label>
                     <Input 
                       type="month"
                       value={tempWork.start_date}
                       onChange={(e) => setTempWork({ ...tempWork, start_date: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -2105,7 +2232,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                       value={tempWork.end_date}
                       onChange={(e) => setTempWork({ ...tempWork, end_date: e.target.value })}
                       disabled={tempWork.current}
-                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm disabled:opacity-50"
+                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -2114,7 +2241,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <button
                     type="button"
                     onClick={() => setTempWork({ ...tempWork, current: !tempWork.current })}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    className={`px-4 py-2.5 sm:py-2 rounded-full text-sm font-medium transition-all ${
                       tempWork.current 
                         ? 'bg-green-500 text-white shadow-md hover:bg-green-600' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -2131,7 +2258,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     value={tempWork.employment_type}
                     onValueChange={(value) => setTempWork({...tempWork, employment_type: value as EmploymentType})}
                   >
-                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-9 text-sm">
+                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm">
                       <SelectValue placeholder="Select employment type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2146,13 +2273,13 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </TabsContent>
 
               {/* Tab 2: Details (Description, Skills, Achievements) */}
-              <TabsContent value="details" className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 mt-2 min-h-0" style={{maxHeight: 'calc(85vh - 250px)'}}>
+              <TabsContent value="details" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-3 sm:space-y-4 mt-2 min-h-0">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</Label>
                   <Textarea 
                     value={tempWork.description}
                     onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900 min-h-[80px] text-sm resize-none"
+                    className="bg-white border-slate-200 text-slate-900 min-h-[80px] text-base sm:text-sm resize-none"
                     placeholder="Briefly describe your responsibilities..."
                   />
                 </div>
@@ -2182,11 +2309,11 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </TabsContent>
 
               {/* Tab 3: Proof (Logo & Documents) */}
-              <TabsContent value="proof" className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 mt-2 min-h-0">
+              <TabsContent value="proof" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-3 sm:space-y-4 mt-2 min-h-0">
                 {/* Company Logo Upload */}
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Logo</Label>
-                  <div className="scale-90 origin-left">
+                  <div className="scale-95 sm:scale-90 origin-left">
                       <CompanyLogoUpload
                       companyName={tempWork.company}
                       currentLogoUrl={tempWork.company_logo_url || null}
@@ -2214,10 +2341,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </TabsContent>
             </Tabs>
 
-
-            <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
-              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-sm">Cancel</Button>
-              <Button onClick={handleSaveWork} className="h-9 bg-white hover:bg-gray-50 text-black border-2 border-black text-sm px-6 font-semibold">Save</Button>
+            <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0 flex-row gap-2 sm:gap-3">
+              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="flex-1 sm:flex-none h-11 sm:h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-base sm:text-sm">Cancel</Button>
+              <Button onClick={handleSaveWork} className="flex-1 sm:flex-none h-11 sm:h-9 bg-white hover:bg-gray-50 text-black border-2 border-black text-base sm:text-sm px-6 font-semibold">Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

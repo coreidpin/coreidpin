@@ -26,6 +26,7 @@ import {
   Globe
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { validators } from '../utils/validation';
 
 interface ProfileCompletionFormProps {
   onAnalysisComplete: (analysis: any) => void;
@@ -59,6 +60,7 @@ export function ProfileCompletionForm({
   const [isSaving, setIsSaving] = useState(false);
   const [missingFields, setMissingFields] = useState<string[]>([]);
   const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
 
   // Calculate completion percentage
   useEffect(() => {
@@ -92,6 +94,114 @@ export function ProfileCompletionForm({
 
   const removeSkill = (skill: string) => {
     updateField('skills', formData.skills.filter(s => s !== skill));
+  };
+
+  // Validate profile form
+  const validateProfileForm = (): Record<string, string> => {
+    const errors: Record<string, string> = {};
+
+    // At least one profile link required
+    const hasLink = formData.linkedinUrl || formData.githubUrl || formData.portfolioUrl || formData.resumeUrl;
+    if (!hasLink) {
+      errors.links = 'At least one profile link is required (LinkedIn, GitHub, Portfolio, or Resume)';
+    }
+
+    // Email validation (optional but if provided, must be valid)
+    if (formData.email) {
+      const emailError = validators.email(formData.email);
+      if (emailError) errors.email = emailError;
+    }
+
+    // Phone validation (optional but if provided, must be valid Nigeria format)
+    if (formData.phone) {
+      const phoneError = validators.phone(formData.phone);
+      if (phoneError) errors.phone = phoneError;
+    }
+
+    // LinkedIn URL validation
+    if (formData.linkedinUrl) {
+      const linkedinError = validators.linkedinUrl(formData.linkedinUrl);
+      if (linkedinError) errors.linkedinUrl = linkedinError;
+    }
+
+    // GitHub URL validation
+    if (formData.githubUrl) {
+      const githubError = validators.githubUrl(formData.githubUrl);
+      if (githubError) errors.githubUrl = githubError;
+    }
+
+    // Portfolio URL validation
+    if (formData.portfolioUrl) {
+      const portfolioError = validators.url(formData.portfolioUrl, 'Portfolio URL');
+      if (portfolioError) errors.portfolioUrl = portfolioError;
+    }
+
+    // Resume URL validation
+    if (formData.resumeUrl) {
+      const resumeError = validators.url(formData.resumeUrl, 'Resume URL');
+      if (resumeError) errors.resumeUrl = resumeError;
+    }
+
+    // Hourly rate validation (optional but if provided, must be valid)
+    if (formData.hourlyRate) {
+      const rate = parseFloat(formData.hourlyRate);
+      if (isNaN(rate)) {
+        errors.hourlyRate = 'Hourly rate must be a valid number';
+      } else {
+        const rateError = validators.number.range(rate, 1, 10000, 'Hourly rate');
+        if (rateError) errors.hourlyRate = rateError;
+      }
+    }
+
+    // Bio validation (max 500 chars)
+    if (formData.bio) {
+      const bioError = validators.stringLength(formData.bio, 0, 500, 'Bio');
+      if (bioError) errors.bio = bioError;
+    }
+
+    // Name validation (if provided, 2-100 chars)
+    if (formData.name) {
+      const nameError = validators.stringLength(formData.name, 2, 100, 'Name');
+      if (nameError) errors.name = nameError;
+    }
+
+    // Title validation (if provided, 2-100 chars)
+    if (formData.title) {
+      const titleError = validators.stringLength(formData.title, 2, 100, 'Title');
+      if (titleError) errors.title = titleError;
+    }
+
+    // Location validation (max 100 chars)
+    if (formData.location) {
+      const locationError = validators.stringLength(formData.location, 0, 100, 'Location');
+      if (locationError) errors.location = locationError;
+    }
+
+    // Skills array (max 30 items, each 2-50 chars)
+    if (formData.skills && formData.skills.length > 0) {
+      const arrayError = validators.array.maxLength(formData.skills, 30, 'Skills');
+      if (arrayError) {
+        errors.skills = arrayError;
+      } else {
+        // Validate each skill length
+        for (let idx = 0; idx < formData.skills.length; idx++) {
+          const skill = formData.skills[idx];
+          const skillError = validators.stringLength(skill, 2, 50, `Skill #${idx + 1}`);
+          if (skillError) {
+            errors.skills = `Skill "${skill}": must be 2-50 characters`;
+            break;
+          }
+        }
+      }
+    }
+
+    // Years of experience (0-70 years)
+    if (formData.yearsOfExperience) {
+      const yearsError = validators.number.range(formData.yearsOfExperience, 0, 70, 'Years of experience');
+      if (yearsError) errors.yearsOfExperience = yearsError;
+    }
+
+    return errors;
   };
 
   const handleAnalyzeProfile = async () => {
@@ -188,10 +298,24 @@ export function ProfileCompletionForm({
   };
 
   const handleSaveProfile = async () => {
-    if (missingFields.length > 0) {
-      toast.error(`Please complete required fields: ${missingFields.join(', ')}`);
-      return;
+    // VALIDATE FIRST - comprehensive validation
+    const errors = validateProfileForm();
+    
+    // Check if there are validation errors
+    if (Object.keys(errors).length > 0) {
+      setProfileErrors(errors);
+      
+      // Show first error in toast for user feedback
+      const firstErrorField = Object.keys(errors)[0];
+      const firstError = errors[firstErrorField];
+      toast.error(firstError);
+      
+      console.log('Validation errors:', errors);
+      return; // STOP - don't proceed with save
     }
+
+    // Clear any previous errors
+    setProfileErrors({});
 
     setIsSaving(true);
     try {

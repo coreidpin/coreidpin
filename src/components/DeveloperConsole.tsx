@@ -35,42 +35,80 @@ export function DeveloperConsole() {
   }, []);
 
   const fetchBusinessProfile = async () => {
+    console.log('🔄 Fetching business profile...');
+    setLoading(true);
+    
     try {
-      // Ensure valid session and sync to supabase client
-      const token = await ensureValidSession();
-      if (!token) {
-        // Session invalid, redirect or show error handled by ensureValidSession usually
+      // Get userId and tokens from localStorage (custom OTP auth)
+      const userId = localStorage.getItem('userId');
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (!userId) {
+        console.log('❌ No userId in localStorage');
+        setBusinessProfile(null);
+        setLoading(false);
         return;
       }
-      
-      // 2. Sync Supabase client if needed
-      if (token) {
-        const localSession = getSessionState();
-        if (localSession) {
-            const { error: setSessionError } = await supabase.auth.setSession({
-                access_token: localSession.accessToken,
-                refresh_token: localSession.refreshToken
-            });
-            if (setSessionError) {
-                console.warn('Supabase setSession warning:', setSessionError);
-            }
+
+      console.log('👤 User ID from localStorage:', userId);
+
+      // CRITICAL: Sync Supabase session for RLS to work
+      // This ensures auth.uid() in RLS policies returns the correct user
+      if (accessToken && refreshToken) {
+        try {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (sessionError) {
+            console.warn('⚠️ Session sync failed (will retry with userId):', sessionError);
+            // Continue anyway - we'll try with userId as fallback
+          } else {
+            console.log('✅ Supabase session synchronized');
+          }
+        } catch (err) {
+          console.warn('⚠️ Session sync error:', err);
+          // Continue anyway
         }
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
+      // Fetch business profile
+      // RLS will check: auth.uid() = user_id
       const { data, error } = await supabase
         .from('business_profiles')
         .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (error) throw error;
-      setBusinessProfile(data);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows found - this is okay, profile doesn't exist yet
+          console.log('⚠️ No business profile found for user');
+          setBusinessProfile(null);
+          return;
+        }
+        
+        // Real error
+        console.error('❌ Error fetching business profile:', error);
+        throw error;
+      }
+
+      if (data) {
+        console.log('✅ Business profile found:', data);
+        setBusinessProfile(data);
+      } else {
+        console.log('⚠️ No business profile found');
+        setBusinessProfile(null);
+      }
     } catch (error: any) {
-      console.error('Error fetching business profile:', error);
-      toast.error('Failed to load profile. Please refresh.');
+      console.error('❌ Error in fetchBusinessProfile:', error);
+      
+      // Don't show error toast on mount (user might not have profile yet)
+      if (!loading) {
+        toast.error('Failed to load business profile');
+      }
     } finally {
       setLoading(false);
     }
@@ -248,7 +286,11 @@ export function DeveloperConsole() {
 
           {/* Settings Tab */}
           <TabsContent value="settings">
-            <BusinessSettings businessId={businessProfile?.id} initialProfile={businessProfile} />
+            <BusinessSettings 
+              businessId={businessProfile?.id} 
+              initialProfile={businessProfile} 
+              onProfileUpdate={fetchBusinessProfile}
+            />
           </TabsContent>
 
           {/* Verify Identity Tab */}

@@ -29,6 +29,7 @@ import {
   Camera
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { validators } from '../utils/validation';
 
 type VerificationStatus = 'not_started' | 'pending' | 'verified' | 'rejected';
 

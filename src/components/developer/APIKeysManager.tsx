@@ -61,14 +61,18 @@ export function APIKeysManager() {
 
   const fetchAPIKeys = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        console.log('No userId found');
+        setLoading(false);
+        return;
+      }
 
+      // Use database function to fetch API keys (bypasses RLS)
       const { data, error } = await supabase
-        .from('api_keys')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .rpc('get_api_keys_for_user', {
+          p_user_id: userId
+        });
 
       if (error) throw error;
       setApiKeys(data || []);
@@ -105,6 +109,21 @@ export function APIKeysManager() {
         });
       }
 
+      // Check for duplicate key name in same environment
+      const { data: existingKeys, error: checkError } = await supabase
+        .from('api_keys')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('key_name', newKeyName.trim())
+        .eq('environment', newKeyEnvironment);
+
+      if (checkError) throw checkError;
+
+      if (existingKeys && existingKeys.length > 0) {
+        toast.error(`An API key named "${newKeyName.trim()}" already exists in ${newKeyEnvironment}. Please use a different name.`);
+        return;
+      }
+
       // Generate API key and secret
       const { data: generatedKey, error: keyError } = await supabase
         .rpc('generate_api_key');
@@ -114,33 +133,44 @@ export function APIKeysManager() {
 
       if (keyError || secretError) throw keyError || secretError;
 
-      // Insert new key
+      // Use database function to create API key (bypasses RLS)
       const { data, error } = await supabase
-        .from('api_keys')
-        .insert({
-          user_id: userId,
-          key_name: newKeyName.trim(),
-          api_key: generatedKey,
-          api_secret: generatedSecret,
-          environment: newKeyEnvironment,
-          permissions: {
+        .rpc('create_api_key_for_user', {
+          p_user_id: userId,
+          p_key_name: newKeyName.trim(),
+          p_api_key: generatedKey,
+          p_api_secret: generatedSecret,
+          p_environment: newKeyEnvironment,
+          p_permissions: {
             verify_pin: true,
-            read_profile: newKeyEnvironment === 'production', 
+            read_profile: newKeyEnvironment === 'production',
             instant_signin: false
           }
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      setNewlyCreatedKey(data);
-      setApiKeys([data, ...apiKeys]);
+      // The function returns an array with one row
+      const apiKeyData = Array.isArray(data) ? data[0] : data;
+
+      if (!apiKeyData) {
+        throw new Error('Failed to create API key');
+      }
+
+      setNewlyCreatedKey(apiKeyData);
+      setApiKeys([apiKeyData, ...apiKeys]);
       toast.success('API key created successfully!');
       setNewKeyName('');
+      setShowCreateModal(false); // Close the modal after successful creation
     } catch (error: any) {
       console.error('Error creating API key:', error);
-      toast.error(error.message || 'Failed to create API key');
+      
+      // Better error message for constraint violations
+      if (error.message?.includes('unique_user_key_name_env') || error.message?.includes('duplicate key')) {
+        toast.error(`An API key with this name already exists in ${newKeyEnvironment}. Please choose a different name.`);
+      } else {
+        toast.error(error.message || 'Failed to create API key');
+      }
     }
   };
 

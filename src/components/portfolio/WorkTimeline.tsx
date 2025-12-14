@@ -263,16 +263,16 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                             <div className="pt-3">
                               <button
                                 onClick={() => toggleSkills(exp.id)}
-                                className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors group w-full"
+                                className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 hover:bg-blue-50/50 active:bg-blue-100/50 transition-all group w-full min-h-[44px] -ml-2 px-2 py-2 rounded-lg"
                               >
                                 <Sparkles className="h-4 w-4 text-blue-600 flex-shrink-0" />
                                 <span>
                                   {exp.skills.length} skill{exp.skills.length !== 1 ? 's' : ''}
                                 </span>
                                 {expandedSkills[exp.id] ? (
-                                  <ChevronUp className="h-4 w-4 text-gray-400 group-hover:text-gray-600 ml-auto" />
+                                  <ChevronUp className="h-5 w-5 text-gray-400 group-hover:text-gray-600 ml-auto transition-transform" />
                                 ) : (
-                                  <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600 ml-auto" />
+                                  <ChevronDown className="h-5 w-5 text-gray-400 group-hover:text-gray-600 ml-auto transition-transform" />
                                 )}
                               </button>
 

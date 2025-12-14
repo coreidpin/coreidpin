@@ -28,9 +28,10 @@ interface BusinessProfile {
 interface BusinessSettingsProps {
   businessId?: string;
   initialProfile?: any;
+  onProfileUpdate?: () => void;
 }
 
-export function BusinessSettings({ businessId, initialProfile }: BusinessSettingsProps) {
+export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }: BusinessSettingsProps) {
   const [profile, setProfile] = useState<BusinessProfile>({
     id: '',
     company_name: '',
@@ -44,38 +45,74 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (initialProfile) {
+    // Always try to fetch the profile from database on mount
+    fetchProfileFromDatabase();
+  }, []);
+
+  const fetchProfileFromDatabase = async () => {
+    setLoading(true);
+    try {
+      // Get current user
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        console.log('No userId found, checking auth...');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fetch business profile by user_id
+      const { data, error } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', userId || (await supabase.auth.getUser()).data.user?.id)
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid error if no profile exists
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error fetching business profile:', error);
+        throw error;
+      }
+
+      if (data) {
+        // Profile exists - load it
+        console.log('Business profile found:', data);
         setProfile({
-            id: initialProfile.id,
-            company_name: initialProfile.company_name || '',
-            company_email: initialProfile.company_email || '',
-            website: initialProfile.website || '',
-            description: initialProfile.description || '',
-            industry: initialProfile.industry || '',
-            api_tier: initialProfile.api_tier || 'free'
+          id: data.id,
+          company_name: data.company_name || '',
+          company_email: data.company_email || '',
+          website: data.website || '',
+          description: data.description || '',
+          industry: data.industry || '',
+          api_tier: data.api_tier || 'free'
         });
-    } else if (businessId) {
-        fetchProfile();
-    } else {
-        // Fallback: Try to prefill from Auth Metadata if no business profile exists yet
-        prefillFromAuth();
+      } else {
+        // No profile exists yet - prefill from auth metadata
+        console.log('No business profile found, using auth metadata');
+        await prefillFromAuth();
+      }
+    } catch (error) {
+      console.error('Error loading business profile:', error);
+      toast.error('Failed to load business profile');
+    } finally {
+      setLoading(false);
     }
-  }, [businessId, initialProfile]);
+  };
 
   const prefillFromAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user?.user_metadata) {
-        const meta = user.user_metadata;
-        // Use 'companyName' if available, otherwise 'name' (common in basic registration)
-        const nameToUse = meta.companyName || meta.name || '';
-        
-        setProfile(prev => ({
-            ...prev,
-            company_name: nameToUse,
-            company_email: meta.email || user.email || '',
-            industry: meta.industry || '',
-            website: meta.website || ''
-        }));
+      const meta = user.user_metadata;
+      const nameToUse = meta.companyName || meta.name || '';
+      
+      setProfile(prev => ({
+        ...prev,
+        company_name: nameToUse,
+        company_email: meta.email || user.email || '',
+        industry: meta.industry || '',
+        website: meta.website || ''
+      }));
     }
   };
 
@@ -92,19 +129,19 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
       if (data) {
         const profileData = data as any;
         setProfile({
-            id: profileData.id,
-            company_name: profileData.company_name || '',
-            company_email: profileData.company_email || '',
-            website: profileData.website || '',
-            description: profileData.description || '',
-            industry: profileData.industry || '',
-            api_tier: profileData.api_tier || 'free'
+          id: profileData.id,
+          company_name: profileData.company_name || '',
+          company_email: profileData.company_email || '',
+          website: profileData.website || '',
+          description: profileData.description || '',
+          industry: profileData.industry || '',
+          api_tier: profileData.api_tier || 'free'
         });
       }
     } catch (error) {
-        console.error('Error fetching profile', error);
+      console.error('Error fetching profile', error);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -153,9 +190,16 @@ export function BusinessSettings({ businessId, initialProfile }: BusinessSetting
             .upsert(updates as any, { onConflict: 'user_id' });
 
         if (error) throw error;
+        console.log('✅ Business profile saved successfully');
         toast.success('Business profile saved successfully');
         
-        // Refresh page or trigger callback if needed to update parent state
+        // Call parent callback to refresh business profile in DeveloperConsole
+        if (onProfileUpdate) {
+          console.log('🔄 Calling onProfileUpdate callback...');
+          onProfileUpdate();
+        } else {
+          console.log('⚠️ No onProfileUpdate callback provided');
+        }
     } catch (error: any) {
         console.error('Error updating profile:', error);
         toast.error('Failed to save profile: ' + error.message);
