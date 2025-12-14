@@ -1,9 +1,12 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Building2, Shield, Briefcase, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, MapPin, Building2, Shield, Briefcase, CheckCircle2, ChevronDown, ChevronUp, Award, Sparkles } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Card, CardContent } from '../ui/card';
+import { CompanyLogo } from '../shared/CompanyLogo';
 import type { ProofDocument } from '../dashboard/ProofDocumentUpload';
+import type { EmploymentType } from '../../utils/employmentTypes';
+import { EMPLOYMENT_TYPE_LABELS } from '../../utils/employmentTypes';
 
 export interface WorkExperience {
   id: string;
@@ -14,7 +17,10 @@ export interface WorkExperience {
   end_date?: string;
   is_current: boolean;
   location?: string;
+  employment_type?: EmploymentType; // 🆕 NEW: Full-time, Part-time, etc.
   description?: string;
+  skills?: string[]; // 🆕 NEW: Array of skills used in this role
+  achievements?: string[]; // 🆕 NEW: Array of key achievements
   verification_status?: string | boolean;
   proof_documents?: ProofDocument[];
 }
@@ -25,6 +31,12 @@ interface WorkTimelineProps {
 }
 
 export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkTimelineProps) {
+  const [expandedSkills, setExpandedSkills] = useState<Record<string, boolean>>({});
+
+  const toggleSkills = (expId: string) => {
+    setExpandedSkills(prev => ({ ...prev, [expId]: !prev[expId] }));
+  };
+
   if (experiences.length === 0) {
     return (
       <Card className="bg-white border-slate-200">
@@ -129,57 +141,60 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                   </div>
 
                   {/* Experience Card */}
-                  <Card className={`overflow-hidden transition-all hover:shadow-xl ${
-                    exp.is_current ? 'border-2 border-green-500 bg-gradient-to-br from-green-50 to-white' : 'border-slate-200 bg-white'
+                  <Card className={`overflow-hidden transition-all duration-300 hover:shadow-2xl border ${ 
+                    exp.is_current 
+                      ? 'border-green-500/50 bg-gradient-to-br from-green-50/50 via-white to-emerald-50/30 shadow-lg shadow-green-500/10' 
+                      : 'border-gray-200/60 bg-white hover:border-gray-300 shadow-md'
                   }`}>
-                    <CardContent className="p-4 md:p-6">
-                      <div className="flex items-start gap-3 md:gap-5">
-                        {/* Company Logo - Smaller on mobile */}
-                        <div className="flex-shrink-0 pt-1">
-                          {exp.company_logo_url ? (
-                            <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl border border-gray-100 bg-white p-2 flex items-center justify-center overflow-hidden shadow-sm">
-                              <img 
-                                src={exp.company_logo_url} 
-                                alt={`${exp.company_name} logo`}
-                                className="w-full h-full object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 md:w-16 md:h-16 rounded-xl border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
-                              <span className="text-sm md:text-xl font-bold text-gray-400">
-                                {getCompanyInitials(exp.company_name)}
-                              </span>
-                            </div>
-                          )}
+                    <CardContent className="p-5 md:p-7">
+                      <div className="flex items-start gap-4 md:gap-6">
+                        {/* Company Logo - Auto-fetched from shared database */}
+                        <div className="flex-shrink-0">
+                          <CompanyLogo 
+                            companyName={exp.company_name}
+                            size="lg"
+                            showTooltip={false}
+                            className="w-14 h-14 md:w-20 md:h-20"
+                          />
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex-1 min-w-0 space-y-3.5">
                           
                           {/* 1. Job Title & Badge (Side-by-Side) - Clean minimal */}
-                          <div className="flex items-baseline gap-2">
-                             <h3 className="text-base md:text-xl font-semibold text-gray-900 leading-tight truncate">
+                          <div className="flex items-baseline gap-3">
+                             <h3 className="text-lg md:text-xl font-bold text-gray-900 leading-tight truncate">
                                {exp.job_title}
                              </h3>
                              {exp.is_current && (
-                               <Badge className="bg-green-500 hover:bg-green-600 text-white border-none px-2 py-0.5 rounded-full text-xs font-semibold shadow-sm flex-shrink-0 translate-y-[-1px]">
+                               <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-none px-3 py-1 rounded-full text-xs font-semibold shadow-sm flex-shrink-0 translate-y-[-1px] flex items-center gap-1.5">
+                                 <span className="relative flex h-2 w-2">
+                                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                   <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                                 </span>
                                  Current
                                </Badge>
                              )}
                           </div>
 
-                          {/* 2. Company Name - Clean minimal */}
-                          <div className="flex items-center gap-2 -mt-1">
-                             <Building2 className="h-4 w-4 md:h-5 md:w-5 text-gray-600 flex-shrink-0" />
-                             <span className="text-sm md:text-base font-medium text-gray-600 truncate">
+                          {/* 2. Company Name & Employment Type */}
+                          <div className="flex items-center gap-2 -mt-0.5 flex-wrap">
+                             <span className="text-base md:text-lg font-semibold text-gray-700">
                                {exp.company_name}
                              </span>
+                             {exp.employment_type && (
+                               <>
+                                 <span className="text-gray-400">·</span>
+                                 <span className="text-sm md:text-base text-gray-600">
+                                   {EMPLOYMENT_TYPE_LABELS[exp.employment_type]}
+                                 </span>
+                               </>
+                             )}
                           </div>
 
                           {/* 3. Date & Duration */}
                           <div className="flex flex-nowrap items-center gap-x-2 text-xs md:text-sm text-gray-500 overflow-hidden">
                             <div className="flex items-center gap-1.5 whitespace-nowrap min-w-0">
-                              <Calendar className="h-3.5 w-3.5 flex-shrink-0" />
                               <span className="truncate">
                                 {formatDate(exp.start_date)} - {exp.is_current ? 'Present' : formatDate(exp.end_date!)}
                               </span>
@@ -224,6 +239,67 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                             <p className="text-gray-700 text-sm leading-relaxed pt-1">
                               {exp.description}
                             </p>
+                          )}
+
+                          {/* 🆕 5. Key Achievements */}
+                          {exp.achievements && exp.achievements.length > 0 && (
+                            <div className="pt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Award className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                                <h4 className="text-sm font-semibold text-gray-900">Key Achievements</h4>
+                              </div>
+                              <ul className="space-y-1.5 ml-6">
+                                {exp.achievements.map((achievement, idx) => (
+                                  <li key={idx} className="text-sm text-gray-700 leading-relaxed list-disc">
+                                    {achievement}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* 🆕 6. Skills Section - LinkedIn-style Expandable */}
+                          {exp.skills && exp.skills.length > 0 && (
+                            <div className="pt-3">
+                              <button
+                                onClick={() => toggleSkills(exp.id)}
+                                className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors group w-full"
+                              >
+                                <Sparkles className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                <span>
+                                  {exp.skills.length} skill{exp.skills.length !== 1 ? 's' : ''}
+                                </span>
+                                {expandedSkills[exp.id] ? (
+                                  <ChevronUp className="h-4 w-4 text-gray-400 group-hover:text-gray-600 ml-auto" />
+                                ) : (
+                                  <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600 ml-auto" />
+                                )}
+                              </button>
+
+                              <AnimatePresence>
+                                {expandedSkills[exp.id] && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+                                      {exp.skills.map((skill, idx) => (
+                                        <Badge
+                                          key={idx}
+                                          variant="secondary"
+                                          className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 px-3 py-1 text-xs font-medium"
+                                        >
+                                          {skill}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
                           )}
 
                           {/* 5. Progress Bar */}

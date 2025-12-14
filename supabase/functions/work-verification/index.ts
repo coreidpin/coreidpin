@@ -35,11 +35,87 @@ serve(async (req) => {
         
         if (error) throw error;
 
-        // Mock Email Sending
-        console.log(`[Email Mock] Sending verification code ${generatedCode} to ${email} for experience ${experienceId}`);
+        // Send ACTUAL email using Resend
+        let emailSent = false;
+        let emailError = null;
+        
+        try {
+            const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+            
+            if (!RESEND_API_KEY) {
+                console.warn('[Email] No RESEND_API_KEY found, code will be shown in toast');
+                emailError = 'No API key configured';
+            } else {
+                const emailResponse = await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${RESEND_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        from: 'gidiPin <noreply@usepin.xyz>',
+                        to: [email],
+                        subject: 'Verify Your Work Email - CoreIDPin',
+                        html: `
+                            <!DOCTYPE html>
+                            <html>
+                            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+                                    <h1 style="color: white; margin: 0; font-size: 28px;">Verify Your Work Email</h1>
+                                </div>
+                                
+                                <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+                                    <p style="font-size: 16px; margin-bottom: 20px;">Hi there,</p>
+                                    
+                                    <p style="font-size: 16px; margin-bottom: 20px;">
+                                        You've requested to verify your work email for CoreIDPin. Enter the code below to complete the verification:
+                                    </p>
+                                    
+                                    <div style="background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+                                        <p style="margin: 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Verification Code</p>
+                                        <h2 style="margin: 10px 0 0 0; font-size: 36px; color: #667eea; letter-spacing: 8px; font-weight: bold;">${generatedCode}</h2>
+                                    </div>
+                                    
+                                    <p style="font-size: 14px; color: #666; margin-top: 30px;">
+                                        This code will expire in 15 minutes. If you didn't request this verification, please ignore this email.
+                                    </p>
+                                    
+                                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #999;">
+                                        <p>© 2025 CoreIDPin. All rights reserved.</p>
+                                        <p>Secure Professional Identity Hub</p>
+                                    </div>
+                                </div>
+                            </body>
+                            </html>
+                        `
+                    })
+                });
+
+                const emailResult = await emailResponse.json();
+                
+                if (!emailResponse.ok) {
+                    console.error('[Email Error]', emailResult);
+                    emailError = emailResult.message || 'Failed to send email';
+                    throw new Error(emailError);
+                }
+                
+                emailSent = true;
+                console.log(`[Email] Verification code sent to ${email} via Resend (ID: ${emailResult.id})`);
+            }
+        } catch (error) {
+            console.error('[Email Error]', error);
+            emailError = error.message || 'Email service error';
+            // Don't fail the whole request if email fails - user can still see the code
+        }
 
         return new Response(
-            JSON.stringify({ success: true, message: 'Verification code sent', debug_code: generatedCode }), // debug_code included for demo
+            JSON.stringify({ 
+                success: true, 
+                message: emailSent ? 'Verification code sent to your email' : 'Code generated (email failed to send)',
+                email_sent: emailSent,
+                debug_code: !emailSent ? generatedCode : undefined, // Show code if email failed
+                email_error: emailError
+            }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }

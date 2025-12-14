@@ -6,6 +6,7 @@ import { getProfileAvatar } from '../utils/avatarUtils';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { CompanyLogo } from './shared/CompanyLogo';
 import { 
   Shield, 
   Briefcase, 
@@ -217,11 +218,13 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none sm:hidden"></div>
                         </div>
                         
-                        {/* Professional Title with CoreIDPin Logo Badge */}
-                        <div className="flex items-center justify-center gap-2 mb-2 sm:mb-4">
-                          <p className="text-base sm:text-xl text-gray-600 font-medium">
-                            {profile.role || profile.job_title || 'Professional'}
-                          </p>
+                        {/* Professional Title with Company Logo & CoreIDPin Logo Badge */}
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mb-2 sm:mb-4">
+                          <div className="flex items-center gap-2">
+                            <p className="text-base sm:text-xl text-gray-600 font-medium">
+                              {profile.role || profile.job_title || 'Professional'}
+                            </p>
+                          </div>
                           {/* CoreIDPin Logo Badge - LinkedIn style */}
                           <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <img 
@@ -348,7 +351,22 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                       Work Experience
                     </h2>
                     <WorkTimeline 
-                      experiences={workExperiences.length > 0 ? workExperiences : profile.work_experience.map((exp: any) => ({
+                      experiences={workExperiences.length > 0 ? workExperiences.map((exp: any) => ({
+                        id: exp.id,
+                        job_title: exp.job_title,
+                        company_name: exp.company_name,
+                        company_logo_url: exp.company_logo_url,
+                        start_date: exp.start_date,
+                        end_date: exp.end_date,
+                        is_current: exp.is_current || false,
+                        location: exp.location,
+                        description: exp.description,
+                        employment_type: exp.employment_type,
+                        skills: exp.skills || [],
+                        achievements: exp.achievements || [],
+                        verification_status: exp.verification_status,
+                        proof_documents: exp.proof_documents || []
+                      })) : profile.work_experience.map((exp: any) => ({
                         id: exp.id || `${exp.company}-${exp.start_date}`,
                         job_title: exp.title || exp.role,
                         company_name: exp.company,
@@ -358,6 +376,9 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         is_current: exp.current || false,
                         location: exp.location,
                         description: exp.description,
+                        employment_type: exp.employment_type,
+                        skills: exp.skills || [],
+                        achievements: exp.achievements || [],
                         verification_status: exp.verification_status,
                         proof_documents: exp.proof_documents || []
                       }))}

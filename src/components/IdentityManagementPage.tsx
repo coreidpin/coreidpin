@@ -22,10 +22,14 @@ import { Badge } from './ui/badge';
 import { Separator } from './ui/separator';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
+import { TagInput } from './ui/TagInput';
+import { DynamicListInput } from './ui/DynamicListInput';
 import { colors, typography, spacing, borderRadius } from '../styles/designTokens';
 import { shadows, premiumCardShadow } from '../styles/shadows';
 import { activityTracker } from '../utils/activityTracker';
 import type { ProofDocument } from './dashboard/ProofDocumentUpload';
+import { EMPLOYMENT_TYPE_OPTIONS } from '../utils/employmentTypes';
+import type { EmploymentType } from '../utils/employmentTypes';
 import { CompanyLogoUpload } from './dashboard/CompanyLogoUpload';
 import { ProofDocumentUpload } from './dashboard/ProofDocumentUpload';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
@@ -104,7 +108,10 @@ export const IdentityManagementPage: React.FC = () => {
     current: false,
     description: '',
     company_logo_url: '' as string | null | undefined,
-    proof_documents: [] as ProofDocument[]
+    proof_documents: [] as ProofDocument[],
+    employment_type: '' as EmploymentType | '',
+    skills: [] as string[],
+    achievements: [] as string[]
   });
 
   const [showCertModal, setShowCertModal] = useState(false);
@@ -125,6 +132,9 @@ export const IdentityManagementPage: React.FC = () => {
   const [codeInput, setCodeInput] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Work Modal Tab State
+  const [workModalTab, setWorkModalTab] = useState('basic');
 
   // Load profile data on component mount
   useEffect(() => {
@@ -250,6 +260,9 @@ export const IdentityManagementPage: React.FC = () => {
             is_current: tempWork.current,
             description: tempWork.description,
             company_logo_url: tempWork.company_logo_url,
+            employment_type: tempWork.employment_type || null,
+            skills: tempWork.skills.length > 0 ? tempWork.skills : null,
+            achievements: tempWork.achievements.length > 0 ? tempWork.achievements : null
         };
 
         if (editingWorkIndex !== null && workExperienceList[editingWorkIndex]) {
@@ -280,7 +293,10 @@ export const IdentityManagementPage: React.FC = () => {
             current: false, 
             description: '',
             company_logo_url: null,
-            proof_documents: []
+            proof_documents: [],
+            employment_type: '',
+            skills: [],
+            achievements: []
         });
     } catch (error: any) {
         console.error('Error saving work:', error);
@@ -512,7 +528,18 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       
       const result = data;
       if (result.success) {
-        toast.success(`Code sent! (Debug: ${result.debug_code})`);
+        // Show appropriate message based on email delivery status
+        if (result.email_sent) {
+          toast.success(`✅ Verification email sent to ${emailInput}`, {
+            description: 'Check your inbox and enter the 6-digit code'
+          });
+        } else if (result.debug_code) {
+          toast.success(`Code generated: ${result.debug_code}`, {
+            description: result.email_error || 'Email failed to send - use this code instead'
+          });
+        } else {
+          toast.success('Code sent!');
+        }
         setStep('code');
       } else {
         toast.error(result.error || 'Failed to send code');
@@ -1743,7 +1770,10 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                                     current: work.is_current,
                                     description: work.description || '',
                                     company_logo_url: work.company_logo_url,
-                                    proof_documents: []
+                                    proof_documents: [],
+                                    employment_type: work.employment_type || '',
+                                    skills: work.skills || [],
+                                    achievements: work.achievements || []
                                 });
                                 setEditingWorkIndex(index);
                                 setShowWorkModal(true);
@@ -2022,109 +2052,172 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[500px] max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-            <DialogHeader className="px-6 py-4 border-b border-slate-100">
+          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[500px] max-h-[75vh] sm:max-h-[85vh] flex flex-col p-0 gap-0">
+            <DialogHeader className="px-6 py-4 border-b border-slate-100 flex-shrink-0">
               <DialogTitle className="text-lg">{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
             </DialogHeader>
             
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</Label>
-                  <Input 
-                    value={tempWork.company}
-                    onChange={(e) => setTempWork({ ...tempWork, company: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
-                    placeholder="e.g. Acme Corp"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Role/Title</Label>
-                  <Input 
-                    value={tempWork.role}
-                    onChange={(e) => setTempWork({ ...tempWork, role: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
-                    placeholder="e.g. Senior Engineer"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Date</Label>
-                  <Input 
-                    type="month"
-                    value={tempWork.start_date}
-                    onChange={(e) => setTempWork({ ...tempWork, start_date: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">End Date</Label>
-                  <Input 
-                    type="month"
-                    value={tempWork.end_date}
-                    onChange={(e) => setTempWork({ ...tempWork, end_date: e.target.value })}
-                    disabled={tempWork.current}
-                    className="bg-white border-slate-200 text-slate-900 h-9 text-sm disabled:opacity-50"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <input 
-                  type="checkbox" 
-                  id="current-role"
-                  checked={tempWork.current}
-                  onChange={(e) => setTempWork({ ...tempWork, current: e.target.checked })}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
-                />
-                <Label htmlFor="current-role" className="text-sm text-slate-700 font-medium">I currently work here</Label>
-              </div>
-              
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</Label>
-                <Textarea 
-                  value={tempWork.description}
-                  onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 min-h-[80px] text-sm resize-none"
-                  placeholder="Briefly describe your responsibilities..."
-                />
-              </div>
+            {/* Tabbed Content */}
+            <Tabs value={workModalTab} onValueChange={setWorkModalTab} className="flex-1 flex flex-col min-h-0">
+              <TabsList className="grid w-full grid-cols-3 mx-6 mt-4 mb-2 flex-shrink-0">
+                <TabsTrigger value="basic" className="text-xs sm:text-sm text-black font-semibold">Basic Info</TabsTrigger>
+                <TabsTrigger value="details" className="text-xs sm:text-sm text-black font-semibold">Details</TabsTrigger>
+                <TabsTrigger value="proof" className="text-xs sm:text-sm text-black font-semibold">Proof</TabsTrigger>
+              </TabsList>
 
-              {/* Company Logo Upload */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Logo</Label>
-                <div className="scale-90 origin-left">
-                    <CompanyLogoUpload
-                    companyName={tempWork.company}
-                    currentLogoUrl={tempWork.company_logo_url || null}
-                    onChange={(url) => setTempWork({ ...tempWork, company_logo_url: url })}
-                    userId={profile?.user_id || ''}
+              {/* Tab 1: Basic Info */}
+              <TabsContent value="basic" className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 mt-2 min-h-0">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</Label>
+                    <Input 
+                      value={tempWork.company}
+                      onChange={(e) => setTempWork({ ...tempWork, company: e.target.value })}
+                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                      placeholder="e.g. Acme Corp"
                     />
-                </div>
-              </div>
-
-              {/* Proof of Work Documents */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Proof of Work</Label>
-                    <span className="text-[10px] text-slate-400">Optional</span>
-                </div>
-                <div className="scale-95 origin-top-left">
-                    <ProofDocumentUpload
-                    documents={tempWork.proof_documents || []}
-                    onChange={(docs) => setTempWork({ ...tempWork, proof_documents: docs })}
-                    userId={profile?.user_id || ''}
-                    maxFiles={5}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Role/Title</Label>
+                    <Input 
+                      value={tempWork.role}
+                      onChange={(e) => setTempWork({ ...tempWork, role: e.target.value })}
+                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                      placeholder="e.g. Senior Engineer"
                     />
+                  </div>
                 </div>
-              </div>
-            </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Date</Label>
+                    <Input 
+                      type="month"
+                      value={tempWork.start_date}
+                      onChange={(e) => setTempWork({ ...tempWork, start_date: e.target.value })}
+                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">End Date</Label>
+                    <Input 
+                      type="month"
+                      value={tempWork.end_date}
+                      onChange={(e) => setTempWork({ ...tempWork, end_date: e.target.value })}
+                      disabled={tempWork.current}
+                      className="bg-white border-slate-200 text-slate-900 h-9 text-sm disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTempWork({ ...tempWork, current: !tempWork.current })}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                      tempWork.current 
+                        ? 'bg-green-500 text-white shadow-md hover:bg-green-600' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tempWork.current ? '✓ Current Role' : 'Mark as Current'}
+                  </button>
+                </div>
 
-            <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                {/* Employment Type */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Employment Type</Label>
+                  <Select
+                    value={tempWork.employment_type}
+                    onValueChange={(value) => setTempWork({...tempWork, employment_type: value as EmploymentType})}
+                  >
+                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-9 text-sm">
+                      <SelectValue placeholder="Select employment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EMPLOYMENT_TYPE_OPTIONS.map(option => (
+                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </TabsContent>
+
+              {/* Tab 2: Details (Description, Skills, Achievements) */}
+              <TabsContent value="details" className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 mt-2 min-h-0" style={{maxHeight: 'calc(85vh - 250px)'}}>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</Label>
+                  <Textarea 
+                    value={tempWork.description}
+                    onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
+                    className="bg-white border-slate-200 text-slate-900 min-h-[80px] text-sm resize-none"
+                    placeholder="Briefly describe your responsibilities..."
+                  />
+                </div>
+
+                {/* Skills */}
+                <div className="space-y-1.5">
+                  <TagInput
+                    label="Skills"
+                    value={tempWork.skills}
+                    onChange={(skills) => setTempWork({...tempWork, skills})}
+                    placeholder="Type a skill and press Enter"
+                  />
+                </div>
+
+                {/* Key Achievements */}
+                <div className="space-y-1.5">
+                  <DynamicListInput
+                    label="Key Achievements"
+                    items={tempWork.achievements}
+                    onItemsChange={(achievements) => setTempWork({...tempWork, achievements})}
+                    placeholder="Describe a major accomplishment..."
+                    helpText="Highlight your notable contributions"
+                    maxItems={10}
+                    minRows={2}
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Tab 3: Proof (Logo & Documents) */}
+              <TabsContent value="proof" className="flex-1 overflow-y-auto px-6 pb-4 space-y-4 mt-2 min-h-0">
+                {/* Company Logo Upload */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Logo</Label>
+                  <div className="scale-90 origin-left">
+                      <CompanyLogoUpload
+                      companyName={tempWork.company}
+                      currentLogoUrl={tempWork.company_logo_url || null}
+                      onChange={(url) => setTempWork({ ...tempWork, company_logo_url: url })}
+                      userId={profile?.user_id || ''}
+                      />
+                  </div>
+                </div>
+
+                {/* Proof of Work Documents */}
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                      <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Proof of Work</Label>
+                      <span className="text-[10px] text-slate-400">Optional</span>
+                  </div>
+                  <div className="scale-95 origin-top-left">
+                      <ProofDocumentUpload
+                      documents={tempWork.proof_documents || []}
+                      onChange={(docs) => setTempWork({ ...tempWork, proof_documents: docs })}
+                      userId={profile?.user_id || ''}
+                      maxFiles={5}
+                      />
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+
+
+            <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0">
               <Button variant="outline" onClick={() => setShowWorkModal(false)} className="h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-sm">Cancel</Button>
-              <Button onClick={handleSaveWork} className="h-9 bg-slate-900 text-white hover:bg-slate-800 text-sm px-6">Save</Button>
+              <Button onClick={handleSaveWork} className="h-9 bg-white hover:bg-gray-50 text-black border-2 border-black text-sm px-6 font-semibold">Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

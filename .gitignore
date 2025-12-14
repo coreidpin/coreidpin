@@ -6,5 +6,7 @@ build/
 .sql
 .md
 *.txt
+agent/
+.agent
 
 

@@ -4,9 +4,15 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
+import { TagInput } from '../ui/TagInput';
+import { DynamicListInput } from '../ui/DynamicListInput';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Label } from '../ui/label';
 import { Building2, CheckCircle2, Shield, Loader2, Lock, Mail, Plus } from 'lucide-react';
 import { supabase, supabaseUrl } from '../../utils/supabase/client';
 import { toast } from 'sonner';
+import { EMPLOYMENT_TYPE_OPTIONS } from '../../utils/employmentTypes';
+import type { EmploymentType } from '../../utils/employmentTypes';
 
 interface WorkIdentityTabProps {
   userId: string;
@@ -30,7 +36,10 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
       job_title: '',
       start_date: '',
       end_date: '',
-      is_current: false
+      is_current: false,
+      employment_type: '' as EmploymentType | '',
+      skills: [] as string[],
+      achievements: [] as string[]
   });
 
   useEffect(() => {
@@ -71,7 +80,10 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                 job_title: newExp.job_title,
                 start_date: newExp.start_date,
                 end_date: newExp.is_current ? null : newExp.end_date,
-                is_current: newExp.is_current
+                is_current: newExp.is_current,
+                employment_type: newExp.employment_type || null,
+                skills: newExp.skills.length > 0 ? newExp.skills : null,
+                achievements: newExp.achievements.length > 0 ? newExp.achievements : null
             });
 
         if (error) throw error;
@@ -83,7 +95,10 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
             job_title: '',
             start_date: '',
             end_date: '',
-            is_current: false
+            is_current: false,
+            employment_type: '',
+            skills: [],
+            achievements: []
         });
         fetchExperiences();
     } catch (error) {
@@ -288,7 +303,7 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                 <DialogTitle>Add Work Experience</DialogTitle>
                 <DialogDescription>Add details about your current or past role.</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Company Name</label>
                     <Input value={newExp.company_name} onChange={e => setNewExp({...newExp, company_name: e.target.value})} placeholder="e.g. Google" />
@@ -297,6 +312,27 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                     <label className="text-sm font-medium">Job Title</label>
                     <Input value={newExp.job_title} onChange={e => setNewExp({...newExp, job_title: e.target.value})} placeholder="e.g. Senior Product Manager" />
                 </div>
+                
+                {/* 🆕 Employment Type */}
+                <div className="space-y-2">
+                    <Label className="text-sm font-medium">Employment Type</Label>
+                    <Select
+                        value={newExp.employment_type}
+                        onValueChange={(value) => setNewExp({...newExp, employment_type: value as EmploymentType})}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select employment type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {EMPLOYMENT_TYPE_OPTIONS.map(option => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Start Date</label>
@@ -311,6 +347,25 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                     <input type="checkbox" id="is_current" checked={newExp.is_current} onChange={e => setNewExp({...newExp, is_current: e.target.checked})} />
                     <label htmlFor="is_current" className="text-sm">I currently work here</label>
                 </div>
+
+                {/* 🆕 Skills */}
+                <TagInput
+                    label="Skills"
+                    value={newExp.skills}
+                    onChange={(skills) => setNewExp({...newExp, skills})}
+                    placeholder="Type a skill and press Enter"
+                />
+
+                {/* 🆕 Achievements */}
+                <DynamicListInput
+                    label="Key Achievements"
+                    items={newExp.achievements}
+                    onItemsChange={(achievements) => setNewExp({...newExp, achievements})}
+                    placeholder="Describe a major accomplishment in this role..."
+                    helpText="Highlight your notable contributions and impacts"
+                    maxItems={10}
+                    minRows={3}
+                />
             </div>
             <DialogFooter>
                 <Button variant="ghost" onClick={() => setShowAddModal(false)}>Cancel</Button>
