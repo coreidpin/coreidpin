@@ -36,6 +36,61 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
       const response = await api.verifyOTP(normalizedContact, normalizedOTP);
       
       if (response.access_token) {
+        // Calculate token expiry (1 hour from now)
+        const expiresAt = Date.now() + (60 * 60 * 1000); // 1 hour in milliseconds
+        
+        // Generate refresh token (will be used for token refresh)
+        const refreshToken = generateRefreshToken();
+        
+        // Save tokens to localStorage
+        localStorage.setItem('accessToken', response.access_token);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('userId', response.user.id);
+        localStorage.setItem('expiresAt', expiresAt.toString());
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userType', response.user.user_metadata?.userType || 'professional');
+        
+        // Create session in database
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          
+          await fetch(`${supabaseUrl}/functions/v1/auth-create-session`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKey}`
+            },
+            body: JSON.stringify({
+              userId: response.user.id,
+              refreshToken: refreshToken,
+              deviceInfo: {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                deviceName: `${navigator.platform} - ${navigator.userAgent.split(' ').slice(-2).join(' ')}`
+              }
+            })
+          });
+          
+          console.log('✅ Session created in database');
+        } catch (sessionError) {
+          console.error('⚠️ Failed to create session in database:', sessionError);
+          // Continue anyway - session creation is not critical for immediate login
+        }
+        
+        // Sync session with Supabase auth for RLS
+        try {
+          const { supabase } = await import('../../utils/supabase/client');
+          await supabase.auth.setSession({
+            access_token: response.access_token,
+            refresh_token: refreshToken
+          });
+          console.log('✅ Supabase session synced for RLS');
+        } catch (syncError) {
+          console.warn('⚠️ Failed to sync Supabase session:', syncError);
+          // Non-critical - continue with login
+        }
+        
         toast.success('Code verified');
         onSuccess(response.access_token, response.user);
       } else {
@@ -47,6 +102,13 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to generate refresh token
+  const generateRefreshToken = () => {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
   };
 
   const handleResend = async () => {

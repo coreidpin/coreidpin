@@ -74,13 +74,25 @@ export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
   const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
   const [copiedPin, setCopiedPin] = useState(false);
-  const [profileCompletion] = useState(85);
   const [activeTab, setActiveTab] = useState('overview');
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showCaseStudyModal, setShowCaseStudyModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for Welcome Modal
   const [userProfile, setUserProfile] = useState(null);
+
+  // Calculate profile completion dynamically
+  const profileCompletion = React.useMemo(() => {
+    const checklist = [
+      !!((userProfile as any)?.email_verified),
+      !!(phonePin && phonePin !== 'Loading...'),
+      !!((userProfile as any)?.profile_picture_url),
+      !!((userProfile as any)?.work_experience && (userProfile as any)?.work_experience?.length > 0),
+      !!((userProfile as any)?.skills && (userProfile as any)?.skills?.length > 0)
+    ];
+    const completed = checklist.filter(Boolean).length;
+    return Math.round((completed / checklist.length) * 100);
+  }, [userProfile, phonePin]);
 
   const location = useLocation();
 
@@ -91,6 +103,47 @@ export function ProfessionalDashboard() {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
+
+  // Profile Completion Celebration
+  useEffect(() => {
+    const hasSeenCompletion = localStorage.getItem('has_seen_completion_100');
+    const userId = localStorage.getItem('userId');
+    
+    if (profileCompletion === 100 && !hasSeenCompletion && userId) {
+      // Show celebration toast
+      toast.success('🎉 Profile Complete! All features unlocked!', {
+        duration: 5000,
+        description: 'You now have full access to API features, analytics, and priority search ranking.'
+      });
+      
+      // Update database
+      (async () => {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ 
+              profile_complete: true,
+              completed_at: new Date().toISOString(),
+              completion_percentage: 100
+            })
+            .eq('user_id', userId);
+          
+          console.log('✅ Profile completion tracked in database');
+        } catch (error) {
+          console.error('Failed to update profile completion:', error);
+        }
+      })();
+      
+      // Mark as seen
+      localStorage.setItem('has_seen_completion_100', 'true');
+      
+      // Track analytics
+      trackEvent('profile_completed', { 
+        userId,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [profileCompletion]);
 
   // Onboarding Check
   useEffect(() => {

@@ -83,22 +83,37 @@ export function ProfileCompletionWidget({
       <div className="relative z-10">
         {/* Header */}
         <div className="mb-6">
-          <h2
-            className="text-white mb-1"
-            style={{
-              fontSize: typography.fontSize.xl,
-              fontWeight: typography.fontWeight.bold,
-            }}
-          >
-            Profile Completion
-          </h2>
+          <div className="flex items-center justify-between mb-1">
+            <h2
+              className="text-white"
+              style={{
+                fontSize: typography.fontSize.xl,
+                fontWeight: typography.fontWeight.bold,
+              }}
+            >
+              Profile Completion
+            </h2>
+            {percentage === 100 && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', delay: 0.5 }}
+                className="px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="h-4 w-4 text-white" />
+                <span className="text-xs font-bold text-white">Elite</span>
+              </motion.div>
+            )}
+          </div>
           <p
-            className="text-gray-400"
+            className={percentage === 100 ? 'text-green-400' : 'text-gray-400'}
             style={{
               fontSize: typography.fontSize.sm,
             }}
           >
-            Complete your profile to unlock all features
+            {percentage === 100 
+              ? '🎉 All features unlocked! Your profile is complete.' 
+              : 'Complete your profile to unlock all features'}
           </p>
         </div>
 

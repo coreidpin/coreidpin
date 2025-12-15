@@ -18,6 +18,7 @@ import {
   SessionState
 } from './utils/session';
 import { initAmplitude, identifyUser, resetAmplitude, trackEvent } from './utils/amplitude';
+import { sessionManager } from './utils/session-manager';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university' | 'business';
 
@@ -95,6 +96,22 @@ export default function App() {
     };
     
     initializeAuth();
+
+    // Initialize new SessionManager for token refresh (Phase 1 - Day 2)
+    const initializeSessionManager = async () => {
+      try {
+        const initialized = await sessionManager.init();
+        if (initialized) {
+          console.log('✅ SessionManager initialized - auto-refresh enabled');
+        } else {
+          console.log('ℹ️ No active session for SessionManager');
+        }
+      } catch (error) {
+        console.warn('Failed to initialize SessionManager:', error);
+      }
+    };
+    
+    initializeSessionManager();
 
     const checkSession = async () => {
       // Check for OAuth callback
@@ -244,6 +261,9 @@ export default function App() {
 
     // Cleanup function for session management
     return () => {
+      // Clean up SessionManager
+      sessionManager.destroy();
+      
       if (cleanupAutoRefresh) cleanupAutoRefresh();
       if (cleanupCrossTab) cleanupCrossTab();
       // Cleanup handled by other listeners
@@ -461,6 +481,9 @@ export default function App() {
       // Track logout in Amplitude
       trackEvent('User Logged Out');
       
+      // Clear SessionManager
+      sessionManager.clearSession();
+      
       // Sign out from Supabase first
       await supabase.auth.signOut();
       
@@ -492,6 +515,7 @@ export default function App() {
       console.error('Error signing out:', error);
       
       // Still clear everything even if Supabase signout fails
+      sessionManager.clearSession();
       const { clearSessionState } = await import('./utils/session');
       clearSessionState();
       localStorage.removeItem('isAdmin');
