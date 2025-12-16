@@ -69,6 +69,7 @@ TO authenticated
 USING (bucket_id = 'company-logos');
 
 -- Function to find company (handles variations)
+DROP FUNCTION IF EXISTS find_company(TEXT);
 CREATE OR REPLACE FUNCTION find_company(company_name TEXT)
 RETURNS TABLE(id UUID, name TEXT, logo_url TEXT, employee_count INTEGER) AS $$
 BEGIN

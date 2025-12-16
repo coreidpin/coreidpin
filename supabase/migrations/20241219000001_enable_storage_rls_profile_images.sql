@@ -11,6 +11,7 @@
 -- ============================================================================
 -- Policy 1: Authenticated users can upload profile images
 -- ============================================================================
+DROP POLICY IF EXISTS "Authenticated users can upload profile images" ON storage.objects;
 CREATE POLICY "Authenticated users can upload profile images"
 ON storage.objects FOR INSERT
 TO authenticated
@@ -21,6 +22,7 @@ WITH CHECK (
 -- ============================================================================
 -- Policy 2: Users can view all profile images (public profiles)
 -- ============================================================================
+DROP POLICY IF EXISTS "Anyone can view profile images" ON storage.objects;
 CREATE POLICY "Anyone can view profile images"
 ON storage.objects FOR SELECT
 TO public
@@ -31,6 +33,7 @@ USING (
 -- ============================================================================
 -- Policy 3: Users can update their own profile images
 -- ============================================================================
+DROP POLICY IF EXISTS "Users can update own profile images" ON storage.objects;
 CREATE POLICY "Users can update own profile images"
 ON storage.objects FOR UPDATE
 TO authenticated
@@ -46,6 +49,7 @@ WITH CHECK (
 -- ============================================================================
 -- Policy 4: Users can delete their own profile images
 -- ============================================================================
+DROP POLICY IF EXISTS "Users can delete own profile images" ON storage.objects;
 CREATE POLICY "Users can delete own profile images"
 ON storage.objects FOR DELETE
 TO authenticated

@@ -59,7 +59,9 @@ import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
 
-import { WelcomeModal } from './onboarding/WelcomeModal'; // Import WelcomeModal
+import { WelcomeModal } from './onboarding/WelcomeModal';
+import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
+import { useOnboarding } from '../hooks/useOnboarding';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
@@ -78,8 +80,18 @@ export function ProfessionalDashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showCaseStudyModal, setShowCaseStudyModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false); // New state for Welcome Modal
   const [userProfile, setUserProfile] = useState(null);
+  
+  // Onboarding modals
+  const {
+    showWelcome,
+    showNotificationPermission,
+    completeWelcome,
+    handleNotificationAllow,
+    handleNotificationDeny,
+    closeWelcome,
+    closeNotification,
+  } = useOnboarding();
 
   // Calculate profile completion dynamically
   const profileCompletion = React.useMemo(() => {
@@ -144,16 +156,6 @@ export function ProfessionalDashboard() {
       });
     }
   }, [profileCompletion]);
-
-  // Onboarding Check
-  useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('has_seen_welcome');
-    if (!hasSeenWelcome) {
-      // Small delay to allow initial render/animations to settle
-      const timer = setTimeout(() => setShowWelcomeModal(true), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   // PIN Generation State
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -2103,22 +2105,22 @@ export function ProfessionalDashboard() {
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} position="bottom-right" />
       <CaseStudyForm open={showCaseStudyModal} onOpenChange={setShowCaseStudyModal} onSubmit={handleCaseStudySubmit} userId={userProfile?.user_id || ''} isLoading={false} caseStudy={null} />
-      </div>
-      <WelcomeModal 
-        open={showWelcomeModal}
-        onOpenChange={setShowWelcomeModal}
-        onStartTour={() => {
-          setShowWelcomeModal(false);
-          // Trigger tour logic here (can be added later)
-          toast.info('Quick tour starting...', { duration: 2000 }); // Placeholder
-          localStorage.setItem('has_seen_welcome', 'true');
-        }}
-        onSkip={() => {
-          setShowWelcomeModal(false);
-          localStorage.setItem('has_seen_welcome', 'true');
-        }}
+      
+      {/* Onboarding Modals */}
+      <WelcomeModal
+        isOpen={showWelcome}
+        onClose={closeWelcome}
+        onGetStarted={completeWelcome}
         userName={userProfile?.full_name?.split(' ')[0]}
       />
+
+      <NotificationPermissionModal
+        isOpen={showNotificationPermission}
+        onClose={closeNotification}
+        onAllow={handleNotificationAllow}
+        onDeny={handleNotificationDeny}
+      />
+      </div>
     </div>
   );
 }

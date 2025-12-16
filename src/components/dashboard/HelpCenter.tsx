@@ -110,7 +110,8 @@ export function HelpCenter({ isOpen, onClose }: HelpCenterProps) {
                 </div>
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                  aria-label="Close help center"
                 >
                   <X className="h-5 w-5" />
                 </button>

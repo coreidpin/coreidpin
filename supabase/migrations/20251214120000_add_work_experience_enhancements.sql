@@ -12,6 +12,9 @@ ADD COLUMN IF NOT EXISTS achievements TEXT[];
 -- Step 2: Add check constraint for employment_type
 -- Only allow valid employment types
 ALTER TABLE work_experiences
+DROP CONSTRAINT IF EXISTS valid_employment_type;
+
+ALTER TABLE work_experiences
 ADD CONSTRAINT valid_employment_type
 CHECK (
   employment_type IS NULL OR 

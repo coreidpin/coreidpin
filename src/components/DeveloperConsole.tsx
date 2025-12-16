@@ -12,6 +12,11 @@ import { TeamManager } from './developer/TeamManager';
 import { WebhooksManager } from './developer/WebhooksManager';
 import { BusinessSettings } from './developer/BusinessSettings';
 import { IdentityVerificationTool } from './developer/IdentityVerificationTool';
+import { FeatureLockInline } from './FeatureLock';
+import { useFeatureGate } from '../hooks/useFeatureGate';
+import { WelcomeModal } from './onboarding/WelcomeModal';
+import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
+import { useOnboarding } from '../hooks/useOnboarding';
 import {
   Key,
   BarChart3,
@@ -29,6 +34,19 @@ import {
 export function DeveloperConsole() {
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const { access, loading: featureLoading } = useFeatureGate();
+  
+  // Onboarding modals
+  const {
+    showWelcome,
+    showNotificationPermission,
+    completeWelcome,
+    handleNotificationAllow,
+    handleNotificationDeny,
+    closeWelcome,
+    closeNotification,
+  } = useOnboarding();
 
   useEffect(() => {
     fetchBusinessProfile();
@@ -194,7 +212,7 @@ export function DeveloperConsole() {
         </motion.div>
 
         {/* Main Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white border border-gray-200 p-1 w-full justify-start overflow-x-auto flex-nowrap h-auto">
             <TabsTrigger value="overview" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
               <BarChart3 className="w-4 h-4" />
@@ -233,7 +251,23 @@ export function DeveloperConsole() {
 
           {/* API Keys Tab */}
           <TabsContent value="api-keys">
-            <APIKeysManager />
+            {featureLoading ? (
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardContent className="p-12 text-center">
+                  <p className="text-gray-500">Loading access permissions...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <FeatureLockInline
+                isUnlocked={access?.canAccessApiKeys || false}
+                currentCompletion={access?.profileCompletionPercentage || 0}
+                requiredCompletion={80}
+                featureName="API Keys"
+                onNavigateToSettings={() => setActiveTab('settings')}
+              >
+                <APIKeysManager />
+              </FeatureLockInline>
+            )}
           </TabsContent>
 
           {/* Team Tab */}
@@ -281,7 +315,23 @@ export function DeveloperConsole() {
 
           {/* Webhooks Tab */}
           <TabsContent value="webhooks">
-            <WebhooksManager businessId={businessProfile?.id} isLoading={loading} />
+            {featureLoading ? (
+              <Card className="bg-white border-gray-200 shadow-sm">
+                <CardContent className="p-12 text-center">
+                  <p className="text-gray-500">Loading access permissions...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <FeatureLockInline
+                isUnlocked={access?.canAccessWebhooks || false}
+                currentCompletion={access?.profileCompletionPercentage || 0}
+                requiredCompletion={100}
+                featureName="Webhooks"
+                onNavigateToSettings={() => setActiveTab('settings')}
+              >
+                <WebhooksManager businessId={businessProfile?.id} isLoading={loading} />
+              </FeatureLockInline>
+            )}
           </TabsContent>
 
           {/* Settings Tab */}
@@ -298,6 +348,21 @@ export function DeveloperConsole() {
              <IdentityVerificationTool />
           </TabsContent>
         </Tabs>
+        
+        {/* Onboarding Modals */}
+        <WelcomeModal
+          isOpen={showWelcome}
+          onClose={closeWelcome}
+          onGetStarted={completeWelcome}
+          userName={businessProfile?.company_name}
+        />
+
+        <NotificationPermissionModal
+          isOpen={showNotificationPermission}
+          onClose={closeNotification}
+          onAllow={handleNotificationAllow}
+          onDeny={handleNotificationDeny}
+        />
       </div>
     </div>
   );

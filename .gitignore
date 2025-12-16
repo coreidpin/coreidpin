@@ -8,5 +8,6 @@ build/
 *.txt
 agent/
 .agent
+/agent
 
 
