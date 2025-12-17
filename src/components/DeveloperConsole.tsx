@@ -214,31 +214,87 @@ export function DeveloperConsole() {
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white border border-gray-200 p-1 w-full justify-start overflow-x-auto flex-nowrap h-auto">
-            <TabsTrigger value="overview" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="overview" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'overview' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <BarChart3 className="w-4 h-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="api-keys" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="api-keys" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'api-keys' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'api-keys' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <Key className="w-4 h-4" />
               API Keys
             </TabsTrigger>
-            <TabsTrigger value="team" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="team" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'team' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'team' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <Users className="w-4 h-4" />
               Team
             </TabsTrigger>
-             <TabsTrigger value="verify" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="verify" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'verify' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'verify' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <Shield className="w-4 h-4" />
               Verify Identity
             </TabsTrigger>
-            <TabsTrigger value="docs" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="docs" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'docs' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'docs' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <BookOpen className="w-4 h-4" />
               Documentation
             </TabsTrigger>
-            <TabsTrigger value="webhooks" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="webhooks" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'webhooks' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'webhooks' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <Webhook className="w-4 h-4" />
               Webhooks
             </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2 text-gray-700 data-[state=active]:text-black data-[state=active]:bg-gray-100 min-w-fit">
+            <TabsTrigger 
+              value="settings" 
+              className="gap-2 min-w-fit"
+              style={{
+                color: activeTab === 'settings' ? '#ffffff' : '#374151',
+                backgroundColor: activeTab === 'settings' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
               <Settings className="w-4 h-4" />
               Settings
             </TabsTrigger>

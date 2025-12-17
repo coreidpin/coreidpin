@@ -1190,23 +1190,35 @@ export function ProfessionalDashboard() {
 
 
         {/* Main Dashboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-xl">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full overflow-x-hidden">
+          <TabsList>
             <TabsTrigger 
-              value="overview" 
-              className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
+              value="overview"
+              style={{
+                color: activeTab === 'overview' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
-              value="projects" 
-              className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
+              value="projects"
+              style={{
+                color: activeTab === 'projects' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'projects' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
             >
               Projects
             </TabsTrigger>
             <TabsTrigger 
-              value="endorsements" 
-              className="data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm text-gray-500 rounded-lg transition-all"
+              value="endorsements"
+              style={{
+                color: activeTab === 'endorsements' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'endorsements' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
             >
               Endorsements
             </TabsTrigger>
@@ -1221,7 +1233,7 @@ export function ProfessionalDashboard() {
                 exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={reducedMotion ? undefined : { duration: 0.2 }}
               >
-                <TabsContent value="overview" className="space-y-8">
+                <TabsContent value="overview" className="space-y-4 sm:space-y-6 md:space-y-8 overflow-x-hidden">
                   <QuickActions 
                     onAddProject={handleAddProject}
                     onRequestEndorsement={handleRequestEndorsement}
@@ -1311,29 +1323,31 @@ export function ProfessionalDashboard() {
                 exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={reducedMotion ? undefined : { duration: 0.2 }}
               >
-                <TabsContent value="projects" className="space-y-6">
-            <div className="flex items-center justify-between">
+                <TabsContent value="projects" className="space-y-6 overflow-x-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
                 <p className="text-gray-500 text-sm mt-1">Showcase your professional work and contributions</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Button 
                   onClick={handleAddProject} 
                   variant="outline"
-                  className="bg-white hover:bg-gray-100 text-black border-2 border-black shadow-sm transition-all hover:scale-105" 
+                  className="!bg-white hover:!bg-gray-100 !text-black border-2 !border-black shadow-sm transition-all hover:scale-105 whitespace-nowrap font-semibold" 
+                  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black' }}
                   aria-label="Add new project"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Project
+                  <span className="text-black font-semibold">Add Project</span>
                 </Button>
                 <Button 
                   onClick={handleAddCaseStudy} 
-                  className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105" 
+                  className="!bg-black hover:!bg-gray-900 !text-white font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 whitespace-nowrap border-0" 
+                  style={{ color: 'white', backgroundColor: 'black' }}
                   aria-label="Create case study"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Create Case Study
+                  <span className="text-white font-semibold">Create Case Study</span>
                 </Button>
               </div>
             </div>
@@ -1353,7 +1367,7 @@ export function ProfessionalDashboard() {
               <select
                 value={projectSort}
                 onChange={(e) => setProjectSort(e.target.value)}
-                className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="date-desc">Newest First</option>
                 <option value="date-asc">Oldest First</option>
@@ -1363,7 +1377,7 @@ export function ProfessionalDashboard() {
             </div>
 
             {projectsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <ProjectCardSkeleton />
                 <ProjectCardSkeleton />
                 <ProjectCardSkeleton />
@@ -1387,7 +1401,7 @@ export function ProfessionalDashboard() {
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {projects
                   .filter((p: any) => {
                     const matchesSearch = p.title?.toLowerCase().includes(projectSearch.toLowerCase()) ||
@@ -1494,20 +1508,20 @@ export function ProfessionalDashboard() {
                 exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={reducedMotion ? undefined : { duration: 0.2 }}
               >
-                <TabsContent value="endorsements" className="space-y-6">
-            <div className="flex items-center justify-between">
+                <TabsContent value="endorsements" className="space-y-4 sm:space-y-6 overflow-x-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">Endorsements</h2>
                 <p className="text-gray-500 text-sm mt-1">Validations from your professional network</p>
               </div>
-              <Button onClick={handleRequestEndorsement} className="bg-black hover:bg-gray-800 text-white shadow-sm transition-all hover:scale-105" aria-label="Request new endorsement">
+              <Button onClick={handleRequestEndorsement} className="!bg-black hover:!bg-gray-900 !text-white font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 w-full sm:w-auto whitespace-nowrap border-0" style={{ color: 'white', backgroundColor: 'black' }} aria-label="Request new endorsement">
                 <Plus className="h-4 w-4 mr-2" />
-                Request Endorsement
+                <span className="text-white font-semibold">Request Endorsement</span>
               </Button>
             </div>
 
             {/* Status Filter Pills */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {[
                 { value: 'all', label: 'All' },
                 { value: 'requested', label: 'Sent' },
@@ -1527,7 +1541,7 @@ export function ProfessionalDashboard() {
             </div>
 
             {endorsementsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <ProjectCardSkeleton />
                 <ProjectCardSkeleton />
               </div>
@@ -1550,7 +1564,7 @@ export function ProfessionalDashboard() {
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {endorsements
                   .filter((e: any) => endorsementFilter === 'all' || e.status === endorsementFilter)
                   .map((endorsement: any, index) => (

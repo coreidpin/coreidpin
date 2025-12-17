@@ -1210,20 +1210,35 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           <TabsList className="flex flex-wrap w-full bg-slate-100 border border-slate-200 p-1 rounded-xl gap-1">
             <TabsTrigger 
               value="overview" 
-              className="flex-1 py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base transition-all duration-300"
+              style={{
+                color: activeTab === 'overview' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="details" 
-              className="flex-1 py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base text-center data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base text-center transition-all duration-300"
+              style={{
+                color: activeTab === 'details' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'details' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
             >
               <span className="hidden sm:inline">Personal & Professional</span>
               <span className="sm:hidden">Personal & Prof.</span>
             </TabsTrigger>
             <TabsTrigger 
               value="work" 
-              className="flex-1 py-3 px-2 rounded-lg text-slate-600 text-sm sm:text-base data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 transition-all duration-300"
+              className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base transition-all duration-300"
+              style={{
+                color: activeTab === 'work' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'work' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
             >
               Work Identity
             </TabsTrigger>

@@ -13,7 +13,7 @@ const Tabs = React.forwardRef<
     <TabsPrimitive.Root
       ref={ref}
       data-slot="tabs"
-      className={cn("flex flex-col gap-2", className)}
+      className={cn("flex flex-col gap-3 md:gap-4", className)}
       {...props}
     />
   );
@@ -30,7 +30,15 @@ const TabsList = React.forwardRef<
       ref={ref}
       data-slot="tabs-list"
       className={cn(
-        "bg-muted text-muted-foreground inline-flex h-9 w-fit items-center justify-center rounded-xl p-[3px] flex",
+        "inline-flex w-full items-center justify-center",
+        "bg-gradient-to-br from-slate-50 to-slate-100/80",
+        "dark:from-slate-900 dark:to-slate-800/80",
+        "backdrop-blur-sm",
+        "border border-slate-200/60 dark:border-slate-700/60",
+        "rounded-xl shadow-sm",
+        "p-1.5 gap-1",
+        "transition-all duration-300",
+        "hover:shadow-md hover:border-slate-300/60 dark:hover:border-slate-600/60",
         className,
       )}
       {...props}
@@ -49,7 +57,45 @@ const TabsTrigger = React.forwardRef<
       ref={ref}
       data-slot="tabs-trigger"
       className={cn(
-        "data-[state=active]:bg-card dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-xl border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        // Base styles
+        "inline-flex flex-1 items-center justify-center gap-2",
+        "rounded-lg px-3 py-2.5 md:px-4 md:py-3",
+        "text-sm font-semibold tracking-wide",
+        "whitespace-nowrap select-none",
+        "transition-all duration-300 ease-out",
+        
+        // Default state
+        "text-slate-600 dark:text-slate-400",
+        "hover:text-slate-900 dark:hover:text-slate-100",
+        "hover:bg-white/50 dark:hover:bg-slate-800/50",
+        
+        // Active state - Enhanced with gradient and shadow
+        "data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800",
+        "data-[state=active]:text-slate-900 dark:data-[state=active]:text-white",
+        "data-[state=active]:shadow-lg data-[state=active]:shadow-slate-900/5",
+        "dark:data-[state=active]:shadow-slate-900/20",
+        "data-[state=active]:border data-[state=active]:border-slate-200/80",
+        "dark:data-[state=active]:border-slate-700/80",
+        
+        // Subtle scale effect on active
+        "data-[state=active]:scale-[1.02]",
+        
+        // Focus styles
+        "focus-visible:outline-none focus-visible:ring-2",
+        "focus-visible:ring-slate-400 dark:focus-visible:ring-slate-600",
+        "focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900",
+        
+        // Disabled state
+        "disabled:pointer-events-none disabled:opacity-50",
+        
+        // Icon sizing
+        "[&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "[&_svg:not([class*='size-'])]:size-4",
+        
+        // Hover effect with transform
+        "hover:translate-y-[-1px]",
+        "data-[state=active]:hover:translate-y-0",
+        
         className,
       )}
       {...props}
@@ -67,7 +113,11 @@ const TabsContent = React.forwardRef<
     <TabsPrimitive.Content
       ref={ref}
       data-slot="tabs-content"
-      className={cn("flex-1 outline-none", className)}
+      className={cn(
+        "flex-1 outline-none",
+        "animate-in fade-in-0 slide-in-from-bottom-2 duration-300",
+        className
+      )}
       {...props}
     />
   );
