@@ -46,8 +46,8 @@ export const validators = {
   email: (value: string): string | null => {
     if (!value) return null; // Allow empty for optional fields
     
-    // RFC 5322 simplified regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // RFC 5322 simplified regex - matched with DB migration
+    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
     if (!emailRegex.test(value)) {
       return 'Please enter a valid email address';
     }
@@ -60,16 +60,12 @@ export const validators = {
   url: (value: string, fieldName: string = 'URL'): string | null => {
     if (!value) return null; // Allow empty for optional fields
     
-    try {
-      const url = new URL(value);
-      // Ensure it's http or https
-      if (!['http:', 'https:'].includes(url.protocol)) {
-        return `${fieldName} must start with http:// or https://`;
-      }
-      return null;
-    } catch {
-      return `${fieldName} must be a valid URL`;
+    // Matched with DB migration regex for URLs
+    const urlRegex = /^https?:\/\/[a-zA-Z0-9][-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+    if (!urlRegex.test(value)) {
+      return `${fieldName} must be a valid URL starting with http:// or https://`;
     }
+    return null;
   },
 
   /**
@@ -78,9 +74,10 @@ export const validators = {
   linkedinUrl: (value: string): string | null => {
     if (!value) return null;
     
-    const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\/in\/([\w-]+)\/?$/;
+    // Matched with DB migration: ^https?://(www\.)?linkedin\.com/in/[a-zA-Z0-9-]+/?$
+    const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\/in\/[a-zA-Z0-9-]+\/?$/;
     if (!linkedinRegex.test(value)) {
-      return 'LinkedIn URL must be in format: https://linkedin.com/in/yourprofile';
+      return 'LinkedIn URL format: https://linkedin.com/in/username';
     }
     return null;
   },
@@ -91,23 +88,24 @@ export const validators = {
   githubUrl: (value: string): string | null => {
     if (!value) return null;
     
-    const githubRegex = /^https?:\/\/(www\.)?github\.com\/([\w-]+)\/?$/;
+    // Matched with DB migration: ^https?://(www\.)?github\.com/[a-zA-Z0-9-]+/?$
+    const githubRegex = /^https?:\/\/(www\.)?github\.com\/[a-zA-Z0-9-]+\/?$/;
     if (!githubRegex.test(value)) {
-      return 'GitHub URL must be in format: https://github.com/yourusername';
+      return 'GitHub URL format: https://github.com/username';
     }
     return null;
   },
 
   /**
-   * Validate phone number (Nigeria E.164 format)
+   * Validate phone number (E.164 international format)
    */
   phone: (value: string): string | null => {
     if (!value) return null;
     
-    // Nigeria phone format: +234XXXXXXXXXX (11 digits after +234)
-    const phoneRegex = /^\+234[789]\d{9}$/;
+    // Matched with DB migration: ^\+?[1-9]\d{1,14}$
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
     if (!phoneRegex.test(value)) {
-      return 'Phone must be in format: +234XXXXXXXXXX';
+      return 'Phone must be in international format (e.g. +234...)';
     }
     return null;
   },

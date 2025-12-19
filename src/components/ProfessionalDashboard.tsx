@@ -58,6 +58,8 @@ import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
+import { ProfileCompletionBanner } from './ProfileCompletionBanner';
+import { calculateProfileCompletion } from '../utils/profileCompletion';
 
 import { WelcomeModal } from './onboarding/WelcomeModal';
 import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
@@ -71,6 +73,7 @@ import { NotificationCenter, ToastContainer } from './notifications';
 import { EndorsementAPI } from '../utils/endorsementAPI';
 import { activityTracker } from '../utils/activityTracker';
 import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } from '../types/endorsement';
+import { Snowfall, HolidayGiftWidget } from './ui/christmas-effects';
 
 export function ProfessionalDashboard() {
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
@@ -95,16 +98,10 @@ export function ProfessionalDashboard() {
 
   // Calculate profile completion dynamically
   const profileCompletion = React.useMemo(() => {
-    const checklist = [
-      !!((userProfile as any)?.email_verified),
-      !!(phonePin && phonePin !== 'Loading...'),
-      !!((userProfile as any)?.profile_picture_url),
-      !!((userProfile as any)?.work_experience && (userProfile as any)?.work_experience?.length > 0),
-      !!((userProfile as any)?.skills && (userProfile as any)?.skills?.length > 0)
-    ];
-    const completed = checklist.filter(Boolean).length;
-    return Math.round((completed / checklist.length) * 100);
-  }, [userProfile, phonePin]);
+    if (!userProfile) return 0;
+    const { completion } = calculateProfileCompletion(userProfile);
+    return completion;
+  }, [userProfile]);
 
   const location = useLocation();
 
@@ -1096,15 +1093,32 @@ export function ProfessionalDashboard() {
 
 
 
+
   return (
     <div className="min-h-screen bg-white scroll-smooth">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
+        {/* Profile Completion Progress - High Visibility at Top */}
+        <Snowfall />
+        <HolidayGiftWidget />
+        
+        {/* Profile Completion Progress - High Visibility at Top */}
+        <AnimatePresence>
+          {userProfile && (
+            <ProfileCompletionBanner 
+              {...calculateProfileCompletion(userProfile)}
+              userName={(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0]}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Welcome Section - Mobile: Stack, Desktop: Side-by-side */}
+
         <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-100 pb-6">
           <div className="space-y-2 sm:space-y-4 flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight break-words">
               Welcome back, <span className="text-slate-500">{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
+              <span className="ml-2 text-base font-normal text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">Happy Holidays! 🎄</span>
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 border border-green-100 w-fit">
@@ -1191,7 +1205,7 @@ export function ProfessionalDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full overflow-x-hidden">
-          <TabsList>
+          <TabsList className="flex flex-wrap w-full bg-slate-100 p-1 rounded-xl gap-1">
             <TabsTrigger 
               value="overview"
               style={{

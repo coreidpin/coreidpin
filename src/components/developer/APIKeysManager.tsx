@@ -240,8 +240,20 @@ export function APIKeysManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-48 bg-gray-100 animate-pulse rounded" />
+          <div className="h-10 w-32 bg-gray-100 animate-pulse rounded" />
+        </div>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="bg-white border-gray-100">
+              <CardContent className="p-6">
+                <div className="h-20 w-full bg-gray-50 animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }

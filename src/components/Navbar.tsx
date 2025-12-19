@@ -22,6 +22,7 @@ import {
   Users
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
+import { SantaHat } from './ui/christmas-effects';
 
 interface NavbarProps {
   currentPage?: string;
@@ -240,7 +241,11 @@ export function Navbar({
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16 lg:h-18">
           {/* Logo */}
-          <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
+          {/* Logo with Holiday Hat */}
+          <div className="relative group">
+            <SantaHat className="top-[-12px] left-[-8px] scale-75 rotate-[-15deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
+            <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
@@ -255,6 +260,7 @@ export function Navbar({
                   <span className="text-sm font-medium text-foreground">
                     {userType === 'employer' && 'Employer Dashboard'}
                     {userType === 'professional' && 'Professional Dashboard'}
+                    {userType === 'admin' && 'Admin Dashboard'}
                     {/* {userType === 'university' && 'University Dashboard'} */}
                   </span>
                 </div>
@@ -300,7 +306,9 @@ export function Navbar({
                   size="sm"
                   onClick={() => {
                     setIsNavigating(true);
-                    const target = userType === 'business' ? '/developer' : '/dashboard';
+                    let target = '/dashboard';
+                    if (userType === 'business') target = '/developer';
+                    if (userType === 'admin') target = '/admin/dashboard';
                     navigate(target);
                     setTimeout(() => setIsNavigating(false), 800);
                   }}
@@ -586,6 +594,7 @@ export function Navbar({
                         <p className="font-medium">
                           {userType === 'employer' && 'Employer Dashboard'}
                           {userType === 'professional' && 'Professional Dashboard'}
+                          {userType === 'admin' && 'Admin Dashboard'}
                         </p>
                       </motion.div>
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

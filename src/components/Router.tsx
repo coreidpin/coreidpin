@@ -51,12 +51,13 @@ const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ defaul
 const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ default: m.PlaceholderPage })));
 
 // Admin Pages
-const AdminDashboard = lazy(() => import('./AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
 const UsersPage = lazy(() => import('../admin/pages/Users').then(m => ({ default: m.UsersPage })));
 const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
 const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
 const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
 const PINLoginLogsPage = lazy(() => import('../admin/pages/logs/PINLoginLogs').then(m => ({ default: m.PINLoginLogsPage })));
+const AdminLoginPage = lazy(() => import('../admin/pages/AdminLoginPage'));
 
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
@@ -138,23 +139,50 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   React.useEffect(() => {
     const checkAdmin = async () => {
       try {
+        console.log('[AdminRoute] Checking admin access...');
+        
+        // FIRST: Check localStorage for admin session (from admin OTP login)
+        const localIsAdmin = localStorage.getItem('isAdmin') === 'true';
+        const localAdminSession = localStorage.getItem('adminSession');
+        
+        if (localIsAdmin && localAdminSession) {
+          console.log('[AdminRoute] ✅ Admin access granted via localStorage');
+          setIsAdmin(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        // FALLBACK: Check Supabase session
         const { data: { user } } = await supabase.auth.getUser();
         
+        console.log('[AdminRoute] Supabase user:', user?.id);
+        
         if (!user) {
+          console.log('[AdminRoute] ❌ No Supabase user found and no localStorage session');
           setIsAdmin(false);
           setIsLoading(false);
           return;
         }
 
-        const { data: adminUser } = await supabase
-          .from('admin_users')
-          .select('id')
-          .eq('user_id', user.id)
-          .single();
+        // Use RPC function to check admin status (bypasses RLS)
+        const { data: adminCheckResult } = await supabase
+          .rpc('check_admin_status', { check_user_id: user.id });
 
-        setIsAdmin(!!adminUser);
+        console.log('[AdminRoute] Admin check result:', adminCheckResult);
+
+        const isAdminUser = adminCheckResult?.[0]?.is_admin === true;
+        setIsAdmin(isAdminUser);
+        
+        if (isAdminUser) {
+          console.log('[AdminRoute] ✅ Admin access granted via Supabase');
+          localStorage.setItem('isAdmin', 'true');
+          localStorage.setItem('adminRole', adminCheckResult[0].role);
+          localStorage.setItem('adminSession', Date.now().toString());
+        } else {
+          console.log('[AdminRoute] ❌ Admin access denied - not an admin');
+        }
       } catch (error) {
-        console.error('Admin check error:', error);
+        console.error('[AdminRoute] Admin check error:', error);
         setIsAdmin(false);
       } finally {
         setIsLoading(false);
@@ -168,7 +196,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return <LoadingSpinner />;
   }
 
-  return isAdmin ? <>{children}</> : <Navigate to="/" replace />;
+  return isAdmin ? <>{children}</> : <Navigate to="/admin/login" replace />;
 };
 
 // Layout Component
@@ -203,7 +231,13 @@ const Layout: React.FC<{
         userType={userType}
       />
       <main className="flex-1">
-        {children}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {children}
+        </motion.div>
       </main>
       {currentPage !== 'login' && currentPage !== 'get-started' && <Footer onNavigate={() => {}} />}
     </div>
@@ -688,9 +722,23 @@ export const AppRouter: React.FC<RouterProps> = ({
         />
 
         {/* Legal Pages */}
+        <Route 
+          path="/admin/login" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <AdminLoginPage />
+            </Suspense>
+          } 
+        />
+
 
         <Route 
           path="/admin" 
+          element={<Navigate to="/admin/dashboard" replace />}
+        />
+        
+        <Route 
+          path="/admin/dashboard" 
           element={
             <AdminRoute>
               <Suspense fallback={<DashboardSkeleton />}>

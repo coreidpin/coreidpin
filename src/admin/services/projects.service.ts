@@ -36,7 +36,7 @@ export class ProjectsService extends BaseAPIClient {
       // Build query
       let query = this.supabase
         .from('projects')
-        .select('*, owner:profiles(email, full_name)', { count: 'exact' });
+        .select('*', { count: 'exact' });
 
       // Apply filters
       if (filters.search) {
@@ -63,7 +63,8 @@ export class ProjectsService extends BaseAPIClient {
       const projects = (data || []).map(item => ({
         ...item,
         // Handle case where owner might be an array or object depending on relation
-        owner: Array.isArray(item.owner) ? item.owner[0] : item.owner
+        // Remove owner handling since we removed the join
+        // owner: Array.isArray(item.owner) ? item.owner[0] : item.owner
       }));
 
       return this.createPaginatedResponse(projects, count || 0, pagination);
@@ -79,7 +80,7 @@ export class ProjectsService extends BaseAPIClient {
     try {
       const { data, error } = await this.supabase
         .from('projects')
-        .select('*, owner:profiles(email, full_name)')
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -87,7 +88,7 @@ export class ProjectsService extends BaseAPIClient {
 
       return {
         ...data,
-        owner: Array.isArray(data.owner) ? data.owner[0] : data.owner
+        // owner: Array.isArray(data.owner) ? data.owner[0] : data.owner
       };
     } catch (error) {
       this.handleError(error);

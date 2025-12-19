@@ -12,10 +12,10 @@ export { EmailVerificationLogsPage } from './pages/logs/EmailVerificationLogs';
 export { APIKeysPage } from './pages/integrations/APIKeys';
 
 // Components
-export { AdminLoginDialog } from './components/LoginDialog';
+
 
 // Types
 export type { AdminUser, PlatformStats } from './types/index';
 
 // Utils
-export { isAdmin, checkAdminAccess } from './utils/auth';
+export { checkIsAdmin, getAdminUser } from './utils/auth';

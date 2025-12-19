@@ -32,7 +32,7 @@ import {
   Target,
   TrendingUp
 } from 'lucide-react';
-import { AdminLoginDialog } from '../admin/components/LoginDialog';
+import { useNavigate } from 'react-router-dom';
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -97,7 +97,7 @@ const certifications = [
 ];
 
 export function Footer({ onNavigate }: FooterProps = {}) {
-  const [showAdminDialog, setShowAdminDialog] = React.useState(false);
+  const navigate = useNavigate();
 
   const handleNavigate = (page: string) => {
     if (onNavigate) {
@@ -106,15 +106,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
   };
 
   const handleAdminClick = () => {
-    // Check if already admin
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (isAdmin) {
-      // Already logged in as admin, navigate to admin dashboard
-      window.location.href = '/admin';
-    } else {
-      // Show login dialog
-      setShowAdminDialog(true);
-    }
+    navigate('/admin/login');
   };
 
   const handleAdminLoginSuccess = () => {
@@ -443,12 +435,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
         </div>
       </div>
 
-      {/* Admin Login Dialog */}
-      <AdminLoginDialog
-        open={showAdminDialog}
-        onOpenChange={setShowAdminDialog}
-        onLoginSuccess={handleAdminLoginSuccess}
-      />
+      {/* Admin Login Dialog removed in favor of AdminLoginPage */}
     </footer>
   );
 }

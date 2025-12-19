@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, User, Phone, Mail, Briefcase, CheckCircle2, 
   ArrowLeft, Save, Loader2, X, Camera, Upload 
@@ -12,6 +12,7 @@ import { api } from '../utils/api';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { handleApiError } from '../utils/apiErrorHandler';
 import { Button } from './ui/button';
+import { Skeleton } from './ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -35,6 +36,7 @@ import { ProofDocumentUpload } from './dashboard/ProofDocumentUpload';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 import { validators } from '../utils/validation';
+import { calculateProfileCompletion } from '../utils/profileCompletion';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -184,9 +186,9 @@ export const IdentityManagementPage: React.FC = () => {
             certifications: profileData.certifications || []
           });
 
-          // Calculate profile completeness
-          const fields = [profileData.full_name, profileData.email, profileData.phone, profileData.bio, profileData.city];
-          setProfileCompleteness(Math.round((fields.filter(f => f).length / fields.length) * 100));
+          // Calculate profile completeness using robust utility
+          const { completion } = calculateProfileCompletion(profileData);
+          setProfileCompleteness(completion);
         }
 
         // Fetch PIN data
@@ -811,9 +813,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
   const calculateCompleteness = (data: any) => {
     if (!data) return;
-    const fields = ['name', 'email', 'phone', 'role', 'bio', 'industry', 'city', 'nationality'];
-    const filled = fields.filter(field => data[field] && data[field].length > 0).length;
-    setProfileCompleteness(Math.round((filled / fields.length) * 100));
+    const { completion } = calculateProfileCompletion(data);
+    setProfileCompleteness(completion);
+    return completion;
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -957,9 +959,23 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       const result = JSON.parse(responseText);
 
       // Update local state
-      setProfile({ ...profile, ...result.profile });
-      calculateCompleteness(result.profile);
+      const { completion } = calculateProfileCompletion(result.profile);
+      setProfile({ 
+        ...profile, 
+        ...result.profile,
+        profile_complete: completion >= 100,
+        profile_completion_percentage: completion
+      });
+      setProfileCompleteness(completion);
       
+      // Sync completion percentage to DB directly to ensure data consistency
+      await (supabase.from('profiles') as any)
+        .update({ 
+          profile_completion_percentage: completion,
+          profile_complete: completion >= 100
+        })
+        .eq('user_id', session.userId);
+
       setMessage({ type: 'success', text: 'Work Identity updated successfully' });
       toast.success('Work Identity updated');
 
@@ -996,17 +1012,55 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         return;
       }
 
-      // Validation
-      if (!formData.name.trim()) {
-        toast.error('Full Name is required');
+      // --- VALIDATION SECTION ---
+      // 1. Full Name (Required, 2-100 chars)
+      const nameError = validators.required(formData.name, 'Full Name') || 
+                        validators.stringLength(formData.name, 2, 100, 'Full Name');
+      if (nameError) {
+        toast.error(nameError);
         setSaving(false);
         return;
       }
-      if (!formData.email.trim()) {
-        toast.error('Email is required');
+
+      // 2. Email (Required, Valid format)
+      const emailError = validators.required(formData.email, 'Email address') || 
+                         validators.email(formData.email);
+      if (emailError) {
+        toast.error(emailError);
         setSaving(false);
         return;
       }
+
+      // 3. Phone (Optional, but if set must be valid)
+      if (formData.phone) {
+        const phoneError = validators.phone(formData.phone);
+        if (phoneError) {
+          toast.error(phoneError);
+          setSaving(false);
+          return;
+        }
+      }
+
+      // 4. LinkedIn (Optional, but if set must be valid)
+      if (formData.linkedin) {
+        const lnError = validators.linkedinUrl(formData.linkedin);
+        if (lnError) {
+          toast.error(lnError);
+          setSaving(false);
+          return;
+        }
+      }
+
+      // 5. Website (Optional, but if set must be valid)
+      if (formData.website) {
+        const webError = validators.url(formData.website, 'Website');
+        if (webError) {
+          toast.error(webError);
+          setSaving(false);
+          return;
+        }
+      }
+      // --- END VALIDATION ---
 
       const roleToSave = isCustomRole ? customRoleText : formData.role;
 
@@ -1061,9 +1115,23 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       }
 
       // Update local state
-      setProfile({ ...profile, ...result.profile });
-      calculateCompleteness(result.profile);
+      const { completion } = calculateProfileCompletion(result.profile);
+      setProfile({ 
+        ...profile, 
+        ...result.profile,
+        profile_complete: completion >= 100,
+        profile_completion_percentage: completion
+      });
+      setProfileCompleteness(completion);
       
+      // Sync completion percentage to DB directly to ensure data consistency
+      await (supabase.from('profiles') as any)
+        .update({ 
+          profile_completion_percentage: completion,
+          profile_complete: completion >= 100
+        })
+        .eq('user_id', session.userId);
+
       setMessage({ type: 'success', text: 'Profile updated successfully' });
       toast.success('Profile updated');
 
@@ -1093,8 +1161,47 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-[#32f08c] animate-spin" />
+      <div className="min-h-screen bg-white py-4 sm:py-8">
+        <div className="container mx-auto px-3 sm:px-4 max-w-6xl space-y-8">
+          {/* Header Skeleton */}
+          <div className="rounded-2xl h-48 bg-slate-900 overflow-hidden relative p-8">
+            <Skeleton className="h-6 w-32 bg-white/10 mb-6" />
+            <div className="flex items-baseline gap-2">
+              <Skeleton className="h-10 w-64 bg-white/20" />
+              <Skeleton className="h-6 w-48 bg-white/10" />
+            </div>
+          </div>
+
+          {/* Tabs Skeleton */}
+          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+            <Skeleton className="h-12 flex-1 rounded-lg" />
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="rounded-xl border border-slate-200 p-8 space-y-8">
+            <div className="flex flex-col sm:flex-row gap-8 items-center sm:items-start">
+              <Skeleton className="w-32 h-32 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-4 w-full">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-6 w-1/4" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Skeleton className="h-12 rounded-lg" />
+                  <Skeleton className="h-12 rounded-lg" />
+                </div>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1244,8 +1351,14 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </TabsTrigger>
           </TabsList>
 
-          {/* OVERVIEW TAB */}
-          <TabsContent value="overview" className="space-y-6 focus-visible:outline-none">
+          <AnimatePresence mode="wait">
+            <TabsContent value="overview" className="space-y-6 focus-visible:outline-none" key="overview">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
             {/* Identity Overview Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1310,14 +1423,20 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto sm:mx-0">
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                      <motion.div 
+                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 transition-all"
+                      >
                         <Phone className="h-4 w-4 text-purple-400" />
                         <span className="text-sm text-gray-300">{formData.phone || 'Not Set'}</span>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                      </motion.div>
+                      <motion.div 
+                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 transition-all"
+                      >
                         <Mail className="h-4 w-4 text-blue-400" />
                         <span className="text-sm text-gray-300 truncate">{formData.email || 'Not Set'}</span>
-                      </div>
+                      </motion.div>
                     </div>
 
                     {/* PIN Display */}
@@ -1383,11 +1502,17 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
                 </div>
               </div>
+              </motion.div>
             </motion.div>
           </TabsContent>
 
-          {/* DETAILS TAB */}
-          <TabsContent value="details" className="space-y-6">
+            <TabsContent value="details" className="space-y-6" key="details">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
             {/* Personal Information */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1813,10 +1938,16 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 )}
               </Button>
             </div>
-          </TabsContent>
+          </motion.div>
+        </TabsContent>
 
-          {/* WORK IDENTITY TAB */}
-          <TabsContent value="work" className="space-y-6">
+              <TabsContent value="work" className="space-y-6" key="work">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
             {/* CV Import Header */}
             <div className="flex justify-end">
               <input
@@ -2189,8 +2320,10 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 )}
               </Button>
             </div>
-          </TabsContent>
-        </Tabs>
+          </motion.div>
+        </TabsContent>
+      </AnimatePresence>
+    </Tabs>
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>

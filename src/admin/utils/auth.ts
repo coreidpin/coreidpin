@@ -67,3 +67,23 @@ export const getAdminUser = async (): Promise<AdminUser | null> => {
 export const clearAdminSession = async (): Promise<void> => {
   await supabase.auth.signOut();
 };
+
+/**
+ * Quick client-side check for admin access (synchronous)
+ * For use in layouts and components that need immediate access control
+ */
+export const checkAdminAccess = (): boolean => {
+  const isAdmin = localStorage.getItem('isAdmin');
+  const adminSession = localStorage.getItem('adminSession');
+  const adminRole = localStorage.getItem('adminRole');
+  
+  console.log('[checkAdminAccess] Checking:', {
+    isAdmin,
+    adminSession,
+    adminRole,
+    hasAccess: isAdmin === 'true' && !!adminSession
+  });
+  
+  return isAdmin === 'true' && !!adminSession;
+};
+

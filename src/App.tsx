@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast, Toaster } from 'sonner';
 import { AppRouter } from './components/Router';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
-import { AdminLoginDialog } from './components/AdminLoginDialog';
+
 import PasswordResetDialog from './components/PasswordResetDialog';
 import { VerificationSuccessModal } from './components/VerificationSuccessModal';
 import { supabase } from './utils/supabase/client';
@@ -35,7 +36,7 @@ export default function App() {
   });
   const [userData, setUserData] = useState<any>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
+
 
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [passwordRecoveryEmail, setPasswordRecoveryEmail] = useState<string | null>(null);
@@ -371,20 +372,7 @@ export default function App() {
     }
   };
 
-  // Admin login handler
-  const handleAdminLogin = () => {
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (isAdmin) {
-      window.location.href = '/admin';
-    } else {
-      setShowAdminLoginDialog(true);
-    }
-  };
 
-  const handleAdminLoginSuccess = () => {
-    setShowAdminLoginDialog(false);
-    window.location.href = '/admin';
-  };
 
   const handleLoginSuccess = async (userType: 'employer' | 'professional' | 'university' | 'business', user: any) => {
     setIsAuthenticated(true);
@@ -548,7 +536,7 @@ export default function App() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <AppRouter
         isAuthenticated={isAuthenticated}
         userType={currentView}
@@ -562,23 +550,21 @@ export default function App() {
       {/* Global Dialogs */}
 
       
-      <AdminLoginDialog
-        open={showAdminLoginDialog}
-        onOpenChange={setShowAdminLoginDialog}
-        onLoginSuccess={handleAdminLoginSuccess}
-      />
+
       
-      <PasswordResetDialog
+      {/* Temporarily disabled due to React import issues */}
+      {/* <PasswordResetDialog
         open={showPasswordResetDialog}
         email={passwordRecoveryEmail}
         onClose={() => setShowPasswordResetDialog(false)}
         onReset={handlePasswordResetConfirm}
-      />
+      /> */}
       
 
       
       {/* Verification Success Modal */}
-      <VerificationSuccessModal
+      {/* Temporarily disabled due to React import issues */}
+      {/* <VerificationSuccessModal
         open={showVerificationSuccess}
         onClose={() => {
           setShowVerificationSuccess(false);
@@ -586,8 +572,8 @@ export default function App() {
           window.location.href = '/dashboard';
         }}
         userType={currentView as 'employer' | 'professional' | 'university' | 'business'}
-      />
+      /> */}
       <Toaster />
-    </>
+    </ErrorBoundary>
   );
 }

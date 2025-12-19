@@ -49,6 +49,8 @@ interface LandingPageProps {
   userType?: string;
 }
 
+import { Snowfall, HolidayGiftWidget } from "./ui/christmas-effects";
+
 export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, userType }: LandingPageProps) {
   const [showWaitlist, setShowWaitlist] = React.useState(false);
   
@@ -58,8 +60,11 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
     }
   };
 
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
+      <Snowfall />
+      <HolidayGiftWidget />
       <Navbar 
         currentPage="landing"
         onNavigate={handleNavigate}

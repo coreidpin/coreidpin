@@ -14,6 +14,7 @@ import {
   Save,
   Loader2
 } from 'lucide-react';
+import { validators } from '../../utils/validation';
 
 interface BusinessProfile {
   id: string;
@@ -78,14 +79,15 @@ export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }
       if (data) {
         // Profile exists - load it
         console.log('Business profile found:', data);
+        const bizData = data as any;
         setProfile({
-          id: data.id,
-          company_name: data.company_name || '',
-          company_email: data.company_email || '',
-          website: data.website || '',
-          description: data.description || '',
-          industry: data.industry || '',
-          api_tier: data.api_tier || 'free'
+          id: bizData.id,
+          company_name: bizData.company_name || '',
+          company_email: bizData.company_email || '',
+          website: bizData.website || '',
+          description: bizData.description || '',
+          industry: bizData.industry || '',
+          api_tier: bizData.api_tier || 'free'
         });
       } else {
         // No profile exists yet - prefill from auth metadata
@@ -172,6 +174,37 @@ export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }
             toast.error('User ID not found. Please log in again.');
             return;
         }
+
+        // --- VALIDATION SECTION ---
+        // 1. Company Name (Required)
+        const nameErr = validators.required(profile.company_name, 'Company Name') ||
+                        validators.stringLength(profile.company_name, 2, 100, 'Company Name');
+        if (nameErr) {
+            toast.error(nameErr);
+            setSaving(false);
+            return;
+        }
+
+        // 2. Company Email (Optional, but if set must be valid)
+        if (profile.company_email) {
+            const emailErr = validators.email(profile.company_email);
+            if (emailErr) {
+                toast.error(emailErr);
+                setSaving(false);
+                return;
+            }
+        }
+
+        // 3. Website (Optional, but if set must be valid)
+        if (profile.website) {
+            const webErr = validators.url(profile.website, 'Website');
+            if (webErr) {
+                toast.error(webErr);
+                setSaving(false);
+                return;
+            }
+        }
+        // --- END VALIDATION ---
 
         const updates = {
             user_id: userId,
