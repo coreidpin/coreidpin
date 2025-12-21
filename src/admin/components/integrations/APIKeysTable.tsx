@@ -110,14 +110,14 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Key</TableHead>
-            <TableHead>Client/Partner</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Last Used</TableHead>
-            <TableHead>Rate Limit</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-gray-900">Name</TableHead>
+            <TableHead className="text-gray-900">Key</TableHead>
+            <TableHead className="text-gray-900">Client/Partner</TableHead>
+            <TableHead className="text-gray-900">Status</TableHead>
+            <TableHead className="text-gray-900">Created</TableHead>
+            <TableHead className="text-gray-900">Last Used</TableHead>
+            <TableHead className="text-gray-900">Rate Limit</TableHead>
+            <TableHead className="text-right text-gray-900">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -132,7 +132,7 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
               <TableRow key={apiKey.id}>
                 <TableCell>
                   <div>
-                    <div className="font-medium text-sm">{apiKey.name}</div>
+                    <div className="font-medium text-sm text-gray-900">{apiKey.name || 'Unnamed Key'}</div>
                     {apiKey.description && (
                       <div className="text-xs text-gray-500 max-w-xs truncate">
                         {apiKey.description}
@@ -143,7 +143,7 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-xs text-gray-600">
-                      {apiKey.key_preview}
+                      {apiKey.key_preview || 'sk_...'}
                     </span>
                     <Button
                       variant="ghost"
@@ -157,7 +157,7 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
                 </TableCell>
                 <TableCell>
                   <div>
-                    <div className="font-medium text-sm">{apiKey.client_name}</div>
+                    <div className="font-medium text-sm text-gray-900">{apiKey.client_name || 'Unknown Client'}</div>
                     {apiKey.client_organization && (
                       <div className="text-xs text-gray-500">
                         {apiKey.client_organization}
@@ -170,7 +170,7 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    <div>{new Date(apiKey.created_at).toLocaleDateString()}</div>
+                    <div className="text-gray-900">{new Date(apiKey.created_at).toLocaleDateString()}</div>
                     <div className="text-xs text-gray-500">
                       {new Date(apiKey.created_at).toLocaleTimeString()}
                     </div>
@@ -179,7 +179,7 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
                 <TableCell>
                   {apiKey.last_used_at ? (
                     <div className="text-sm">
-                      <div>{new Date(apiKey.last_used_at).toLocaleDateString()}</div>
+                      <div className="text-gray-900">{new Date(apiKey.last_used_at).toLocaleDateString()}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(apiKey.last_used_at).toLocaleTimeString()}
                       </div>
@@ -189,8 +189,8 @@ export function APIKeysTable({ apiKeys, isLoading, onViewKey, onCopyKey, onRevok
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="font-mono">
-                    {formatRateLimit(apiKey.rate_limit)}
+                  <Badge variant="outline" className="font-mono text-gray-900">
+                    {formatRateLimit(apiKey.rate_limit || 0)}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

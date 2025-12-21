@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '../../components/layout/AdminLayout';
+import { AdminLayout } from '../../layouts/AdminLayout';
 import { APIKeysTable, APIKey } from '../../components/integrations/APIKeysTable';
 import { APIKeyDetailModal } from '../../components/integrations/APIKeyDetailModal';
 import { CreateAPIKeyModal, CreateAPIKeyData } from '../../components/integrations/CreateAPIKeyModal';

@@ -31,6 +31,7 @@ import { TopTalentBadge } from './ui/TopTalentBadge';
 import { activityTracker } from '../utils/activityTracker';
 import { trackProfileView } from '../utils/demandAnalytics';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
+import { ContactModal } from './public/ContactModal';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 
 
@@ -46,6 +47,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
   const [workExperiences, setWorkExperiences] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -313,10 +315,49 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                     
                     {/* Desktop Action Buttons - Inside card */}
                     <div className="hidden sm:flex items-center gap-4 mt-8">
-                      <Button className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl h-14 px-10 text-base font-semibold hover:scale-105 transition-transform">
+                      <Button 
+                        onClick={() => setShowContactModal(true)}
+                        className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl h-14 px-10 text-base font-semibold hover:scale-105 transition-transform"
+                      >
                         <Mail className="h-5 w-5 mr-2" />
                         Contact Me
                       </Button>
+                      
+                      {profile.booking_url && (
+                        <Button 
+                          onClick={async () => {
+                            // 1. Track Notification (Intent)
+                            try {
+                              if (profile.user_id) {
+                                await supabase.from('notifications').insert({
+                                  user_id: profile.user_id,
+                                  type: 'info',
+                                  category: 'notification',
+                                  title: 'Booking Link Clicked',
+                                  message: 'A visitor clicked your "Book Call" button. Check your calendar for potential confirmations.',
+                                  metadata: { 
+                                    action: 'booking_intent',
+                                    source: 'public_profile',
+                                    timestamp: new Date().toISOString()
+                                  },
+                                  is_read: false,
+                                  is_new: true
+                                });
+                              }
+                            } catch (err) {
+                              console.error('Failed to log booking click:', err);
+                            }
+
+                            // 2. Open URL
+                            window.open(profile.booking_url, '_blank');
+                          }}
+                          className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-200 rounded-xl h-14 px-10 text-base font-semibold hover:scale-105 transition-transform"
+                        >
+                          <Calendar className="h-5 w-5 mr-2" />
+                          Book Call
+                        </Button>
+                      )}
+
                       <Button variant="outline" onClick={() => setShowQR(true)} className="flex-1 sm:flex-none border-2 border-gray-300 hover:border-gray-400 rounded-xl h-14 px-10 text-base font-semibold hover:scale-105 transition-transform">
                         <QrCode className="h-5 w-5 mr-2" />
                         Share Profile
@@ -467,12 +508,26 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         
         {/* Floating Action Bar - Fixed at bottom on mobile */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg sm:hidden z-50">
-          <div className="max-w-lg mx-auto flex gap-3">
-            <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 rounded-xl h-12 text-base font-semibold">
+          <div className="max-w-lg mx-auto flex gap-3 overflow-x-auto scrollbar-hide py-1">
+            <Button 
+              onClick={() => setShowContactModal(true)} 
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 rounded-xl h-12 text-base font-semibold min-w-[140px]"
+            >
               <Mail className="h-5 w-5 mr-2" />
-              Contact Me
+              Contact
             </Button>
-            <Button variant="outline" onClick={() => setShowQR(true)} className="flex-1 border-gray-300 rounded-xl h-12 text-base font-semibold">
+            
+            {profile.booking_url && (
+              <Button 
+                onClick={() => window.open(profile.booking_url, '_blank')}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200 rounded-xl h-12 text-base font-semibold min-w-[140px]"
+              >
+                <Calendar className="h-5 w-5 mr-2" />
+                Book
+              </Button>
+            )}
+
+            <Button variant="outline" onClick={() => setShowQR(true)} className="flex-1 border-gray-300 rounded-xl h-12 text-base font-semibold min-w-[100px]">
               <QrCode className="h-5 w-5 mr-2" />
               Share
             </Button>
@@ -508,6 +563,13 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ContactModal
+        open={showContactModal}
+        onOpenChange={setShowContactModal}
+        professionalId={profile?.user_id}
+        professionalName={profile?.full_name || profile?.name || 'Professional'}
+      />
     </>
   );
 }

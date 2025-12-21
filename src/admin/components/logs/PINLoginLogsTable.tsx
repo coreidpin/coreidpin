@@ -19,28 +19,12 @@ import {
   DropdownMenuTrigger,
 } from '../../../components/ui/dropdown-menu';
 
-export interface PINLoginLog {
-  id: string;
-  user_id?: string;
-  user_email?: string;
-  phone_number?: string;
-  status: 'success' | 'failed' | 'blocked';
-  attempt_count: number;
-  pin_sent: boolean;
-  pin_verified: boolean;
-  ip_address?: string;
-  user_agent?: string;
-  device_info?: string;
-  error_message?: string;
-  blocked_until?: string;
-  metadata?: any;
-  created_at: string;
-}
+import { AuthLog } from './AuthLogsTable';
 
 interface PINLoginLogsTableProps {
-  logs: PINLoginLog[];
+  logs: AuthLog[];
   isLoading: boolean;
-  onViewLog: (log: PINLoginLog) => void;
+  onViewLog: (log: AuthLog) => void;
 }
 
 export function PINLoginLogsTable({ logs, isLoading, onViewLog }: PINLoginLogsTableProps) {
@@ -102,7 +86,12 @@ export function PINLoginLogsTable({ logs, isLoading, onViewLog }: PINLoginLogsTa
               </TableCell>
             </TableRow>
           ) : (
-            logs.map((log) => (
+            logs.map((log) => {
+               // Extract PIN specific data from metadata if available
+               const phone = log.metadata?.phone || log.metadata?.phone_number || 'N/A';
+               const attempts = log.metadata?.attempts || log.metadata?.attempt_count || 1;
+               
+               return (
               <TableRow key={log.id}>
                 <TableCell>
                   <div className="text-sm">
@@ -128,7 +117,7 @@ export function PINLoginLogsTable({ logs, isLoading, onViewLog }: PINLoginLogsTa
                 </TableCell>
                 <TableCell>
                   <span className="text-sm font-medium">
-                    {log.phone_number || 'N/A'}
+                    {phone}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -137,9 +126,9 @@ export function PINLoginLogsTable({ logs, isLoading, onViewLog }: PINLoginLogsTa
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="font-mono">
-                      {log.attempt_count}
+                      {attempts}
                     </Badge>
-                    {log.attempt_count > 3 && (
+                    {attempts > 3 && (
                       <span className="text-xs text-orange-600">⚠️</span>
                     )}
                   </div>
@@ -173,7 +162,8 @@ export function PINLoginLogsTable({ logs, isLoading, onViewLog }: PINLoginLogsTa
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            ))
+            );
+          })
           )}
         </TableBody>
       </Table>

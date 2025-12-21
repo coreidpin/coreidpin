@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '../../components/layout/AdminLayout';
-import { PINLoginLogsTable, PINLoginLog } from '../../components/logs/PINLoginLogsTable';
+import { AdminLayout } from '../../layouts/AdminLayout';
+import { PINLoginLogsTable } from '../../components/logs/PINLoginLogsTable';
+import { AuthLog } from '../../components/logs/AuthLogsTable';
 import { PINLoginLogDetailModal } from '../../components/logs/PINLoginLogDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
@@ -20,11 +21,11 @@ import { EmptyState } from '../../components/EmptyState';
 import { Pagination } from '../../components/shared/DataTable/Pagination';
 
 export function PINLoginLogsPage() {
-  const [logs, setLogs] = useState<PINLoginLog[]>([]);
+  const [logs, setLogs] = useState<AuthLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedLog, setSelectedLog] = useState<PINLoginLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuthLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Pagination state
@@ -62,7 +63,7 @@ export function PINLoginLogsPage() {
     }
   };
 
-  const handleViewLog = (log: PINLoginLog) => {
+  const handleViewLog = (log: AuthLog) => {
     setSelectedLog(log);
     setIsModalOpen(true);
   };
@@ -139,7 +140,6 @@ export function PINLoginLogsPage() {
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="success">Success</SelectItem>
                     <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="blocked">Blocked</SelectItem>
                   </SelectContent>
                 </Select>
                 {(searchQuery || statusFilter !== 'all') && (

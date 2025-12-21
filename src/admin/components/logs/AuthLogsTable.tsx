@@ -23,8 +23,8 @@ export interface AuthLog {
   id: string;
   user_id?: string;
   user_email?: string;
-  event_type: 'login' | 'logout' | 'failed_login' | 'password_reset' | 'email_verification' | 'session_expired';
-  status: 'success' | 'failed' | 'suspicious';
+  event_type: string;
+  status: string;
   ip_address?: string;
   user_agent?: string;
   location?: string;
@@ -79,12 +79,14 @@ export function AuthLogsTable({ logs, isLoading, onViewLog }: AuthLogsTableProps
 
   const getEventTypeBadge = (eventType: string) => {
     const eventLabels: Record<string, string> = {
-      login: 'Login',
-      logout: 'Logout',
-      failed_login: 'Failed Login',
-      password_reset: 'Password Reset',
-      email_verification: 'Email Verification',
-      session_expired: 'Session Expired',
+      registration_started: 'Registration Started',
+      registration_finalized: 'Registration Completed',
+      otp_sent: 'OTP Sent',
+      otp_verified: 'OTP Verified',
+      pin_issued: 'PIN Created',
+      email_verified: 'Email Verified',
+      welcome_email_sent: 'Welcome Email',
+      otp_failed: 'OTP Failed',
     };
 
     return (

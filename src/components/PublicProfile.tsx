@@ -10,12 +10,14 @@ import { toast } from 'sonner';
 import { supabase } from '../utils/supabase/client';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { CaseStudyViewer } from './portfolio/CaseStudyViewer';
 import { WorkTimeline } from './portfolio/WorkTimeline';
 import { BetaBadge } from './ui/BetaBadge';
 import { TopTalentBadge } from './ui/TopTalentBadge';
 import { ContributionBadge } from './ui/ContributionBadge';
+import { ContactModal } from './public/ContactModal';
 
 export const PublicProfile: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -26,6 +28,7 @@ export const PublicProfile: React.FC = () => {
   const [workExperiences, setWorkExperiences] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -138,86 +141,124 @@ export const PublicProfile: React.FC = () => {
           className="space-y-6"
         >
           {/* Header Card */}
-          <Card className="bg-gradient-to-br from-[#32f08c]/10 via-[#0e0f12] to-[#bfa5ff]/10 border-[#32f08c]/30">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Profile Picture */}
-                <div className="flex-shrink-0">
-                  {profile.profile_picture_url ? (
-                    <img 
-                      src={profile.profile_picture_url} 
-                      alt={profile.name}
-                      className="w-32 h-32 rounded-full object-cover border-4 border-[#32f08c]/30"
-                    />
-                  ) : (
-                    <div className="w-32 h-32 rounded-full bg-white/5 border-4 border-white/10 flex items-center justify-center">
-                      <Shield className="h-16 w-16 text-white/40" />
-                    </div>
-                  )}
-                </div>
+          <Card className="bg-[#0e0f12] border-[#32f08c]/30 overflow-hidden relative">
+            {/* Cover Image */}
+            <div 
+              className="h-48 w-full bg-cover bg-center relative"
+              style={{ 
+                backgroundImage: profile.cover_image_url 
+                  ? `url(${profile.cover_image_url})` 
+                  : 'linear-gradient(to right bottom, #32f08c1a, #0e0f12, #bfa5ff1a)'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0e0f12] to-transparent opacity-60" />
+            </div>
 
-                {/* Info */}
-                <div className="flex-1 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h1 className="text-3xl font-bold text-white">{profile.name}</h1>
-                      {pin && (
-                        <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30 h-6">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Verified
-                        </Badge>
+            <CardContent className="px-8 pb-8 pt-0 relative flex flex-col items-center">
+              {/* Profile Picture - Centered Overlapping */}
+              <div className="absolute -top-16 left-1/2 -translate-x-1/2">
+                {profile.profile_picture_url ? (
+                  <img 
+                    src={profile.profile_picture_url} 
+                    alt={profile.name}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-[#0e0f12] shadow-xl"
+                  />
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-[#1a1b1f] border-4 border-[#0e0f12] flex items-center justify-center shadow-xl">
+                    <Shield className="h-16 w-16 text-white/40" />
+                  </div>
+                )}
+              </div>
+
+              {/* Main Info Section - Centered */}
+              <div className="mt-20 w-full flex flex-col items-center text-center">
+                
+                {/* Name & Details */}
+                <div className="space-y-2 flex flex-col items-center">
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <h1 className="text-3xl font-bold text-white">{profile.name}</h1>
+                    {pin && (
+                      <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/30 h-6">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
+                    <BetaBadge className="h-6" />
+                    <TopTalentBadge className="h-6" />
+                  </div>
+                  <p className="text-xl text-white/90 font-medium">{profile.role}</p>
+
+                  <div className="pt-4 pb-2">
+                    <div className="flex gap-4">
+                      <Button 
+                        onClick={() => {
+                          console.log('Contact Me clicked! Setting showContactModal to true');
+                          setShowContactModal(true);
+                        }}
+                        className="bg-white text-black hover:bg-white/90 font-semibold px-8 py-6 rounded-full text-lg shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105"
+                      >
+                        <Mail className="mr-2 h-5 w-5" />
+                        Contact Me
+                      </Button>
+                      
+                      {profile.booking_url && (
+                        <Button 
+                          onClick={() => window.open(profile.booking_url, '_blank')}
+                          className="bg-[#32f08c] text-black hover:bg-[#32f08c]/90 font-semibold px-8 py-6 rounded-full text-lg shadow-[0_0_20px_rgba(50,240,140,0.3)] transition-all hover:scale-105"
+                        >
+                          <Calendar className="mr-2 h-5 w-5" />
+                          Book Call
+                        </Button>
                       )}
-                      <BetaBadge className="h-6" />
-                      <TopTalentBadge className="h-6" />
                     </div>
-                    <p className="text-xl text-white/90">{profile.role}</p>
                   </div>
 
                   {/* Contact Info */}
-                  <div className="flex flex-wrap gap-4 text-sm">
+                  <div className="flex flex-wrap justify-center gap-4 text-sm text-white/60 pt-2">
                     {profile.city && (
-                      <div className="flex items-center gap-2 text-white/80">
+                      <div className="flex items-center gap-1.5">
                         <MapPin className="h-4 w-4 text-[#32f08c]" />
                         {profile.city}
                       </div>
                     )}
                     {profile.industry && (
-                      <div className="flex items-center gap-2 text-white/80">
+                      <div className="flex items-center gap-1.5">
                         <Briefcase className="h-4 w-4 text-[#32f08c]" />
                         {profile.industry}
                       </div>
                     )}
                     {profile.years_of_experience && (
-                      <div className="flex items-center gap-2 text-white/80">
+                      <div className="flex items-center gap-1.5">
                         <Calendar className="h-4 w-4 text-[#32f08c]" />
                         {profile.years_of_experience} years exp.
                       </div>
                     )}
                   </div>
-
-                  {/* PIN Display */}
-                  {pin && (
-                    <div className="inline-flex items-center gap-3 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
-                      <div>
-                        <div className="text-xs text-white/60 uppercase tracking-wide mb-1">Professional PIN</div>
-                        <div className="text-lg font-mono font-bold text-white">{pin.pin_number}</div>
-                      </div>
-                      <Separator orientation="vertical" className="h-8 bg-white/10" />
-                      <div>
-                        <div className="text-xs text-white/60 uppercase tracking-wide mb-1">Trust Score</div>
-                        <div className="text-lg font-bold text-[#32f08c]">{pin.trust_score}/100</div>
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {/* PIN Display - Centered or subtle */}
+                {pin && (
+                  <div className="mt-6 inline-flex items-center gap-4 px-6 py-3 bg-white/5 rounded-xl border border-white/10">
+                    <div className="text-center">
+                      <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">Professional PIN</div>
+                      <div className="text-xl font-mono font-bold text-white tracking-widest">{pin.pin_number}</div>
+                    </div>
+                    <Separator orientation="vertical" className="h-8 bg-white/10" />
+                    <div className="text-center">
+                      <div className="text-[10px] text-white/50 uppercase tracking-widest font-semibold mb-0.5">Trust Score</div>
+                      <div className="text-xl font-bold text-[#32f08c]">{pin.trust_score}</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Bio */}
               {profile.bio && (
-                <>
-                  <Separator className="my-6 bg-white/10" />
-                  <p className="text-white/90 leading-relaxed">{profile.bio}</p>
-                </>
+                <div className="mt-8">
+                  <Separator className="mb-6 bg-white/10" />
+                  <h3 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-2">About</h3>
+                  <p className="text-white/90 leading-relaxed max-w-3xl">{profile.bio}</p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -315,6 +356,13 @@ export const PublicProfile: React.FC = () => {
             project={selectedProject}
             open={selectedProject !== null}
             onClose={() => setSelectedProject(null)}
+          />
+
+          <ContactModal
+            open={showContactModal}
+            onOpenChange={setShowContactModal}
+            professionalId={profile?.user_id}
+            professionalName={profile?.name || 'Professional'}
           />
 
 

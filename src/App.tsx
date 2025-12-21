@@ -333,7 +333,13 @@ export default function App() {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        const userType = session.user.user_metadata?.userType || 'professional';
+        let userType = session.user.user_metadata?.userType || 'professional';
+        
+        // Preserve admin type if already set contextually (prevents overwrite on login)
+        if (localStorage.getItem('userType') === 'admin') {
+          userType = 'admin';
+        }
+
         localStorage.setItem('accessToken', session.access_token);
         localStorage.setItem('userId', session.user.id);
         localStorage.setItem('userType', userType);
@@ -351,6 +357,10 @@ export default function App() {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
         localStorage.removeItem('userType');
+        // Do NOT clear admin keys here - only on explicit logout
+        // localStorage.removeItem('isAdmin');
+        // localStorage.removeItem('adminSession');
+        
         setIsAuthenticated(false);
         setUserData(null);
         setCurrentView('landing');

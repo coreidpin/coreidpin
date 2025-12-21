@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Shield, 
@@ -12,30 +12,46 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { SystemHealth } from '../components/SystemHealth';
+import { dashboardService, DashboardStats, RecentActivityItem } from '../services/dashboard.service';
+import { toast } from '../utils/toast';
 
-interface DashboardStats {
-  totalUsers: number;
-  activeProfessionals: number;
-  dailySignups: number;
-  emailVerificationRate: number;
-  pinActivationRate: number;
-  apiIntegrations: number;
-  activePartners: number;
-  endorsementActivity: number;
-}
+import { AdminDashboardSkeleton } from '../components/AdminDashboardSkeleton';
 
 export function AdminDashboard() {
-  console.log('AdminDashboard mounting...');
-  const [stats] = useState<DashboardStats>({
-    totalUsers: 12847,
-    activeProfessionals: 8452,
-    dailySignups: 342,
-    emailVerificationRate: 87.3,
-    pinActivationRate: 92.1,
-    apiIntegrations: 48,
-    activePartners: 127,
-    endorsementActivity: 1249,
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    activeProfessionals: 0,
+    dailySignups: 0,
+    emailVerificationRate: 0,
+    pinActivationRate: 0,
+    apiIntegrations: 0,
+    activePartners: 0,
+    endorsementActivity: 0,
   });
+  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setIsLoading(true);
+        // Run in parallel
+        const [statsData, activityData] = await Promise.all([
+          dashboardService.getDashboardStats(),
+          dashboardService.getRecentActivity()
+        ]);
+        setStats(statsData);
+        setRecentActivity(activityData);
+      } catch (error) {
+        console.error('Failed to load dashboard data', error);
+        toast.error('Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
@@ -43,6 +59,24 @@ export function AdminDashboard() {
     localStorage.removeItem('adminRole');
     window.location.href = '/';
   };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'user': return Users;
+      case 'security': return Shield;
+      case 'api': return Activity;
+      case 'endorsement': return CheckCircle;
+      default: return Activity;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <AdminLayout breadcrumbs={['Overview']} onLogout={handleLogout}>
+        <AdminDashboardSkeleton />
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout breadcrumbs={['Overview']} onLogout={handleLogout}>
@@ -76,7 +110,9 @@ export function AdminDashboard() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.activeProfessionals.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
-                {((stats.activeProfessionals / stats.totalUsers) * 100).toFixed(1)}% of total
+                {stats.totalUsers > 0 
+                  ? ((stats.activeProfessionals / stats.totalUsers) * 100).toFixed(1) 
+                  : 0}% of total
               </p>
             </CardContent>
           </Card>
@@ -120,26 +156,28 @@ export function AdminDashboard() {
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                {[
-                  { action: 'New user registration', user: 'john@example.com', time: '2 minutes ago', icon: Users },
-                  { action: 'Profile verified', user: 'sarah@company.com', time: '15 minutes ago', icon: Shield },
-                  { action: 'API key generated', user: 'TechCorp Ltd.', time: '1 hour ago', icon: Activity },
-                  { action: 'Endorsement created', user: 'mike@startup.io', time: '3 hours ago', icon: CheckCircle },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className="mr-4 p-2 bg-blue-50 rounded-full">
-                      <item.icon className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{item.action}</p>
-                      <p className="text-xs text-gray-500">{item.user}</p>
-                    </div>
-                    <div className="flex items-center text-xs text-gray-400">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {item.time}
-                    </div>
-                  </div>
-                ))}
+                {recentActivity.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500">No recent activity found</div>
+                ) : (
+                    recentActivity.map((item, index) => {
+                      const Icon = getActivityIcon(item.type);
+                      return (
+                        <div key={item.id || index} className="flex items-center">
+                          <div className="mr-4 p-2 bg-blue-50 rounded-full">
+                            <Icon className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{item.action}</p>
+                            <p className="text-xs text-gray-500">{item.user}</p>
+                          </div>
+                          <div className="flex items-center text-xs text-gray-400">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
               </div>
             </CardContent>
           </Card>

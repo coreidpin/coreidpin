@@ -172,9 +172,22 @@ export function IdentityVerificationTool() {
               <p className="text-lg text-gray-600 font-medium mb-6">{result.role || result.job_title || 'Professional'}</p>
 
               {/* Work Status Box */}
-              <div className="w-full bg-white border border-gray-100 rounded-xl p-4 shadow-sm mb-6 flex items-center justify-center gap-2">
-                <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse" />
-                <span className="font-medium text-gray-900">Actively Working • Remote</span>
+              {/* Work Status & Location Row */}
+              <div className="w-full mb-6 flex items-center justify-center gap-3">
+                {/* Status Pill */}
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full shadow-sm">
+                  <div className="relative flex items-center justify-center">
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="absolute inset-0 rounded-full bg-emerald-500 opacity-20 animate-ping" />
+                  </div>
+                  <span className="font-semibold text-sm">Actively Working</span>
+                </div>
+
+                {/* Location Pill */}
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full shadow-sm">
+                  <MapPin className="h-4 w-4" />
+                  <span className="font-semibold text-sm">Remote</span>
+                </div>
               </div>
 
               {/* Stats/Info Row */}

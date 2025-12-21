@@ -165,18 +165,19 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         }
 
         // Use RPC function to check admin status (bypasses RLS)
+        // @ts-ignore
         const { data: adminCheckResult } = await supabase
-          .rpc('check_admin_status', { check_user_id: user.id });
+          .rpc('check_admin_status', { check_user_id: user.id } as any);
 
         console.log('[AdminRoute] Admin check result:', adminCheckResult);
 
-        const isAdminUser = adminCheckResult?.[0]?.is_admin === true;
+        const isAdminUser = adminCheckResult && (adminCheckResult as any)?.[0]?.is_admin === true;
         setIsAdmin(isAdminUser);
         
         if (isAdminUser) {
           console.log('[AdminRoute] ✅ Admin access granted via Supabase');
           localStorage.setItem('isAdmin', 'true');
-          localStorage.setItem('adminRole', adminCheckResult[0].role);
+          localStorage.setItem('adminRole', (adminCheckResult as any)[0].role);
           localStorage.setItem('adminSession', Date.now().toString());
         } else {
           console.log('[AdminRoute] ❌ Admin access denied - not an admin');
@@ -781,6 +782,11 @@ export const AppRouter: React.FC<RouterProps> = ({
         />
 
         <Route 
+          path="/admin/logs" 
+          element={<Navigate to="/admin/logs/auth" replace />}
+        />
+
+        <Route 
           path="/admin/logs/auth" 
           element={
             <AdminRoute>
@@ -811,6 +817,11 @@ export const AppRouter: React.FC<RouterProps> = ({
               </Suspense>
             </AdminRoute>
           } 
+        />
+
+        <Route 
+          path="/admin/integrations" 
+          element={<Navigate to="/admin/integrations/api-keys" replace />}
         />
 
         <Route 

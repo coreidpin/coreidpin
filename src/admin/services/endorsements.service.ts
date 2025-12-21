@@ -50,12 +50,7 @@ export class EndorsementsService extends BaseAPIClient {
         .from('endorsements')
         .select(`
           *,
-          project:projects(
-            title, 
-            user_id,
-            owner:profiles(email, full_name)
-          ),
-          endorser:profiles!endorsements_endorser_id_fkey(email, full_name, avatar_url)
+          endorser:profiles!endorsements_endorser_id_fkey(email)
         `, { count: 'exact' });
 
       // Apply filters
@@ -82,18 +77,28 @@ export class EndorsementsService extends BaseAPIClient {
 
       if (error) this.handleError(error);
 
-      const endorsements = (data || []).map(item => ({
+      const endorsements = ((data as any[]) || []).map(item => ({
         ...item,
-        project: Array.isArray(item.project) ? item.project[0] : item.project,
-        endorser: Array.isArray(item.endorser) ? item.endorser[0] : item.endorser
+        // project: handled by ...item if it exists, otherwise undefined
+        endorser: Array.isArray(item.endorser) 
+          ? {
+            ...item.endorser[0],
+            full_name: item.endorser[0].email
+          } 
+          : item.endorser ? {
+            ...item.endorser,
+            full_name: item.endorser.email
+          } : undefined
       }));
 
       // Handle nested project.owner if it comes back as array (it shouldn't with single join but good to be safe)
+      /* 
       endorsements.forEach(e => {
         if (e.project && Array.isArray(e.project.owner)) {
           e.project.owner = e.project.owner[0];
         }
       });
+      */
 
       return this.createPaginatedResponse(endorsements, count || 0, pagination);
     } catch (error) {
@@ -110,12 +115,8 @@ export class EndorsementsService extends BaseAPIClient {
         .from('endorsements')
         .select(`
           *,
-          project:projects(
-            title, 
-            user_id,
-            owner:profiles(email, full_name)
-          ),
-          endorser:profiles!endorsements_endorser_id_fkey(email, full_name, avatar_url)
+          
+          endorser:profiles!endorsements_endorser_id_fkey(email)
         `)
         .eq('id', id)
         .single();
@@ -123,14 +124,24 @@ export class EndorsementsService extends BaseAPIClient {
       if (error) this.handleError(error);
 
       const endorsement = {
-        ...data,
-        project: Array.isArray(data.project) ? data.project[0] : data.project,
-        endorser: Array.isArray(data.endorser) ? data.endorser[0] : data.endorser
+        ...(data as any),
+        // project: handled by spread if exists
+        endorser: Array.isArray((data as any).endorser) 
+          ? {
+            ...(data as any).endorser[0],
+            full_name: (data as any).endorser[0].email
+          }
+          : (data as any).endorser ? {
+            ...(data as any).endorser,
+            full_name: (data as any).endorser.email
+          } : undefined
       };
 
+      /*
       if (endorsement.project && Array.isArray(endorsement.project.owner)) {
         endorsement.project.owner = endorsement.project.owner[0];
       }
+      */
 
       return endorsement;
     } catch (error) {
@@ -143,12 +154,12 @@ export class EndorsementsService extends BaseAPIClient {
    */
   async approveEndorsement(id: string): Promise<Endorsement> {
     try {
-      const { data, error } = await this.supabase
-        .from('endorsements')
+      const { data, error } = await (this.supabase
+        .from('endorsements') as any)
         .update({ 
           verification_status: 'verified', 
           updated_at: new Date().toISOString() 
-        })
+        } as any)
         .eq('id', id)
         .select()
         .single();
@@ -166,12 +177,12 @@ export class EndorsementsService extends BaseAPIClient {
    */
   async rejectEndorsement(id: string): Promise<Endorsement> {
     try {
-      const { data, error } = await this.supabase
-        .from('endorsements')
+      const { data, error } = await (this.supabase
+        .from('endorsements') as any)
         .update({ 
           verification_status: 'rejected', 
           updated_at: new Date().toISOString() 
-        })
+        } as any)
         .eq('id', id)
         .select()
         .single();

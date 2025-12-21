@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '../../components/layout/AdminLayout';
-import { EmailVerificationLogsTable, EmailVerificationLog } from '../../components/logs/EmailVerificationLogsTable';
-import { EmailVerificationLogDetailModal } from '../../components/logs/EmailVerificationLogDetailModal';
+import { AdminLayout } from '../../layouts/AdminLayout';
+import { AuthLogsTable, AuthLog } from '../../components/logs/AuthLogsTable';
+import { AuthLogDetailModal } from '../../components/logs/AuthLogDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Search, Mail } from 'lucide-react';
@@ -20,11 +20,11 @@ import { EmptyState } from '../../components/EmptyState';
 import { Pagination } from '../../components/shared/DataTable/Pagination';
 
 export function EmailVerificationLogsPage() {
-  const [logs, setLogs] = useState<EmailVerificationLog[]>([]);
+  const [logs, setLogs] = useState<AuthLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedLog, setSelectedLog] = useState<EmailVerificationLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuthLog | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Pagination state
@@ -45,6 +45,7 @@ export function EmailVerificationLogsPage() {
       
       const filters: any = {};
       if (searchQuery) filters.search = searchQuery;
+      // Map status filter if needed, OR just use generic status filter
       if (statusFilter !== 'all') filters.status = statusFilter;
 
       const response = await logsService.getEmailVerificationLogs(
@@ -62,7 +63,7 @@ export function EmailVerificationLogsPage() {
     }
   };
 
-  const handleViewLog = (log: EmailVerificationLog) => {
+  const handleViewLog = (log: AuthLog) => {
     setSelectedLog(log);
     setIsModalOpen(true);
   };
@@ -138,9 +139,7 @@ export function EmailVerificationLogsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="verified">Verified</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="success">Success</SelectItem>
                     <SelectItem value="failed">Failed</SelectItem>
                   </SelectContent>
                 </Select>
@@ -160,7 +159,7 @@ export function EmailVerificationLogsPage() {
             </CardContent>
           </Card>
 
-          {/* Email Verification Logs Table */}
+          {/* Email Verification Logs Table (Reusing AuthLogsTable) */}
           <Card>
             <CardContent className="p-0">
               {!isLoading && logs.length === 0 ? (
@@ -178,7 +177,7 @@ export function EmailVerificationLogsPage() {
                 />
               ) : (
                 <>
-                  <EmailVerificationLogsTable
+                  <AuthLogsTable
                     logs={logs}
                     isLoading={isLoading}
                     onViewLog={handleViewLog}
@@ -196,7 +195,7 @@ export function EmailVerificationLogsPage() {
           </Card>
 
           {/* Email Verification Log Detail Modal */}
-          <EmailVerificationLogDetailModal
+          <AuthLogDetailModal
             log={selectedLog}
             isOpen={isModalOpen}
             onClose={handleCloseModal}

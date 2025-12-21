@@ -23,7 +23,7 @@ export interface UserProfile {
   id: string;
   email: string;
   full_name: string;
-  user_type: 'professional' | 'employer' | 'university';
+  user_type: 'professional' | 'employer' | 'university' | 'Unspecified' | 'Super Admin';
   created_at: string;
   status?: 'active' | 'suspended' | 'pending'; // Assuming status field exists or we derive it
   avatar_url?: string;
@@ -76,14 +76,23 @@ export function UsersTable({ users, isLoading, onViewUser }: UsersTableProps) {
                         {user.full_name?.charAt(0).toUpperCase() || '?'}
                       </div>
                     )}
-                    <span>{user.full_name || 'N/A'}</span>
+                    <span className="text-gray-900">{user.full_name || 'N/A'}</span>
                   </div>
                 </TableCell>
-                <TableCell>{user.email}</TableCell>
+                <TableCell className="text-gray-900">{user.email}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="capitalize">
-                    {user.user_type}
-                  </Badge>
+                  {user.user_type && user.user_type !== 'Unspecified' && (
+                    <Badge 
+                      variant="outline" 
+                      className={`capitalize border-gray-300 ${
+                        user.user_type === 'Super Admin' 
+                          ? 'bg-purple-100 text-purple-800 border-purple-200' 
+                          : 'text-gray-700'
+                      }`}
+                    >
+                      {user.user_type}
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Badge 
@@ -96,7 +105,7 @@ export function UsersTable({ users, isLoading, onViewUser }: UsersTableProps) {
                     {user.status || 'active'}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-gray-900">
                   {new Date(user.created_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right">

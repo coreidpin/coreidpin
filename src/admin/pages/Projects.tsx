@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '../components/layout/AdminLayout';
+import { AdminLayout } from '../layouts/AdminLayout';
 import { ProjectsTable, Project } from '../components/projects/ProjectsTable';
 import { ProjectDetailModal } from '../components/projects/ProjectDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';

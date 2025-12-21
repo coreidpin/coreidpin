@@ -48,24 +48,26 @@ export class LogsService extends BaseAPIClient {
    */
   async getAuthLogs(
     filters: LogFilters = {},
-    pagination: PaginationParams = { page: 1, pageSize: 10 }
+    pagination: PaginationParams = { page: 1, pageSize: 15 }
   ): Promise<PaginatedResponse<AuthLog>> {
     try {
+      // Query audit_events which contains actual system activity
+      // Note: No foreign key to profiles, so we can't join directly
       let query = this.supabase
-        .from('auth_logs')
+        .from('audit_events')
         .select('*', { count: 'exact' });
 
       if (filters.search) {
-        query = query.or(`user_email.ilike.%${filters.search}%,ip_address.ilike.%${filters.search}%`);
-      }
-
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        // Search in event_type or cast meta to text for search
+        query = query.ilike('event_type', `%${filters.search}%`);
       }
 
       if (filters.eventType && filters.eventType !== 'all') {
         query = query.eq('event_type', filters.eventType);
       }
+
+      // Filter by status is tricky since it's derived. 
+      // We'll skip DB filtering for status for now or assume specific events map to status.
 
       query = this.applyPagination(query, pagination);
       query = query.order('created_at', { ascending: false });
@@ -74,7 +76,47 @@ export class LogsService extends BaseAPIClient {
 
       if (error) this.handleError(error);
 
-      return this.createPaginatedResponse(data || [], count || 0, pagination);
+      // Fetch user emails manually since we can't join
+      const userIds = (data || [])
+        .map((e: any) => e.user_id)
+        .filter((id: string) => id); // Filter out nulls
+      
+      let userMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: users } = await this.supabase
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', userIds);
+          
+        if (users) {
+          users.forEach((u: any) => {
+            userMap[u.user_id] = u.email;
+          });
+        }
+      }
+
+      // Map audit_events to AuthLog interface
+      const logs: AuthLog[] = (data || []).map((event: any) => {
+        const meta = event.meta || {};
+        const isFailure = event.event_type.includes('failed') || event.event_type.includes('error');
+        const userEmail = userMap[event.user_id] || meta.email || (event.user_id ? 'Registered User' : 'Visitor');
+        
+        return {
+          id: event.id,
+          user_id: event.user_id,
+          user_email: userEmail,
+          event_type: event.event_type,
+          status: isFailure ? 'failed' : 'success',
+          ip_address: meta.ip || 'N/A',
+          user_agent: meta.user_agent || 'N/A',
+          location: meta.location || 'N/A',
+          created_at: event.created_at,
+          metadata: meta
+        };
+      });
+
+      return this.createPaginatedResponse(logs, count || 0, pagination);
     } catch (error) {
       this.handleError(error);
     }
@@ -85,19 +127,21 @@ export class LogsService extends BaseAPIClient {
    */
   async getPINLoginLogs(
     filters: LogFilters = {},
-    pagination: PaginationParams = { page: 1, pageSize: 10 }
-  ): Promise<PaginatedResponse<PINLoginLog>> {
+    pagination: PaginationParams = { page: 1, pageSize: 15 }
+  ): Promise<PaginatedResponse<AuthLog>> {
     try {
+      // Query audit_events for PIN related events
       let query = this.supabase
-        .from('pin_login_logs')
-        .select('*', { count: 'exact' });
+        .from('audit_events')
+        .select('*', { count: 'exact' })
+        .ilike('event_type', 'pin_%'); // Filter for PIN events
 
       if (filters.search) {
-        query = query.or(`user_email.ilike.%${filters.search}%,ip_address.ilike.%${filters.search}%`);
+        query = query.ilike('event_type', `%${filters.search}%`);
       }
 
       if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+         // rough status mapping if needed, or skip
       }
 
       query = this.applyPagination(query, pagination);
@@ -107,7 +151,40 @@ export class LogsService extends BaseAPIClient {
 
       if (error) this.handleError(error);
 
-      return this.createPaginatedResponse(data || [], count || 0, pagination);
+      // Fetch user emails manually
+      const userIds = (data || []).map((e: any) => e.user_id).filter((id: string) => id);
+      let userMap: Record<string, string> = {};
+      
+      if (userIds.length > 0) {
+        const { data: users } = await this.supabase
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', userIds);
+          
+        if (users) {
+          users.forEach((u: any) => userMap[u.user_id] = u.email);
+        }
+      }
+
+      const logs: AuthLog[] = (data || []).map((event: any) => {
+        const meta = event.meta || {};
+        const isFailure = event.event_type.includes('failed') || event.event_type.includes('error');
+        
+        return {
+          id: event.id,
+          user_id: event.user_id,
+          user_email: userMap[event.user_id] || meta.email || (event.user_id ? 'Registered User' : 'Visitor'),
+          event_type: event.event_type,
+          status: isFailure ? 'failed' : 'success',
+          ip_address: meta.ip || 'N/A',
+          user_agent: meta.user_agent || 'N/A',
+          location: meta.location || 'N/A',
+          created_at: event.created_at,
+          metadata: meta
+        };
+      });
+
+      return this.createPaginatedResponse(logs, count || 0, pagination);
     } catch (error) {
       this.handleError(error);
     }

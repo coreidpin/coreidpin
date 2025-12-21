@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '../components/layout/AdminLayout';
+import { AdminLayout } from '../layouts/AdminLayout';
 import { EndorsementsTable, Endorsement } from '../components/endorsements/EndorsementsTable';
 import { EndorsementDetailModal } from '../components/endorsements/EndorsementDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';

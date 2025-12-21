@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AdminLayout } from '../../components/layout/AdminLayout';
+import { AdminLayout } from '../../layouts/AdminLayout';
 import { AuthLogsTable, AuthLog } from '../../components/logs/AuthLogsTable';
 import { AuthLogDetailModal } from '../../components/logs/AuthLogDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
@@ -139,12 +139,12 @@ export function AuthLogsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Events</SelectItem>
-                    <SelectItem value="login">Login</SelectItem>
-                    <SelectItem value="logout">Logout</SelectItem>
-                    <SelectItem value="failed_login">Failed Login</SelectItem>
-                    <SelectItem value="password_reset">Password Reset</SelectItem>
-                    <SelectItem value="email_verification">Email Verification</SelectItem>
-                    <SelectItem value="session_expired">Session Expired</SelectItem>
+                    <SelectItem value="registration_started">Registration Started</SelectItem>
+                    <SelectItem value="otp_sent">OTP Sent</SelectItem>
+                    <SelectItem value="otp_verified">OTP Verified</SelectItem>
+                    <SelectItem value="pin_issued">PIN Issued</SelectItem>
+                    <SelectItem value="email_verified">Email Verified</SelectItem>
+                    <SelectItem value="welcome_email_sent">Welcome Email</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select

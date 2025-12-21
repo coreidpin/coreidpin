@@ -771,6 +771,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         recovery_email: (profileData as any)?.recovery_email || '',
         linkedin: (profileData as any)?.linkedin || '',
         website: (profileData as any)?.website || '',
+        booking_url: (profileData as any)?.booking_url || '',
         twitter: '',
         availability_status: (profileData as any)?.availability_status || 'actively_working',
         work_preference: (profileData as any)?.work_preference || 'remote',
@@ -1056,6 +1057,16 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         const webError = validators.url(formData.website, 'Website');
         if (webError) {
           toast.error(webError);
+          setSaving(false);
+          return;
+        }
+      }
+
+      // 6. Booking URL (Optional, but if set must be valid)
+      if ((formData as any).booking_url) {
+        const bookingError = validators.url((formData as any).booking_url, 'Booking URL');
+        if (bookingError) {
+          toast.error(bookingError);
           setSaving(false);
           return;
         }
@@ -1720,6 +1731,17 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                         className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
                         placeholder="Personal Website URL"
+                      />
+                    </div>
+                    <div className="relative">
+                      <div className="absolute left-3 top-2.5 text-slate-400">
+                        <Calendar className="h-4 w-4" />
+                      </div>
+                      <Input 
+                        value={(formData as any).booking_url || ''}
+                        onChange={(e) => setFormData({ ...formData, booking_url: e.target.value } as any)}
+                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
+                        placeholder="Booking URL (Calendly, Cal.com)"
                       />
                     </div>
                     <div className="relative">

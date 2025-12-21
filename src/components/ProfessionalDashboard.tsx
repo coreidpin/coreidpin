@@ -60,6 +60,7 @@ import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
 import { ProfileCompletionBanner } from './ProfileCompletionBanner';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
+import { LeadsWidget } from './dashboard/LeadsWidget';
 
 import { WelcomeModal } from './onboarding/WelcomeModal';
 import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
@@ -1236,6 +1237,16 @@ export function ProfessionalDashboard() {
             >
               Endorsements
             </TabsTrigger>
+            <TabsTrigger 
+              value="inquiries"
+              style={{
+                color: activeTab === 'inquiries' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'inquiries' ? '#000000' : 'transparent',
+                fontWeight: '600'
+              }}
+            >
+              Inquiries
+            </TabsTrigger>
           </TabsList>
 
           <AnimatePresence mode="wait">
@@ -1319,9 +1330,16 @@ export function ProfessionalDashboard() {
                     )}
                   </div>
                   
-                  <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
-                    <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
-                  </motion.div>
+                  <div className="grid grid-cols-1 gap-6">
+                    <motion.div 
+                      className="col-span-1"
+                      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} 
+                      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} 
+                      transition={reducedMotion ? undefined : { delay: 0.1 }}
+                    >
+                      <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
+                    </motion.div>
+                  </div>
                 </TabsContent>
               </motion.div>
             )}
@@ -1703,6 +1721,29 @@ export function ProfessionalDashboard() {
                 ))}
               </div>
             )}
+          </TabsContent>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Inquiries Tab */}
+    <AnimatePresence mode="wait">
+      {activeTab === 'inquiries' && (
+        <motion.div
+          key="inquiries"
+          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={reducedMotion ? undefined : { duration: 0.2 }}
+        >
+          <TabsContent value="inquiries" className="space-y-6 overflow-x-hidden">
+            <div className="flex flex-col gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Inquiries</h2>
+                <p className="text-gray-500 text-sm mt-1">Manage your incoming job leads and opportunities</p>
+              </div>
+              <LeadsWidget professionalId={(userProfile as any)?.user_id} currentPin={phonePin} />
+            </div>
           </TabsContent>
         </motion.div>
       )}
