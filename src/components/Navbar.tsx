@@ -275,7 +275,6 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  disabled={import.meta.env.PROD}
                   onClick={() => navigate('/login')}
                   className={cn(
                     "transition-colors",
@@ -288,7 +287,6 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
-                  disabled={import.meta.env.PROD}
                   onClick={() => handleLogin('professional')}
                   className={cn(
                     isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : ""
@@ -550,8 +548,7 @@ export function Navbar({
                               <Button 
                                 variant="outline" 
                                 className="relative w-full justify-between h-14 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#bfa5ff]/50 hover:shadow-lg hover:shadow-[#bfa5ff]/20 overflow-hidden group"
-                                disabled={isProd}
-                                onClick={() => { if (isProd) return; handleLogin('employer'); }}
+                                onClick={() => { handleLogin('employer'); }}
                               >
                                 {/* Ripple background on hover */}
                                 <span className="absolute inset-0 bg-gradient-to-r from-[#bfa5ff]/0 via-[#bfa5ff]/10 to-[#bfa5ff]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />

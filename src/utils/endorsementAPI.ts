@@ -142,6 +142,27 @@ export class EndorsementAPI {
   }
 
   /**
+   * Get endorsement by token (for public endorsement page)
+   */
+  static async getEndorsementByToken(token: string): Promise<{ success: boolean; endorsement?: any; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_endorsement_by_token' as any, { token_input: token });
+
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        return { success: false, error: 'Invalid or expired verification link' };
+      }
+
+      // RPC returns an array, take the first item
+      return { success: true, endorsement: data[0] };
+    } catch (error: any) {
+      console.error('Failed to verify token:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Write/submit an endorsement (by endorser)
    */
   static async submitEndorsement(
@@ -149,45 +170,24 @@ export class EndorsementAPI {
     data: WriteEndorsementForm
   ): Promise<{ success: boolean; endorsement?: ProfessionalEndorsement; error?: string }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: result, error } = await supabase.rpc('submit_endorsement_by_token' as any, {
+        token_input: token,
+        headline_input: data.headline,
+        text_input: data.text,
+        skills_input: data.skills_endorsed || [],
+        endorser_name_input: data.endorser_name,
+        endorser_role_input: data.endorser_role,
+        endorser_company_input: data.endorser_company,
+        endorser_linkedin_url_input: data.endorser_linkedin_url
+      });
 
-      // Verify token and get endorsement request
-      const { data: endorsement, error: fetchError } = await (supabase
-        .from('professional_endorsements_v2') as any)
-        .select()
-        .eq('verification_token', token)
-        .single();
-
-      if (fetchError || !endorsement) {
-        return { success: false, error: 'Invalid or expired verification link' };
+      if (error) throw error;
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
       }
 
-      // Check expiration
-      if (new Date(endorsement.verification_expires_at) < new Date()) {
-        return { success: false, error: 'Verification link has expired' };
-      }
-
-      // Update endorsement
-      const { data: updated, error: updateError } = await (supabase
-        .from('professional_endorsements_v2') as any)
-        .update({
-          headline: data.headline,
-          text: data.text,
-          template_used: data.template_used,
-          skills_endorsed: data.skills_endorsed,
-          status: 'pending_professional',
-          responded_at: new Date().toISOString(),
-          verified: true,
-          verified_at: new Date().toISOString(),
-          verification_token: null, // Clear token after use
-        })
-        .eq('id', endorsement.id)
-        .select()
-        .single();
-
-      if (updateError) throw updateError;
-
-      return { success: true, endorsement: updated as ProfessionalEndorsement };
+      return { success: true, endorsement: result.endorsement };
     } catch (error: any) {
       console.error('Failed to submit endorsement:', error);
       return { success: false, error: error.message };

@@ -35,7 +35,8 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
     if (isAuthenticated) {
       handleNavigate('dashboard');
     } else {
-      setShowWaitlist(true);
+      // Redirect to Get Started page instead of waitlist
+      navigate('/get-started');
       setTimeout(() => setIsNavigating(false), 500);
     }
   };
@@ -133,7 +134,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                     ) : (
                       <>
                         <Fingerprint className="h-5 w-5 mr-2" />
-                        {isAuthenticated ? 'Dashboard' : 'Join the Waitlist'}
+                        {isAuthenticated ? 'Dashboard' : 'Get Started'}
                         <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}

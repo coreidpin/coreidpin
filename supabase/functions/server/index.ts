@@ -153,19 +153,29 @@ app.post('/registration/send-otp', async (c) => {
         
         const smsResult = await smsResponse.json();
         logInfo('SMS sent via Termii', { request_id: requestId, status: smsResult.message_id ? 'success' : 'unknown' });
-      } catch (smsError) {
-        logError('SMS sending failed', smsError, { request_id: requestId });
+      } catch (smsError: any) {
+        // FAILSAFE: If SMS fails, we log the OTP and allow the user to proceed.
+        // This prevents registration blocks due to third-party API issues.
+        console.error('FAILSAFE: SMS failed. Serving OTP to console.', { phone, otp });
+        
+        const errorMessage = smsError instanceof Error ? smsError.message : String(smsError);
+        console.error('Detailed SMS Error:', errorMessage);
+        
+        // Log to DB logging but do not crash
+        logError('SMS sending failed (Soft Fail)', smsError, { request_id: requestId });
       }
     } else {
       // Safe logging: Only log in dev, sanitized in prod
       await logOTPRequest('phone', phone, requestId);
-      logDebug('TEST MODE - OTP generated', { request_id: requestId, phone, otp });
+      console.log('TEST MODE - OTP generated:', { phone, otp });
     }
     
     return c.json({ 
       success: true, 
       reg_token: regToken,
-      expires_in: 600
+      expires_in: 600,
+      // In dev/debug mode, we might want to return the OTP in the body for easier testing
+      // debug_otp: otp 
     });
   } catch (error) {
     logError('Registration OTP failed', error, { request_id: requestId });

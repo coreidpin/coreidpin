@@ -44,22 +44,15 @@ export function EndorsementPage() {
 
       try {
         // Fetch endorsement details by token
-        const { data, error } = await (supabase
-          .from('professional_endorsements_v2') as any)
-          .select(`
-            *,
-            professional:professional_id (
-              raw_user_meta_data
-            )
-          `)
-          .eq('verification_token', token)
-          .single();
+        const result = await EndorsementAPI.getEndorsementByToken(token);
 
-        if (error || !data) {
-          setError('This endorsement link is invalid or has expired.');
+        if (!result.success || !result.endorsement) {
+          setError(result.error || 'This endorsement link is invalid or has expired.');
           setLoading(false);
           return;
         }
+
+        const data = result.endorsement;
 
         if (data.status === 'accepted' || data.status === 'rejected') {
           setError('This endorsement request has already been processed.');
@@ -78,10 +71,13 @@ export function EndorsementPage() {
           endorser_linkedin_url: data.endorser_linkedin_url || ''
         }));
 
-        // Get professional's name
-        const meta = data.professional?.raw_user_meta_data;
-        if (meta?.name || meta?.full_name) {
-          setProfessionalName(meta.name || meta.full_name);
+        // Get professional's name - API returns it flattened
+        if (data.professional_name) {
+          setProfessionalName(data.professional_name);
+        } else if (data.professional?.raw_user_meta_data) {
+           // Fallback for legacy structure if any
+           const meta = data.professional.raw_user_meta_data;
+           setProfessionalName(meta.name || meta.full_name || 'The professional');
         }
       } catch (err) {
         console.error('Error verifying token:', err);
@@ -119,6 +115,24 @@ export function EndorsementPage() {
       if (result.success) {
         setSuccess(true);
         toast.success('Endorsement submitted successfully!');
+
+        // Notify professional via backend
+        if (result.endorsement?.id) {
+          try {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+             // Using fetch to trigger the notification without blocking the UI
+             fetch(`${supabaseUrl}/functions/v1/server/endorsements/notify-submission`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+              },
+              body: JSON.stringify({ endorsementId: result.endorsement.id })
+            }).catch(err => console.error('Failed to trigger notification:', err));
+          } catch (notifyError) {
+            console.error('Notification trigger error:', notifyError);
+          }
+        }
       } else {
         toast.error(result.error || 'Failed to submit endorsement');
       }

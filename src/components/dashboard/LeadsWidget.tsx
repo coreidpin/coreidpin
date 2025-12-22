@@ -64,7 +64,7 @@ export function LeadsWidget({ professionalId, currentPin }: LeadsWidgetProps) {
            const result = await supabase
             .from('job_leads')
             .select('*')
-            // .eq('professional_id', userId) // Reliant on RLS
+            .eq('professional_id', userId) // Enforce filter explicitly
             .order('created_at', { ascending: false })
             .limit(5);
             

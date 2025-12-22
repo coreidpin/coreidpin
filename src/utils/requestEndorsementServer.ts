@@ -1,4 +1,5 @@
-import { supabase, supabaseUrl } from './supabase/client';
+import { supabaseUrl } from './supabase/client';
+import { ensureValidSession } from './session';
 import type { RequestEndorsementForm, ProfessionalEndorsement } from '../types/endorsement';
 
 /**
@@ -9,9 +10,10 @@ export async function requestEndorsementViaServer(
   data: RequestEndorsementForm
 ): Promise<{ success: boolean; endorsement?: ProfessionalEndorsement; error?: string }> {
   try {
-    // Get current session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.access_token) {
+    // Get current session with automatic refresh if needed
+    const accessToken = await ensureValidSession();
+    
+    if (!accessToken) {
       throw new Error('Not authenticated - Please log in again');
     }
 
@@ -19,7 +21,7 @@ export async function requestEndorsementViaServer(
     const response = await fetch(`${supabaseUrl}/functions/v1/server/endorsements/request-v2`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(data)

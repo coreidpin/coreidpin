@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from '../ui/label';
 import { Building2, CheckCircle2, Shield, Loader2, Lock, Mail, Plus } from 'lucide-react';
 import { supabase, supabaseUrl } from '../../utils/supabase/client';
+import { ensureValidSession } from '../../utils/session';
 import { toast } from 'sonner';
 import { EMPLOYMENT_TYPE_OPTIONS } from '../../utils/employmentTypes';
 import type { EmploymentType } from '../../utils/employmentTypes';
@@ -124,12 +125,14 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
 
     setActionLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = await ensureValidSession();
+      if (!accessToken) throw new Error('Authentication failed');
+      
       const response = await fetch(`${supabaseUrl}/functions/v1/work-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           action: 'send-code',
@@ -155,12 +158,14 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
   const handleVerifyCode = async () => {
     setActionLoading(true);
     try {
-       const { data: { session } } = await supabase.auth.getSession();
+       const accessToken = await ensureValidSession();
+       if (!accessToken) throw new Error('Authentication failed');
+
        const response = await fetch(`${supabaseUrl}/functions/v1/work-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           action: 'verify-code',

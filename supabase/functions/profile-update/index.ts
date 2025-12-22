@@ -2,6 +2,12 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { createClient } from "npm:@supabase/supabase-js";
 
+// Deno globals
+declare const Deno: any;
+
+import { buildWelcomeEmail } from "../server/templates/welcome.ts";
+import { issuePinToUser, verifyPin } from "../_shared/pinService.ts";
+
 const app = new Hono();
 
 const supabase = createClient(
@@ -15,6 +21,16 @@ app.use("/*", cors({
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: false,
 }));
+
+// Helper to hash data
+async function hashData(data: string, salt: string = ''): Promise<string> {
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(data + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 // Verify JWT and extract user ID
 async function verifyToken(token: string): Promise<{ userId: string } | null> {
@@ -98,9 +114,45 @@ app.put('*', async (c) => {
     }
 
     const body = await c.req.json();
-    
+
     // Remove sensitive fields that shouldn't be updated via this endpoint
     const { user_id, created_at, ...updates } = body;
+
+    // STRICT CHECK: Phone Uniqueness & Identity Sync
+    if (updates.phone) {
+      const contact = updates.phone.trim().toLowerCase();
+      // 1. Hash contact
+      const contactHash = await hashData(contact, Deno.env.get('SERVER_SALT') ?? 'default-salt');
+
+      // 2. Check overlap
+      const { data: existingUser } = await supabase
+        .from('identity_users')
+        .select('user_id')
+        .eq('phone_hash', contactHash)
+        .neq('user_id', auth.userId) // Exclude self
+        .maybeSingle();
+
+      if (existingUser) {
+          console.warn(`Block Profile Update: Phone ${contact} already used by ${existingUser.user_id}`);
+          return c.json({ error: 'This phone number is already linked to another account.' }, 400);
+      }
+      
+      // 3. Sync to identity_users (CRITICAL: Enables login with new phone)
+      const { error: identityError } = await supabase
+        .from('identity_users')
+        .update({ 
+            phone_hash: contactHash,
+            updated_at: new Date().toISOString()
+        })
+        .eq('user_id', auth.userId);
+        
+      if (identityError) {
+          console.error('Failed to sync phone update to identity_users:', identityError);
+          // Continue, but log critical error
+      } else {
+          console.log(`Synced new phone hash for user ${auth.userId}`);
+      }
+    }
 
     // Update profile using service role (bypasses RLS)
     const { data, error } = await supabase

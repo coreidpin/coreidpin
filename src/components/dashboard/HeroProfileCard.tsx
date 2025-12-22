@@ -5,7 +5,7 @@ import { Badge } from '../ui/badge';
 import { BetaBadge } from '../ui/BetaBadge';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
 import { gradients, glassMorphism } from '../../styles/shadows';
-import { HolidayGiftWidget } from '../ui/christmas-effects';
+
 
 interface HeroProfileCardProps {
   name: string;
@@ -58,10 +58,7 @@ export function HeroProfileCard({
       <div className="relative z-10 p-6 flex flex-col justify-between h-full min-h-[200px]">
         {/* Top Row: Gift Icon (left) and Beta Badge (right) */}
         <div className="flex justify-between items-start">
-          {/* Holiday Gift Widget - positioned in card */}
-          <div className="relative">
-            <HolidayGiftWidget />
-          </div>
+
           
           {/* Beta Badge */}
           {isBetaTester && (

@@ -81,10 +81,133 @@ endorsements.post("/request-v2", async (c) => {
       return c.json({ success: false, error: insertError.message }, 400);
     }
 
+    // Send email notification
+    if (endorser_email) {
+      const origin = c.req.header('origin') || c.req.header('referer') || 'https://gidipin.com';
+      const verificationUrl = `${origin}/endorse/${verification_token}`;
+      const professionalName = user.user_metadata?.name || 'A professional';
+      
+      const subject = `${professionalName} requested a professional endorsement`;
+      
+      const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>Professional Endorsement Request</h2>
+          <p><strong>${professionalName}</strong> has asked for your professional endorsement on GidiPIN.</p>
+          
+          <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #4b5563;">"${custom_message || 'I would appreciate your endorsement of my skills and work.'}"</p>
+          </div>
+
+          <p>Please click the button below to verify and write your endorsement. It only takes a minute.</p>
+          
+          <a href="${verificationUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Write Endorsement
+          </a>
+          
+          <p style="margin-top: 24px; font-size: 14px; color: #6b7280;">
+            Or copy this link: <br>
+            <a href="${verificationUrl}">${verificationUrl}</a>
+          </p>
+        </div>
+      `;
+
+      const text = `
+        Professional Endorsement Request
+        
+        ${professionalName} has asked for your professional endorsement on GidiPIN.
+        
+        Message: "${custom_message || 'I would appreciate your endorsement of my skills and work.'}"
+        
+        Click here to endorse: ${verificationUrl}
+      `;
+
+      // Run in background (don't await)
+      sendEmail(endorser_email, subject, html, text, { userId: user.id })
+        .catch(err => console.error('Failed to send endorsement email:', err));
+    }
+
     return c.json({ success: true, endorsement });
   } catch (error: any) {
     console.error('Request endorsement error:', error);
     return c.json({ success: false, error: 'Failed to request endorsement' }, 500);
+  }
+});
+
+// POST /endorsements/notify-submission - Notify professional of new endorsement
+endorsements.post("/notify-submission", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { endorsementId } = body;
+
+    if (!endorsementId) {
+      return c.json({ error: "Endorsement ID is required" }, 400);
+    }
+
+    const supabase = getSupabaseClient();
+
+    // Fetch endorsement and professional details securely (service role)
+    const { data: endorsement, error } = await supabase
+      .from('professional_endorsements_v2')
+      .select(`
+        *,
+        professional:professional_id (
+          email,
+          raw_user_meta_data
+        )
+      `)
+      .eq('id', endorsementId)
+      .single();
+
+    if (error || !endorsement) {
+      console.error('Endorsement not found for notification:', error);
+      return c.json({ error: "Endorsement not found" }, 404);
+    }
+
+    const professionalEmail = endorsement.professional?.email;
+    const professionalName = endorsement.professional?.raw_user_meta_data?.name || 'Professional';
+    const endorserName = endorsement.endorser_name;
+
+    if (professionalEmail) {
+      const dashboardUrl = `${c.req.header('origin') || 'https://gidipin.com'}/dashboard?tab=endorsements`;
+      
+      const subject = `You received a new endorsement from ${endorserName}`;
+      
+      const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2>New Endorsement Received!</h2>
+          <p><strong>${endorserName}</strong> has processed your endorsement request.</p>
+          
+          <div style="background-color: #f9fafb; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; color: #4b5563;">"${endorsement.text}"</p>
+          </div>
+
+          <p>Log in to your dashboard to review and accept this endorsement.</p>
+          
+          <a href="${dashboardUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            Review Endorsement
+          </a>
+        </div>
+      `;
+
+      const text = `
+        New Endorsement Received!
+        
+        ${endorserName} has processed your endorsement request.
+        
+        "${endorsement.text}"
+        
+        Log in to review: ${dashboardUrl}
+      `;
+
+      // Run in background
+      sendEmail(professionalEmail, subject, html, text, { userId: endorsement.professional_id })
+        .catch(err => console.error('Failed to send notification email:', err));
+    }
+
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Notify submission error:', error);
+    return c.json({ success: false, error: error.message }, 500);
   }
 });
 
@@ -101,7 +224,7 @@ endorsements.get("/", async (c) => {
     const status = c.req.query('status');
 
     let query = supabase
-      .from('professional_endorsements')
+      .from('professional_endorsements_v2')
       .select('*')
       .eq('professional_id', user.id)
       .order('created_at', { ascending: false });

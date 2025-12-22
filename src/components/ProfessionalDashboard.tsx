@@ -878,6 +878,14 @@ export function ProfessionalDashboard() {
 
   useEffect(() => {
     fetchEndorsements();
+
+    // Refresh on window focus to catch external updates (e.g. endorsements submitted)
+    const onFocus = () => {
+      fetchEndorsements();
+    };
+
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   // Reduced motion preference
@@ -2263,6 +2271,9 @@ export function ProfessionalDashboard() {
         onAllow={handleNotificationAllow}
         onDeny={handleNotificationDeny}
       />
+
+      
+      <HolidayGiftWidget />
       </div>
       </ErrorBoundary>
     </div>
