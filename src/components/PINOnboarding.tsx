@@ -150,7 +150,9 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
             name: typeof skill === 'string' ? skill : skill,
             level: 'Intermediate',
             verified: false
-          }))
+          })),
+          usePhoneAsPin: !!formData.phone,
+          phoneNumber: formData.phone
         };
 
         console.log('Creating PIN with payload:', pinPayload);

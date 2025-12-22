@@ -40,7 +40,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <Button 
                 onClick={onAddProject}
                 variant="outline" 
-                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
               >
                 <Plus className="h-6 w-6 text-black mb-1" />
                 <span className="text-xs font-medium text-center leading-tight">Add Project</span>
@@ -51,7 +51,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <Button 
                 onClick={onAddCaseStudy}
                 variant="outline" 
-                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
               >
                 <FileText className="h-6 w-6 text-purple-600 mb-1" />
                 <span className="text-xs font-medium text-center leading-tight">Create Case Study</span>
@@ -62,7 +62,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <Button 
                 onClick={onRequestEndorsement}
                 variant="outline" 
-                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
               >
                 <UserPlus className="h-6 w-6 text-black mb-1" />
                 <span className="text-xs font-medium text-center leading-tight">Request Endorsement</span>
@@ -72,7 +72,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             <Button 
               onClick={() => window.location.href = '/identity-management'}
               variant="outline" 
-              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
             >
               <Fingerprint className="h-6 w-6 text-purple-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">Manage Identity</span>
@@ -87,56 +87,32 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
                 }
               }}
               variant="outline" 
-              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
             >
               <Eye className="h-6 w-6 text-green-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">View Public Profile</span>
             </Button>
             
             
-            {/* Download Badge - Only enabled if verified */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={isVerified ? onDownloadBadge : undefined}
-                    variant="outline" 
-                    className={`h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal ${
-                      !isVerified ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                    disabled={!isVerified}
-                  >
-                    <Download className={`h-6 w-6 mb-1 ${isVerified ? 'text-blue-600' : 'text-gray-400'}`} />
-                    <span className="text-xs font-medium text-center leading-tight">
-                      Download Badge
-                      {!isVerified && <span className="block text-[10px] text-gray-500 mt-0.5">Complete Profile</span>}
-                    </span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  {isVerified ? (
-                    <p className="text-sm">
-                      <strong>Download your verification badge!</strong><br />
-                      Share your verified professional status on LinkedIn, Twitter, and other social platforms.
-                    </p>
-                  ) : (
-                    <p className="text-sm">
-                      <strong>Complete your profile to unlock:</strong><br />
-                      ✓ Verify your email<br />
-                      ✓ Add your job title<br />
-                      ✓ Add at least 1 work experience
-                    </p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Download Badge / Share Profile */}
+            <Button 
+              onClick={onDownloadBadge}
+              variant="outline" 
+              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+            >
+              <Download className="h-6 w-6 text-blue-600 mb-1" />
+              <span className="text-xs font-medium text-center leading-tight">
+                Download Badge
+                <span className="block text-[10px] text-gray-500 mt-0.5">Share Profile</span>
+              </span>
+            </Button>
             
-            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
+            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
               <Phone className="h-6 w-6 text-purple-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">Update Phone</span>
             </Button>
             
-            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
+            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
               <Share2 className="h-6 w-6 text-green-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">Share PIN</span>
             </Button>
@@ -152,7 +128,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               <Button 
                 onClick={() => window.location.href = '/referrals'}
                 variant="outline" 
-                className="w-full h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal relative overflow-hidden"
+                className="w-full h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal relative overflow-hidden"
               >
                 <Users className="h-6 w-6 text-green-600 mb-2" />
                 <span className="text-xs font-medium text-center leading-tight">Invite & Earn</span>
@@ -162,7 +138,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             <Button 
               onClick={() => window.location.href = '/security'}
               variant="outline" 
-              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+              className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
             >
               <Settings className="h-6 w-6 text-blue-600 mb-1" />
               <span className="text-xs font-medium text-center leading-tight">Security Settings</span>

@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js";
 import { getAuthUser } from "../lib/supabaseClient.tsx";
 import { issuePinToUser } from "../../_shared/pinService.ts";
 import { checkRateLimit } from "../../_shared/rateLimiter.ts";
+import * as kv from "../kv_store.tsx";
 
 const app = new Hono();
 
@@ -133,6 +134,84 @@ app.post("/verify-email", async (c) => {
       success: false, 
       error: error.message 
     }, 500);
+  }
+});
+
+// Convert Phone to PIN
+app.post("/convert-phone", async (c) => {
+  try {
+    const { user, supabase } = await getAuthUser(c);
+    
+    if (!user) {
+      return c.json({ success: false, error: "Unauthorized" }, 401);
+    }
+
+    const { phoneNumber } = await c.req.json();
+
+    if (!phoneNumber) {
+      return c.json({ success: false, error: "Phone number is required" }, 400);
+    }
+    
+    // Sanitize
+    const newPin = phoneNumber.replace(/\D/g, '');
+
+    // Get existing PIN
+    const { data: existingPin } = await supabase
+      .from('professional_pins')
+      .select('id, pin_number')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!existingPin) {
+      return c.json({ success: false, error: "No PIN found" }, 404);
+    }
+
+    // Check if new PIN is already in use
+    const { data: conflict } = await supabase
+      .from('professional_pins')
+      .select('id')
+      .eq('pin_number', newPin)
+      .neq('user_id', user.id)
+      .single();
+
+    if (conflict) {
+      return c.json({ success: false, error: "This phone number is already used as a PIN by another user" }, 409);
+    }
+
+    // Update PIN
+    const { error: updateError } = await supabase
+      .from('professional_pins')
+      .update({ 
+        pin_number: newPin,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingPin.id);
+
+    if (updateError) {
+      console.error('Update PIN error:', updateError);
+      throw new Error('Failed to update PIN');
+    }
+
+    // Refresh KV
+    try {
+      await kv.set(`pin:${newPin}`, { 
+        pinId: existingPin.id, 
+        userId: user.id, 
+        pinNumber: newPin, 
+        updatedAt: new Date().toISOString() 
+      });
+      // Delete old key if different
+      if (existingPin.pin_number !== newPin) {
+        await kv.del(`pin:${existingPin.pin_number}`);
+      }
+    } catch (err) {
+      console.log('KV update warning:', err);
+    }
+
+    return c.json({ success: true, pinNumber: newPin });
+  } catch (error: any) {
+    console.error("Convert PIN error:", error);
+    return c.json({ success: false, error: error.message || "Failed to convert PIN" }, 500);
   }
 });
 

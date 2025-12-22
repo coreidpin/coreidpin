@@ -36,8 +36,9 @@ export function GeneralSettingsForm() {
     try {
       await settingsService.updateSystemSettings(settings);
       toast.success('Settings updated successfully');
-    } catch (error) {
-      toast.error('Failed to update settings');
+    } catch (error: any) {
+      console.error('Settings update failed:', error);
+      toast.error(`Failed to update settings: ${error.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }

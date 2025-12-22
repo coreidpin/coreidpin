@@ -492,6 +492,21 @@ class APIClient {
     return response.json();
   }
 
+  async convertPhoneToPIN(phoneNumber: string, accessToken: string) {
+    const response = await this.fetchWithRetry(`${BASE_URL}/pin/convert-phone`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ phoneNumber })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to convert PIN');
+    }
+
+    return response.json();
+  }
+
   async getUserPIN(userId: string, accessToken: string) {
     const response = await this.fetchWithRetry(`${BASE_URL}/pin/user/${userId}`, {
       method: 'GET',

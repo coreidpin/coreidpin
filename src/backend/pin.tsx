@@ -105,7 +105,9 @@ pin.post("/create", async (c) => {
       githubUrl, 
       portfolioUrl,
       experiences = [],
-      skills = []
+      skills = [],
+      usePhoneAsPin = false,
+      phoneNumber = null
     } = body;
 
     console.log(`Creating PIN for user ${user.id}:`, { name, title, location });
@@ -125,16 +127,23 @@ pin.post("/create", async (c) => {
       }, 400);
     }
 
-    // Generate unique PIN number using database function
-    const { data: pinNumberData, error: pinGenError } = await supabase.rpc('generate_pin_number');
-    
-    if (pinGenError || !pinNumberData) {
-      console.log('PIN generation error:', pinGenError);
-      throw new Error('Failed to generate unique PIN number');
+    // Generate unique PIN number using database function or use phone number
+    let pinNumber;
+    if (usePhoneAsPin && phoneNumber) {
+      // Use provided phone number (sanitize to just digits)
+      pinNumber = phoneNumber.replace(/\D/g, '');
+      console.log(`Using phone number as PIN: ${pinNumber}`);
+    } else {
+      // Generate unique PIN number using database function
+      const { data: pinNumberData, error: pinGenError } = await supabase.rpc('generate_pin_number');
+      
+      if (pinGenError || !pinNumberData) {
+        console.log('PIN generation error:', pinGenError);
+        throw new Error('Failed to generate unique PIN number');
+      }
+      pinNumber = pinNumberData;
+      console.log(`Generated PIN number: ${pinNumber}`);
     }
-
-    const pinNumber = pinNumberData;
-    console.log(`Generated PIN number: ${pinNumber}`);
 
     // Create PIN record
     const { data: pinRecord, error: pinError } = await supabase
@@ -617,6 +626,87 @@ pin.post('/regenerate', async (c) => {
     return c.json({ success: true, pinNumber: newPin });
   } catch {
     return c.json({ error: 'Failed to regenerate PIN' }, 500);
+  }
+});
+
+// ============================================================================
+// CONVERT TO PHONE PIN
+// ============================================================================
+pin.post('/convert-phone', async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (!user?.id || authError) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { phoneNumber } = await c.req.json();
+
+    if (!phoneNumber) {
+      return c.json({ error: "Phone number is required" }, 400);
+    }
+    
+    // Sanitize
+    const newPin = phoneNumber.replace(/\D/g, '');
+
+    // Get existing PIN
+    const { data: existingPin } = await supabase
+      .from('professional_pins')
+      .select('id, pin_number')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!existingPin) {
+      return c.json({ error: "No PIN found" }, 404);
+    }
+
+    // Check if new PIN is already in use
+    const { data: conflict } = await supabase
+      .from('professional_pins')
+      .select('id')
+      .eq('pin_number', newPin)
+      .neq('user_id', user.id) // excluding self if already matches
+      .single();
+
+    if (conflict) {
+      return c.json({ error: "This phone number is already used as a PIN by another user" }, 409);
+    }
+
+    // Update PIN
+    const { error: updateError } = await supabase
+      .from('professional_pins')
+      .update({ 
+        pin_number: newPin,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingPin.id);
+
+    if (updateError) {
+      console.error('Update PIN error:', updateError);
+      throw new Error('Failed to update PIN');
+    }
+
+    // Refresh KV
+    try {
+      await kv.set(`pin:${newPin}`, { 
+        pinId: existingPin.id, 
+        userId: user.id, 
+        pinNumber: newPin, 
+        updatedAt: new Date().toISOString() 
+      });
+      // Delete old key if different
+      if (existingPin.pin_number !== newPin) {
+        await kv.del(`pin:${existingPin.pin_number}`);
+      }
+    } catch (err) {
+      console.log('KV update warning:', err);
+    }
+
+    return c.json({ success: true, pinNumber: newPin });
+  } catch (error: any) {
+    console.error("Convert PIN error:", error);
+    return c.json({ error: error.message || "Failed to convert PIN" }, 500);
   }
 });
 

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ProfileCompletionBannerProps {
   completion: number;
@@ -36,25 +35,23 @@ export function ProfileCompletionBanner({
           : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-500'
         }
       `}
+      style={{
+        margin: window.innerWidth < 768 ? '0 -12px 24px -12px' : undefined,
+        width: window.innerWidth < 768 ? 'calc(100% + 24px)' : undefined,
+      }}
     >
       <div className="flex items-start justify-between gap-4">
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {completion < 80 ? (
-              <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0" />
-            ) : (
-              <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
-            )}
-            <h4 className="font-semibold text-gray-900">
-              {completion < 50 
-                ? `Welcome ${userName}! Let's complete your profile`
-                : completion < 80
-                ? 'Almost there! Complete your profile'
-                : 'Final touches for your profile'
-              }
-            </h4>
-          </div>
+          {/* Title - no icon */}
+          <h4 className="font-semibold text-gray-900 mb-1">
+            {completion < 50 
+              ? `Welcome ${userName}! Let's complete your profile`
+              : completion < 80
+              ? 'Almost there! Complete your profile'
+              : 'Final touches for your profile'
+            }
+          </h4>
           
           <p className="text-sm text-gray-600 mb-3">
             <span className="font-medium">{completion}% complete</span>

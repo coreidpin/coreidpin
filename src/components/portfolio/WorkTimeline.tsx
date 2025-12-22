@@ -103,7 +103,7 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
   return (
     <div className="relative">
       {/* Timeline Line */}
-      <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-gray-300" />
+      <div className="absolute left-3 md:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 to-gray-300" />
 
       <div className="space-y-8">
         {years.map((year, yearIndex) => (
@@ -115,14 +115,14 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
               transition={{ delay: yearIndex * 0.1 }}
               className="sticky top-4 z-10 mb-4 flex items-center gap-4"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">{year}</span>
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg transform -translate-x-1/4 md:translate-x-0">
+                <span className="text-white font-bold text-sm md:text-lg">{year}</span>
               </div>
               <div className="h-px flex-1 bg-gradient-to-r from-blue-500/50 to-transparent" />
             </motion.div>
 
             {/* Experience Cards for this year */}
-            <div className="space-y-6 ml-14 md:ml-24">
+            <div className="space-y-6 ml-8 md:ml-24">
               {groupedByYear[year].map((exp, expIndex) => (
                 <motion.div
                   key={exp.id}
@@ -132,7 +132,7 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                   className="relative"
                 >
                   {/* Connection Dot */}
-                  <div className="absolute -left-20 top-6">
+                  <div className="absolute -left-[1.65rem] md:-left-20 top-6 z-10">
                     <div className={`w-4 h-4 rounded-full border-4 ${
                       exp.is_current 
                         ? 'bg-green-500 border-green-200 shadow-lg shadow-green-500/50 animate-pulse' 
@@ -146,7 +146,7 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                       ? 'border-green-500/50 bg-gradient-to-br from-green-50/50 via-white to-emerald-50/30 shadow-lg shadow-green-500/10' 
                       : 'border-gray-200/60 bg-white hover:border-gray-300 shadow-md'
                   }`}>
-                    <CardContent className="p-5 md:p-7">
+                    <CardContent className="p-4 md:p-7">
                       <div className="flex items-start gap-4 md:gap-6">
                         {/* Company Logo - Auto-fetched from shared database */}
                         <div className="flex-shrink-0">

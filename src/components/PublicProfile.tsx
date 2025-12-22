@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Shield, Phone, Mail, Briefcase, MapPin, Calendar,
-  CheckCircle2, ExternalLink, Globe, FolderOpen
+  CheckCircle2, ExternalLink, Globe, FolderOpen,
+  Linkedin, Twitter, Github, Instagram, Facebook, Youtube,
+  ArrowLeft
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -133,7 +135,17 @@ export const PublicProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0b0d] text-white py-12">
+    <div className="min-h-screen bg-[#0a0b0d] text-white py-12 relative">
+      {/* Back Button - Fixed for visibility */}
+      <Button
+        variant="outline" 
+        className="fixed top-4 left-4 z-50 bg-black/50 backdrop-blur-md border-white/20 text-white hover:bg-white/20 hover:text-white"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+
       <div className="container mx-auto px-4 max-w-4xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -213,6 +225,36 @@ export const PublicProfile: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Social Links */}
+                  {profile.social_links && profile.social_links.length > 0 && (
+                    <div className="flex gap-4 mb-6">
+                      {profile.social_links.map((link: any, index: number) => {
+                         const Icon = {
+                           linkedin: Linkedin,
+                           twitter: Twitter,
+                           github: Github,
+                           instagram: Instagram,
+                           facebook: Facebook,
+                           youtube: Youtube,
+                           website: Globe,
+                           other: Globe
+                         }[link.platform.toLowerCase()] || Globe;
+                         
+                         return (
+                           <a 
+                             key={index} 
+                             href={link.url} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all hover:scale-110 border border-white/5 hover:border-[#32f08c]/30"
+                           >
+                             <Icon className="h-5 w-5" />
+                           </a>
+                         );
+                      })}
+                    </div>
+                  )}
+
                   {/* Contact Info */}
                   <div className="flex flex-wrap justify-center gap-4 text-sm text-white/60 pt-2">
                     {profile.city && (
@@ -282,15 +324,19 @@ export const PublicProfile: React.FC = () => {
           {/* Work Experience */}
           {workExperiences.length > 0 && (
             <Card className="bg-[#0e0f12]/80 border-[#1a1b1f]/50">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-[#32f08c]" />
-                  Work Experience
-                </h2>
-                <WorkTimeline 
-                  experiences={workExperiences} 
-                  showProofBadges={true} 
-                />
+              <CardContent className="p-0 sm:p-6">
+                <div className="p-6 sm:p-0 mb-0 sm:mb-6">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-[#32f08c]" />
+                    Work Experience
+                  </h2>
+                </div>
+                <div className="px-2 sm:px-0 pb-6 sm:pb-0">
+                  <WorkTimeline 
+                    experiences={workExperiences} 
+                    showProofBadges={true} 
+                  />
+                </div>
               </CardContent>
             </Card>
           )}

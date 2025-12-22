@@ -17,9 +17,13 @@ import {
   Loader2,
   CheckCircle2,
   Award,
-  Globe,
   Linkedin,
   Twitter,
+  Github,
+  Instagram,
+  Facebook,
+  Youtube,
+  Globe,
   QrCode,
   Download,
   Share2
@@ -294,24 +298,36 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                       </div>
                     </div>
 
-                    {/* Social Links - Desktop only */}
-                    <div className="hidden sm:flex items-center gap-3 mt-6 justify-center sm:justify-start">
-                      {profile.linkedin_url && (
-                        <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer" className="p-3 text-gray-400 hover:text-[#0077b5] hover:bg-blue-50 rounded-xl transition-all hover:scale-110">
-                          <Linkedin className="h-6 w-6" />
-                        </a>
-                      )}
-                      {profile.twitter && (
-                        <a href={profile.twitter} target="_blank" rel="noopener noreferrer" className="p-3 text-gray-400 hover:text-black hover:bg-gray-100 rounded-xl transition-all hover:scale-110">
-                          <Twitter className="h-6 w-6" />
-                        </a>
-                      )}
-                      {profile.website && (
-                        <a href={profile.website} target="_blank" rel="noopener noreferrer" className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-110">
-                          <Globe className="h-6 w-6" />
-                        </a>
-                      )}
-                    </div>
+                    {/* Social Links - Visible on all devices */}
+                    {profile.social_links && profile.social_links.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-3 mt-6 justify-center sm:justify-start">
+                        {profile.social_links.map((link: any, index: number) => {
+                          const Icon = {
+                              linkedin: Linkedin,
+                              twitter: Twitter,
+                              github: Github,
+                              instagram: Instagram,
+                              facebook: Facebook,
+                              youtube: Youtube,
+                              website: Globe,
+                              other: Globe
+                          }[link.platform.toLowerCase()] || Globe;
+                          
+                          return (
+                            <a 
+                              key={index} 
+                              href={link.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all hover:scale-110 border border-gray-100 hover:border-blue-100 bg-white"
+                              title={link.platform}
+                            >
+                              <Icon className="h-5 w-5" />
+                            </a>
+                          )
+                        })}
+                      </div>
+                    )}
                     
                     {/* Desktop Action Buttons - Inside card */}
                     <div className="hidden sm:flex items-center gap-4 mt-8">
@@ -386,45 +402,49 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
               {/* Experience Section */}
               {((workExperiences && workExperiences.length > 0) || (profile.work_experience && profile.work_experience.length > 0)) && (
                 <Card className="border-none shadow-sm">
-                  <CardContent className="p-3 sm:p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                      <Briefcase className="h-5 w-5 text-blue-600" />
-                      Work Experience
-                    </h2>
-                    <WorkTimeline 
-                      experiences={workExperiences.length > 0 ? workExperiences.map((exp: any) => ({
-                        id: exp.id,
-                        job_title: exp.job_title,
-                        company_name: exp.company_name,
-                        company_logo_url: exp.company_logo_url,
-                        start_date: exp.start_date,
-                        end_date: exp.end_date,
-                        is_current: exp.is_current || false,
-                        location: exp.location,
-                        description: exp.description,
-                        employment_type: exp.employment_type,
-                        skills: exp.skills || [],
-                        achievements: exp.achievements || [],
-                        verification_status: exp.verification_status,
-                        proof_documents: exp.proof_documents || []
-                      })) : profile.work_experience.map((exp: any) => ({
-                        id: exp.id || `${exp.company}-${exp.start_date}`,
-                        job_title: exp.title || exp.role,
-                        company_name: exp.company,
-                        company_logo_url: exp.company_logo_url,
-                        start_date: exp.start_date,
-                        end_date: exp.end_date,
-                        is_current: exp.current || false,
-                        location: exp.location,
-                        description: exp.description,
-                        employment_type: exp.employment_type,
-                        skills: exp.skills || [],
-                        achievements: exp.achievements || [],
-                        verification_status: exp.verification_status,
-                        proof_documents: exp.proof_documents || []
-                      }))}
-                      showProofBadges={true}
-                    />
+                  <CardContent className="p-0 sm:p-6">
+                    <div className="p-4 sm:p-0 mb-0 sm:mb-6">
+                      <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-blue-600" />
+                        Work Experience
+                      </h2>
+                    </div>
+                    <div className="px-2 sm:px-0 pb-4 sm:pb-0">
+                      <WorkTimeline 
+                        experiences={workExperiences.length > 0 ? workExperiences.map((exp: any) => ({
+                          id: exp.id,
+                          job_title: exp.job_title,
+                          company_name: exp.company_name,
+                          company_logo_url: exp.company_logo_url,
+                          start_date: exp.start_date,
+                          end_date: exp.end_date,
+                          is_current: exp.is_current || false,
+                          location: exp.location,
+                          description: exp.description,
+                          employment_type: exp.employment_type,
+                          skills: exp.skills || [],
+                          achievements: exp.achievements || [],
+                          verification_status: exp.verification_status,
+                          proof_documents: exp.proof_documents || []
+                        })) : profile.work_experience.map((exp: any) => ({
+                          id: exp.id || `${exp.company}-${exp.start_date}`,
+                          job_title: exp.title || exp.role,
+                          company_name: exp.company,
+                          company_logo_url: exp.company_logo_url,
+                          start_date: exp.start_date,
+                          end_date: exp.end_date,
+                          is_current: exp.current || false,
+                          location: exp.location,
+                          description: exp.description,
+                          employment_type: exp.employment_type,
+                          skills: exp.skills || [],
+                          achievements: exp.achievements || [],
+                          verification_status: exp.verification_status,
+                          proof_documents: exp.proof_documents || []
+                        }))}
+                        showProofBadges={true}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               )}

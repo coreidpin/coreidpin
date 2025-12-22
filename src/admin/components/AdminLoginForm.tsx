@@ -53,12 +53,13 @@ export const AdminLoginForm: React.FC = () => {
       console.log('User object:', user);
       
       // 1. Verify Admin Status using RPC function (bypasses RLS)
-      const { data: adminCheckResult, error: adminError } = await supabase
+      // RPC function call wrapped to handle typing issues with dynamically generated types
+      const { data: adminCheckResult, error: adminError } = await (supabase as any)
         .rpc('check_admin_status', { check_user_id: user.id });
 
       console.log('Admin RPC result:', { adminCheckResult, adminError });
 
-      const adminData = adminCheckResult?.[0];
+      const adminData = adminCheckResult && adminCheckResult[0];
 
       if (adminError || !adminData || !adminData.is_admin) {
         console.error('❌ Admin check failed:', adminError);
@@ -87,12 +88,26 @@ export const AdminLoginForm: React.FC = () => {
         adminSession: localStorage.getItem('adminSession')
       });
       
+      // Verify tokens saved to localStorage
+      const savedToken = localStorage.getItem('accessToken');
+      console.log('🔍 Final verification:', { 
+        hasToken: !!savedToken,
+        isAdmin: localStorage.getItem('isAdmin'),
+        userId: localStorage.getItem('userId')
+      });
+
+      if (!savedToken) {
+         console.error('⚠️ Tokens not saved to localStorage!');
+         toast.error('Login failed. Please try again.');
+         return;
+      }
+
       toast.success('Admin authentication successful - redirecting to dashboard...');
       
-      // Delay redirect to ensure localStorage is persisted
+      // Delay redirect to ensure everything is persisted
       setTimeout(() => {
         console.log('🚀 Redirecting to /admin/dashboard');
-        window.location.href = '/admin/dashboard';
+        navigate('/admin/dashboard');
       }, 1000);
       
     } catch (err: any) {
@@ -230,37 +245,15 @@ export const AdminLoginForm: React.FC = () => {
                   );
                   
                   if (response.access_token) {
-                    console.log('🔑 OTP verified, setting up Supabase session...');
+                    console.log('🔑 OTP verified, tokens received');
                     
-                    // Save tokens
+                    // Save tokens to localStorage (don't use Supabase session for admin login)
                     localStorage.setItem('accessToken', response.access_token);
                     localStorage.setItem('userId', response.user.id);
                     localStorage.setItem('isAuthenticated', 'true');
-                    // FIX: Force 'admin' type for admin login, don't default to professional
                     localStorage.setItem('userType', 'admin');
                     
-                    // Sync with Supabase - CRITICAL: Must set proper session
-                    try {
-                      const sessionData = {
-                        access_token: response.access_token,
-                        refresh_token: response.refresh_token || response.access_token
-                      };
-                      
-                      console.log('Setting Supabase session with tokens:', {
-                        hasAccessToken: !!sessionData.access_token,
-                        hasRefreshToken: !!sessionData.refresh_token
-                      });
-                      
-                      const { data: sessionResult, error: sessionError } = await supabase.auth.setSession(sessionData);
-                      
-                      if (sessionError) {
-                        console.error('❌ Supabase session error:', sessionError);
-                      } else {
-                        console.log('✅ Supabase session set successfully:', sessionResult.session?.user?.id);
-                      }
-                    } catch (syncError) {
-                      console.error('Session sync error:', syncError);
-                    }
+                    console.log('✅ Tokens saved to localStorage');
                     
                     // Now check admin status
                     await handleOTPVerifySuccess(response.access_token, response.user);

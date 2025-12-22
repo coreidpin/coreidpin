@@ -89,6 +89,8 @@ export function PINGenerationCard({
           borderRadius: borderRadius.xl,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
           padding: spacing[6],
+          margin: window.innerWidth < 768 ? '0 -12px' : '0',
+          width: window.innerWidth < 768 ? 'calc(100% + 24px)' : '100%',
         }}
       >
         <PremiumBackground />
@@ -97,10 +99,20 @@ export function PINGenerationCard({
           <div className="flex flex-col items-center text-center mb-6">
             <div className="mb-2 text-sm font-medium text-gray-400 uppercase tracking-wider">Your Professional PIN</div>
             
-            <div className="relative group w-full flex items-center gap-3">
+            <div className="relative group w-full flex items-center justify-center gap-3">
               <div 
-                className="flex-1 text-2xl sm:text-3xl md:text-3xl lg:text-3xl font-mono font-bold tracking-widest text-white my-4 px-4 sm:px-6 md:px-8 py-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm text-center"
-                style={{ textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}
+                className="flex-1 text-xl md:text-2xl font-mono font-bold text-white my-4 px-3 py-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm text-center"
+                style={{ 
+                  textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+                  letterSpacing: '0.1em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '60px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}
               >
                 {isLoading || currentPin === 'Loading...' ? (
                   <span className="animate-pulse opacity-70">Loading...</span>
@@ -184,6 +196,8 @@ export function PINGenerationCard({
         borderRadius: borderRadius.xl,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         padding: spacing[6],
+        margin: window.innerWidth < 768 ? '0 -12px' : '0',
+        width: window.innerWidth < 768 ? 'calc(100% + 24px)' : '100%',
       }}
     >
       <PremiumBackground />

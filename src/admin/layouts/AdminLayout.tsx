@@ -209,7 +209,7 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
       >
         {/* Header */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="px-6 py-4">
+          <div className="px-4 py-3 md:px-6 md:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
@@ -221,7 +221,7 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
                 
                 {/* Breadcrumbs */}
                 {breadcrumbs.length > 0 && (
-                  <nav className="flex items-center gap-2">
+                  <nav className="hidden sm:flex items-center gap-2 overflow-x-auto">
                     <span className="text-sm text-gray-500">Admin</span>
                     {breadcrumbs.map((crumb, index) => (
                       <Fragment key={index}>
@@ -245,7 +245,7 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
         </header>
 
         {/* Page Content */}
-        <main className="p-6">
+        <main className="p-4 md:p-6">
           {children}
         </main>
       </div>

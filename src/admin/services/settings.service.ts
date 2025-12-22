@@ -38,14 +38,19 @@ export class SettingsService extends BaseAPIClient {
    */
   async getSystemSettings(): Promise<SystemSettings> {
     try {
+      console.log('🔍 Fetching system settings via RPC...');
+      
+      // Use RPC function to bypass RLS
       const { data, error } = await (this.supabase as any)
-        .from('system_settings')
-        .select('*')
-        .single();
+        .rpc('get_system_settings');
+
+      console.log('📊 RPC Response:', { data, error });
 
       if (error) {
-        // If no settings found, return defaults (or handle as needed)
-        if (error.code === 'PGRST116') {
+        console.error('Failed to get system settings:', error);
+        // If no settings found, return defaults
+        if (error.code === 'PGRST116' || !data || data.length === 0) {
+          console.log('⚠️ No settings found, using defaults');
           return {
             siteName: 'CoreID Admin',
             supportEmail: 'support@coreid.com',
@@ -60,20 +65,55 @@ export class SettingsService extends BaseAPIClient {
         this.handleError(error);
       }
 
+      // RPC returns array, get first row
+      const row = data && data.length > 0 ? data[0] : null;
+      
+      console.log('📝 Loaded settings row:', row);
+      
+      if (!row) {
+        // Return defaults if no settings exist
+        console.log('⚠️ No row found, using defaults');
+        return {
+          siteName: 'CoreID Admin',
+          supportEmail: 'support@coreid.com',
+          maintenanceMode: false,
+          passwordMinLength: 8,
+          requireSpecialChar: true,
+          requireNumbers: true,
+          enforce2FA: false,
+          sessionTimeout: 30,
+        };
+      }
+
       // Map snake_case to camelCase
-      return {
-        id: data.id,
-        siteName: data.site_name,
-        supportEmail: data.support_email,
-        maintenanceMode: data.maintenance_mode,
-        passwordMinLength: data.password_min_length,
-        requireSpecialChar: data.require_special_char,
-        requireNumbers: data.require_numbers,
-        enforce2FA: data.enforce_2fa,
-        sessionTimeout: data.session_timeout,
+      const settings = {
+        id: row.id,
+        siteName: row.site_name,
+        supportEmail: row.support_email,
+        maintenanceMode: row.maintenance_mode,
+        passwordMinLength: row.password_min_length,
+        requireSpecialChar: row.require_special_char,
+        requireNumbers: row.require_numbers,
+        enforce2FA: row.enforce_2fa,
+        sessionTimeout: row.session_timeout,
       };
+      
+      console.log('✅ Returning settings:', settings);
+      return settings;
     } catch (error) {
+      console.error('Get system settings error:', error);
       this.handleError(error);
+      // Return defaults on complete failure
+      return {
+        siteName: 'CoreID Admin',
+        supportEmail: 'support@coreid.com',
+        maintenanceMode: false,
+        passwordMinLength: 8,
+        requireSpecialChar: true,
+        requireNumbers: true,
+        enforce2FA: false,
+        sessionTimeout: 30,
+      };
     }
   }
 
@@ -82,44 +122,34 @@ export class SettingsService extends BaseAPIClient {
    */
   async updateSystemSettings(settings: SystemSettings): Promise<void> {
     try {
-      // Map camelCase to snake_case
-      const dbSettings = {
-        site_name: settings.siteName,
-        support_email: settings.supportEmail,
-        maintenance_mode: settings.maintenanceMode,
-        password_min_length: settings.passwordMinLength,
-        require_special_char: settings.requireSpecialChar,
-        require_numbers: settings.requireNumbers,
-        enforce_2fa: settings.enforce2FA,
-        session_timeout: settings.sessionTimeout,
-        updated_at: new Date().toISOString(),
-      };
+      console.log('💾 Saving system settings:', settings);
+      
+      // Use RPC function to bypass RLS
+      const { data, error } = await (this.supabase as any)
+        .rpc('update_system_settings', {
+          p_site_name: settings.siteName,
+          p_support_email: settings.supportEmail,
+          p_maintenance_mode: settings.maintenanceMode,
+          p_password_min_length: settings.passwordMinLength,
+          p_require_special_char: settings.requireSpecialChar,
+          p_require_numbers: settings.requireNumbers,
+          p_enforce_2fa: settings.enforce2FA,
+          p_session_timeout: settings.sessionTimeout
+        });
 
-      // Check if settings exist
-      const { data: existing } = await (this.supabase as any)
-        .from('system_settings')
-        .select('id')
-        .single();
+      console.log('💾 Save response:', { data, error });
 
-      let error;
-      if (existing) {
-        const { error: updateError } = await (this.supabase as any)
-          .from('system_settings')
-          .update(dbSettings)
-          .eq('id', existing.id);
-        error = updateError;
-      } else {
-        const { error: insertError } = await (this.supabase as any)
-          .from('system_settings')
-          .insert(dbSettings);
-        error = insertError;
+      if (error) {
+        console.error('RPC error:', error);
+        throw error;
       }
 
-      if (error) this.handleError(error);
+      console.log('✅ Settings saved successfully:', data);
       
       // Log the action
       await this.logAction('update_settings', 'System Settings', 'success');
     } catch (error) {
+      console.error('Update settings error:', error);
       this.handleError(error);
     }
   }
@@ -129,34 +159,27 @@ export class SettingsService extends BaseAPIClient {
    */
   async getAdminUsers(): Promise<AdminUser[]> {
     try {
-      // Join admin_users with profiles to get email/name
-      // Note: This assumes a relationship exists or we manually join
-      // Since we can't easily join auth.users, we'll rely on profiles if available
-      // or just return what we have in admin_users if it stores email (it doesn't in our schema)
-      // Ideally, we should have a view or use profiles.
-      
+      // Use RPC function to bypass RLS
       const { data, error } = await (this.supabase as any)
-        .from('admin_users')
-        .select(`
-          *,
-          profiles:user_id (
-            email,
-            full_name
-          )
-        `);
+        .rpc('get_admin_users');
 
-      if (error) this.handleError(error);
+      if (error) {
+        console.error('Failed to get admin users:', error);
+        this.handleError(error);
+      }
 
-      return data.map((admin: any) => ({
+      return (data || []).map((admin: any) => ({
         id: admin.id,
-        email: admin.profiles?.email || 'Unknown',
-        full_name: admin.profiles?.full_name,
+        email: admin.email || 'Unknown',
+        full_name: admin.full_name,
         role: admin.role,
         status: 'active', // Default to active for now
         lastLogin: admin.created_at, // Placeholder
       }));
     } catch (error) {
+      console.error('Get admin users error:', error);
       this.handleError(error);
+      return []
     }
   }
 
@@ -165,44 +188,79 @@ export class SettingsService extends BaseAPIClient {
    */
   async inviteAdmin(email: string, role: string): Promise<void> {
     try {
-      // Get current session for authentication
-      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+      console.log('Inviting admin via RPC:', email, role);
+
+      // Use RPC function to bypass token compatibility issues
+      const { data, error } = await (this.supabase as any)
+        .rpc('invite_admin_user', {
+          p_email: email,
+          p_role: role
+        });
+
+      console.log('Invite RPC response:', { data, error });
+
+      if (error) {
+        console.error('RPC error:', error);
+        throw new Error(error.message || 'Failed to invite admin');
+      }
+
+      if (data && !data.success) {
+        throw new Error(data.error || 'Failed to invite admin');
+      }
+
+      console.log('Admin invited successfully:', data);
       
-      if (sessionError || !session) {
-        throw new Error('Not authenticated. Please log in to the admin panel.');
-      }
-
-      const supabaseUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
-      const supabaseKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY || publicAnonKey;
-
-      console.log('Calling Edge Function to invite:', email, role);
-
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/invite-admin`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-            'apikey': supabaseKey,
-          },
-          body: JSON.stringify({ email, role }),
+      // If invitation was created (not existing user), send email
+      if (data && data.invitation_token) {
+        console.log('Sending invitation email...');
+        
+        try {
+          await this.sendInvitationEmail(email, role, data.invitation_token);
+          console.log('✅ Invitation email sent successfully');
+        } catch (emailError) {
+          // Log but don't fail - invitation was created successfully
+          console.error('⚠️ Failed to send invitation email:', emailError);
+          // Still return success since the invitation was created
         }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Edge Function error:', error);
-        throw new Error(error.error || 'Failed to send invitation');
       }
-
-      const result = await response.json();
-      console.log('Invitation result:', result);
-      return result;
+      
+      // Return the full data object so the UI can display the appropriate message
+      return data;
     } catch (error) {
       console.error('Exception in inviteAdmin:', error);
       this.handleError(error);
     }
+  }
+
+  /**
+   * Send invitation email via Edge Function
+   */
+  private async sendInvitationEmail(email: string, role: string, invitationToken: string): Promise<void> {
+    const supabaseUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL || `https://${projectId}.supabase.co`;
+    const supabaseKey = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY || publicAnonKey;
+
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/send-admin-invitation`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+        },
+        body: JSON.stringify({
+          email,
+          role,
+          invitation_token: invitationToken
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(error.error || 'Failed to send invitation email');
+    }
+
+    return response.json();
   }
 
   /**
@@ -243,14 +301,13 @@ export class SettingsService extends BaseAPIClient {
    */
   private async logAction(action: string, target: string, status: 'success' | 'failure', details?: any) {
     try {
+      // Use RPC function to bypass RLS
       const { error } = await (this.supabase as any)
-        .from('admin_audit_logs')
-        .insert({
-          action,
-          target,
-          status,
-          details,
-          actor_id: (await this.supabase.auth.getUser()).data.user?.id
+        .rpc('log_admin_action', {
+          p_action: action,
+          p_target: target,
+          p_status: status,
+          p_details: details || null
         });
         
       if (error) console.error('Failed to log audit:', error);

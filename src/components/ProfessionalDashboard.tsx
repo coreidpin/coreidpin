@@ -59,8 +59,12 @@ import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
 import { ProfileCompletionBanner } from './ProfileCompletionBanner';
+import { PhoneToPinWidget } from './dashboard/PhoneToPinWidget';
+import { ErrorBoundary } from './ui/error-boundary';
+import { OverviewSkeleton } from './dashboard/OverviewSkeleton';
+import { DigitalBusinessCard } from './dashboard/DigitalBusinessCard';
+import type { UserProfile } from '../types/profile';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
-import { LeadsWidget } from './dashboard/LeadsWidget';
 
 import { WelcomeModal } from './onboarding/WelcomeModal';
 import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
@@ -84,7 +88,10 @@ export function ProfessionalDashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showCaseStudyModal, setShowCaseStudyModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const loading = profileLoading;
   
   // Onboarding modals
   const {
@@ -396,6 +403,11 @@ export function ProfessionalDashboard() {
     setShowCaseStudyModal(true);
   };
 
+  const handleShareProfile = () => {
+    console.log('Opening Share Profile Dialog');
+    setShowShareDialog(true);
+  };
+
   const handleCaseStudySubmit = async (data: any) => {
     try {
       const token = await ensureValidSession();
@@ -595,15 +607,23 @@ export function ProfessionalDashboard() {
         const session = getSessionState();
         if (!session?.userId) {
           console.error('No user ID found in session');
+          setProfileLoading(false);
           return;
         }
 
-        // Fetch Profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.userId)
-          .single();
+        // Add minimum delay to prevent flicker
+        const minDelay = new Promise(resolve => setTimeout(resolve, 800));
+        const fetchPromise = (async () => {
+          // Fetch Profile
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.userId)
+            .single();
+          return { profile, profileError };
+        })();
+        
+        const [_, { profile, profileError }] = await Promise.all([minDelay, fetchPromise]);
         
         // Check email verification status from Auth
         const { data: { user } } = await supabase.auth.getUser();
@@ -681,12 +701,14 @@ export function ProfessionalDashboard() {
           setPhonePin(null);
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Profile fetch unexpected error:', error);
+      } finally {
+        setProfileLoading(false);
       }
     };
     
     fetchProfile();
-  }, []);
+  }, [location.pathname]);
 
   // Fetch dashboard stats
   const fetchStats = async () => {
@@ -1100,10 +1122,6 @@ export function ProfessionalDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Profile Completion Progress - High Visibility at Top */}
-        <Snowfall />
-        <HolidayGiftWidget />
-        
-        {/* Profile Completion Progress - High Visibility at Top */}
         <AnimatePresence>
           {userProfile && (
             <ProfileCompletionBanner 
@@ -1136,17 +1154,19 @@ export function ProfessionalDashboard() {
           </div>
           <button
             onClick={() => setNotificationCenterOpen(true)}
-            className="relative p-3 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm hover:shadow-md transition-all"
+            className="relative p-3 rounded-full bg-gray-50 hover:bg-gray-100 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
             aria-label="Open notifications"
           >
             <Bell className="w-5 h-5 text-gray-700" />
             {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                {realTimeNotifications.filter(n => n.isNew).length > 9 ? '9+' : realTimeNotifications.filter(n => n.isNew).length}
+              </span>
             )}
           </button>
         </div>
 
-        {/* Header Profile Card */}
+        {/* Header Profile Card - Full width on mobile */}
         <motion.div
           initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
           animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
@@ -1206,43 +1226,55 @@ export function ProfessionalDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full overflow-x-hidden">
-          <TabsList className="flex flex-wrap w-full bg-slate-100 p-1 rounded-xl gap-1">
+          <TabsList className="inline-flex w-full bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto scrollbar-hide" style={{ flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
             <TabsTrigger 
               value="overview"
+              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
               style={{
                 color: activeTab === 'overview' ? '#ffffff' : '#334155',
                 backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                flex: '0 0 auto'
               }}
             >
               Overview
             </TabsTrigger>
             <TabsTrigger 
               value="projects"
+              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
               style={{
                 color: activeTab === 'projects' ? '#ffffff' : '#334155',
                 backgroundColor: activeTab === 'projects' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                flex: '0 0 auto'
               }}
             >
               Projects
             </TabsTrigger>
             <TabsTrigger 
               value="endorsements"
+              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
               style={{
                 color: activeTab === 'endorsements' ? '#ffffff' : '#334155',
                 backgroundColor: activeTab === 'endorsements' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                flex: '0 0 auto'
               }}
             >
               Endorsements
             </TabsTrigger>
             <TabsTrigger 
               value="inquiries"
+              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
               style={{
                 color: activeTab === 'inquiries' ? '#ffffff' : '#334155',
                 backgroundColor: activeTab === 'inquiries' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                flex: '0 0 auto'
               }}
             >
               Inquiries
@@ -1258,18 +1290,41 @@ export function ProfessionalDashboard() {
                 exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
                 transition={reducedMotion ? undefined : { duration: 0.2 }}
               >
+
                 <TabsContent value="overview" className="space-y-4 sm:space-y-6 md:space-y-8 overflow-x-hidden">
-                  <QuickActions 
-                    onAddProject={handleAddProject}
-                    onRequestEndorsement={handleRequestEndorsement}
-                    onAddCaseStudy={handleAddCaseStudy}
-                    reducedMotion={reducedMotion}
-                    userPin={phonePin || undefined}
-                  />
                   
-                  {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                    {statsLoading ? (
+                  {loading ? (
+                    <OverviewSkeleton />
+                  ) : (
+                    <>
+                      {/* Phone to PIN Conversion Widget */}
+                      {phonePin && phonePin !== 'Loading...' && (activeTab === 'overview') && (
+                        <ErrorBoundary name="PhoneToPinWidget">
+                          <PhoneToPinWidget
+                            currentPin={phonePin}
+                            phoneNumber={userProfile?.phone || userProfile?.mobile}
+                            onSuccess={(newPin) => {
+                              setPhonePin(newPin);
+                            }}
+                          />
+                        </ErrorBoundary>
+                      )}
+                      
+                      <QuickActions 
+                        onAddProject={handleAddProject}
+                        onRequestEndorsement={handleRequestEndorsement}
+                        onAddCaseStudy={handleAddCaseStudy}
+                        reducedMotion={reducedMotion}
+                        userPin={phonePin || undefined}
+                        isVerified={userProfile?.email_verified ?? false}
+                        jobTitle={userProfile?.job_title}
+                        onDownloadBadge={handleShareProfile}
+                      />
+                      
+                      {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                        {statsLoading ? (
+// ... rest of code
                       Array(8).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
                     ) : (
                       [
@@ -1330,16 +1385,11 @@ export function ProfessionalDashboard() {
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-6">
-                    <motion.div 
-                      className="col-span-1"
-                      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} 
-                      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} 
-                      transition={reducedMotion ? undefined : { delay: 0.1 }}
-                    >
-                      <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
-                    </motion.div>
-                  </div>
+                  <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
+                    <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
+                  </motion.div>
+                    </>
+                  )}
                 </TabsContent>
               </motion.div>
             )}
@@ -1428,9 +1478,21 @@ export function ProfessionalDashboard() {
                 <div className="text-sm text-gray-400 mb-6">
                   <p>💡 Tip: Add 3-5 projects for best results</p>
                 </div>
-                <Button onClick={handleAddProject} variant="outline">
-                  Add Your First Project
-                </Button>
+                <div className="flex items-center gap-2">
+                   <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleShareProfile}
+                      className="hidden sm:flex items-center gap-2 h-9"
+                   >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share Profile</span>
+                  </Button>
+                  
+                  <Button variant="outline" size="icon" className="h-9 w-9">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </div>
               </motion.div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -1721,29 +1783,6 @@ export function ProfessionalDashboard() {
                 ))}
               </div>
             )}
-          </TabsContent>
-        </motion.div>
-      )}
-    </AnimatePresence>
-
-    {/* Inquiries Tab */}
-    <AnimatePresence mode="wait">
-      {activeTab === 'inquiries' && (
-        <motion.div
-          key="inquiries"
-          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
-          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
-          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
-          transition={reducedMotion ? undefined : { duration: 0.2 }}
-        >
-          <TabsContent value="inquiries" className="space-y-6 overflow-x-hidden">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Inquiries</h2>
-                <p className="text-gray-500 text-sm mt-1">Manage your incoming job leads and opportunities</p>
-              </div>
-              <LeadsWidget professionalId={(userProfile as any)?.user_id} currentPin={phonePin} />
-            </div>
           </TabsContent>
         </motion.div>
       )}
@@ -2174,6 +2213,21 @@ export function ProfessionalDashboard() {
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={(id) => setToasts(prev => prev.filter(t => t.id !== id))} position="bottom-right" />
       <CaseStudyForm open={showCaseStudyModal} onOpenChange={setShowCaseStudyModal} onSubmit={handleCaseStudySubmit} userId={userProfile?.user_id || ''} isLoading={false} caseStudy={null} />
+      
+      {/* Share Profile Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-sm">
+          <DialogHeader>
+            <DialogTitle>Share Your Profile</DialogTitle>
+            <DialogDescription>
+              Share your digital business card or copy your unique profile link.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+             <DigitalBusinessCard userProfile={userProfile} pin={phonePin} />
+          </div>
+        </DialogContent>
+      </Dialog>
       
       {/* Onboarding Modals */}
       <WelcomeModal

@@ -5,6 +5,7 @@ import { Badge } from '../ui/badge';
 import { BetaBadge } from '../ui/BetaBadge';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
 import { gradients, glassMorphism } from '../../styles/shadows';
+import { HolidayGiftWidget } from '../ui/christmas-effects';
 
 interface HeroProfileCardProps {
   name: string;
@@ -27,12 +28,13 @@ export function HeroProfileCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="relative w-full overflow-hidden"
+      className="relative w-full overflow-hidden rounded-2xl"
       style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)',
-        borderRadius: '16px',
         minHeight: '200px',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        margin: window.innerWidth < 768 ? '0 -12px' : '0',
+        width: window.innerWidth < 768 ? 'calc(100% + 24px)' : '100%',
       }}
     >
       {/* Animated gradient overlay */}
@@ -54,12 +56,20 @@ export function HeroProfileCard({
 
       {/* Content */}
       <div className="relative z-10 p-6 flex flex-col justify-between h-full min-h-[200px]">
-        {/* Top Row: Beta Badge */}
-        {isBetaTester && (
-          <div className="flex justify-end">
-            <BetaBadge />
+        {/* Top Row: Gift Icon (left) and Beta Badge (right) */}
+        <div className="flex justify-between items-start">
+          {/* Holiday Gift Widget - positioned in card */}
+          <div className="relative">
+            <HolidayGiftWidget />
           </div>
-        )}
+          
+          {/* Beta Badge */}
+          {isBetaTester && (
+            <div>
+              <BetaBadge />
+            </div>
+          )}
+        </div>
 
         {/* Bottom Row: Profile Info */}
         <div className="flex flex-col gap-2 mt-auto">

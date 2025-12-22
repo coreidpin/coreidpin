@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { SocialLinksEditor, SocialLink } from './dashboard/SocialLinksEditor';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, User, Phone, Mail, Briefcase, CheckCircle2, 
-  ArrowLeft, Save, Loader2, X, Camera, Upload 
+  ArrowLeft, Save, Loader2, X, Camera, Upload, Edit2,
+  Linkedin, Twitter, Github, Instagram, Facebook, Youtube, Globe 
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -37,6 +39,7 @@ import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 import { validators } from '../utils/validation';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
+import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -58,12 +61,13 @@ const WORK_PREFERENCES = [
 
 export const IdentityManagementPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cvInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [isUploadingCV, setIsUploadingCV] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Data State
@@ -94,6 +98,7 @@ export const IdentityManagementPage: React.FC = () => {
     skills: [] as string[],
     tools: [] as string[],
     industry_tags: [] as string[],
+    social_links: [] as SocialLink[],
     certifications: [] as any[]
   });
 
@@ -183,6 +188,7 @@ export const IdentityManagementPage: React.FC = () => {
             skills: profileData.skills || [],
             tools: profileData.tools || [],
             industry_tags: profileData.industry_tags || [],
+            social_links: profileData.social_links || [],
             certifications: profileData.certifications || []
           });
 
@@ -1078,6 +1084,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       const updates = {
         ...formData,
         role: roleToSave,
+        social_links: formData.social_links
       };
 
 
@@ -1395,6 +1402,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
                 </div>
 
+                
                 {/* Profile Picture & Basic Info */}
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
                   <div className="flex-shrink-0 relative group/avatar">
@@ -1458,6 +1466,37 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] ml-2">
                           ACTIVE PIN
                         </Badge>
+                      </div>
+                    )}
+
+                    {/* Social Links */}
+                    {formData.social_links && formData.social_links.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 mt-4">
+                        {formData.social_links.map((link, index) => {
+                          const Icon = {
+                              linkedin: Linkedin,
+                              twitter: Twitter,
+                              github: Github,
+                              instagram: Instagram,
+                              facebook: Facebook,
+                              youtube: Youtube,
+                              website: Globe,
+                              other: Globe
+                          }[link.platform.toLowerCase()] || Globe;
+                          
+                          return (
+                              <a 
+                                key={index} 
+                                href={link.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors border border-white/5"
+                                title={link.platform}
+                              >
+                                  <Icon className="h-4 w-4" />
+                              </a>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
@@ -1613,149 +1652,164 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </motion.div>
 
             {/* Contact Identity (Critical Section) */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-900 flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-green-600" />
-                  Contact Identity
-                </CardTitle>
-                <CardDescription className="text-slate-500">
-                  Manage your primary identity and contact channels
-                </CardDescription>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-slate-50 bg-slate-50/30 pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                      Contact Identity
+                    </CardTitle>
+                    <CardDescription className="text-slate-500 mt-1">
+                      Manage your primary contact channels and verification status
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <CardContent className="p-6 md:p-8 space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Primary Identity: Phone */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-slate-700 font-medium">Phone</Label>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
+                      <Label className="text-slate-700 font-semibold text-sm">Phone Number</Label>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
+                        <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
                       </Badge>
                     </div>
-                    <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Phone className="h-4 w-4 text-slate-400" />
+                    
+                    <div className="relative group flex items-center">
+                      <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                          <Phone className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
+                        <Input 
+                          value={formData.phone}
+                          readOnly
+                          className="bg-slate-50 border-slate-200 text-slate-900 pl-10 h-11 font-mono text-sm focus:bg-white transition-all shadow-sm pr-20" 
+                        />
+                        <div className="absolute right-1.5 top-1.5 bottom-1.5">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-full w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <Input 
-                        value={formData.phone}
-                        readOnly
-                        className="bg-slate-50 border-slate-200 text-slate-900 pl-10 font-mono" 
-                      />
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="absolute right-1 top-1 bottom-1 h-auto px-2 text-xs text-slate-500 hover:text-slate-900"
-                      >
-                        Change
-                      </Button>
                     </div>
-                    <p className="text-[11px] text-slate-500">
-                      Your unique identifier on GidiPIN.
+                    <p className="text-[11px] text-slate-400 pl-1">
+                      This is your unique identifier on GidiPIN
                     </p>
                   </div>
 
                   {/* Primary Email */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-slate-700 font-medium">Email</Label>
+                      <Label className="text-slate-700 font-semibold text-sm">Email Address</Label>
                       {profile?.email_verified ? (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> Verified
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
+                          <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 rounded-full px-3">
                           Unverified
                         </Badge>
                       )}
                     </div>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="h-4 w-4 text-slate-400" />
+                    
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <Mail className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
                       </div>
                       <Input 
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 pl-10" 
+                        className="bg-white border-slate-200 text-slate-900 pl-10 h-11 shadow-sm focus:border-blue-500 focus:ring-blue-500/20" 
                       />
                     </div>
                   </div>
 
                   {/* Recovery Email */}
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Recovery Email</Label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Shield className="h-4 w-4 text-slate-400" />
+                  <div className="space-y-3 md:col-span-2">
+                    <Separator className="mb-6 bg-slate-100" />
+                    <div className="max-w-md">
+                      <Label className="text-slate-700 font-semibold text-sm mb-1.5 block">Recovery Email</Label>
+                      <p className="text-xs text-slate-500 mb-3">Used for account recovery if you lose access to your primary email.</p>
+                      
+                      <div className="relative flex gap-3">
+                        <div className="relative flex-1 group">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <Mail className="h-4 w-4 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
+                          </div>
+                          <Input 
+                            value={formData.recovery_email || ''}
+                            onChange={(e) => setFormData({ ...formData, recovery_email: e.target.value })}
+                            className="bg-white border-slate-200 text-slate-900 pl-10 h-11 shadow-sm placeholder:text-slate-400 focus:border-purple-500 focus:ring-purple-500/20"
+                            placeholder="backup@example.com"
+                          />
+                        </div>
+                        <Button 
+                          variant="outline"
+                          className="h-11 px-4 border-slate-200 text-slate-600 hover:text-purple-600 hover:border-purple-200 hover:bg-purple-50"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Save
+                        </Button>
                       </div>
-                      <Input 
-                        value={formData.recovery_email || ''}
-                        onChange={(e) => setFormData({ ...formData, recovery_email: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
-                        placeholder="backup@example.com"
-                      />
-                      <Button 
-                        size="icon"
-                        variant="ghost" 
-                        className="absolute right-1 top-1 bottom-1 h-auto w-8 text-slate-400 hover:text-blue-600"
-                      >
-                        <Save className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </div>
 
-                <Separator className="bg-slate-100" />
-
-                {/* Social Links */}
-                <div className="space-y-4">
-                  <Label className="text-slate-700 font-medium block">Social Presence</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-slate-400">
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                      </div>
-                      <Input 
-                        value={formData.linkedin || ''}
-                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
-                        placeholder="LinkedIn Profile URL"
-                      />
-                    </div>
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-slate-400">
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
-                      </div>
-                      <Input 
-                        value={formData.website || ''}
-                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
-                        placeholder="Personal Website URL"
-                      />
-                    </div>
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-slate-400">
-                        <Calendar className="h-4 w-4" />
-                      </div>
-                      <Input 
-                        value={(formData as any).booking_url || ''}
-                        onChange={(e) => setFormData({ ...formData, booking_url: e.target.value } as any)}
-                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
-                        placeholder="Booking URL (Calendly, Cal.com)"
-                      />
-                    </div>
-                    <div className="relative">
-                      <div className="absolute left-3 top-2.5 text-slate-400">
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                      </div>
-                      <Input 
-                        value={(formData as any).twitter || ''}
-                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value } as any)}
-                        className="bg-white border-slate-200 text-slate-900 pl-10 placeholder:text-slate-400"
-                        placeholder="Twitter Profile URL"
-                      />
+                <div className="mt-8 pt-8 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="space-y-1">
+                       <h3 className="text-sm font-semibold text-slate-900">Social Connections</h3>
+                       <p className="text-xs text-slate-500">Connect your professional profiles to build trust</p>
                     </div>
                   </div>
+
+                  {/* Social Links - Dark Card like HeroProfileCard */}
+                  <motion.div
+                    className="relative overflow-hidden rounded-xl"
+                    style={{
+                      background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    {/* Animated gradient overlay */}
+                    <motion.div
+                      className="absolute inset-0"
+                      animate={{
+                        background: [
+                          'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+                          'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
+                          'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
+                        ],
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    />
+
+                    {/* Subtle grid pattern */}
+                    <div
+                      className="absolute inset-0 opacity-10"
+                      style={{
+                        backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+                        backgroundSize: '32px 32px',
+                      }}
+                    />
+
+                    <div className="relative z-10 p-6">
+                      <SocialLinksEditor 
+                        links={formData.social_links}
+                        onChange={(links) => setFormData({ ...formData, social_links: links })}
+                      />
+                    </div>
+                  </motion.div>
                 </div>
               </CardContent>
             </Card>

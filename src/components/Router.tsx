@@ -28,6 +28,7 @@ const EmailVerificationLogsPage = lazy(() => import('../admin/pages/logs/EmailVe
 const APIKeysPage = lazy(() => import('../admin/pages/integrations/APIKeys').then(m => ({ default: m.APIKeysPage })));
 const SettingsPage = lazy(() => import('../admin/pages/Settings'));
 const AcceptInvitationPage = lazy(() => import('../admin/pages/AcceptInvitation').then(m => ({ default: m.AcceptInvitation })));
+const AcceptAdminInvitationPage = lazy(() => import('../admin/pages/AcceptAdminInvitation').then(m => ({ default: m.AcceptAdminInvitation })));
 const IdentityManagementPage = lazy(() => import('./IdentityManagementPage').then(m => ({ default: m.IdentityManagementPage })));
 const IdentityCard = lazy(() => import('./IdentityCard').then(m => ({ default: m.IdentityCard })));
 const PublicProfile = lazy(() => import('./PublicProfile').then(m => ({ default: m.PublicProfile })));
@@ -843,6 +844,16 @@ export const AppRouter: React.FC<RouterProps> = ({
                 <SettingsPage />
               </Suspense>
             </AdminRoute>
+          } 
+        />
+
+        {/* Admin Invitation Acceptance - No Auth Required */}
+        <Route 
+          path="/admin/accept-invite/:token" 
+          element={
+            <Suspense fallback={<DashboardSkeleton />}>
+              <AcceptAdminInvitationPage />
+            </Suspense>
           } 
         />
 

@@ -75,7 +75,9 @@ export function ProfileCompletionWidget({
         background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
         borderRadius: borderRadius.xl,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-        padding: spacing[6],
+        padding: window.innerWidth < 768 ? spacing[4] : spacing[6],
+        margin: window.innerWidth < 768 ? '0 -16px' : '0',
+        width: window.innerWidth < 768 ? 'calc(100% + 32px)' : '100%',
       }}
     >
       <PremiumBackground />

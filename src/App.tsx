@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast, Toaster } from 'sonner';
 import { AppRouter } from './components/Router';
-import { ErrorBoundary } from './components/ErrorBoundary';
 
 
 import PasswordResetDialog from './components/PasswordResetDialog';
@@ -21,7 +20,7 @@ import {
 import { initAmplitude, identifyUser, resetAmplitude, trackEvent } from './utils/amplitude';
 import { sessionManager } from './utils/session-manager';
 
-type UserType = 'landing' | 'employer' | 'professional' | 'university' | 'business';
+type UserType = 'landing' | 'employer' | 'professional' | 'university' | 'business' | 'admin';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('professional');
@@ -384,7 +383,7 @@ export default function App() {
 
 
 
-  const handleLoginSuccess = async (userType: 'employer' | 'professional' | 'university' | 'business', user: any) => {
+  const handleLoginSuccess = async (userType: 'employer' | 'professional' | 'university' | 'business' | 'admin', user: any) => {
     setIsAuthenticated(true);
     setCurrentView(userType);
     setUserData(user);
@@ -429,6 +428,8 @@ export default function App() {
       window.location.href = '/developer';
     } else if (userType === 'employer') {
       window.location.href = '/employers';
+    } else if (userType === 'admin') {
+      window.location.href = '/admin/dashboard';
     } else {
       window.location.href = '/dashboard';
     }
@@ -546,7 +547,7 @@ export default function App() {
   };
 
   return (
-    <ErrorBoundary>
+    <>
       <AppRouter
         isAuthenticated={isAuthenticated}
         userType={currentView}
@@ -584,6 +585,6 @@ export default function App() {
         userType={currentView as 'employer' | 'professional' | 'university' | 'business'}
       /> */}
       <Toaster />
-    </ErrorBoundary>
+    </>
   );
 }
