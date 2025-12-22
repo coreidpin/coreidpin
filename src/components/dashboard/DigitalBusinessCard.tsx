@@ -36,26 +36,19 @@ export function DigitalBusinessCard({ userProfile, pin }: DigitalBusinessCardPro
   };
 
   const handleDownload = async () => {
-    console.log('Download triggered');
-    if (!cardRef.current) {
-        console.error('cardRef is null');
-        return;
-    }
+    if (!cardRef.current) return;
     
     try {
-      console.log('Starting html2canvas generation...');
       setDownloading(true);
       const canvas = await html2canvas(cardRef.current, {
         scale: 2, // Better resolution
         backgroundColor: null,
-        logging: true, // Enable html2canvas logging
         useCORS: true, // Important for external images like avatars
         foreignObjectRendering: false,
         // Force dimensions to ensure everything is captured
         width: cardRef.current.offsetWidth,
         height: cardRef.current.offsetHeight
       });
-      console.log('Canvas generated successfully');
       
       const link = document.createElement('a');
       link.download = `${displayName.replace(/\s+/g, '-').toLowerCase()}-card.png`;
@@ -86,25 +79,26 @@ export function DigitalBusinessCard({ userProfile, pin }: DigitalBusinessCardPro
   };
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center space-y-6 w-full max-w-full overflow-hidden">
       {/* The Downloadable Card Area */}
-      <div className="relative group perspective-1000">
+      <div className="relative group perspective-1000 w-full max-w-sm flex justify-center mx-auto px-4">
         <div 
           ref={cardRef}
-          className="w-full max-w-sm text-white p-6 rounded-2xl shadow-xl overflow-hidden border border-slate-700/50 relative"
+          className="w-full text-white p-5 rounded-2xl shadow-xl overflow-hidden border border-slate-700/50 relative mx-auto"
           style={{ 
-            minWidth: '320px',
-            background: 'linear-gradient(to bottom right, #0f172a, #1e293b)' // explicit hex for slate-900 to slate-800
+            minWidth: '250px', 
+            maxWidth: '280px', // Smaller mobile width as requested
+            background: 'linear-gradient(to bottom right, #0f172a, #1e293b)' 
           }}
         >
-          {/* Decorative Elements */}
+          {/* Decorative Elements - preserved */}
           <div 
             className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" 
-            style={{ background: 'rgba(59, 130, 246, 0.1)' }} // blue-500/10
+            style={{ background: 'rgba(59, 130, 246, 0.1)' }} 
           />
           <div 
             className="absolute bottom-0 left-0 w-32 h-32 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none" 
-            style={{ background: 'rgba(168, 85, 247, 0.1)' }} // purple-500/10
+            style={{ background: 'rgba(168, 85, 247, 0.1)' }} 
           />
           
           <div className="flex flex-col items-center text-center space-y-4 relative z-10">
@@ -193,11 +187,11 @@ export function DigitalBusinessCard({ userProfile, pin }: DigitalBusinessCardPro
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-3 w-full max-w-sm">
+      {/* Action Buttons - Stack on mobile, row on larger screens */}
+      <div className="flex flex-col sm:flex-row gap-3 w-full max-w-[280px] sm:max-w-sm">
         <Button 
           variant="outline" 
-          className="flex-1 gap-2"
+          className="flex-1 gap-2 h-10"
           onClick={handleCopyLink}
         >
           {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}

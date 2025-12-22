@@ -58,6 +58,7 @@ import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
+import { LeadsWidget } from './dashboard/LeadsWidget';
 import { ProfileCompletionBanner } from './ProfileCompletionBanner';
 import { PhoneToPinWidget } from './dashboard/PhoneToPinWidget';
 import { ErrorBoundary } from './ui/error-boundary';
@@ -1118,7 +1119,8 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-white scroll-smooth">
+    <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden">
+      <ErrorBoundary name="DashboardContent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Profile Completion Progress - High Visibility at Top */}
@@ -1786,6 +1788,24 @@ export function ProfessionalDashboard() {
           </TabsContent>
         </motion.div>
       )}
+
+      {activeTab === 'inquiries' && (
+        <motion.div
+          key="inquiries"
+          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={reducedMotion ? undefined : { duration: 0.2 }}
+        >
+          <TabsContent value="inquiries" className="space-y-6">
+             <LeadsWidget 
+               professionalId={userProfile?.id || userProfile?.user_id} 
+               currentPin={phonePin} 
+             />
+          </TabsContent>
+        </motion.div>
+      )}
+
     </AnimatePresence>
   </Tabs>
 </div>
@@ -2223,7 +2243,7 @@ export function ProfessionalDashboard() {
               Share your digital business card or copy your unique profile link.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
+          <div className="py-2 flex justify-center w-full">
              <DigitalBusinessCard userProfile={userProfile} pin={phonePin} />
           </div>
         </DialogContent>
@@ -2244,6 +2264,7 @@ export function ProfessionalDashboard() {
         onDeny={handleNotificationDeny}
       />
       </div>
+      </ErrorBoundary>
     </div>
   );
 }

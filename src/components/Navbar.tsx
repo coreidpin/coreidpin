@@ -243,7 +243,7 @@ export function Navbar({
           {/* Logo */}
           {/* Logo with Holiday Hat */}
           <div className="relative group">
-            <SantaHat className="top-[-12px] left-[-8px] scale-75 rotate-[-15deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
+            <SantaHat className="top-[-18px] left-[-2px] scale-75 rotate-[-10deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
             <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
           </div>
 
