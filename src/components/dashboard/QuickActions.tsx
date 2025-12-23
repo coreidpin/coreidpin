@@ -11,9 +11,10 @@ interface QuickActionsProps {
   onAddCaseStudy?: () => void;
   onDownloadBadge?: () => void;
   reducedMotion?: boolean;
-  userPin?: string;
-  isVerified?: boolean; // User is verified professional
+  onGenerateResume?: () => void;
   jobTitle?: string;
+  userPin?: string;
+  isVerified?: boolean;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({ 
@@ -21,6 +22,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onRequestEndorsement,
   onAddCaseStudy,
   onDownloadBadge,
+  onGenerateResume,
   reducedMotion = false,
   userPin,
   isVerified = false,
@@ -44,6 +46,20 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               >
                 <Plus className="h-6 w-6 text-black mb-1" />
                 <span className="text-xs font-medium text-center leading-tight">Add Project</span>
+              </Button>
+            )}
+
+            {onGenerateResume && (
+              <Button 
+                onClick={onGenerateResume}
+                variant="outline" 
+                className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal"
+              >
+                <FileText className="h-6 w-6 text-blue-600 mb-1" />
+                <span className="text-xs font-medium text-center leading-tight">
+                    Resume Builder
+                    <span className="block text-[10px] text-emerald-600 font-bold mt-0.5">NEW</span>
+                </span>
               </Button>
             )}
 
@@ -107,15 +123,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               </span>
             </Button>
             
-            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
-              <Phone className="h-6 w-6 text-purple-600 mb-1" />
-              <span className="text-xs font-medium text-center leading-tight">Update Phone</span>
-            </Button>
-            
-            <Button variant="outline" className="h-auto min-h-[100px] p-4 flex-col justify-center gap-3 border-0 hover:bg-gray-50 text-gray-700 hover:text-gray-900 hover:shadow-md transition-all whitespace-normal">
-              <Share2 className="h-6 w-6 text-green-600 mb-1" />
-              <span className="text-xs font-medium text-center leading-tight">Share PIN</span>
-            </Button>
+
 
             <div className="relative group w-full">
               <div className="absolute top-2 right-2 z-20 pointer-events-none">

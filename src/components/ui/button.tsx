@@ -53,6 +53,8 @@ const Button = React.forwardRef<
   // Ensure text color is explicitly set via inline styles
   const getInlineStyle = (): React.CSSProperties => {
     const baseStyle = style || {};
+    // If color is explicitly provided in style prop, respect it
+    if (baseStyle.color) return baseStyle;
     
     switch (variant) {
       case 'default':

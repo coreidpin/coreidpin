@@ -232,7 +232,7 @@ const Layout: React.FC<{
         isAuthenticated={isAuthenticated}
         userType={userType}
       />
-      <main className="flex-1">
+      <main className="flex-1 pt-14 md:pt-16 lg:pt-[4.5rem]">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

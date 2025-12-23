@@ -152,9 +152,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         )}
       </div>
 
-      {step === 'request' && userType !== 'business' && (
+      {step === 'request' && (
         <>
-          <div className="relative mb-6">
+{/*           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/10" />
             </div>
@@ -180,7 +180,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
                 Google
               </>
             )}
-          </Button>
+          </Button> */}
           
           <p className="text-center text-white/40 text-[10px] sm:text-xs mt-6 px-4 leading-relaxed">
             By creating an account, you agree to the <a href="/terms" className="underline hover:text-white/60">Terms of Service</a>. For more information about GidiPIN's privacy practices, see the <a href="/privacy" className="underline hover:text-white/60">GidiPIN Privacy Statement</a>. We'll occasionally send you account-related emails.

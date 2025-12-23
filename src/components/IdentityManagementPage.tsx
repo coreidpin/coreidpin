@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, User, Phone, Mail, Briefcase, CheckCircle2, 
   ArrowLeft, Save, Loader2, X, Camera, Upload, Edit2,
-  Linkedin, Twitter, Github, Instagram, Facebook, Youtube, Globe 
+  Linkedin, Twitter, Github, Instagram, Facebook, Youtube, Globe, GraduationCap 
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -99,7 +99,8 @@ export const IdentityManagementPage: React.FC = () => {
     tools: [] as string[],
     industry_tags: [] as string[],
     social_links: [] as SocialLink[],
-    certifications: [] as any[]
+    certifications: [] as any[],
+    education: [] as any[]
   });
 
   const [isCustomRole, setIsCustomRole] = useState(false);
@@ -131,6 +132,16 @@ export const IdentityManagementPage: React.FC = () => {
     issuer: '',
     date: '',
     url: ''
+  });
+
+  const [showEducationModal, setShowEducationModal] = useState(false);
+  const [tempEducation, setTempEducation] = useState({
+    school: '',
+    degree: '',
+    field: '',
+    start_year: '',
+    end_year: '',
+    description: ''
   });
 
   const [skillInput, setSkillInput] = useState('');
@@ -189,7 +200,9 @@ export const IdentityManagementPage: React.FC = () => {
             tools: profileData.tools || [],
             industry_tags: profileData.industry_tags || [],
             social_links: profileData.social_links || [],
-            certifications: profileData.certifications || []
+            social_links: profileData.social_links || [],
+            certifications: profileData.certifications || [],
+            education: profileData.education || []
           });
 
           // Calculate profile completeness using robust utility
@@ -478,6 +491,28 @@ export const IdentityManagementPage: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       certifications: prev.certifications.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSaveEducation = () => {
+    if (!tempEducation.school || !tempEducation.degree) {
+      toast.error('School and Degree are required');
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      education: [...prev.education, tempEducation]
+    }));
+
+    setShowEducationModal(false);
+    setTempEducation({ school: '', degree: '', field: '', start_year: '', end_year: '', description: '' });
+  };
+
+  const handleRemoveEducation = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
     }));
   };
 
@@ -2218,6 +2253,73 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </Dialog>
             </Card>
 
+            {/* Education Section */}
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-slate-900 flex items-center gap-2">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
+                  Education
+                </CardTitle>
+                <Button 
+                  onClick={() => setShowEducationModal(true)}
+                  size="sm" 
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200"
+                >
+                  Add Education
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {formData.education.length === 0 ? (
+                  <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
+                    <p className="text-slate-500 text-sm">No education history added yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {formData.education.map((edu, index) => (
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="text-slate-900 font-semibold">{edu.school}</h4>
+                            <p className="text-blue-600 text-sm">{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>
+                            <p className="text-slate-500 text-xs mt-1">
+                              {edu.start_year} - {edu.end_year || 'Present'}
+                            </p>
+                          </div>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              onClick={() => {
+                                setTempEducation(edu);
+                                handleRemoveEducation(index); // Remove to re-add on save (simplifies edit)
+                                setShowEducationModal(true);
+                              }}
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-8 w-8 text-slate-400 hover:text-slate-900"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              onClick={() => handleRemoveEducation(index)}
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        {edu.description && (
+                          <p className="text-slate-600 text-sm mt-3 border-t border-slate-200 pt-3">
+                            {edu.description}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Skills & Tools */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Skills */}
@@ -2568,6 +2670,81 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0 flex-row gap-2 sm:gap-3">
               <Button variant="outline" onClick={() => setShowWorkModal(false)} className="flex-1 sm:flex-none h-11 sm:h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-base sm:text-sm">Cancel</Button>
               <Button onClick={handleSaveWork} className="flex-1 sm:flex-none h-11 sm:h-9 bg-white hover:bg-gray-50 text-black border-2 border-black text-base sm:text-sm px-6 font-semibold">Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Education Modal */}
+        <Dialog open={showEducationModal} onOpenChange={setShowEducationModal}>
+          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add Education</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label>School / University</Label>
+                <Input 
+                  value={tempEducation.school}
+                  onChange={(e) => setTempEducation({ ...tempEducation, school: e.target.value })}
+                  className="bg-white border-slate-200 text-slate-900"
+                  placeholder="e.g. University of Lagos"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Degree</Label>
+                  <Input 
+                    value={tempEducation.degree}
+                    onChange={(e) => setTempEducation({ ...tempEducation, degree: e.target.value })}
+                    className="bg-white border-slate-200 text-slate-900"
+                    placeholder="e.g. BSc"
+                  />
+                </div>
+                <div>
+                  <Label>Field of Study</Label>
+                  <Input 
+                    value={tempEducation.field}
+                    onChange={(e) => setTempEducation({ ...tempEducation, field: e.target.value })}
+                    className="bg-white border-slate-200 text-slate-900"
+                    placeholder="e.g. Computer Science"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Start Year</Label>
+                  <Input 
+                    type="number"
+                    value={tempEducation.start_year}
+                    onChange={(e) => setTempEducation({ ...tempEducation, start_year: e.target.value })}
+                    className="bg-white border-slate-200 text-slate-900"
+                    placeholder="2018"
+                  />
+                </div>
+                <div>
+                  <Label>End Year</Label>
+                  <Input 
+                    type="number"
+                    value={tempEducation.end_year}
+                    onChange={(e) => setTempEducation({ ...tempEducation, end_year: e.target.value })}
+                    className="bg-white border-slate-200 text-slate-900"
+                    placeholder="2022"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Description (Optional)</Label>
+                <Textarea 
+                  value={tempEducation.description}
+                  onChange={(e) => setTempEducation({ ...tempEducation, description: e.target.value })}
+                  className="bg-white border-slate-200 text-slate-900 min-h-[80px]"
+                  placeholder="Activities, societies, honors..."
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEducationModal(false)} className="border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</Button>
+              <Button onClick={handleSaveEducation} className="bg-blue-600 hover:bg-blue-700 text-white">Save Education</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -58,6 +58,7 @@ import { ActivityFeed } from './dashboard/ActivityFeed';
 import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
+import { ResumeGenerator } from './dashboard/ResumeGenerator';
 import { LeadsWidget } from './dashboard/LeadsWidget';
 import { ProfileCompletionBanner } from './ProfileCompletionBanner';
 import { PhoneToPinWidget } from './dashboard/PhoneToPinWidget';
@@ -89,6 +90,8 @@ export function ProfessionalDashboard() {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showCaseStudyModal, setShowCaseStudyModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [activityPeriod, setActivityPeriod] = useState<'7d' | '30d' | '90d'>('30d');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -1329,6 +1332,7 @@ export function ProfessionalDashboard() {
                         isVerified={userProfile?.email_verified ?? false}
                         jobTitle={userProfile?.job_title}
                         onDownloadBadge={handleShareProfile}
+                        onGenerateResume={() => setShowResumeModal(true)}
                       />
                       
                       {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
@@ -1396,7 +1400,11 @@ export function ProfessionalDashboard() {
                   </div>
                   
                   <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
-                    <ActivityChart data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} period="30d" onPeriodChange={() => {}} />
+                    <ActivityChart 
+                      data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} 
+                      period={activityPeriod} 
+                      onPeriodChange={setActivityPeriod} 
+                    />
                   </motion.div>
                     </>
                   )}
@@ -2274,6 +2282,12 @@ export function ProfessionalDashboard() {
 
       
       <HolidayGiftWidget />
+      
+      <ResumeGenerator 
+        isOpen={showResumeModal} 
+        onClose={() => setShowResumeModal(false)} 
+        profile={userProfile} 
+      />
       </div>
       </ErrorBoundary>
     </div>

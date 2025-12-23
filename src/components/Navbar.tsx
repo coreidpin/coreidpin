@@ -232,7 +232,7 @@ export function Navbar({
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className={cn(
-          "border-b backdrop-blur-md sticky top-0 z-50 shadow-sm transition-colors duration-200",
+          "border-b backdrop-blur-md fixed top-0 left-0 right-0 z-50 shadow-sm transition-colors duration-200",
           isLight 
             ? "bg-white/80 border-slate-200 text-slate-900" 
             : "bg-[#0a0b0d]/95 border-white/10 text-white"
@@ -276,9 +276,10 @@ export function Navbar({
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/login')}
+                  style={!isLight ? { color: '#ffffff' } : undefined}
                   className={cn(
                     "transition-colors",
-                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : "hover:bg-white/10 text-white"
+                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : "hover:bg-white/10 hover:text-white"
                   )}
                 >
                   Login

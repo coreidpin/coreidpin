@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import CountUp from 'react-countup';
 import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
 import { shadows } from '../../styles/shadows';
 
@@ -212,11 +213,22 @@ export function ActivityChart({
             {/* Data points */}
             {points.map((point, i) => (
               <g key={i}>
+                {i === points.length - 1 && (
+                  <motion.circle
+                    cx={point.x}
+                    cy={point.y}
+                    r={8}
+                    fill="rgba(96, 165, 250, 0.3)"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1.5, opacity: [0, 0.5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                )}
                 <motion.circle
                   cx={point.x}
                   cy={point.y}
                   r={hoveredPoint === i ? 5 : 3}
-                  fill="#1a1a1a"
+                  fill={i === points.length - 1 ? "#60A5FA" : "#1a1a1a"}
                   stroke="#60A5FA"
                   strokeWidth="2"
                   initial={{ scale: 0 }}
@@ -255,15 +267,21 @@ export function ActivityChart({
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-white/10">
           <div>
-            <div className="text-2xl font-bold text-white">{values.reduce((a, b) => a + b, 0)}</div>
+            <div className="text-2xl font-bold text-white">
+              <CountUp end={values.reduce((a, b) => a + b, 0)} duration={2} separator="," />
+            </div>
             <div className="text-xs text-gray-400">Total</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-white">{Math.round(values.reduce((a, b) => a + b, 0) / values.length)}</div>
+            <div className="text-2xl font-bold text-white">
+              <CountUp end={Math.round(values.reduce((a, b) => a + b, 0) / values.length)} duration={2} separator="," />
+            </div>
             <div className="text-xs text-gray-400">Avg/day</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-white">{Math.max(...values)}</div>
+            <div className="text-2xl font-bold text-white">
+              <CountUp end={Math.max(...values)} duration={2} separator="," />
+            </div>
             <div className="text-xs text-gray-400">Peak</div>
           </div>
         </div>

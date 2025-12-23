@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { api } from '../../utils/api';
 import { toast } from 'sonner';
 
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+
 interface OTPRequestFormProps {
   onSuccess: (contact: string, contactType: 'phone' | 'email') => void;
 }
 
 export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => {
   const [contact, setContact] = useState('');
-  const [contactType, setContactType] = useState<'phone' | 'email'>('phone');
+  const [contactType, setContactType] = useState<'phone' | 'email'>('email');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,58 +41,66 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
+      <div className="text-center mb-6">
         <h2 className="text-2xl font-semibold mb-2 text-white">
-          {contactType === 'phone' ? 'Enter your phone' : 'Enter your email'}
+          Verify Identity
         </h2>
         <p className="text-sm text-white/70">
           We'll send you a one-time code to verify your identity.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-white/90 mb-1.5">
-            {contactType === 'phone' ? 'Phone Number' : 'Email Address'}
-          </label>
-          <input
-            type={contactType === 'phone' ? 'tel' : 'email'}
-            value={contact}
-            onChange={(e) => setContact(e.target.value)}
-            placeholder={contactType === 'phone' ? '+234 800 000 0000' : 'you@example.com'}
-            className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-            required
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
-          {loading ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
-              Sending...
-            </>
-          ) : (
-            'Send Code'
-          )}
-        </button>
-
-        <div className="text-center pt-2">
-          <button
-            type="button"
-            onClick={() => {
-              setContactType(contactType === 'phone' ? 'email' : 'phone');
-              setContact('');
-            }}
-            className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+      <Tabs defaultValue="email" value={contactType} onValueChange={(v) => setContactType(v as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/5 border border-white/10">
+          <TabsTrigger value="email" className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-white/60">
+            Email
+          </TabsTrigger>
+          <TabsTrigger 
+            value="phone"
+            className="group flex items-center justify-center gap-2 cursor-not-allowed opacity-100 data-[state=active]:bg-white/10 data-[state=active]:text-white"
+            onClick={(e) => e.preventDefault()}
+            style={{ pointerEvents: 'none' }}
           >
-            Use {contactType === 'phone' ? 'email' : 'phone number'} instead
-          </button>
-        </div>
-      </form>
+            <span className="text-white/40 font-medium">Phone</span>
+            <span className="flex items-center justify-center px-2 py-0.5 bg-amber-500/20 text-amber-100 text-[8px] font-bold tracking-[0.2em] rounded-full shadow-[0_0_8px_-2px_rgba(245,158,11,0.5)]">
+              SOON
+            </span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="email" className="mt-0">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-1.5">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              {loading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                  Sending...
+                </>
+              ) : (
+                'Send Code'
+              )}
+            </button>
+          </form>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
