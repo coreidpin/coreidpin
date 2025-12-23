@@ -175,7 +175,7 @@ export function FeatureLock({
                     Why Complete Your Profile?
                   </h3>
                   <p className="text-sm text-purple-700">
-                    Unlock premium features and stand out to employers
+                    Unlock premium features and stand out to businesses
                   </p>
                 </div>
               </div>

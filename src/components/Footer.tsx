@@ -41,7 +41,7 @@ interface FooterProps {
 // PIN-focused trust metrics with brand colors
 const pinMetrics = [
   { label: 'Verified PINs', value: '50K+', icon: CreditCard, color: '#7bb8ff' },
-  { label: 'Global Employers', value: '2.5K+', icon: Building, color: '#32f08c' },
+  { label: 'Global Businesses', value: '2.5K+', icon: Building, color: '#32f08c' },
   { label: 'Partner Institutions', value: '150+', icon: GraduationCap, color: '#bfa5ff' },
   { label: 'Countries Active', value: '45+', icon: Globe, color: '#7bb8ff' }
 ];

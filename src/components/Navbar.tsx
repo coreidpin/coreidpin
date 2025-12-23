@@ -86,7 +86,7 @@ export function Navbar({
     {
       label: 'Solutions',
       items: [
-        { label: 'For Employers', href: '/employers', icon: Building },
+        { label: 'For Business', href: '/employers', icon: Building },
         { label: 'For Professionals', href: '/professionals', icon: UserCheck },
         // { label: 'For Universities', href: '/universities', icon: GraduationCap }
       ]
@@ -258,7 +258,7 @@ export function Navbar({
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                   <span className="text-sm font-medium text-foreground">
-                    {userType === 'employer' && 'Employer Dashboard'}
+                    {userType === 'employer' && 'Business Dashboard'}
                     {userType === 'professional' && 'Professional Dashboard'}
                     {userType === 'admin' && 'Admin Dashboard'}
                     {/* {userType === 'university' && 'University Dashboard'} */}
@@ -563,7 +563,7 @@ export function Navbar({
                                     <Building className="h-5 w-5 text-[#bfa5ff]" />
                                   </motion.div>
                                   <div className="text-left">
-                                    <div className="font-semibold">Employer</div>
+                                    <div className="font-semibold">Business</div>
                                     <div className="text-xs text-white/60">Hire verified talent</div>
                                   </div>
                                 </div>
@@ -590,7 +590,7 @@ export function Navbar({
                           <p className="text-sm text-muted-foreground">Logged in as</p>
                         </div>
                         <p className="font-medium">
-                          {userType === 'employer' && 'Employer Dashboard'}
+                          {userType === 'employer' && 'Business Dashboard'}
                           {userType === 'professional' && 'Professional Dashboard'}
                           {userType === 'admin' && 'Admin Dashboard'}
                         </p>
