@@ -70,14 +70,10 @@ export function ProfileCompletionWidget({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="w-full relative overflow-hidden"
+      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6"
       style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-        borderRadius: borderRadius.xl,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-        padding: window.innerWidth < 768 ? spacing[4] : spacing[6],
-        margin: window.innerWidth < 768 ? '0 -16px' : '0',
-        width: window.innerWidth < 768 ? 'calc(100% + 32px)' : '100%',
       }}
     >
       <PremiumBackground />

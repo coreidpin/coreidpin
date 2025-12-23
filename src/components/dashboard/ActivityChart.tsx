@@ -103,12 +103,10 @@ export function ActivityChart({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="w-full relative overflow-hidden"
+      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6"
       style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-        borderRadius: borderRadius.xl,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-        padding: spacing[6],
       }}
     >
       <PremiumBackground />

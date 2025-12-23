@@ -28,13 +28,11 @@ export function HeroProfileCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="relative w-full overflow-hidden rounded-2xl"
+      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-2xl"
       style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)',
         minHeight: '200px',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-        margin: window.innerWidth < 768 ? '0 -12px' : '0',
-        width: window.innerWidth < 768 ? 'calc(100% + 24px)' : '100%',
       }}
     >
       {/* Animated gradient overlay */}
