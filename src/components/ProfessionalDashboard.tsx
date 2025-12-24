@@ -1146,7 +1146,7 @@ export function ProfessionalDashboard() {
 
         {/* Welcome Section - Mobile: Stack, Desktop: Side-by-side */}
 
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-100 pb-6">
+        <div className="mb-6 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-100 pb-6">
           <div className="space-y-2 sm:space-y-4 flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight break-words">
               Welcome back, <span className="text-slate-500">{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>

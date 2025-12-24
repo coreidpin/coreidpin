@@ -36,7 +36,6 @@ export function calculateProfileCompletion(profileData: any): ProfileCompletionR
     'Years of Experience': profileData?.years_of_experience !== undefined && profileData?.years_of_experience !== null,
     'Work History': (profileData?.work_history && profileData.work_history.length > 0) || 
                     (profileData?.work_experience && profileData.work_experience.length > 0),
-    'Portfolio': profileData?.portfolio_url || profileData?.website || profileData?.portfolio || profileData?.github_url,
   };
 
   const fieldKeys = Object.keys(allFields);
