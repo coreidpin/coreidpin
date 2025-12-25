@@ -11,7 +11,9 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  TrendingUp,
+  Map
 } from 'lucide-react';
 import { checkAdminAccess } from '../utils/auth';
 import { useIsMobile } from '@/components/ui/use-mobile';
@@ -27,6 +29,10 @@ const navigationGroups = [
     title: 'ANALYTICS',
     items: [
       { icon: LayoutDashboard, label: 'Overview', path: '/admin/dashboard' },
+      { icon: TrendingUp, label: 'Engagement', path: '/admin/engagement' },
+      { icon: Activity, label: 'Performance', path: '/admin/performance' },
+      { icon: Map, label: 'Geographic', path: '/admin/geographic' },
+      { icon: FileText, label: 'Reports', path: '/admin/reports' },
       { icon: Activity, label: 'Activity Logs', path: '/admin/logs' },
     ]
   },

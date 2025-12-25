@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, TrendingUp } from 'lucide-react';
-import { Card, CardContent } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { dashboardService, SystemHealthData } from '../services/dashboard.service';
 
 export function SystemHealth() {
@@ -26,62 +26,57 @@ export function SystemHealth() {
   }, []);
 
   return (
-    <div className="grid gap-4 md:grid-cols-4">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">API Status</p>
-              <p className="text-2xl font-semibold" style={{ color: health.apiStatus === 'Operational' ? '#32F08C' : '#FF4444' }}>
-                {health.apiStatus}
-              </p>
+    <Card>
+      <CardHeader>
+        <CardTitle>System Health</CardTitle>
+        <p className="text-sm text-gray-500 mt-1">Real-time system status</p>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 grid-cols-2">
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-gray-600">API Status</p>
+              <div className="relative flex h-2 w-2">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${health.apiStatus === 'Operational' ? 'bg-green-400' : 'bg-red-400'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${health.apiStatus === 'Operational' ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              </div>
             </div>
-            <div className="relative flex h-3 w-3">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${health.apiStatus === 'Operational' ? 'bg-green-400' : 'bg-red-400'}`}></span>
-              <span className={`relative inline-flex rounded-full h-3 w-3 ${health.apiStatus === 'Operational' ? 'bg-green-500' : 'bg-red-500'}`}></span>
-            </div>
+            <p className="text-xl font-bold" style={{ color: health.apiStatus === 'Operational' ? '#10b981' : '#ef4444' }}>
+              {health.apiStatus}
+            </p>
           </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Database</p>
-              <p className="text-2xl font-semibold" style={{ color: health.dbStatus === 'Healthy' ? '#32F08C' : '#FF4444' }}>
-                {health.dbStatus}
-              </p>
+
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-gray-600">Database</p>
+              <div className={`h-2 w-2 rounded-full ${health.dbStatus === 'Healthy' ? 'bg-green-500' : 'bg-red-500'}`}></div>
             </div>
-            <div className={`h-3 w-3 rounded-full ${health.dbStatus === 'Healthy' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <p className="text-xl font-bold" style={{ color: health.dbStatus === 'Healthy' ? '#10b981' : '#ef4444' }}>
+              {health.dbStatus}
+            </p>
           </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Uptime</p>
-              <p className="text-2xl font-semibold" style={{ color: '#0A2540' }}>
-                {health.uptime}%
-              </p>
+
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-gray-600">Uptime</p>
+              <TrendingUp className="h-4 w-4 text-green-500" />
             </div>
-            <TrendingUp className="h-5 w-5 text-green-500" />
+            <p className="text-xl font-bold text-gray-900">
+              {health.uptime}%
+            </p>
           </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Avg Response</p>
-              <p className="text-2xl font-semibold" style={{ color: '#0A2540' }}>
-                {health.latency}ms
-              </p>
+
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium text-gray-600">Avg Response</p>
+              <Activity className="h-4 w-4 text-blue-500" />
             </div>
-            <Activity className="h-5 w-5" style={{ color: '#445DFF' }} />
+            <p className="text-xl font-bold text-gray-900">
+              {health.latency}ms
+            </p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

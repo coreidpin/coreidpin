@@ -7,12 +7,19 @@ import {
   Activity, 
   Building, 
   GraduationCap, 
-  Clock 
+  Clock,
+  Download,
+  Bell
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { SystemHealth } from '../components/SystemHealth';
+import { UserGrowthChart } from '../components/analytics/UserGrowthChart';
+import { UserTypeBreakdown } from '../components/analytics/UserTypeBreakdown';
+import { PINActivationFunnel } from '../components/analytics/PINActivationFunnel';
 import { dashboardService, DashboardStats, RecentActivityItem } from '../services/dashboard.service';
+import { analyticsService } from '../services/analytics.service';
 import { toast } from '../utils/toast';
 
 import { AdminDashboardSkeleton } from '../components/AdminDashboardSkeleton';
@@ -144,13 +151,73 @@ export function AdminDashboard() {
           </Card>
         </div>
 
-        {/* System Health */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">System Health</h2>
-          <SystemHealth />
+        {/* Quick Actions Bar */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">Quick Actions</h3>
+                <p className="text-xs text-gray-600 mt-0.5">Common administrative tasks</p>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-gray-50"
+                  onClick={async () => {
+                    try {
+                      const blob = await analyticsService.exportUsers();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      toast.success('Users exported successfully');
+                    } catch (error) {
+                      toast.error('Failed to export users');
+                    }
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Users
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-gray-50"
+                  onClick={() => toast.info('Announcement feature coming soon!')}
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Send Announcement
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Analytics Section */}
+        <div className="space-y-8">
+          {/* Section Header */}
+          <div className="flex items-center gap-3">
+            <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
+            <h2 className="text-2xl font-bold text-gray-900">Analytics Overview</h2>
+          </div>
+
+          {/* User Growth - Full Width */}
+          <UserGrowthChart />
+          
+          {/* Two Column Layout - Balanced */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <UserTypeBreakdown />
+            <SystemHealth />
+          </div>
+
+          {/* PIN Funnel - Full Width */}
+          <PINActivationFunnel />
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity Section */}
         <div>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
           <Card>

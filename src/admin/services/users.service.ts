@@ -2,7 +2,14 @@ import { BaseAPIClient, PaginationParams, PaginatedResponse } from './api';
 
 export interface UserFilters {
   search?: string;
-  status?: string[];
+  status?: string | string[];
+  userType?: string;
+  verified?: string;
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+  // Legacy support
   identityType?: string[];
 }
 
@@ -39,22 +46,65 @@ export class UsersService extends BaseAPIClient {
         .from('profiles')
         .select('*', { count: 'exact' });
 
-      // Apply filters
+      // Apply search filter - search across multiple fields
       if (filters.search) {
-        query = query.or(`email.ilike.%${filters.search}%,full_name.ilike.%${filters.search}%`);
+        const searchTerm = filters.search.toLowerCase();
+        query = query.or(`email.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`);
       }
 
-      if (filters.status && filters.status.length > 0) {
-        if (filters.status.includes('suspended')) {
-          query = query.eq('is_suspended', true);
-        }
-        if (filters.status.includes('active')) {
-          query = query.eq('is_suspended', false);
+      // Apply user type filter
+      if (filters.userType) {
+        query = query.eq('user_type', filters.userType);
+      }
+
+      // Apply status filter
+      if (filters.status) {
+        const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
+        if (statuses.includes('active')) {
+          query = query.is('status', null).or('status.eq.active');
+        } else if (statuses.includes('inactive')) {
+          query = query.eq('status', 'inactive');
+        } else if (statuses.includes('suspended')) {
+          query = query.eq('status', 'suspended');
         }
       }
 
+      // Apply verification filter
+      if (filters.verified) {
+        switch (filters.verified) {
+          case 'verified':
+            query = query.eq('email_verified', true);
+            break;
+          case 'unverified':
+            query = query.eq('email_verified', false);
+            break;
+          case 'has_pin':
+            // We'll need to join with professional_pins table or check if user has PIN
+            // For now, let's use a simple check
+            query = query.not('pin_number', 'is', null);
+            break;
+          case 'no_pin':
+            query = query.is('pin_number', null);
+            break;
+        }
+      }
+
+      // Apply date range filter
+      if (filters.dateRange) {
+        if (filters.dateRange.start) {
+          query = query.gte('created_at', filters.dateRange.start);
+        }
+        if (filters.dateRange.end) {
+          // Add 1 day to include the end date
+          const endDate = new Date(filters.dateRange.end);
+          endDate.setDate(endDate.getDate() + 1);
+          query = query.lt('created_at', endDate.toISOString());
+        }
+      }
+
+      // Legacy support for identityType filter
       if (filters.identityType && filters.identityType.length > 0) {
-        query = query.in('identity_type', filters.identityType);
+        query = query.in('user_type', filters.identityType);
       }
 
       // Apply pagination

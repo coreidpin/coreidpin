@@ -88,6 +88,13 @@ const handleRequest = async (c: any) => {
 
     // 1. Hash contact for lookup
     const contactHash = await hashData(contact, Deno.env.get('SERVER_SALT') ?? 'default-salt');
+    
+    // DEBUG: Log hash for admin troubleshooting
+    console.log('🔍 Contact hash lookup:', { 
+      contact: contact.replace(/.(?=.{4})/g, '*'), 
+      hash: contactHash,
+      salt: Deno.env.get('SERVER_SALT') ? 'CUSTOM' : 'default-salt'
+    });
 
     // STRICT CHECK: Validate User Existence
     // Check if a user with this contact hash already exists
@@ -97,16 +104,32 @@ const handleRequest = async (c: any) => {
       .eq('phone_hash', contactHash)
       .maybeSingle();
 
+    // ADMIN CHECK: Also check if this email exists in admin_users table
+    let existingAdmin = null;
+    if (contact_type === 'email') {
+      const { data: adminData } = await supabase
+        .from('admin_users')
+        .select('user_id, email, is_active')
+        .eq('email', contact)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (adminData) {
+        console.log('✅ Admin user found:', { email: contact.replace(/.(?=.{4})/g, '*') });
+        existingAdmin = adminData;
+      }
+    }
+
     const isRegistration = body.create_account === true;
 
     if (isRegistration) {
-      if (existingUser) {
+      if (existingUser || existingAdmin) {
         console.log('Block Registration: User already exists', { contact_masked: contact.replace(/.(?=.{4})/g, '*') });
         return c.json({ error: 'Account already exists. Please log in.' }, 400);
       }
     } else {
       // Login attempt
-      if (!existingUser) {
+      if (!existingUser && !existingAdmin) {
         console.log('Block Login: User not found', { contact_masked: contact.replace(/.(?=.{4})/g, '*') });
         return c.json({ error: 'Account not found. Please sign up.' }, 404);
       }
@@ -330,6 +353,28 @@ const handleVerify = async (c: any) => {
 
     let userId = user?.user_id;
     let userEmail: string | null = null;
+    
+    // ADMIN CHECK: If not found in identity_users, check admin_users by email
+    if (!userId) {
+      const { data: adminUser } = await supabase
+        .from('admin_users')
+        .select('user_id, email')
+        .eq('email', contact)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (adminUser) {
+        console.log('✅ Admin login - user found in admin_users:', { email: contact.replace(/.(?=.{4})/g, '*') });
+        userId = adminUser.user_id;
+        userEmail = adminUser.email;
+        
+        // Fetch auth user email for JWT
+        const { data: authData } = await supabase.auth.admin.getUserById(userId);
+        if (authData?.user?.email) {
+          userEmail = authData.user.email;
+        }
+      }
+    }
 
     // 6. Create user if not exists
     if (!userId) {

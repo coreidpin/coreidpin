@@ -54,6 +54,10 @@ const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ defa
 // Admin Pages
 const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
 const UsersPage = lazy(() => import('../admin/pages/Users').then(m => ({ default: m.UsersPage })));
+const EngagementPage = lazy(() => import('../admin/pages/Engagement').then(m => ({ default: m.EngagementPage })));
+const PerformanceMonitoring = lazy(() => import('../admin/pages/PerformanceMonitoring').then(m => ({ default: m.PerformanceMonitoring })));
+const GeographicInsights = lazy(() => import('../admin/pages/GeographicInsights').then(m => ({ default: m.GeographicInsights })));
+const ReportBuilder = lazy(() => import('../admin/pages/ReportBuilder').then(m => ({ default: m.ReportBuilder })));
 const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
 const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
 const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
@@ -757,6 +761,50 @@ export const AppRouter: React.FC<RouterProps> = ({
             <AdminRoute>
               <Suspense fallback={<DashboardSkeleton />}>
                 <UsersPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/engagement" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <EngagementPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/performance" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <PerformanceMonitoring />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/geographic" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <GeographicInsights />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/reports" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ReportBuilder />
               </Suspense>
             </AdminRoute>
           } 

@@ -1,22 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { UsersTable, UserProfile } from '../components/users/UsersTable';
 import { UserDetailModal } from '../components/users/UserDetailModal';
+import { UserSearch } from '../components/users/UserSearch';
+import { UserFilters, UserFilterOptions } from '../components/users/UserFilters';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { Search, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { usersService } from '../services';
+import { analyticsService } from '../services/analytics.service';
 import { toast } from '../utils/toast';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/shared/DataTable/Pagination';
 import { Button } from '../../components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 
 export function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<UserFilterOptions>({});
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -25,23 +28,23 @@ export function UsersPage() {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  // Debounce search
+  // Fetch users when search, filters, or pagination changes
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchUsers();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, page, pageSize]);
+    fetchUsers();
+  }, [searchQuery, filters, page, pageSize]);
 
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       
-      const filters: any = {};
-      if (searchQuery) filters.search = searchQuery;
+      // Combine search and filters
+      const combinedFilters: any = {
+        ...filters,
+        search: searchQuery || undefined
+      };
 
       const response = await usersService.getUsers(
-        filters,
+        combinedFilters,
         { page, pageSize }
       );
 
@@ -49,11 +52,11 @@ export function UsersPage() {
       const mappedUsers: UserProfile[] = response.data.map((u: any) => ({
         id: u.id || u.user_id, // Fallback to user_id if id is missing
         email: u.email,
-        // Generate a name from email if missing (e.g. 'john.doe@gmail.com' -> 'John Doe')
-        full_name: u.full_name || (u.email ? u.email.split('@')[0].split(/[._]/).map((part: string) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : '—'),
+        // Generate a name from email if missing
+        full_name: u.full_name || u.name || (u.email ? u.email.split('@')[0].split(/[._]/).map((part: string) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') : '—'),
         // Fallback for user type, and explicit check for Super Admin
         user_type: (u.email === 'admin@gidipin.work' ? 'Super Admin' : (u.identity_type || u.user_type || 'Unspecified')) as any,
-        status: u.is_suspended ? 'suspended' : 'active',
+        status: u.status || (u.is_suspended ? 'suspended' : 'active'),
         created_at: u.created_at,
         avatar_url: u.avatar_url
       }));
@@ -88,6 +91,37 @@ export function UsersPage() {
     setPage(1);
   };
 
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setPage(1); // Reset to first page on search
+  }, []);
+
+  const handleFiltersChange = useCallback((newFilters: UserFilterOptions) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page on filter change
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setFilters({});
+    setSearchQuery('');
+    setPage(1);
+  }, []);
+
+  const handleExport = async () => {
+    try {
+      const blob = await analyticsService.exportUsers(filters);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Users exported successfully');
+    } catch (error) {
+      toast.error('Failed to export users');
+    }
+  };
+
   return (
     <AdminLayout breadcrumbs={['Users', 'View Users']} onLogout={handleLogout}>
       <ErrorBoundary>
@@ -97,7 +131,7 @@ export function UsersPage() {
               Users
             </h1>
             <p className="text-gray-600 mt-1">
-              Manage and view all registered users
+              Manage and view all registered users ({total.toLocaleString()} total)
             </p>
           </div>
 
@@ -105,90 +139,38 @@ export function UsersPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>All Users</CardTitle>
-                <div className="relative w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    placeholder="Search users..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchUsers}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExport}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-1 gap-4 items-center">
-                  <div className="relative w-64">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input
-                      placeholder="Search users..."
-                      className="pl-8"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  
-                  {/* Filters */}
-                  <div className="flex gap-2">
-                    <select
-                      className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      onChange={(e) => {
-                        // Implement filter logic
-                        const status = e.target.value ? [e.target.value] : undefined;
-                        // @ts-ignore
-                        fetchUsers({ status });
-                      }}
-                    >
-                      <option value="">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="suspended">Suspended</option>
-                    </select>
-
-                    <select
-                      className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      onChange={(e) => {
-                         const identityType = e.target.value ? [e.target.value] : undefined;
-                         // @ts-ignore
-                         fetchUsers({ identityType });
-                      }}
-                    >
-                      <option value="">All Types</option>
-                      <option value="professional">Professional</option>
-                      <option value="employer">Employer</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Export Button */}
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    // Simple CSV Export
-                    const headers = ['ID', 'Name', 'Email', 'Type', 'Status', 'Joined'];
-                    const csvContent = [
-                      headers.join(','),
-                      ...users.map(u => [
-                        u.id, 
-                        `"${u.full_name}"`, 
-                        u.email, 
-                        u.user_type, 
-                        u.status, 
-                        new Date(u.created_at).toLocaleDateString()
-                      ].join(','))
-                    ].join('\n');
-                    
-                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
-                    link.click();
-                  }}
-                  className="gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Export CSV
-                </Button>
+              {/* Search and Filters */}
+              <div className="space-y-4 mb-6">
+                <UserSearch
+                  onSearch={handleSearch}
+                  placeholder="Search by name, email, phone, or PIN..."
+                />
+                <UserFilters
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  onClearFilters={handleClearFilters}
+                />
               </div>
 
               {!isLoading && users.length === 0 ? (

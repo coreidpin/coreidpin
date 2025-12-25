@@ -30,8 +30,8 @@ export const AdminLoginForm: React.FC = () => {
         throw new Error('Please enter a valid email address');
       }
 
-      // Need create_account=true to create identity_users record
-      await api.requestOTP(normalizedContact, contactType, true);
+      // Admin login - do not create account (must already exist)
+      await api.requestOTP(normalizedContact, contactType, false);
       toast.success('OTP sent to your email');
       setStep('verify_otp');
     } catch (err: any) {
