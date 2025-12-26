@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase/client';
+import { notificationService } from '../admin/services/notification.service';
 
 export interface Notification {
   id: string;
@@ -17,9 +18,13 @@ export interface Notification {
 }
 
 export function useNotifications() {
+  console.log('🚀 useNotifications HOOK STARTED');
+  
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  console.log('🚀 Hook state initialized, will fetch notifications...');
 
   // Fetch notifications from database
   const fetchNotifications = async () => {
@@ -27,29 +32,68 @@ export function useNotifications() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Fetch user-specific notifications
+      const { data: userNotifications, error: notifError } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) {
+      if (notifError) {
         // If table doesn't exist yet (migration not run), silently fail
-        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        if (notifError.code === '42P01' || notifError.message?.includes('does not exist')) {
           console.warn('Notifications table does not exist yet. Run migration to enable notifications.');
           setNotifications([]);
           setUnreadCount(0);
           setLoading(false);
           return;
         }
-        throw error;
+        throw notifError;
       }
 
-      setNotifications(data || []);
+      // Fetch active announcements
+      const userType = localStorage.getItem('userType') || 'professional';
+      console.log('🔔 Fetching announcements for user type:', userType);
+      let announcements: any[] = [];
+      try {
+        announcements = await notificationService.getActiveAnnouncements(userType);
+        console.log('🔔 Fetched announcements:', announcements);
+      } catch (error) {
+        console.warn('Could not fetch announcements:', error);
+      }
+
+      // Convert announcements to notification format
+      const formattedAnnouncements: Notification[] = announcements.map(a => ({
+        id: a.id,
+        user_id: user.id,
+        type: a.type as any,
+        category: 'announcement' as const,
+        title: a.title,
+        message: a.message,
+        metadata: { priority: a.priority, target_audience: a.target_audience },
+        is_read: false,
+        is_new: true,
+        action_url: null,
+        created_at: a.created_at,
+        read_at: null
+      }));
+
+      console.log('🔔 Formatted announcements:', formattedAnnouncements);
+
+      // Combine and sort by date
+      const combined = [
+        ...(userNotifications || []),
+        ...formattedAnnouncements
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      console.log('🔔 Combined notifications + announcements:', combined);
+      console.log('🔔 Total count:', combined.length);
+
+      setNotifications(combined);
       
-      // Calculate unread count
-      const unread = (data || []).filter(n => !n.is_read).length;
+      // Calculate unread count (announcements are always unread for display)
+      const unread = combined.filter(n => !n.is_read).length;
       setUnreadCount(unread);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -132,11 +176,14 @@ export function useNotifications() {
 
   // Subscribe to real-time updates
   useEffect(() => {
+    console.log('🔵 useEffect RUNNING - will call fetchNotifications');
     let cleanup: (() => void) | null = null;
 
     const initSubscription = async () => {
       try {
+        console.log('🔵 Calling fetchNotifications...');
         await fetchNotifications();
+        console.log('🔵 fetchNotifications completed');
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;

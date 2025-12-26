@@ -61,6 +61,7 @@ import { MarketValueCard } from './dashboard/MarketValueCard';
 import { ResumeGenerator } from './dashboard/ResumeGenerator';
 import { LeadsWidget } from './dashboard/LeadsWidget';
 import { ProfileCompletionBanner } from './ProfileCompletionBanner';
+import { LiveAnnouncementBanner } from './LiveAnnouncementBanner';
 import { PhoneToPinWidget } from './dashboard/PhoneToPinWidget';
 import { ErrorBoundary } from './ui/error-boundary';
 import { OverviewSkeleton } from './dashboard/OverviewSkeleton';
@@ -77,12 +78,16 @@ import { trackEvent } from '../utils/analytics';
 import { Checkbox } from './ui/checkbox';
 import { DialogFooter, DialogDescription } from './ui/dialog';
 import { NotificationCenter, ToastContainer } from './notifications';
+import { useNotifications } from '../hooks/useNotifications';
 import { EndorsementAPI } from '../utils/endorsementAPI';
 import { activityTracker } from '../utils/activityTracker';
 import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } from '../types/endorsement';
 import { Snowfall, HolidayGiftWidget } from './ui/christmas-effects';
 
 export function ProfessionalDashboard() {
+  // Notifications hook
+  const { notifications: hookNotifications, unreadCount, loading: notificationsLoadingHook } = useNotifications();
+  
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
   const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
   const [copiedPin, setCopiedPin] = useState(false);
@@ -1144,6 +1149,9 @@ export function ProfessionalDashboard() {
           )}
         </AnimatePresence>
 
+        {/* Live Announcements from Admin */}
+        <LiveAnnouncementBanner />
+
         {/* Welcome Section - Mobile: Stack, Desktop: Side-by-side */}
 
         <div className="mb-6 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-100 pb-6">
@@ -1171,18 +1179,24 @@ export function ProfessionalDashboard() {
             aria-label="Open notifications"
           >
             <Bell className="w-5 h-5 text-gray-700" />
-            {!notificationsLoading && realTimeNotifications.filter(n => n.isNew).length > 0 && (
+            {!notificationsLoadingHook && unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
-                {realTimeNotifications.filter(n => n.isNew).length > 9 ? '9+' : realTimeNotifications.filter(n => n.isNew).length}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
         </div>
 
-        {/* Header Profile Card - Full width on mobile */}
+        {/* Header Profile Card */}
         <motion.div
           initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
           animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+          className="px-4"
+          style={{
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)'
+          }}
         >
           <HeroProfileCard 
             name={(userProfile as any)?.full_name || (userProfile as any)?.name || 'Professional User'}

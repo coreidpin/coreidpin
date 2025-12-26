@@ -186,7 +186,7 @@ export function AdminDashboard() {
                   variant="outline"
                   size="sm"
                   className="bg-white hover:bg-gray-50"
-                  onClick={() => toast.info('Announcement feature coming soon!')}
+                  onClick={() => window.location.href = '/admin/announcements'}
                 >
                   <Bell className="h-4 w-4 mr-2" />
                   Send Announcement

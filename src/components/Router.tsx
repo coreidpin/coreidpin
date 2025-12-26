@@ -53,11 +53,16 @@ const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ defa
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
-const UsersPage = lazy(() => import('../admin/pages/Users').then(m => ({ default: m.UsersPage })));
+const UsersPage = lazy(() => import('../admin/pages/EnhancedUsers'));
 const EngagementPage = lazy(() => import('../admin/pages/Engagement').then(m => ({ default: m.EngagementPage })));
 const PerformanceMonitoring = lazy(() => import('../admin/pages/PerformanceMonitoring').then(m => ({ default: m.PerformanceMonitoring })));
 const GeographicInsights = lazy(() => import('../admin/pages/GeographicInsights').then(m => ({ default: m.GeographicInsights })));
 const ReportBuilder = lazy(() => import('../admin/pages/ReportBuilder').then(m => ({ default: m.ReportBuilder })));
+const RevenueMonetization = lazy(() => import('../admin/pages/RevenueMonetization').then(m => ({ default: m.RevenueMonetization })));
+const SystemSettings = lazy(() => import('../admin/pages/SystemSettings'));
+const AuditLogs = lazy(() => import('../admin/pages/AuditLogs'));
+const Announcements = lazy(() => import('../admin/pages/Announcements'));
+const EmailManagement = lazy(() => import('../admin/pages/EmailManagement'));
 const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
 const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
 const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
@@ -811,6 +816,17 @@ export const AppRouter: React.FC<RouterProps> = ({
         />
 
         <Route 
+          path="/admin/revenue" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <RevenueMonetization />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
           path="/admin/projects" 
           element={
             <AdminRoute>
@@ -827,6 +843,50 @@ export const AppRouter: React.FC<RouterProps> = ({
             <AdminRoute>
               <Suspense fallback={<DashboardSkeleton />}>
                 <EndorsementsPage />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/settings" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <SystemSettings />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/audit" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <AuditLogs />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/announcements" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <Announcements />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/emails" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <EmailManagement />
               </Suspense>
             </AdminRoute>
           } 

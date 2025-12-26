@@ -13,7 +13,10 @@ import {
   X,
   ChevronRight,
   TrendingUp,
-  Map
+  Map,
+  DollarSign,
+  Bell,
+  Mail
 } from 'lucide-react';
 import { checkAdminAccess } from '../utils/auth';
 import { useIsMobile } from '@/components/ui/use-mobile';
@@ -33,7 +36,8 @@ const navigationGroups = [
       { icon: Activity, label: 'Performance', path: '/admin/performance' },
       { icon: Map, label: 'Geographic', path: '/admin/geographic' },
       { icon: FileText, label: 'Reports', path: '/admin/reports' },
-      { icon: Activity, label: 'Activity Logs', path: '/admin/logs' },
+      { icon: DollarSign, label: 'Revenue', path: '/admin/revenue' },
+      { icon: Activity, label: 'Audit Logs', path: '/admin/audit' },
     ]
   },
   {
@@ -47,6 +51,8 @@ const navigationGroups = [
   {
     title: 'SYSTEM',
     items: [
+      { icon: Bell, label: 'Announcements', path: '/admin/announcements' },
+      { icon: Mail, label: 'Email System', path: '/admin/emails' },
       { icon: Building, label: 'Integrations', path: '/admin/integrations' },
       { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ]
@@ -130,7 +136,7 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto overflow-x-hidden">
+          <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto overflow-x-hidden" style={{ maxHeight: 'calc(100vh - 160px)' }}>
             {navigationGroups.map((group) => (
               <div key={group.title}>
                 <h3 

@@ -28,7 +28,7 @@ export function HeroProfileCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-2xl"
+      className="relative overflow-hidden w-full rounded-2xl"
       style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #000000 100%)',
         minHeight: '200px',
