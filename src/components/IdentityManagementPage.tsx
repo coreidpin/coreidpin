@@ -2269,13 +2269,13 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 </Button>
               </CardHeader>
               <CardContent>
-                {formData.education.length === 0 ? (
+                {(formData.education || []).length === 0 ? (
                   <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
                     <p className="text-slate-500 text-sm">No education history added yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {formData.education.map((edu, index) => (
+                    {(formData.education || []).map((edu, index) => (
                       <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
                         <div className="flex justify-between items-start">
                           <div>
