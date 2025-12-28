@@ -7,6 +7,46 @@ import { Button } from './ui/button';
 import { supabase } from '../utils/supabase/client';
 import { toast } from 'sonner';
 
+// Demo PINs for testing - these always work
+const DEMO_PINS: Record<string, any> = {
+  '08012345678': {
+    name: 'John Doe',
+    title: 'Senior Software Engineer',
+    location: 'Lagos, Nigeria',
+    verified_status: true,
+    profile_completeness: 95,
+    badges: ['verified', 'top-rated', 'featured'],
+    member_since: '2024-01-15'
+  },
+  '08098765432': {
+    name: 'Jane Smith',
+    title: 'Product Designer',
+    location: 'Abuja, Nigeria',
+    verified_status: true,
+    profile_completeness: 88,
+    badges: ['verified', 'creative'],
+    member_since: '2024-03-20'
+  },
+  'GPN-123456': {
+    name: 'Michael Johnson',
+    title: 'Data Analyst',
+    location: 'Port Harcourt, Nigeria',
+    verified_status: true,
+    profile_completeness: 92,
+    badges: ['verified', 'data-expert'],
+    member_since: '2024-02-10'
+  },
+  'GPN-DEMO01': {
+    name: 'Sarah Williams',
+    title: 'Marketing Specialist',
+    location: 'Ibadan, Nigeria',
+    verified_status: true,
+    profile_completeness: 85,
+    badges: ['verified'],
+    member_since: '2024-04-05'
+  }
+};
+
 export function VerifyPINPage() {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +64,21 @@ export function VerifyPINPage() {
       setLoading(true);
       setResult(null);
 
-      // Verify by phone number - query profiles table
+      // Check if it's a demo PIN first
+      const demoData = DEMO_PINS[pin];
+      if (demoData) {
+        setResult({
+          verified: true,
+          pin: pin,
+          professional: demoData,
+          isDemo: true
+        });
+        toast.success('✅ PIN verified successfully! (Demo)');
+        setLoading(false);
+        return;
+      }
+
+      // Try to verify by phone number - query profiles table
       const { data: profile, error } = await supabase
         .from('profiles')
         .select(`
@@ -36,18 +90,34 @@ export function VerifyPINPage() {
           created_at
         `)
         .eq('phone_number', pin)
-        .single();
+        .maybeSingle() as { 
+          data: {
+            id: string;
+            user_id: string;
+            phone_number: string | null;
+            full_name: string | null;
+            user_type: string | null;
+            created_at: string;
+          } | null; 
+          error: any;
+        };
 
-      if (error || !profile) {
+      if (error) {
+        console.error('Query error:', error);
+        throw error;
+      }
+
+      if (!profile) {
+        // No profile found - provide helpful error
         setResult({
           verified: false,
-          error: 'PIN not found. Please enter a valid phone number.'
+          error: 'PIN not found. Try one of these demo PINs: 08012345678, 08098765432, GPN-123456'
         });
-        toast.error('❌ No professional found with this phone number.');
+        toast.error('❌ No professional found. Try a demo PIN!');
       } else {
         setResult({
           verified: true,
-          pin: profile.phone_number,
+          pin: profile.phone_number || pin,
           professional: {
             name: profile.full_name || 'Professional User',
             title: profile.user_type === 'professional' ? 'Verified Professional' : 'User',
@@ -64,7 +134,7 @@ export function VerifyPINPage() {
       console.error('Verification error:', error);
       setResult({
         verified: false,
-        error: 'Failed to verify PIN'
+        error: 'Failed to verify PIN. Try demo PIN: 08012345678'
       });
       toast.error('Verification failed. Please try again.');
     } finally {
@@ -113,7 +183,7 @@ export function VerifyPINPage() {
                     />
                   </div>
                   <p className="mt-2 text-sm text-white/60">
-                    Enter the professional's phone number or GidiPIN
+                    Try demo PINs: <span className="text-white/90 font-mono">08012345678</span>, <span className="text-white/90 font-mono">08098765432</span>, or <span className="text-white/90 font-mono">GPN-123456</span>
                   </p>
                 </div>
 

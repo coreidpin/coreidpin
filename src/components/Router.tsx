@@ -63,6 +63,8 @@ const APIPage = lazy(() => import('./APIPage').then(m => ({ default: m.APIPage }
 const GetPINPage = lazy(() => import('./GetPINPage').then(m => ({ default: m.GetPINPage })));
 const SecurityPage = lazy(() => import('./SecurityPage').then(m => ({ default: m.SecurityPage })));
 const VerifyPINPage = lazy(() => import('./VerifyPINPage').then(m => ({ default: m.VerifyPINPage })));
+const PricingPage = lazy(() => import('./PricingPage').then(m => ({ default: m.PricingPage })));
+const CompliancePage = lazy(() => import('./CompliancePage').then(m => ({ default: m.CompliancePage })));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
@@ -621,6 +623,28 @@ export const AppRouter: React.FC<RouterProps> = ({
             <Layout currentPage="verify-pin" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
               <Suspense fallback={<LoadingSpinner />}>
                 <VerifyPINPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/pricing" 
+          element={
+            <Layout currentPage="pricing" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <PricingPage onNavigate={() => {}} />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/compliance" 
+          element={
+            <Layout currentPage="compliance" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <CompliancePage onNavigate={() => {}} />
               </Suspense>
             </Layout>
           } 

@@ -28,7 +28,6 @@ import {
   Briefcase,
   UserCheck,
   School,
-  Zap,
   Target,
   TrendingUp
 } from 'lucide-react';
@@ -229,7 +228,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                       className="border-surface bg-surface hover:bg-[#7bb8ff]/20 hover:border-[#7bb8ff]/40 text-white"
                       asChild
                     >
-                      <a href="https://twitter.com/swipe" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Twitter">
+                      <a href="https://twitter.com/gidipin" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Twitter">
                         <Twitter className="h-4 w-4" />
                       </a>
                     </Button>
@@ -239,7 +238,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                       className="border-surface bg-surface hover:bg-[#bfa5ff]/20 hover:border-[#bfa5ff]/40 text-white"
                       asChild
                     >
-                      <a href="https://linkedin.com/company/swipe" target="_blank" rel="noopener noreferrer" aria-label="Connect on LinkedIn">
+                      <a href="https://linkedin.com/company/gidipin" target="_blank" rel="noopener noreferrer" aria-label="Connect on LinkedIn">
                         <Linkedin className="h-4 w-4" />
                       </a>
                     </Button>
@@ -249,7 +248,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                       className="border-surface bg-surface hover:bg-[#32f08c]/20 hover:border-[#32f08c]/40 text-white"
                       asChild
                     >
-                      <a href="https://instagram.com/swipe" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram">
+                      <a href="https://instagram.com/gidipin" target="_blank" rel="noopener noreferrer" aria-label="Follow us on Instagram">
                         <Instagram className="h-4 w-4" />
                       </a>
                     </Button>
@@ -259,7 +258,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                       className="border-surface bg-surface hover:bg-[#7bb8ff]/20 hover:border-[#7bb8ff]/40 text-white"
                       asChild
                     >
-                      <a href="https://facebook.com/swipe" target="_blank" rel="noopener noreferrer" aria-label="Like us on Facebook">
+                      <a href="https://facebook.com/gidipin" target="_blank" rel="noopener noreferrer" aria-label="Like us on Facebook">
                         <Facebook className="h-4 w-4" />
                       </a>
                     </Button>
@@ -392,10 +391,6 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                 <Globe className="h-4 w-4" />
                 <span>45+ Countries</span>
               </div>
-              <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#bfa5ff]/10 to-[#7bb8ff]/10 border border-[#bfa5ff]/20 text-white/80 flex items-center gap-2">
-                <Zap className="h-4 w-4 text-[#32f08c]" />
-                <span>Powered by AI</span>
-              </div>
             </div>
           </div>
 
@@ -411,7 +406,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
           {/* Disclaimer */}
           <div className="mt-6 p-4 rounded-xl bg-surface border border-surface backdrop-blur-xl">
             <p className="text-xs text-white/40 text-center leading-relaxed">
-              <strong className="text-white/60">Important:</strong> swipe implements rigorous KYC, AML, and credential verification. 
+              <strong className="text-white/60">Important:</strong> GidiPIN implements rigorous KYC, AML, and credential verification. 
               All data processing complies with GDPR, NDPR, and international privacy regulations. 
               Professional Identity Numbers (PINs) are blockchain-secured and AI-verified for maximum trust and authenticity.
             </p>
