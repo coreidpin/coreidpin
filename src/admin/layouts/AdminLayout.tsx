@@ -16,7 +16,8 @@ import {
   Map,
   DollarSign,
   Bell,
-  Mail
+  Mail,
+  Folder
 } from 'lucide-react';
 import { checkAdminAccess } from '../utils/auth';
 import { useIsMobile } from '@/components/ui/use-mobile';
@@ -53,6 +54,7 @@ const navigationGroups = [
     items: [
       { icon: Bell, label: 'Announcements', path: '/admin/announcements' },
       { icon: Mail, label: 'Email System', path: '/admin/emails' },
+      { icon: Folder, label: 'Content Management', path: '/admin/content' },
       { icon: Building, label: 'Integrations', path: '/admin/integrations' },
       { icon: Settings, label: 'Settings', path: '/admin/settings' },
     ]

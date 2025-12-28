@@ -51,6 +51,19 @@ const CookiesPolicy = lazy(() => import('./CookiesPolicy').then(m => ({ default:
 const GDPRCompliance = lazy(() => import('./GDPRCompliance').then(m => ({ default: m.GDPRCompliance })));
 const PlaceholderPage = lazy(() => import('./PlaceholderPage').then(m => ({ default: m.PlaceholderPage })));
 
+// CMS Pages
+const FAQPage = lazy(() => import('./FAQPage').then(m => ({ default: m.FAQPage })));
+const CMSPageViewer = lazy(() => import('./CMSPageViewer').then(m => ({ default: m.CMSPageViewer })));
+const DocumentationPage = lazy(() => import('./DocumentationPage').then(m => ({ default: m.DocumentationPage })));
+const BlogPage = lazy(() => import('./BlogPage').then(m => ({ default: m.BlogPage })));
+const SuccessStoriesPage = lazy(() => import('./SuccessStoriesPage').then(m => ({ default: m.SuccessStoriesPage })));
+const AboutPage = lazy(() => import('./AboutPage').then(m => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('./ContactPage').then(m => ({ default: m.ContactPage })));
+const APIPage = lazy(() => import('./APIPage').then(m => ({ default: m.APIPage })));
+const GetPINPage = lazy(() => import('./GetPINPage').then(m => ({ default: m.GetPINPage })));
+const SecurityPage = lazy(() => import('./SecurityPage').then(m => ({ default: m.SecurityPage })));
+const VerifyPINPage = lazy(() => import('./VerifyPINPage').then(m => ({ default: m.VerifyPINPage })));
+
 // Admin Pages
 const AdminDashboard = lazy(() => import('../admin/pages/Dashboard').then(m => ({ default: m.AdminDashboard })));
 const UsersPage = lazy(() => import('../admin/pages/EnhancedUsers'));
@@ -63,6 +76,7 @@ const SystemSettings = lazy(() => import('../admin/pages/SystemSettings'));
 const AuditLogs = lazy(() => import('../admin/pages/AuditLogs'));
 const Announcements = lazy(() => import('../admin/pages/Announcements'));
 const EmailManagement = lazy(() => import('../admin/pages/EmailManagement'));
+const ContentManagement = lazy(() => import('../admin/pages/ContentManagement').then(m => ({ default: m.default })));
 const ProjectsPage = lazy(() => import('../admin/pages/Projects').then(m => ({ default: m.ProjectsPage })));
 const EndorsementsPage = lazy(() => import('../admin/pages/Endorsements').then(m => ({ default: m.EndorsementsPage })));
 const AuthLogsPage = lazy(() => import('../admin/pages/logs/AuthLogs').then(m => ({ default: m.AuthLogsPage })));
@@ -492,6 +506,127 @@ export const AppRouter: React.FC<RouterProps> = ({
         />
 
         <Route 
+          path="/faq" 
+          element={
+            <Layout currentPage="faq" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <FAQPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/pages/:slug" 
+          element={
+            <Layout currentPage="pages" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <CMSPageViewer />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/docs" 
+          element={
+            <Layout currentPage="docs" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <DocumentationPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/blog" 
+          element={
+            <Layout currentPage="blog" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <BlogPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/stories" 
+          element={
+            <Layout currentPage="stories" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <SuccessStoriesPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/about" 
+          element={
+            <Layout currentPage="about" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <AboutPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/contact" 
+          element={
+            <Layout currentPage="contact" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <ContactPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/api" 
+          element={
+            <Layout currentPage="api" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <APIPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/get-pin" 
+          element={
+            <Layout currentPage="get-pin" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <GetPINPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/security" 
+          element={
+            <Layout currentPage="security" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <SecurityPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/verify-pin" 
+          element={
+            <Layout currentPage="verify-pin" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <VerifyPINPage />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
           path="/employers" 
           element={
             <Layout currentPage="employers" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
@@ -887,6 +1022,17 @@ export const AppRouter: React.FC<RouterProps> = ({
             <AdminRoute>
               <Suspense fallback={<DashboardSkeleton />}>
                 <EmailManagement />
+              </Suspense>
+            </AdminRoute>
+          } 
+        />
+
+        <Route 
+          path="/admin/content" 
+          element={
+            <AdminRoute>
+              <Suspense fallback={<DashboardSkeleton />}>
+                <ContentManagement />
               </Suspense>
             </AdminRoute>
           } 

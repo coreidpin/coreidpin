@@ -172,6 +172,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                     border-surface text-white 
                     hover:bg-surface hover:border-surface
                   "
+                  onClick={() => navigate('/verify-pin')}
                 >
                   Verify a PIN
                   <Shield className="ml-2 h-5 w-5" />
