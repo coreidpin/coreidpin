@@ -1174,3 +1174,90 @@ app.get('/metrics/alerts', async (c) => {
     return c.json({ error: 'alerts_failed' }, 500);
   }
 });
+
+// PIN Conversion Endpoint - Convert existing PIN to phone number
+app.post("/make-server-5cd3a043/pin/convert-phone", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (!user?.id || authError) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { phoneNumber } = await c.req.json();
+
+    if (!phoneNumber) {
+      return c.json({ error: "Phone number is required" }, 400);
+    }
+    
+    // Sanitize phone number to digits only
+    const newPin = phoneNumber.replace(/\D/g, '');
+
+    // Get existing PIN
+    const { data: existingPin } = await supabase
+      .from('professional_pins')
+      .select('id, pin_number')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!existingPin) {
+      return c.json({ error: "No PIN found for this user" }, 404);
+    }
+
+    // Check if new PIN is already in use by another user
+    const { data: conflict } = await supabase
+      .from('professional_pins')
+      .select('id')
+      .eq('pin_number', newPin)
+      .neq('user_id', user.id)
+      .single();
+
+    if (conflict) {
+      return c.json({ error: "This phone number is already used as a PIN by another user" }, 409);
+    }
+
+    // Update PIN to phone number
+    const { error: updateError } = await supabase
+      .from('professional_pins')
+      .update({ 
+        pin_number: newPin,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingPin.id);
+
+    if (updateError) {
+      console.error('Update PIN error:', updateError);
+      throw new Error('Failed to update PIN');
+    }
+
+    // Update KV cache if available
+    try {
+      await kv.set(`pin:${newPin}`, { 
+        pinId: existingPin.id, 
+        userId: user.id, 
+        pinNumber: newPin, 
+        updatedAt: new Date().toISOString() 
+      });
+      // Delete old key if different
+      if (existingPin.pin_number !== newPin) {
+        await kv.del(`pin:${existingPin.pin_number}`);
+      }
+    } catch (kvErr) {
+      console.log('KV update warning:', kvErr);
+      // Non-fatal, continue
+    }
+
+    // Log the conversion
+    await supabase.from('audit_events').insert({
+      event_type: 'pin_converted_to_phone',
+      user_id: user.id,
+      meta: { old_pin: existingPin.pin_number, new_pin: newPin }
+    });
+
+    return c.json({ success: true, pinNumber: newPin });
+  } catch (error: any) {
+    console.error("Convert PIN error:", error);
+    return c.json({ error: error.message || "Failed to convert PIN" }, 500);
+  }
+});

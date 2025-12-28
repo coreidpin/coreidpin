@@ -78,26 +78,40 @@ export function VerifyPINPage() {
         return;
       }
 
-      // Try to verify by phone number - query profiles table
-      const { data: profile, error } = await supabase
-        .from('profiles')
+      // Try to verify PIN - query professional_pins table (works for both auto-generated and phone-based PINs)
+      const { data: pinRecord, error } = await supabase
+        .from('professional_pins')
         .select(`
           id,
+          pin_number,
           user_id,
-          phone_number,
-          full_name,
-          user_type,
-          created_at
+          verification_status,
+          trust_score,
+          created_at,
+          updated_at,
+          profiles!inner(
+            full_name,
+            phone_number,
+            user_type,
+            created_at
+          )
         `)
-        .eq('phone_number', pin)
+        .eq('pin_number', pin)
         .maybeSingle() as { 
           data: {
             id: string;
+            pin_number: string;
             user_id: string;
-            phone_number: string | null;
-            full_name: string | null;
-            user_type: string | null;
+            verification_status: string;
+            trust_score: number | null;
             created_at: string;
+            updated_at: string | null;
+            profiles: {
+              full_name: string | null;
+              phone_number: string | null;
+              user_type: string | null;
+              created_at: string;
+            };
           } | null; 
           error: any;
         };
@@ -107,28 +121,34 @@ export function VerifyPINPage() {
         throw error;
       }
 
-      if (!profile) {
-        // No profile found - provide helpful error
+      if (!pinRecord) {
+        // No PIN found - provide helpful error
         setResult({
           verified: false,
           error: 'PIN not found. Try one of these demo PINs: 08012345678, 08098765432, GPN-123456'
         });
-        toast.error('❌ No professional found. Try a demo PIN!');
+        toast.error('❌ No professional found with this PIN. Try a demo PIN!');
       } else {
+        // PIN found - display professional info
+        const isProfessional = pinRecord.profiles.user_type === 'professional';
+        const isVerified = pinRecord.verification_status === 'verified' || pinRecord.verification_status === 'active';
+        
         setResult({
           verified: true,
-          pin: profile.phone_number || pin,
+          pin: pinRecord.pin_number,
           professional: {
-            name: profile.full_name || 'Professional User',
-            title: profile.user_type === 'professional' ? 'Verified Professional' : 'User',
+            name: pinRecord.profiles.full_name || 'Professional User',
+            title: isProfessional ? 'Verified Professional' : pinRecord.profiles.user_type || 'User',
             location: 'Nigeria',
-            verified_status: true,
-            profile_completeness: 75,
-            badges: ['verified'],
-            member_since: profile.created_at
+            verified_status: isVerified,
+            profile_completeness: 75, // TODO: Calculate actual completeness
+            badges: isVerified ? ['verified'] : [],
+            member_since: pinRecord.created_at,
+            trust_score: pinRecord.trust_score || 20,
+            pin_type: pinRecord.pin_number.startsWith('GPN-') ? 'Auto-Generated' : 'Phone-Based'
           }
         });
-        toast.success('✅ PIN verified successfully!');
+        toast.success(`✅ PIN verified successfully! (${pinRecord.pin_number.startsWith('GPN-') ? 'Auto' : 'Phone'} PIN)`);
       }
     } catch (error: any) {
       console.error('Verification error:', error);

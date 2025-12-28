@@ -106,11 +106,10 @@ pin.post("/create", async (c) => {
       portfolioUrl,
       experiences = [],
       skills = [],
-      usePhoneAsPin = false,
       phoneNumber = null
     } = body;
 
-    console.log(`Creating PIN for user ${user.id}:`, { name, title, location });
+    console.log(`Creating PIN for user ${user.id}:`, { name, title, location, phoneNumber });
 
     // Check if user already has a PIN
     const { data: existingPin } = await supabase
@@ -127,22 +126,20 @@ pin.post("/create", async (c) => {
       }, 400);
     }
 
-    // Generate unique PIN number using database function or use phone number
+    // DEFAULT: Use phone number as PIN (original system design)
+    // Phone numbers are universal, memorable, and what users expect
     let pinNumber;
-    if (usePhoneAsPin && phoneNumber) {
-      // Use provided phone number (sanitize to just digits)
+    if (phoneNumber) {
+      // Use phone number as PIN (sanitize to just digits)
       pinNumber = phoneNumber.replace(/\D/g, '');
       console.log(`Using phone number as PIN: ${pinNumber}`);
     } else {
-      // Generate unique PIN number using database function
-      const { data: pinNumberData, error: pinGenError } = await supabase.rpc('generate_pin_number');
-      
-      if (pinGenError || !pinNumberData) {
-        console.log('PIN generation error:', pinGenError);
-        throw new Error('Failed to generate unique PIN number');
-      }
-      pinNumber = pinNumberData;
-      console.log(`Generated PIN number: ${pinNumber}`);
+      // Fallback for users without phone: simple sequential PIN
+      // This is rare and only happens in edge cases
+      const timestamp = Date.now().toString().slice(-8);
+      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      pinNumber = `234${timestamp}${random}`; // Looks like a phone number
+      console.log(`Generated fallback PIN (no phone provided): ${pinNumber}`);
     }
 
     // Create PIN record
