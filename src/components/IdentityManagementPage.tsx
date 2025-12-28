@@ -1707,9 +1707,15 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label className="text-slate-700 font-semibold text-sm">Phone Number</Label>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
-                        <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
-                      </Badge>
+                      {profile?.phone_verified ? (
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
+                          <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 rounded-full px-3">
+                          Unverified
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="relative group flex items-center">
@@ -1719,14 +1725,19 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         </div>
                         <Input 
                           value={formData.phone}
-                          readOnly
-                          className="bg-slate-50 border-slate-200 text-slate-900 pl-10 h-11 font-mono text-sm focus:bg-white transition-all shadow-sm pr-20" 
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="e.g. +234 801 234 5678"
+                          className="bg-white border-slate-200 text-slate-900 pl-10 h-11 font-mono text-sm focus:bg-white focus:border-blue-500 focus:ring-blue-500/20 transition-all shadow-sm pr-20" 
                         />
                         <div className="absolute right-1.5 top-1.5 bottom-1.5">
                           <Button 
                             size="icon" 
                             variant="ghost" 
                             className="h-full w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            onClick={() => {
+                              const input = document.querySelector('input[class*="font-mono"]') as HTMLInputElement;
+                              input?.focus();
+                            }}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
