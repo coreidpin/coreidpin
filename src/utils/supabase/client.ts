@@ -22,6 +22,20 @@ export function createClient() {
         storageKey: 'sb-auth-token',
         flowType: 'pkce'
       },
+      realtime: {
+        // Prevent aggressive reconnection attempts
+        params: {
+          eventsPerSecond: 2 // Throttle events
+        },
+        timeout: 10000, // 10 seconds timeout
+        heartbeatIntervalMs: 30000, // 30 second heartbeat
+        reconnectAfterMs: (tries) => {
+          // Exponential backoff with max 30 seconds
+          const delay = Math.min(1000 * Math.pow(2, tries), 30000);
+          console.log(`[Supabase] Reconnecting in ${delay/1000}s (attempt ${tries + 1})`);
+          return delay;
+        }
+      },
       global: {
         headers: {
           'x-client-info': 'gidipin-web'

@@ -37,6 +37,7 @@ import { trackProfileView } from '../utils/demandAnalytics';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { ContactModal } from './public/ContactModal';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
+import { FeaturedSection, TechStackManager, CaseStudyList } from './portfolio';
 
 
 interface PublicPINPageProps {
@@ -445,6 +446,42 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         showProofBadges={true}
                       />
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ✨ Featured Section - Read Only */}
+              {profile?.user_id && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6">
+                    <FeaturedSection
+                      userId={profile.user_id}
+                      editable={false}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ✨ Tech Stack - Read Only */}
+              {profile?.user_id && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6">
+                    <TechStackManager
+                      userId={profile.user_id}
+                      editable={false}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* ✨ Case Studies - Read Only */}
+              {profile?.user_id && (
+                <Card className="border-none shadow-sm">
+                  <CardContent className="p-6">
+                    <CaseStudyList
+                      userId={profile.user_id}
+                      editable={false}
+                    />
                   </CardContent>
                 </Card>
               )}

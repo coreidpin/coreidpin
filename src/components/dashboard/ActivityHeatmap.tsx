@@ -140,7 +140,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
       </div>
 
       {/* Heatmap - Cleaner mobile display */}
-      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="overflow-x-auto px-4 sm:px-6">
         <div className="inline-flex gap-1 min-w-full">
           {/* Day labels - Show on all screens */}
           <div className="flex flex-col gap-1 justify-start pt-5 pr-2">
@@ -173,7 +173,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                     <motion.div
                       key={`${weekIndex}-${dayIndex}`}
                       className={cn(
-                        "w-3 h-3 sm:w-4 sm:h-4 rounded-sm cursor-pointer transition-all",
+                        "w-4 h-4 sm:w-5 sm:h-5 rounded-sm cursor-pointer transition-all",
                         day.date && "active:scale-90 sm:hover:ring-2 sm:hover:ring-blue-400 sm:hover:ring-offset-1"
                       )}
                       style={{

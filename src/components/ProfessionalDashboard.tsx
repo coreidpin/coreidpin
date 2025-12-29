@@ -87,14 +87,19 @@ import { ProductTour } from './dashboard/ProductTour';
 import { professionalDashboardTour } from './dashboard/tourSteps';
 import { NoProjects, NoEndorsements, NoActivity } from './dashboard/EmptyStates';
 import { ProjectCardSkeleton, EndorsementCardSkeleton, StatsCardSkeleton } from './dashboard/LoadingSkeletons';
-import { useRealtime } from '../hooks/useRealtime';
-import { RealtimeStatus } from './RealtimeStatus';
+// import { useRealtime } from '../hooks/useRealtime'; // DISABLED - causing connection issues
+// import { RealtimeStatus } from './RealtimeStatus'; // DISABLED - real-time is off
 import { NetworkStatus } from './NetworkStatus';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { GlobalSearch } from './GlobalSearch';
 import type { SearchableItem } from '../utils/searchUtils';
+import { FeaturedSection, AddFeaturedItemModal, TechStackManager, AddTechSkillModal, CaseStudyCreator, CaseStudyList } from './portfolio';
+import { addFeaturedItem } from '../utils/portfolio-api';
+import { addTechSkill, updateTechSkill } from '../utils/tech-stack-api';
+import { createCaseStudy } from '../utils/case-study-api';
 import { QuickStats } from './dashboard/QuickStats';
 import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
+import { ExportActions } from './dashboard/ExportActions';
 
 export function ProfessionalDashboard() {
   // Notifications hook
@@ -257,36 +262,51 @@ export function ProfessionalDashboard() {
 
   // ✨ Phase 1: Real-time Profile Updates
   const userId = localStorage.getItem('userId');
-  const { status: profileRealtimeStatus } = useRealtime({
-    table: 'profiles',
-    filter: userId ? `user_id=eq.${userId}` : undefined,
-    onUpdate: (payload) => {
-      console.log('✨ Profile updated in real-time:', payload.new);
-      setUserProfile(payload.new);
-      toast.success('Profile updated');
-    }
-  });
+  // ✨ Real-time updates DISABLED to prevent connection issues
+  // You can enable this later when connection is stable
+  // const { status: profileRealtimeStatus } = useRealtime({
+  //   table: 'profiles',
+  //   filter: userId ? `user_id=eq.${userId}` : undefined,
+  //   onUpdate: (payload) => {
+  //     console.log('✨ Profile updated in real-time:', payload.new);
+  //     setUserProfile(payload.new);
+  //     toast.success('Profile updated');
+  //   }
+  // });
 
-  // ✨ Phase 1: Real-time Endorsements Updates  
-  const { status: endorsementsRealtimeStatus } = useRealtime({
-    table: 'endorsements',
-    filter: userId ? `professional_id=eq.${userId}` : undefined,
-    onInsert: (payload) => {
-      console.log('✨ New endorsement received!', payload.new);
-      setEndorsements(prev => [payload.new as DisplayEndorsement, ...prev]);
-      toast.success('🎉 New endorsement received!');
-    },
-    onUpdate: (payload) => {
-      console.log('✨ Endorsement updated:', payload.new);
-      setEndorsements(prev => 
-        prev.map(e => e.id === payload.new.id ? payload.new as DisplayEndorsement : e)
-      );
-    }
-  });
+  // ✨ Phase 1: Real-time Endorsements Updates DISABLED
+  // const { status: endorsementsRealtimeStatus } = useRealtime({
+  //   table: 'endorsements',
+  //   filter: userId ? `professional_id=eq.${userId}` : undefined,
+  //   onInsert: (payload) => {
+  //     console.log('✨ New endorsement received!', payload.new);
+  //     setEndorsements(prev => [payload.new as DisplayEndorsement, ...prev]);
+  //     toast.success('🎉 New endorsement received!');
+  //   },
+  //   onUpdate: (payload) => {
+  //     console.log('✨ Endorsement updated:', payload.new);
+  //     setEndorsements(prev => 
+  //       prev.map(e => e.id === payload.new.id ? payload.new as DisplayEndorsement : e)
+  //     );
+  //   }
+  // });
 
   // ✨ Phase 2: Global Search
   const [showSearch, setShowSearch] = React.useState(false);
   const [searchableItems, setSearchableItems] = React.useState<SearchableItem[]>([]);
+
+  // ✨ Featured Section State
+  const [showAddFeaturedModal, setShowAddFeaturedModal] = React.useState(false);
+  const [featuredRefresh, setFeaturedRefresh] = React.useState(0);
+
+  // ✨ Tech Stack State
+  const [showAddSkillModal, setShowAddSkillModal] = React.useState(false);
+  const [editingSkill, setEditingSkill] = React.useState<any | null>(null);
+  const [techStackRefresh, setTechStackRefresh] = React.useState(0);
+
+  // ✨ Case Study State
+  const [showCaseStudyCreator, setShowCaseStudyCreator] = React.useState(false);
+  const [caseStudyRefresh, setCaseStudyRefresh] = React.useState(0);
 
   // Prepare searchable data
   React.useEffect(() => {
@@ -1235,12 +1255,13 @@ export function ProfessionalDashboard() {
     <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden pt-20 sm:pt-24">
       {/* ✨ Phase 1: Network & Realtime Status Indicators */}
       <NetworkStatus showWhenOnline position="top" />
-      <RealtimeStatus 
+      {/* RealtimeStatus disabled since real-time is turned off */}
+      {/* <RealtimeStatus 
         status={profileRealtimeStatus} 
         position="top-right" 
         compact 
         showWhenConnected
-      />
+      /> */}
 
       {/* ✨ Phase 2: Global Search (Cmd+K) */}
       <GlobalSearch
@@ -1375,8 +1396,77 @@ export function ProfessionalDashboard() {
           }}
         />
 
+        {/* ✨ Featured Section - Showcase best work */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <FeaturedSection
+              userId={userId}
+              editable={true}
+              onAddClick={() => setShowAddFeaturedModal(true)}
+              refreshTrigger={featuredRefresh}
+            />
+          </motion.div>
+        )}
+
+        {/* ✨ Tech Stack Manager */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-8"
+          >
+            <TechStackManager
+              userId={userId}
+              editable={true}
+              onAddClick={() => setShowAddSkillModal(true)}
+              onEditClick={(skill) => {
+                setEditingSkill(skill);
+                setShowAddSkillModal(true);
+              }}
+            />
+          </motion.div>
+        )}
+
+        {/* ✨ Case Studies Section */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-8"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Case Studies</h2>
+              <button
+                onClick={() => setShowCaseStudyCreator(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Create Case Study
+              </button>
+            </div>
+            <p className="text-sm text-gray-600">
+              Showcase your design work with detailed case studies
+            </p>
+          </motion.div>
+        )}
+
         {/* ✨ Phase 3: Activity Heatmap */}
-        <ActivityHeatmap
+        <div 
+          className="px-4"
+          style={{
+            width: '100vw',
+            marginLeft: 'calc(-50vw + 50%)',
+            marginRight: 'calc(-50vw + 50%)'
+          }}
+        >
+          <ActivityHeatmap
           data={React.useMemo(() => {
             // TODO: Replace with real activity tracking data
             // For now, showing empty heatmap until activity tracking is implemented
@@ -1399,7 +1489,42 @@ export function ProfessionalDashboard() {
               toast.info(`${day.count} activities on ${new Date(day.date).toLocaleDateString()}`);
             }
           }}
-        />
+          />
+        </div>
+
+        {/* ✨ Export & Share Actions */}
+        {userId && userProfile && (
+          <ExportActions
+            userId={userId}
+            userName={(userProfile as any)?.full_name || (userProfile as any)?.name || 'Professional'}
+            userRole={(userProfile as any)?.role || (userProfile as any)?.job_title || 'Professional'}
+            userSkills={(userProfile as any)?.skills || []}
+            pinNumber={(userProfile as any)?.pin || ''}
+            className="mb-8"
+          />
+        )}
+
+        {/* ✨ Case Studies List */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-8"
+          >
+            <CaseStudyList
+              userId={userId}
+              editable={true}
+              onAddClick={() => setShowCaseStudyCreator(true)}
+              onEditClick={(caseStudy) => {
+                // TODO: Implement edit functionality
+                console.log('Edit case study:', caseStudy);
+                toast.info('Edit mode coming soon!');
+              }}
+              refreshTrigger={caseStudyRefresh}
+            />
+          </motion.div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content Area */}
@@ -2491,9 +2616,65 @@ export function ProfessionalDashboard() {
         </button>
       )}
 
+      {/* Add Featured Item Modal */}
+      <AddFeaturedItemModal
+        isOpen={showAddFeaturedModal}
+        onClose={() => setShowAddFeaturedModal(false)}
+        onAdd={async (item) => {
+          if (!userId) return;
+          await addFeaturedItem(userId, {
+            itemType: 'custom',
+            customTitle: item.customTitle,
+            customDescription: item.customDescription,
+            customLink: item.customLink,
+            customImage: item.customImage
+          });
+        }}
+      />
+
+      {/* Add/Edit Tech Skill Modal */}
+      <AddTechSkillModal
+        isOpen={showAddSkillModal}
+        onClose={() => {
+          setShowAddSkillModal(false);
+          setEditingSkill(null);
+        }}
+        onSave={async (skill) => {
+          if (!userId) return;
+          
+          if (editingSkill) {
+            await updateTechSkill(editingSkill.id, skill);
+          } else {
+            await addTechSkill(userId, skill);
+          }
+        }}
+        editingSkill={editingSkill}
+      />
+
+      {/* Featured Items Modal */}
+      <AddFeaturedItemModal
+        isOpen={showAddFeaturedModal}
+        onClose={() => setShowAddFeaturedModal(false)}
+        onAdd={async (item) => {
+          if (!userId) return;
+          await addFeaturedItem(userId, item);
+          setFeaturedRefresh(prev => prev + 1); // Trigger auto-refresh!
+        }}
+      />
+
+      {/* Case Study Creator Modal */}
+      <CaseStudyCreator
+        isOpen={showCaseStudyCreator}
+        onClose={() => setShowCaseStudyCreator(false)}
+        onSave={async (caseStudy) => {
+          if (!userId) return;
+          await createCaseStudy(userId, caseStudy);
+          setCaseStudyRefresh(prev => prev + 1); // Auto-refresh!
+        }}
+      />
+
       </div>
       </ErrorBoundary>
     </div>
   );
-}
-
+};

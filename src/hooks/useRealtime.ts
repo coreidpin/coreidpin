@@ -44,6 +44,8 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
   const [error, setError] = useState<Error | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isSubscribedRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 3; // Stop after 3 failed attempts
 
   const handlePayload = useCallback((payload: any) => {
     const { eventType, new: newRecord, old: oldRecord } = payload;
@@ -68,6 +70,14 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
   const subscribe = useCallback(() => {
     if (isSubscribedRef.current) {
       console.warn('[useRealtime] Already subscribed to', table);
+      return;
+    }
+
+    // Check if max retries exceeded
+    if (retryCountRef.current >= MAX_RETRIES) {
+      console.error(`[useRealtime] Max retries (${MAX_RETRIES}) exceeded for ${table}. Stopping reconnection attempts.`);
+      setStatus('error');
+      setError(new Error('Connection failed after multiple attempts. Please refresh the page.'));
       return;
     }
 
@@ -96,15 +106,18 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
         if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
           setStatus('connected');
           isSubscribedRef.current = true;
+          retryCountRef.current = 0; // Reset on successful connection
           console.log(`[useRealtime] ✅ Connected to ${table}`);
         } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
+          retryCountRef.current++;
           setStatus('error');
           setError(err || new Error('Channel error'));
-          console.error(`[useRealtime] ❌ Error connecting to ${table}:`, err);
+          console.error(`[useRealtime] ❌ Error connecting to ${table} (attempt ${retryCountRef.current}/${MAX_RETRIES}):`, err);
         } else if (status === REALTIME_SUBSCRIBE_STATES.TIMED_OUT) {
+          retryCountRef.current++;
           setStatus('error');
           setError(new Error('Connection timed out'));
-          console.error(`[useRealtime] ⏱️ Timeout connecting to ${table}`);
+          console.error(`[useRealtime] ⏱️ Timeout connecting to ${table} (attempt ${retryCountRef.current}/${MAX_RETRIES})`);
         } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
           setStatus('disconnected');
           isSubscribedRef.current = false;
@@ -114,9 +127,10 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
 
       channelRef.current = channel;
     } catch (err) {
+      retryCountRef.current++;
       setStatus('error');
       setError(err as Error);
-      console.error('[useRealtime] Failed to subscribe:', err);
+      console.error(`[useRealtime] Failed to subscribe (attempt ${retryCountRef.current}/${MAX_RETRIES}):`, err);
     }
   }, [table, event, filter, schema, handlePayload]);
 
@@ -125,6 +139,7 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
       await supabase.removeChannel(channelRef.current);
       channelRef.current = null;
       isSubscribedRef.current = false;
+      retryCountRef.current = 0; // Reset retry count
       setStatus('disconnected');
       console.log(`[useRealtime] Unsubscribed from ${table}`);
     }
