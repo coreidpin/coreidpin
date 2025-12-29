@@ -32,7 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { WorkTimeline } from './portfolio/WorkTimeline';
 import { BetaBadge } from './ui/BetaBadge';
 import { TopTalentBadge } from './ui/TopTalentBadge';
-import { activityTracker } from '../utils/activityTracker';
+import { ActivityTracker } from '../utils/activityTracker';
 import { trackProfileView } from '../utils/demandAnalytics';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { ContactModal } from './public/ContactModal';

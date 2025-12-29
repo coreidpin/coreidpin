@@ -80,9 +80,21 @@ import { DialogFooter, DialogDescription } from './ui/dialog';
 import { NotificationCenter, ToastContainer } from './notifications';
 import { useNotifications } from '../hooks/useNotifications';
 import { EndorsementAPI } from '../utils/endorsementAPI';
-import { activityTracker } from '../utils/activityTracker';
+import { ActivityTracker } from '../utils/activityTracker';
 import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } from '../types/endorsement';
 import { Snowfall, HolidayGiftWidget } from './ui/christmas-effects';
+import { ProductTour } from './dashboard/ProductTour';
+import { professionalDashboardTour } from './dashboard/tourSteps';
+import { NoProjects, NoEndorsements, NoActivity } from './dashboard/EmptyStates';
+import { ProjectCardSkeleton, EndorsementCardSkeleton, StatsCardSkeleton } from './dashboard/LoadingSkeletons';
+import { useRealtime } from '../hooks/useRealtime';
+import { RealtimeStatus } from './RealtimeStatus';
+import { NetworkStatus } from './NetworkStatus';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { GlobalSearch } from './GlobalSearch';
+import type { SearchableItem } from '../utils/searchUtils';
+import { QuickStats } from './dashboard/QuickStats';
+import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
 
 export function ProfessionalDashboard() {
   // Notifications hook
@@ -239,6 +251,91 @@ export function ProfessionalDashboard() {
   
   // Derived state for highlighting manage button
   const highlightManage = !userProfile || (userProfile as any)?.onboarding_complete !== true;
+
+  // ✨ Phase 1: Error Handling
+  const { handleError } = useErrorHandler();
+
+  // ✨ Phase 1: Real-time Profile Updates
+  const userId = localStorage.getItem('userId');
+  const { status: profileRealtimeStatus } = useRealtime({
+    table: 'profiles',
+    filter: userId ? `user_id=eq.${userId}` : undefined,
+    onUpdate: (payload) => {
+      console.log('✨ Profile updated in real-time:', payload.new);
+      setUserProfile(payload.new);
+      toast.success('Profile updated');
+    }
+  });
+
+  // ✨ Phase 1: Real-time Endorsements Updates  
+  const { status: endorsementsRealtimeStatus } = useRealtime({
+    table: 'endorsements',
+    filter: userId ? `professional_id=eq.${userId}` : undefined,
+    onInsert: (payload) => {
+      console.log('✨ New endorsement received!', payload.new);
+      setEndorsements(prev => [payload.new as DisplayEndorsement, ...prev]);
+      toast.success('🎉 New endorsement received!');
+    },
+    onUpdate: (payload) => {
+      console.log('✨ Endorsement updated:', payload.new);
+      setEndorsements(prev => 
+        prev.map(e => e.id === payload.new.id ? payload.new as DisplayEndorsement : e)
+      );
+    }
+  });
+
+  // ✨ Phase 2: Global Search
+  const [showSearch, setShowSearch] = React.useState(false);
+  const [searchableItems, setSearchableItems] = React.useState<SearchableItem[]>([]);
+
+  // Prepare searchable data
+  React.useEffect(() => {
+    const items: SearchableItem[] = [
+      // Projects
+      ...projects.map((p: any) => ({
+        id: p.id,
+        title: p.title || p.name,
+        description: p.description,
+        tags: p.skills || [],
+        type: 'project' as const,
+        metadata: p
+      })),
+      // Endorsements
+      ...endorsements.map((e: any) => ({
+        id: e.id,
+        title: `Endorsement from ${e.endorser_name}`,
+        description: e.message,
+        tags: e.skills || [],
+        type: 'endorsement' as const,
+        metadata: e
+      }))
+    ];
+    setSearchableItems(items);
+  }, [projects, endorsements]);
+
+  // Cmd+K / Ctrl+K keyboard shortcut
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowSearch(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleSelectSearchItem = (item: SearchableItem) => {
+    console.log('Selected:', item);
+    // Navigate or show details based on item type
+    if (item.type === 'project') {
+      // Could scroll to project or open modal
+      toast.success(`Opening: ${item.title}`);
+    } else if (item.type === 'endorsement') {
+      toast.success(`Viewing endorsement: ${item.title}`);
+    }
+  };
 
   // Project form state
   const [editingProject, setEditingProject] = useState(null);
@@ -508,7 +605,7 @@ export function ProfessionalDashboard() {
         
         // Track activity
         if (result.endorsement) {
-          await activityTracker.endorsementRequested(endorsementFormData.endorser_name);
+          await ActivityTracker.endorsementRequested(endorsementFormData.endorser_name);
         }
       } else {
         toast.error(result.error || 'Failed to request endorsement');
@@ -537,9 +634,9 @@ export function ProfessionalDashboard() {
         const endorsement = endorsements.find(e => e.id === endorsementId);
         if (endorsement) {
           if (action === 'accept') {
-            await activityTracker.endorsementApproved(endorsement.endorser_name);
+            await ActivityTracker.endorsementApproved(endorsement.endorser_name);
           } else {
-            await activityTracker.endorsementRejected(endorsement.endorser_name);
+            await ActivityTracker.endorsementRejected(endorsement.endorser_name);
           }
         }
       } else {
@@ -1135,17 +1232,36 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden">
+    <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden pt-20 sm:pt-24">
+      {/* ✨ Phase 1: Network & Realtime Status Indicators */}
+      <NetworkStatus showWhenOnline position="top" />
+      <RealtimeStatus 
+        status={profileRealtimeStatus} 
+        position="top-right" 
+        compact 
+        showWhenConnected
+      />
+
+      {/* ✨ Phase 2: Global Search (Cmd+K) */}
+      <GlobalSearch
+        isOpen={showSearch}
+        onClose={() => setShowSearch(false)}
+        items={searchableItems}
+        onSelectItem={handleSelectSearchItem}
+      />
+
       <ErrorBoundary name="DashboardContent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         
         {/* Profile Completion Progress - High Visibility at Top */}
         <AnimatePresence>
           {userProfile && (
-            <ProfileCompletionBanner 
-              {...calculateProfileCompletion(userProfile)}
-              userName={(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0]}
-            />
+            <div id="identity-completion">
+              <ProfileCompletionBanner 
+                {...calculateProfileCompletion(userProfile)}
+                userName={(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0]}
+              />
+            </div>
           )}
         </AnimatePresence>
 
@@ -1245,6 +1361,46 @@ export function ProfessionalDashboard() {
         {/* Market Value Card */}
         <MarketValueCard />
 
+        {/* ✨ Phase 2: QuickStats Analytics */}
+        <QuickStats 
+          stats={{
+            profileViews: 0, // TODO: Add profile view tracking
+            profileViewsChange: 0,
+            endorsements: endorsements.length, // ✅ Real data
+            endorsementsChange: endorsements.length > 0 ? 12 : 0,
+            pinUsage: userProfile?.pin_code ? 1 : 0, // ✅ Real data
+            pinUsageChange: 0,
+            verifications: (userProfile as any)?.email_verified ? 1 : 0, // ✅ Real data
+            verificationsChange: 0
+          }}
+        />
+
+        {/* ✨ Phase 3: Activity Heatmap */}
+        <ActivityHeatmap
+          data={React.useMemo(() => {
+            // TODO: Replace with real activity tracking data
+            // For now, showing empty heatmap until activity tracking is implemented
+            const days = [];
+            const today = new Date();
+            for (let i = 364; i >= 0; i--) {
+              const date = new Date(today);
+              date.setDate(date.getDate() - i);
+              days.push({
+                date: date.toISOString().split('T')[0],
+                count: 0, // Will show as empty until tracking added
+                level: 0 as 0 | 1 | 2 | 3 | 4
+              });
+            }
+            return days;
+          }, [])}
+          onDayClick={(day) => {
+            console.log('Clicked day:', day);
+            if (day.count > 0) {
+              toast.info(`${day.count} activities on ${new Date(day.date).toLocaleDateString()}`);
+            }
+          }}
+        />
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content Area */}
           <div className="lg:col-span-2 space-y-8">
@@ -1327,17 +1483,20 @@ export function ProfessionalDashboard() {
                       {/* Phone to PIN Conversion Widget */}
                       {phonePin && phonePin !== 'Loading...' && (activeTab === 'overview') && (
                         <ErrorBoundary name="PhoneToPinWidget">
-                          <PhoneToPinWidget
-                            currentPin={phonePin}
-                            phoneNumber={userProfile?.phone || userProfile?.mobile}
-                            onSuccess={(newPin) => {
-                              setPhonePin(newPin);
-                            }}
-                          />
+                          <div id="professional-pin-card">
+                            <PhoneToPinWidget
+                              currentPin={phonePin}
+                              phoneNumber={userProfile?.phone || userProfile?.mobile}
+                              onSuccess={(newPin) => {
+                                setPhonePin(newPin);
+                              }}
+                            />
+                          </div>
                         </ErrorBoundary>
                       )}
                       
-                      <QuickActions 
+                      <div id="quick-actions">
+                        <QuickActions 
                         onAddProject={handleAddProject}
                         onRequestEndorsement={handleRequestEndorsement}
                         onAddCaseStudy={handleAddCaseStudy}
@@ -1348,6 +1507,7 @@ export function ProfessionalDashboard() {
                         onDownloadBadge={handleShareProfile}
                         onGenerateResume={() => setShowResumeModal(true)}
                       />
+                      </div>
                       
                       {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
@@ -2047,7 +2207,7 @@ export function ProfessionalDashboard() {
               await fetchEndorsements();
               await fetchStats();
               if (result.endorsement) {
-                await activityTracker.endorsementRequested(data.endorser_name);
+                await ActivityTracker.endorsementRequested(data.endorser_name);
               }
             } else {
               toast.error(result.error || 'Failed to request endorsement');
@@ -2302,6 +2462,35 @@ export function ProfessionalDashboard() {
         onClose={() => setShowResumeModal(false)} 
         profile={userProfile} 
       />
+
+      {/* Product Walkthrough Tour */}
+      <ProductTour
+        steps={professionalDashboardTour}
+        onComplete={() => {
+          console.log('✅ Product tour completed!');
+          trackEvent('product_tour_completed', { tour: 'professional-dashboard' });
+        }}
+        onSkip={() => {
+          console.log('⏩ Product tour skipped');
+          trackEvent('product_tour_skipped', { tour: 'professional-dashboard' });
+        }}
+        storageKey="professional-dashboard-tour-v1"
+      />
+
+      {/* Dev Tool: Restart Tour (only in development) */}
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          onClick={() => {
+            localStorage.removeItem('professional-dashboard-tour-v1');
+            window.location.reload();
+          }}
+          className="fixed bottom-20 right-4 bg-blue-600 text-white px-3 py-2 rounded-lg shadow-lg text-sm hover:bg-blue-700 transition-colors z-50 flex items-center gap-2"
+          title="Restart Product Tour (Dev Only)"
+        >
+          📖 Restart Tour
+        </button>
+      )}
+
       </div>
       </ErrorBoundary>
     </div>

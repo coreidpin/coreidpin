@@ -29,7 +29,7 @@ import { TagInput } from './ui/TagInput';
 import { DynamicListInput } from './ui/DynamicListInput';
 import { colors, typography, spacing, borderRadius } from '../styles/designTokens';
 import { shadows, premiumCardShadow } from '../styles/shadows';
-import { activityTracker } from '../utils/activityTracker';
+import { ActivityTracker } from '../utils/activityTracker';
 import type { ProofDocument } from './dashboard/ProofDocumentUpload';
 import { EMPLOYMENT_TYPE_OPTIONS } from '../utils/employmentTypes';
 import type { EmploymentType } from '../utils/employmentTypes';
@@ -155,6 +155,13 @@ export const IdentityManagementPage: React.FC = () => {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Phone Verification State
+  const [showPhoneVerifyModal, setShowPhoneVerifyModal] = useState(false);
+  const [phoneOTP, setPhoneOTP] = useState('');
+  const [sendingOTP, setSendingOTP] = useState(false);
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [devOTP, setDevOTP] = useState<string | null>(null);
+
   // Work Modal Tab State
   const [workModalTab, setWorkModalTab] = useState('basic');
 
@@ -199,7 +206,6 @@ export const IdentityManagementPage: React.FC = () => {
             skills: profileData.skills || [],
             tools: profileData.tools || [],
             industry_tags: profileData.industry_tags || [],
-            social_links: profileData.social_links || [],
             social_links: profileData.social_links || [],
             certifications: profileData.certifications || [],
             education: profileData.education || []
@@ -927,7 +933,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       toast.success('Profile picture updated');
 
       // Track activity
-      await activityTracker.profilePictureUploaded();
+      await ActivityTracker.profilePictureUploaded();
 
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -1195,7 +1201,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       if (formData.bio !== profile.bio) changedFields.push('Bio');
       if (formData.industry !== profile.industry) changedFields.push('Industry');
       if (changedFields.length > 0) {
-        await activityTracker.profileUpdated(changedFields);
+        await ActivityTracker.profileUpdated(changedFields);
       }
 
     } catch (error) {
@@ -1707,15 +1713,33 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label className="text-slate-700 font-semibold text-sm">Phone Number</Label>
-                      {profile?.phone_verified ? (
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
-                          <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 rounded-full px-3">
-                          Unverified
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {profile?.phone_verified ? (
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
+                            <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
+                          </Badge>
+                        ) : (
+                          <>
+                            <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 rounded-full px-3">
+                              Unverified
+                            </Badge>
+                            {formData.phone && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2"
+                                onClick={() => {
+                                  setShowPhoneVerifyModal(true);
+                                  setPhoneOTP('');
+                                  setDevOTP(null);
+                                }}
+                              >
+                                Verify Now
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="relative group flex items-center">
@@ -2805,6 +2829,113 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowCertModal(false)} className="border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</Button>
               <Button onClick={handleSaveCert} className="bg-slate-900 text-white hover:bg-slate-800">Add Certification</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Phone Verification Modal */}
+        <Dialog open={showPhoneVerifyModal} onOpenChange={setShowPhoneVerifyModal}>
+          <DialogContent className="sm:max-w-md bg-white text-slate-900 border-slate-200">
+            <DialogHeader>
+              <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                <Phone className="h-6 w-6 text-blue-600" />
+              </div>
+              <DialogTitle className="text-center text-slate-900">Verify Phone Number</DialogTitle>
+              <div className="text-center text-slate-500 text-sm">
+                We'll send a verification code to {formData.phone}
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">Verification Code</label>
+                <Input 
+                  placeholder="Enter 6-digit code" 
+                  className="text-center text-lg tracking-widest bg-white border-slate-200 text-slate-900"
+                  maxLength={6}
+                  value={phoneOTP}
+                  onChange={(e) => setPhoneOTP(e.target.value.replace(/\D/g, ''))}
+                />
+                {devOTP && (
+                  <div className="p-2 bg-amber-50 border border-amber-200 rounded-md">
+                    <p className="text-xs text-amber-800 text-center font-mono">
+                      [DEV MODE] Your code: <span className="font-bold">{devOTP}</span>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    setSendingOTP(true);
+                    const token = await ensureValidSession();
+                    const result = await api.sendPhoneOTP(formData.phone, token);
+                    setDevOTP(result._dev_otp);
+                    toast.success('Verification code sent!', {
+                      description: result._dev_otp ? 'Check the yellow box above' : 'Check your phone for the code'
+                    });
+                  } catch (error: any) {
+                    handleApiError(error, 'Failed to send code');
+                  } finally {
+                    setSendingOTP(false);
+                  }
+                }}
+                disabled={sendingOTP || verifyingOTP}
+                className="w-full sm:w-auto border-slate-200 text-slate-700 hover:bg-slate-50"
+              >
+                {sendingOTP ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : 'Send Code'}
+              </Button>
+              
+              <Button 
+                onClick={async () => {
+                  try {
+                    setVerifyingOTP(true);
+                    const token = await ensureValidSession();
+                    await api.verifyPhoneOTP(formData.phone, phoneOTP, token);
+                    
+                    // Update local state
+                    setProfile({ ...profile, phone_verified: true });
+                    toast.success('Phone verified successfully!', {
+                      description: 'Your phone number has been verified.'
+                    });
+                    
+                    // Close modal and reset
+                    setShowPhoneVerifyModal(false);
+                    setPhoneOTP('');
+                    setDevOTP(null);
+                    
+                    // Reload to update badge
+                    setTimeout(() => window.location.reload(), 1000);
+                  } catch (error: any) {
+                    handleApiError(error, 'Verification failed');
+                  } finally {
+                    setVerifyingOTP(false);
+                  }
+                }}
+                disabled={phoneOTP.length !== 6 || sendingOTP || verifyingOTP}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {verifyingOTP ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Verify
+                  </>
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

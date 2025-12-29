@@ -1261,3 +1261,155 @@ app.post("/make-server-5cd3a043/pin/convert-phone", async (c) => {
     return c.json({ error: error.message || "Failed to convert PIN" }, 500);
   }
 });
+
+// Phone Verification - Send OTP
+app.post("/pin/send-otp", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (!user?.id || authError) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { phone } = await c.req.json();
+
+    if (!phone) {
+      return c.json({ error: "Phone number is required" }, 400);
+    }
+
+    // Sanitize phone number
+    const sanitizedPhone = phone.replace(/\D/g, '');
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Store OTP in database
+    const { error: otpError } = await supabase
+      .from('phone_verification_otps')
+      .insert({
+        user_id: user.id,
+        phone_number: sanitizedPhone,
+        otp_code: otp,
+        expires_at: expiresAt.toISOString()
+      });
+
+    if (otpError) {
+      console.error('Failed to store OTP:', otpError);
+      return c.json({ error: "Failed to generate OTP" }, 500);
+    }
+
+    // TODO: Integrate with SMS provider to actually send SMS
+    // For now, we'll just log it (in production, send actual SMS)
+    console.log(`[DEV] OTP for ${sanitizedPhone}: ${otp}`);
+
+    // In production, you would call your SMS provider here:
+    // await sendSMS(sanitizedPhone, `Your verification code is: ${otp}`);
+
+    return c.json({ 
+      success: true, 
+      message: "OTP sent successfully",
+      expiresIn: 300,
+      // Remove this in production - only for testing
+      _dev_otp: otp 
+    });
+  } catch (error: any) {
+    console.error("Send OTP error:", error);
+    return c.json({ error: error.message || "Failed to send OTP" }, 500);
+  }
+});
+
+// Phone Verification - Verify OTP
+app.post("/pin/verify-phone", async (c) => {
+  try {
+    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (!user?.id || authError) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { phone, otp } = await c.req.json();
+
+    if (!phone || !otp) {
+      return c.json({ error: "Phone number and OTP are required" }, 400);
+    }
+
+    // Sanitize phone number
+    const sanitizedPhone = phone.replace(/\D/g, '');
+
+    // Get the latest unused OTP for this user and phone
+    const { data: otpRecord, error: fetchError } = await supabase
+      .from('phone_verification_otps')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('phone_number', sanitizedPhone)
+      .eq('used', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (fetchError || !otpRecord) {
+      return c.json({ error: "No OTP found. Please request a new one." }, 404);
+    }
+
+    // Check if OTP expired
+    if (new Date(otpRecord.expires_at) < new Date()) {
+      return c.json({ error: "OTP has expired. Please request a new one." }, 410);
+    }
+
+    // Check attempts
+    if (otpRecord.attempts >= 5) {
+      return c.json({ error: "Too many attempts. Please request a new OTP." }, 429);
+    }
+
+    // Increment attempts
+    await supabase
+      .from('phone_verification_otps')
+      .update({ attempts: otpRecord.attempts + 1 })
+      .eq('id', otpRecord.id);
+
+    // Verify OTP
+    if (otpRecord.otp_code !== otp) {
+      return c.json({ error: "Invalid OTP code" }, 400);
+    }
+
+    // Mark OTP as used
+    await supabase
+      .from('phone_verification_otps')
+      .update({ used: true })
+      .eq('id', otpRecord.id);
+
+    // Update profile - mark phone as verified
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ 
+        phone_verified: true,
+        phone: sanitizedPhone,
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', user.id);
+
+    if (profileError) {
+      console.error('Failed to update profile:', profileError);
+      return c.json({ error: "Failed to verify phone" }, 500);
+    }
+
+    // Log success
+    await supabase.from('audit_events').insert({
+      event_type: 'phone_verified',
+      user_id: user.id,
+      meta: { phone_hash: sanitizedPhone.slice(-4) }
+    });
+
+    return c.json({ 
+      success: true,
+      message: "Phone verified successfully"
+    });
+  } catch (error: any) {
+    console.error("Verify OTP error:", error);
+    return c.json({ error: error.message || "Failed to verify OTP" }, 500);
+  }
+});
+

@@ -363,7 +363,7 @@ const DashboardAuthWrapper: React.FC<{
         isAuthenticated={isAuthenticated}
         userType={userType}
       />
-      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8">
+      <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
