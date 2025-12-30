@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -49,9 +49,7 @@ interface LandingPageProps {
   userType?: string;
 }
 
-import { Snowfall, HolidayGiftWidget } from "./ui/christmas-effects";
 
-import { WelcomeModal } from "./WelcomeModal";
 
 export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, userType }: LandingPageProps) {
   const [showWaitlist, setShowWaitlist] = React.useState(false);
@@ -65,9 +63,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
-      <Snowfall />
-      <HolidayGiftWidget />
-      <WelcomeModal />
+
       <Navbar 
         currentPage="landing"
         onNavigate={handleNavigate}

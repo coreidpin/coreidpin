@@ -14,6 +14,7 @@ export interface Project {
   result?: string;
   media_urls?: string[];
   featured_image_url?: string;
+  video_url?: string;
   is_portfolio_visible?: boolean;
   project_type?: 'case_study' | 'portfolio_item' | 'basic';
 }

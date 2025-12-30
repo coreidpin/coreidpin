@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ExternalLink, X } from 'lucide-react';
 import type { Project } from '@/types/dashboard';
 import { MediaGallery } from './MediaGallery';
+import { VideoPlayer } from './VideoPlayer';
+import { GitHubStats } from './GitHubStats';
+import { LiveDemoEmbed } from './LiveDemoEmbed';
 
 interface CaseStudyViewerProps {
   project: Project | null;
@@ -73,6 +76,27 @@ export function CaseStudyViewer({ project, open, onClose }: CaseStudyViewerProps
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                     {project.solution}
                   </p>
+                </div>
+              )}
+
+              {project.video_url && (
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-3">Video Walkthrough</h2>
+                  <VideoPlayer url={project.video_url} className="w-full max-w-3xl" />
+                </div>
+              )}
+
+              {/* GitHub Stats for Engineering Projects */}
+              {project.links && project.links.length > 0 && project.links[0]?.includes('github.com') && (
+                <div className="mb-6">
+                  <GitHubStats repoUrl={project.links[0]} />
+                </div>
+              )}
+
+              {/* Live Demo Embed */}
+              {project.links && project.links.length > 1 && project.links[1] && (
+                <div className="mb-6">
+                  <LiveDemoEmbed url={project.links[1]} title={`${project.title} - Live Demo`} />
                 </div>
               )}
 

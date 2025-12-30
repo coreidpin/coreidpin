@@ -2,6 +2,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import "./styles/mobile-fix.css";
 import { toast } from 'sonner';
 import { registerServiceWorker } from './registerServiceWorker';
 

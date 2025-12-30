@@ -30,7 +30,7 @@ import {
   Users,
   Shield
 } from 'lucide-react';
-import { Snowfall, HolidayGiftWidget } from './ui/christmas-effects';
+
 
 export function DeveloperConsole() {
   const [businessProfile, setBusinessProfile] = useState<any>(null);
@@ -135,8 +135,7 @@ export function DeveloperConsole() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Snowfall />
-      <HolidayGiftWidget />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div

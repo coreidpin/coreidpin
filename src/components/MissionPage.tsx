@@ -2,8 +2,7 @@ import { motion } from 'framer-motion';
 import { Users, TrendingUp, Briefcase, Heart, Shield, Zap, ArrowRight } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
-import { WaitlistForm } from './WaitlistForm';
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const stakeholders = [
   {
@@ -49,7 +48,7 @@ const values = [
 ];
 
 export function MissionPage() {
-  const [showWaitlist, setShowWaitlist] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <section className="relative py-24 md:py-32 overflow-hidden sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: '#0a0b0d' }}>
@@ -213,11 +212,11 @@ export function MissionPage() {
               >
                 <Button
                   size="lg"
-                  onClick={() => setShowWaitlist(true)}
+                  onClick={() => navigate('/get-started')}
                   className="text-black font-semibold px-8 py-4 text-lg"
                   style={{ backgroundColor: '#8fd0ca' }}
                 >
-                  Join the Waitlist
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </motion.div>
@@ -365,9 +364,7 @@ export function MissionPage() {
           </div>
         </motion.div>
 
-        {showWaitlist && (
-          <WaitlistForm onClose={() => setShowWaitlist(false)} />
-        )}
+
       </div>
     </section>
   );

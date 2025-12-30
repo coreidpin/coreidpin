@@ -90,6 +90,7 @@ export interface CaseStudySolution {
   finalDesigns: ImageGallery[];
   designSystem?: ComponentShowcase;
   prototype?: string;
+  videoUrl?: string;
   annotations: DesignAnnotation[];
 }
 

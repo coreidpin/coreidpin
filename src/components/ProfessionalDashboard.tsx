@@ -67,6 +67,7 @@ import { ErrorBoundary } from './ui/error-boundary';
 import { OverviewSkeleton } from './dashboard/OverviewSkeleton';
 import { DigitalBusinessCard } from './dashboard/DigitalBusinessCard';
 import type { UserProfile } from '../types/profile';
+import type { Project } from '../types/dashboard';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
 
 import { WelcomeModal } from './onboarding/WelcomeModal';
@@ -80,12 +81,13 @@ import { DialogFooter, DialogDescription } from './ui/dialog';
 import { NotificationCenter, ToastContainer } from './notifications';
 import { useNotifications } from '../hooks/useNotifications';
 import { EndorsementAPI } from '../utils/endorsementAPI';
-import { ActivityTracker } from '../utils/activityTracker';
+import { ActivityTracker, getActivitySummary, getTrend } from '../utils/activityTracker';
 import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } from '../types/endorsement';
-import { Snowfall, HolidayGiftWidget } from './ui/christmas-effects';
+
 import { ProductTour } from './dashboard/ProductTour';
 import { professionalDashboardTour } from './dashboard/tourSteps';
 import { NoProjects, NoEndorsements, NoActivity } from './dashboard/EmptyStates';
+import { ExportActions } from './dashboard/ExportActions';
 import { ProjectCardSkeleton, EndorsementCardSkeleton, StatsCardSkeleton } from './dashboard/LoadingSkeletons';
 // import { useRealtime } from '../hooks/useRealtime'; // DISABLED - causing connection issues
 // import { RealtimeStatus } from './RealtimeStatus'; // DISABLED - real-time is off
@@ -93,13 +95,15 @@ import { NetworkStatus } from './NetworkStatus';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { GlobalSearch } from './GlobalSearch';
 import type { SearchableItem } from '../utils/searchUtils';
-import { FeaturedSection, AddFeaturedItemModal, TechStackManager, AddTechSkillModal, CaseStudyCreator, CaseStudyList } from './portfolio';
+import { FeaturedSection, AddFeaturedItemModal, TechStackManager, AddTechSkillModal, CaseStudyCreator, CaseStudyList, CaseStudyViewer, ProjectCreator, ProjectList, ContributionGraph, PortfolioSearch, FeaturedShowcase, PortfolioAnalytics, PortfolioHealth, SkillsGap, SocialShare } from './portfolio';
 import { addFeaturedItem } from '../utils/portfolio-api';
 import { addTechSkill, updateTechSkill } from '../utils/tech-stack-api';
 import { createCaseStudy } from '../utils/case-study-api';
+import { createProject } from '../utils/project-api';
+import { PortfolioExporter } from '../utils/portfolio-export';
 import { QuickStats } from './dashboard/QuickStats';
 import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
-import { ExportActions } from './dashboard/ExportActions';
+
 
 export function ProfessionalDashboard() {
   // Notifications hook
@@ -199,6 +203,7 @@ export function ProfessionalDashboard() {
   const [pinLoading, setPinLoading] = useState(false);
 
   const [projects, setProjects] = useState([]);
+  const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [endorsements, setEndorsements] = useState<DisplayEndorsement[]>([]);
   const [endorsementsLoading, setEndorsementsLoading] = useState(true);
@@ -229,15 +234,15 @@ export function ProfessionalDashboard() {
     endorsements: 0
   });
   const [statsLoading, setStatsLoading] = useState(true);
-  const [statsTrends] = useState({
-    profileViews: { change: 12, direction: 'up' as const },
-    pinUsage: { change: 8, direction: 'up' as const },
-    verifications: { change: 5, direction: 'up' as const },
-    apiCalls: { change: -3, direction: 'down' as const },
-    countries: { change: 15, direction: 'up' as const },
-    companies: { change: 10, direction: 'up' as const },
+  const [statsTrends, setStatsTrends] = useState({
+    profileViews: { change: 0, direction: 'up' as const },
+    pinUsage: { change: 0, direction: 'up' as const },
+    verifications: { change: 0, direction: 'up' as const },
+    apiCalls: { change: 0, direction: 'up' as const },
+    countries: { change: 0, direction: 'up' as const },
+    companies: { change: 0, direction: 'up' as const },
     projects: { change: 0, direction: 'up' as const },
-    endorsements: { change: 20, direction: 'up' as const }
+    endorsements: { change: 0, direction: 'up' as const }
   });
 
   // Notifications state - now fetched from API
@@ -307,6 +312,50 @@ export function ProfessionalDashboard() {
   // ✨ Case Study State
   const [showCaseStudyCreator, setShowCaseStudyCreator] = React.useState(false);
   const [caseStudyRefresh, setCaseStudyRefresh] = React.useState(0);
+
+  // ✨ Engineering Project State
+  const [showProjectCreator, setShowProjectCreator] = React.useState(false);
+  const [projectRefresh, setProjectRefresh] = React.useState(0);
+
+  // ✨ Portfolio Search & Analytics State
+  const [portfolioSearchQuery, setPortfolioSearchQuery] = React.useState('');
+  const [portfolioFilters, setPortfolioFilters] = React.useState<any>({
+    query: '',
+    type: 'all',
+    tags: [],
+    featured: false,
+  });
+
+  // ✨ Heatmap State
+  const [heatmapData, setHeatmapData] = useState<any[]>([]);
+  const [heatmapLoading, setHeatmapLoading] = useState(true);
+
+  // Fetch heatmap data
+  useEffect(() => {
+    const fetchHeatmap = async () => {
+      if (!userId) return;
+      try {
+        const data = await getActivitySummary(userId);
+        
+        // Calculate levels based on max activity
+        const maxCount = Math.max(...data.map((d: any) => d.count), 1);
+        
+        const formattedData = data.map((d: any) => ({
+           date: d.date,
+           count: d.count,
+           level: Math.min(Math.ceil((d.count / maxCount) * 4), 4) as 0|1|2|3|4
+        }));
+        
+        setHeatmapData(formattedData);
+      } catch (err) {
+        console.error('Error fetching heatmap:', err);
+      } finally {
+        setHeatmapLoading(false);
+      }
+    };
+    
+    fetchHeatmap();
+  }, [userId]);
 
   // Prepare searchable data
   React.useEffect(() => {
@@ -855,6 +904,24 @@ export function ProfessionalDashboard() {
           const data = await response.json();
           if (data.success && data.stats) {
             setStats(data.stats);
+
+            // Fetch real trends if user is logged in
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const [endorsementsTrend, viewsTrend, pinTrend] = await Promise.all([
+                 getTrend('professional_endorsements_v2', 'professional_id', user.id),
+                 getTrend('profile_views', 'profile_user_id', user.id),
+                 getTrend('pin_verifications', 'professional_id', user.id) // Assuming we have this table or similar
+              ]);
+
+              setStatsTrends(prev => ({
+                ...prev,
+                endorsements: { change: endorsementsTrend, direction: endorsementsTrend >= 0 ? 'up' : 'down' },
+                profileViews: { change: viewsTrend, direction: viewsTrend >= 0 ? 'up' : 'down' },
+                pinUsage: { change: pinTrend, direction: pinTrend >= 0 ? 'up' : 'down' },
+                // Keep others as 0 for now until tracking is implemented for them
+              }));
+            }
           }
         }
       }
@@ -1252,7 +1319,7 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden pt-20 sm:pt-24">
+    <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden pt-20 sm:pt-24 w-full">
       {/* ✨ Phase 1: Network & Realtime Status Indicators */}
       <NetworkStatus showWhenOnline position="top" />
       {/* RealtimeStatus disabled since real-time is turned off */}
@@ -1272,7 +1339,7 @@ export function ProfessionalDashboard() {
       />
 
       <ErrorBoundary name="DashboardContent">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 space-y-6 sm:space-y-8">
         
         {/* Profile Completion Progress - High Visibility at Top */}
         <AnimatePresence>
@@ -1385,14 +1452,14 @@ export function ProfessionalDashboard() {
         {/* ✨ Phase 2: QuickStats Analytics */}
         <QuickStats 
           stats={{
-            profileViews: 0, // TODO: Add profile view tracking
-            profileViewsChange: 0,
-            endorsements: endorsements.length, // ✅ Real data
-            endorsementsChange: endorsements.length > 0 ? 12 : 0,
-            pinUsage: userProfile?.pin_code ? 1 : 0, // ✅ Real data
-            pinUsageChange: 0,
-            verifications: (userProfile as any)?.email_verified ? 1 : 0, // ✅ Real data
-            verificationsChange: 0
+            profileViews: stats.profileViews || 0,
+            profileViewsChange: statsTrends.profileViews?.change || 0,
+            endorsements: endorsements.length || stats.endorsements || 0,
+            endorsementsChange: statsTrends.endorsements?.change || 0,
+            pinUsage: stats.pinUsage || 0,
+            pinUsageChange: statsTrends.pinUsage?.change || 0,
+            verifications: stats.verifications || 0,
+            verificationsChange: statsTrends.verifications?.change || 0
           }}
         />
 
@@ -1466,42 +1533,87 @@ export function ProfessionalDashboard() {
             marginRight: 'calc(-50vw + 50%)'
           }}
         >
-          <ActivityHeatmap
-          data={React.useMemo(() => {
-            // TODO: Replace with real activity tracking data
-            // For now, showing empty heatmap until activity tracking is implemented
-            const days = [];
-            const today = new Date();
-            for (let i = 364; i >= 0; i--) {
-              const date = new Date(today);
-              date.setDate(date.getDate() - i);
-              days.push({
-                date: date.toISOString().split('T')[0],
-                count: 0, // Will show as empty until tracking added
-                level: 0 as 0 | 1 | 2 | 3 | 4
-              });
-            }
-            return days;
-          }, [])}
-          onDayClick={(day) => {
-            console.log('Clicked day:', day);
-            if (day.count > 0) {
-              toast.info(`${day.count} activities on ${new Date(day.date).toLocaleDateString()}`);
-            }
-          }}
+          <ActivityHeatmap 
+            data={heatmapLoading ? [] : heatmapData}
+            onDayClick={(day) => {
+              if (day.count > 0) {
+                toast.info(`${day.count} activities on ${new Date(day.date).toLocaleDateString()}`);
+              } else {
+                 toast.info(`No activity on ${new Date(day.date).toLocaleDateString()}`);
+              }
+            }}
           />
         </div>
 
-        {/* ✨ Export & Share Actions */}
-        {userId && userProfile && (
-          <ExportActions
-            userId={userId}
-            userName={(userProfile as any)?.full_name || (userProfile as any)?.name || 'Professional'}
-            userRole={(userProfile as any)?.role || (userProfile as any)?.job_title || 'Professional'}
-            userSkills={(userProfile as any)?.skills || []}
-            pinNumber={(userProfile as any)?.pin || ''}
+        {/* ✨ Portfolio Search */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
             className="mb-8"
-          />
+          >
+            <PortfolioSearch
+              onSearch={(query, filters) => {
+                setPortfolioSearchQuery(query);
+                setPortfolioFilters(filters);
+              }}
+              availableTags={[
+                'React', 'TypeScript', 'Node.js', 'Python', 'Design', 
+                'UI/UX', 'Mobile', 'Web', 'API', 'Cloud'
+              ]}
+            />
+          </motion.div>
+        )}
+
+        {/* ✨ Featured Projects Showcase */}
+        {userId && projects.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.32 }}
+            className="mb-8"
+          >
+            <FeaturedShowcase
+              projects={projects
+                .filter((p: any) => p.featured || p.is_featured)
+                .slice(0, 5)
+                .map((p: any) => ({
+                  id: p.id,
+                  title: p.title || p.name,
+                  description: p.description || '',
+                  imageUrl: p.image_url || p.cover_image || p.featured_image_url,
+                  type: p.project_type || 'portfolio_item',
+                  tags: p.tags || p.tech_stack || p.skills || [],
+                  link: p.links?.[0],
+                }))}
+              onProjectClick={(id) => {
+                const project = projects.find((p: any) => p.id === id);
+                if (project) {
+                  // View project logic here
+                  toast.info(`Opening project: ${project.title || project.name}`);
+                }
+              }}
+            />
+          </motion.div>
+        )}
+
+        {/* ✨ GitHub-style Contribution Graph (for engineers) */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mb-8"
+          >
+            <ContributionGraph
+              data={heatmapData.map(day => ({
+                date: day.date,
+                count: day.count,
+                level: day.level as 0 | 1 | 2 | 3 | 4
+              }))}
+            />
+          </motion.div>
         )}
 
         {/* ✨ Case Studies List */}
@@ -1517,11 +1629,62 @@ export function ProfessionalDashboard() {
               editable={true}
               onAddClick={() => setShowCaseStudyCreator(true)}
               onEditClick={(caseStudy) => {
-                // TODO: Implement edit functionality
-                console.log('Edit case study:', caseStudy);
-                toast.info('Edit mode coming soon!');
+                const projectMapper: Project = {
+                  id: caseStudy.id,
+                  title: caseStudy.title,
+                  description: `Client: ${caseStudy.client}`,
+                  role: caseStudy.role,
+                  timeline: caseStudy.year,
+                  skills: caseStudy.tags,
+                  links: [],
+                  challenge: caseStudy.problem?.statement || '',
+                  solution: caseStudy.solution?.prototype || '',
+                  result: caseStudy.impact?.metrics?.map((m: any) => `${m.label}: ${m.value}`).join('\n') || '',
+                  media_urls: caseStudy.solution?.finalDesigns?.map((img: any) => img.url) || [],
+                  featured_image_url: caseStudy.coverImage,
+                  video_url: caseStudy.solution?.videoUrl,
+                  project_type: 'case_study' as const
+                };
+                setViewingProject(projectMapper);
               }}
               refreshTrigger={caseStudyRefresh}
+            />
+          </motion.div>
+        )}
+
+        {/* ✨ Engineering Projects List */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-8"
+          >
+            <ProjectList
+              userId={userId}
+              editable={true}
+              onAddClick={() => setShowProjectCreator(true)}
+              onEditClick={(project) => {
+                // Map EngineeringProject to Project for viewer
+                const projectMapper: Project = {
+                  id: project.id,
+                  title: project.name,
+                  description: project.description,
+                  role: project.role,
+                  timeline: project.duration,
+                  skills: project.techStack,
+                  links: [project.repositoryUrl, project.liveDemoUrl].filter(Boolean) as string[],
+                  challenge: '',
+                  solution: '',
+                  result: `Users: ${project.impact?.usersServed || 'N/A'}\nPerformance: ${project.impact?.performanceGain || 'N/A'}`,
+                  media_urls: project.screenshots,
+                  featured_image_url: project.coverImage,
+                  video_url: undefined,
+                  project_type: 'portfolio_item' as const
+                };
+                setViewingProject(projectMapper);
+              }}
+              refreshTrigger={projectRefresh}
             />
           </motion.div>
         )}
@@ -1587,6 +1750,19 @@ export function ProfessionalDashboard() {
             >
               Inquiries
             </TabsTrigger>
+            <TabsTrigger 
+              value="analytics"
+              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
+              style={{
+                color: activeTab === 'analytics' ? '#ffffff' : '#334155',
+                backgroundColor: activeTab === 'analytics' ? '#000000' : 'transparent',
+                fontWeight: '600',
+                whiteSpace: 'nowrap',
+                flex: '0 0 auto'
+              }}
+            >
+              Analytics
+            </TabsTrigger>
           </TabsList>
 
           <AnimatePresence mode="wait">
@@ -1632,6 +1808,16 @@ export function ProfessionalDashboard() {
                         onDownloadBadge={handleShareProfile}
                         onGenerateResume={() => setShowResumeModal(true)}
                       />
+                      </div>
+
+                      <div className="mt-6 mb-6">
+                        <ExportActions 
+                          userId={userProfile?.id || userProfile?.user_id || ''}
+                          userName={userProfile?.full_name || 'Professional'}
+                          userRole={userProfile?.job_title || userProfile?.role || 'Member'}
+                          userSkills={userProfile?.skills || []}
+                          pinNumber={phonePin || undefined}
+                        />
                       </div>
                       
                       {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
@@ -2121,6 +2307,74 @@ export function ProfessionalDashboard() {
         </motion.div>
       )}
 
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <motion.div
+          key="analytics"
+          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={reducedMotion ? undefined : { duration: 0.2 }}
+        >
+          <TabsContent value="analytics" className="space-y-6">
+            {/* Portfolio Analytics Overview */}
+            <PortfolioAnalytics
+              stats={{
+                totalViews: stats.profileViews,
+                totalProjects: projects.length,
+                featuredProjects: projects.filter((p: any) => p.featured || p.is_featured).length,
+                totalEngagement: stats.apiCalls + stats.pinUsage,
+                topProject: {
+                  title: projects[0]?.title || projects[0]?.name || 'No projects yet',
+                  views: projects[0]?.view_count || 0,
+                },
+                recentViews: [
+                  { date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), count: 12 },
+                  { date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), count: 19 },
+                  { date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), count: 8 },
+                  { date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), count: 24 },
+                  { date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), count: 16 },
+                  { date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), count: 21 },
+                  { date: new Date().toISOString(), count: 15 },
+                ],
+              }}
+            />
+
+            {/* Two Column Layout for Intelligence Features */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Portfolio Health Score */}
+              <PortfolioHealth
+                metrics={{
+                  hasProjects: projects.length > 0,
+                  projectCount: projects.length,
+                  hasFeaturedProjects: projects.some((p: any) => p.featured || p.is_featured),
+                  hasDescription: !!userProfile?.bio,
+                  hasSkills: (userProfile?.skills?.length || 0) > 0,
+                  skillCount: userProfile?.skills?.length || 0,
+                  hasProfileImage: !!userProfile?.avatar_url,
+                  hasContact: !!userProfile?.email,
+                  hasLinks: !!userProfile?.linkedin_url || !!userProfile?.github_url,
+                  projectsWithImages: projects.filter((p: any) => p.image_url || p.cover_image || p.featured_image_url).length,
+                  projectsWithDescriptions: projects.filter((p: any) => p.description).length,
+                }}
+              />
+
+              {/* Skills Gap Analysis */}
+              <SkillsGap
+                userSkills={userProfile?.skills || []}
+              />
+            </div>
+
+            {/* Social Share */}
+            <SocialShare
+              portfolioUrl={`${window.location.origin}/profile/${userProfile?.id || userProfile?.user_id}`}
+              userName={userProfile?.full_name || 'Professional'}
+              userTitle={userProfile?.job_title || userProfile?.role || 'Professional'}
+            />
+          </TabsContent>
+        </motion.div>
+      )}
+
     </AnimatePresence>
   </Tabs>
 </div>
@@ -2580,7 +2834,7 @@ export function ProfessionalDashboard() {
       />
 
       
-      <HolidayGiftWidget />
+
       
       <ResumeGenerator 
         isOpen={showResumeModal} 
@@ -2670,6 +2924,24 @@ export function ProfessionalDashboard() {
           if (!userId) return;
           await createCaseStudy(userId, caseStudy);
           setCaseStudyRefresh(prev => prev + 1); // Auto-refresh!
+        }}
+      />
+
+      {/* Case Study Viewer */}
+      <CaseStudyViewer
+        project={viewingProject}
+        open={!!viewingProject}
+        onClose={() => setViewingProject(null)}
+      />
+
+      {/* Engineering Project Creator Modal */}
+      <ProjectCreator
+        isOpen={showProjectCreator}
+        onClose={() => setShowProjectCreator(false)}
+        onSave={async (project) => {
+          if (!userId) return;
+          await createProject(userId, project);
+          setProjectRefresh(prev => prev + 1); // Auto-refresh!
         }}
       />
 

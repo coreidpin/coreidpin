@@ -89,10 +89,10 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-white rounded-xl border border-gray-200 p-6 ${className}`}
+      className={`w-full bg-white rounded-xl border border-gray-200 p-4 sm:p-6 ${className}`}
     >
-      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-        <Share2 className="h-5 w-5 text-blue-600" />
+      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+        <Share2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
         Export & Share
       </h3>
 

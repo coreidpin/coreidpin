@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils';
 import { ImageUploader } from './ImageUploader';
 import { TagInput } from './TagInput';
 import { MetricCard } from './MetricCard';
+import { VideoPlayer } from './VideoPlayer';
 import type { CaseStudyFormData } from '../../types/portfolio';
 import { toast } from '../../utils/toast';
 
@@ -56,6 +57,9 @@ export const CaseStudyCreator: React.FC<CaseStudyCreatorProps> = ({
   const [prototypeLink, setPrototypeLink] = useState(
     initialData?.solution?.prototype || ''
   );
+  const [videoUrl, setVideoUrl] = useState(
+    initialData?.solution?.videoUrl || ''
+  );
   
   // Impact section
   const [impactDescription, setImpactDescription] = useState('');
@@ -91,6 +95,7 @@ export const CaseStudyCreator: React.FC<CaseStudyCreatorProps> = ({
         solution: {
           finalDesigns: solutionImages.map(url => ({ url })),
           prototype: prototypeLink,
+          videoUrl,
           annotations: []
         },
         impact: {
@@ -286,6 +291,21 @@ export const CaseStudyCreator: React.FC<CaseStudyCreatorProps> = ({
                         placeholder="https://figma.com/..."
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Video Walkthrough (YouTube/Vimeo)</label>
+                      <input
+                        type="url"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://youtube.com/watch?v=..."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3"
+                      />
+                      {videoUrl && (
+                        <div className="mt-2">
+                          <VideoPlayer url={videoUrl} className="w-full max-w-md" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </section>

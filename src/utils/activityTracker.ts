@@ -160,11 +160,57 @@ export async function getProfileViewTrend(profileUserId: string, days: number = 
     const previous = previousCount || 0;
 
     if (previous === 0) return current > 0 ? 100 : 0;
-
+    
     const change = ((current - previous) / previous) * 100;
     return Math.round(change);
   } catch (error) {
     console.error('Error calculating profile view trend:', error);
+    return 0;
+  }
+}
+
+/**
+ * Generic trend calculator
+ */
+export async function getTrend(
+  tableName: string, 
+  userIdField: string, 
+  userId: string, 
+  days: number = 30
+): Promise<number> {
+  try {
+    const now = new Date();
+    const periodStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+    const previousPeriodStart = new Date(periodStart.getTime() - days * 24 * 60 * 60 * 1000);
+
+    // Current period
+    const { count: currentCount, error: currentError } = await supabase
+      .from(tableName)
+      .select('*', { count: 'exact', head: true })
+      .eq(userIdField, userId)
+      .gte('created_at', periodStart.toISOString());
+
+    if (currentError) throw currentError;
+
+    // Previous period
+    const { count: previousCount, error: prevError } = await supabase
+      .from(tableName)
+      .select('*', { count: 'exact', head: true })
+      .eq(userIdField, userId)
+      .gte('created_at', previousPeriodStart.toISOString())
+      .lt('created_at', periodStart.toISOString());
+
+    if (prevError) throw prevError;
+
+    const current = currentCount || 0;
+    const previous = previousCount || 0;
+
+    if (previous === 0) return current > 0 ? 100 : 0;
+
+    const change = ((current - previous) / previous) * 100;
+    return Math.round(change);
+  } catch (error) {
+    console.error(`Error calculating trend for ${tableName}:`, error);
     return 0;
   }
 }

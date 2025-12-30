@@ -83,7 +83,7 @@ export function PINGenerationCard({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6"
+        className="relative overflow-hidden w-full rounded-xl p-4 md:p-6"
         style={{
           background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -186,7 +186,7 @@ export function PINGenerationCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
-      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6"
+      className="relative overflow-hidden w-full rounded-xl p-4 md:p-6"
       style={{
         background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
