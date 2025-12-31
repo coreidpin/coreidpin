@@ -1689,9 +1689,9 @@ export function ProfessionalDashboard() {
           </motion.div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Main Content Area */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="w-full lg:col-span-2 space-y-6 lg:space-y-8">
             
 
 
@@ -2380,7 +2380,7 @@ export function ProfessionalDashboard() {
 </div>
 
           {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="w-full lg:col-span-1 space-y-6">
             <motion.div 
               initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
               animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
