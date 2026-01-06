@@ -130,17 +130,17 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
       <div className="flex items-center mb-4">
         <button 
           onClick={onBack}
-          className="text-sm text-white/60 hover:text-white flex items-center gap-1 transition-colors"
+          className="text-sm text-white/80 hover:text-white flex items-center gap-1 transition-colors"
         >
           ← Back
         </button>
       </div>
       
-      <div className="text-center">
+      <div className="text-left">
         <h2 className="text-2xl font-semibold mb-2 text-white">
           Verify your {contactType}
         </h2>
-        <p className="text-sm text-white/70">
+        <p className="text-sm text-white/80">
           Enter the 6-digit code sent to <span className="font-medium text-white">{contact}</span>
         </p>
       </div>
@@ -155,7 +155,7 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="123456"
-            className="w-full h-14 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/20 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-center text-3xl tracking-[0.5em] font-mono"
+            className="w-full h-14 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-center text-3xl tracking-[0.5em] font-mono"
             required
             autoFocus
           />
@@ -176,8 +176,8 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
           )}
         </button>
 
-        <div className="text-center pt-2">
-          <p className="text-sm text-white/60">
+        <div className="text-left pt-2">
+          <p className="text-sm text-white/80">
             Didn't receive code?{' '}
             <button
               type="button"

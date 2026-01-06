@@ -64,37 +64,24 @@ function AnnouncementBanner({
       aria-label={`Announcement: ${title}`}
       className="announcement-banner relative overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
+        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
         borderRadius: 8,
         padding: '8px 12px',
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        border: '1px solid #bfdbfe'
       }}
     >
       {/* Animated gradient overlay - same as HeroProfileCard */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-          ],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)' }} />
 
       {/* Subtle grid pattern - same as HeroProfileCard */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       />
@@ -109,14 +96,14 @@ function AnnouncementBanner({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'rgba(255,255,255,0.1)',
+          background: 'rgba(59, 130, 246, 0.1)',
         }}
         aria-hidden
       >
         {/* Simple inline SVG icon (megaphone) */}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M3 10v4h3l7 5V5L6 10H3z" fill="#ffffff" opacity="0.9" />
-          <path d="M20 8v8a1 1 0 0 1-1.447.894L16 15H15V9h1l2.553-1.894A1 1 0 0 1 20 8z" fill="#3DE6B3" />
+          <path d="M3 10v4h3l7 5V5L6 10H3z" fill="#3B82F6" />
+          <path d="M20 8v8a1 1 0 0 1-1.447.894L16 15H15V9h1l2.553-1.894A1 1 0 0 1 20 8z" fill="#8B5CF6" />
         </svg>
       </div>
 
@@ -127,7 +114,7 @@ function AnnouncementBanner({
             <div
               style={{
                 fontWeight: 600,
-                color: '#ffffff',
+                color: '#0f172a',
                 fontSize: '12px',
                 lineHeight: 1.2,
                 whiteSpace: 'nowrap',
@@ -141,7 +128,7 @@ function AnnouncementBanner({
               className="hidden sm:block"
               style={{
                 marginTop: 1,
-                color: 'rgba(255,255,255,0.7)',
+                color: '#475569',
                 fontSize: '11px',
                 lineHeight: 1.2,
                 overflow: 'hidden',
@@ -165,8 +152,8 @@ function AnnouncementBanner({
                   display: 'inline-flex',
                   alignItems: 'center',
                   padding: '5px 10px',
-                  background: '#3DE6B3',
-                  color: '#000000',
+                  background: '#3B82F6',
+                  color: '#ffffff',
                   borderRadius: 5,
                   border: 'none',
                   cursor: 'pointer',
@@ -199,8 +186,8 @@ function AnnouncementBanner({
           }}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path d="M18 6L6 18" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M6 6l12 12" stroke="rgba(255,255,255,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M18 6L6 18" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M6 6l12 12" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>

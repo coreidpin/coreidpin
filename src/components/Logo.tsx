@@ -7,9 +7,10 @@ interface LogoProps {
   showText?: boolean;
   onClick?: () => void;
   isLight?: boolean;
+  style?: React.CSSProperties;
 }
 
-export function Logo({ size = 'md', className = '', showText = true, onClick, isLight = false }: LogoProps) {
+export function Logo({ size = 'md', className = '', showText = true, onClick, isLight = false, style = {} }: LogoProps) {
   const sizes = {
     sm: { icon: 'h-8 w-auto', text: 'text-lg' },
     md: { icon: 'h-10 w-auto', text: 'text-xl' },
@@ -33,6 +34,7 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
     <div 
       className={`flex items-center gap-2 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={handleClick}
+      style={style}
     >
       <motion.img
         key={logoSrc} // Ensure re-render on source change
@@ -63,8 +65,8 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
         >
-          <span className={isLight ? 'text-black' : 'text-white'}>GiDi</span>
-          <span className="text-[#3DE6B3]">PIN</span>
+          <span style={{ color: isLight ? 'black' : 'white' }}>GiDi</span>
+          <span style={{ color: '#3DE6B3' }}>PIN</span>
         </motion.span>
       )}
     </div>

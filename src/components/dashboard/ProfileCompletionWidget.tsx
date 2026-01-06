@@ -40,25 +40,11 @@ export function ProfileCompletionWidget({
   // Shared Background Component
   const PremiumBackground = () => (
     <>
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-          ],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)' }} />
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       />
@@ -70,10 +56,10 @@ export function ProfileCompletionWidget({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6"
+      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6 border border-slate-200"
       style={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        background: '#ffffff',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
       }}
     >
       <PremiumBackground />
@@ -83,7 +69,7 @@ export function ProfileCompletionWidget({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1">
             <h2
-              className="text-white"
+              className="text-slate-900"
               style={{
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.bold,
@@ -104,7 +90,7 @@ export function ProfileCompletionWidget({
             )}
           </div>
           <p
-            className={percentage === 100 ? 'text-green-400' : 'text-gray-400'}
+            className={percentage === 100 ? 'text-green-600' : 'text-slate-500'}
             style={{
               fontSize: typography.fontSize.sm,
             }}
@@ -124,7 +110,7 @@ export function ProfileCompletionWidget({
                 cx="70"
                 cy="70"
                 r={radius}
-                stroke="rgba(255,255,255,0.1)"
+                stroke="rgba(0,0,0,0.05)"
                 strokeWidth="8"
                 fill="none"
               />
@@ -166,15 +152,14 @@ export function ProfileCompletionWidget({
                 style={{
                   fontSize: typography.fontSize['4xl'],
                   fontWeight: typography.fontWeight.bold,
-                  color: 'white',
+                  color: '#0f172a',
                   lineHeight: 1,
-                  textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                 }}
               >
                 {animatedPercentage}%
               </motion.div>
               <span
-                className="text-gray-400 mt-1"
+                className="text-slate-400 mt-1"
                 style={{
                   fontSize: typography.fontSize.xs,
                 }}
@@ -196,8 +181,8 @@ export function ProfileCompletionWidget({
               onClick={() => onItemClick?.(item.id)}
               className="w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200 hover:bg-white/5 active:scale-[0.99] group"
               style={{
-                border: `1px solid rgba(255, 255, 255, 0.1)`,
-                background: 'rgba(255, 255, 255, 0.02)',
+                border: `1px solid rgba(0, 0, 0, 0.05)`,
+                background: 'rgba(0, 0, 0, 0.02)',
                 minHeight: '56px',
               }}
             >
@@ -219,7 +204,7 @@ export function ProfileCompletionWidget({
 
                 {/* Label */}
                 <span
-                  className={item.completed ? 'text-gray-500 line-through' : 'text-gray-200 group-hover:text-white transition-colors'}
+                  className={item.completed ? 'text-slate-400 line-through' : 'text-slate-700 group-hover:text-slate-900 transition-colors'}
                   style={{
                     fontSize: typography.fontSize.sm,
                     fontWeight: typography.fontWeight.medium,

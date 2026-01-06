@@ -5859,9 +5859,27 @@
   --sidebar-ring: #3b82f6;
 }
 
-html {
-  font-size: var(--font-size);
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
 }
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none;
+}
+
+
+
 
 @property --tw-translate-x {
   syntax: "*";

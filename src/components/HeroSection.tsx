@@ -93,7 +93,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 sm:mb-5 md:mb-6 leading-tight font-bold"
                   style={{ color: '#0A0B0D' }}
                 >
-                  Your Phone Number. Your Global Identity.
+                  Your Phone Number. Your Verified Global PIN.
                 </motion.h1>
 
                 {/* Subheadline */}
@@ -179,112 +179,72 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
 
               {/* Right: Abstract Identity Visualization */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
-                className="relative max-w-[min(90vw,520px)] mx-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 1 }}
+                className="relative flex flex-col items-center justify-center gap-8 lg:gap-12"
               >
-                {/* Floating particles */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {[...Array(8)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute w-1 h-1 bg-blue-400/40 rounded-full"
-                      initial={{ 
-                        x: Math.random() * 400,
-                        y: Math.random() * 400,
-                        scale: 0
-                      }}
-                      animate={{
-                        x: Math.random() * 400,
-                        y: Math.random() * 400,
-                        scale: [0, 1, 0]
-                      }}
-                      transition={{
-                        duration: 4 + Math.random() * 2,
-                        repeat: Infinity,
-                        delay: i * 0.3
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <motion.div 
-                  className="relative rounded-2xl md:rounded-3xl bg-white shadow-2xl border border-slate-200 p-6 md:p-8 cursor-pointer"
-                  whileHover={{ 
-                    scale: 1.02,
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                {/* Phone Number Card */}
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.8 }}
+                  className="relative group rounded-2xl p-6 md:p-8 border border-white/10 shadow-2xl w-64 md:w-72"
+                  style={{ backgroundColor: '#111827', color: 'white' }}
                 >
-                  {/* Pulse effect on hover */}
-                  <motion.div
-                    className="absolute inset-0 rounded-3xl border-2 border-blue-400/50"
-                    initial={{ scale: 1, opacity: 0 }}
-                    whileHover={{ scale: 1.1, opacity: [0, 1, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  />
-                  <div className="absolute inset-0 rounded-3xl pointer-events-none bg-[radial-gradient(circle_at_20%_30%,#e2e8f0_0,transparent_40%),radial-gradient(circle_at_80%_70%,#f1f5f9_0,transparent_40%)]" />
-                  <div className="relative">
-                    <motion.div 
-                      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden"
-                      whileHover={{ y: -2 }}
-                    >
-                      {/* Animated gradient overlay */}
-                      <motion.div
-                        className="absolute inset-0"
-                        animate={{
-                          background: [
-                            'radial-gradient(circle at 20% 50%, rgba(123, 184, 255, 0.2) 0%, transparent 50%)',
-                            'radial-gradient(circle at 80% 50%, rgba(191, 165, 255, 0.2) 0%, transparent 50%)',
-                            'radial-gradient(circle at 20% 50%, rgba(123, 184, 255, 0.2) 0%, transparent 50%)',
-                          ],
-                        }}
-                        transition={{
-                          duration: 8,
-                          repeat: Infinity,
-                          ease: 'easeInOut',
-                        }}
-                      />
-                      
-                      {/* Subtle grid pattern */}
-                      <div
-                        className="absolute inset-0 opacity-5"
-                        style={{
-                          backgroundImage: 'linear-gradient(rgba(10,11,13,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(10,11,13,0.05) 1px, transparent 1px)',
-                          backgroundSize: '32px 32px',
-                        }}
-                      />
-                      
-                      <div className="relative z-10">
-                        <div className="text-sm mb-2" style={{ color: '#0A0B0D' }}>Core-ID PIN</div>
-                        <motion.div 
-                          className="text-2xl font-semibold tracking-wide" 
-                          style={{ color: '#0A0B0D' }}
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          PIN-234-812345
-                        </motion.div>
-                        <div className="mt-4 relative">
-                          <div className="brand-gradient-overlay" />
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative">
-                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                              <div className="text-xs" style={{ color: '#0A0B0D' }}>Status</div>
-                              <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Verified</div>
-                            </div>
-                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen">
-                              <div className="text-xs" style={{ color: '#0A0B0D' }}>Scope</div>
-                              <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Global</div>
-                            </div>
-                            <div className="rounded-lg bg-white border border-slate-200 p-3 brand-sheen col-span-2 sm:col-span-1">
-                              <div className="text-xs" style={{ color: '#0A0B0D' }}>Security</div>
-                              <div className="text-sm font-medium" style={{ color: '#0A0B0D' }}>Enterprise-grade</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
+                  <div className="text-xs mb-2 text-center uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Phone Number</div>
+                  <div className="text-xl md:text-2xl font-mono tracking-tighter text-center" style={{ color: 'white' }}>
+                    +234 812 345 6789
                   </div>
+                  <motion.div 
+                    className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"
+                    animate={{ opacity: [0.3, 0.5, 0.3] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  />
+                </motion.div>
+
+                {/* Arrow / Connection */}
+                <motion.div
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                  className="relative h-px w-24 bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400"
+                >
+                  <motion.div 
+                    className="absolute right-0 -top-[3px] w-2 h-2 border-t border-r border-emerald-400 rotate-45"
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </motion.div>
+
+                {/* Verified PIN Card */}
+                <motion.div
+                  initial={{ x: 20, opacity: 0, scale: 0.9 }}
+                  animate={{ x: 0, opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.4, duration: 0.8, type: "spring" }}
+                  className="relative group rounded-2xl p-6 md:p-8 border shadow-2xl w-64 md:w-72"
+                  style={{ 
+                    backgroundColor: '#0A0B0D', 
+                    color: 'white', 
+                    borderColor: 'rgba(50, 240, 140, 0.5)', 
+                    boxShadow: '0 0 50px rgba(50, 240, 140, 0.2)' 
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <CheckCircle className="h-10 w-10" style={{ color: '#32f08c' }} />
+                    </motion.div>
+                    <div className="text-center">
+                      <div className="text-xs mb-1 uppercase tracking-widest" style={{ color: 'rgba(50, 240, 140, 0.6)' }}>Verified PIN</div>
+                      <div className="text-xl md:text-2xl font-semibold" style={{ color: 'white' }}>PIN-234-812345</div>
+                    </div>
+                  </div>
+                  
+                  {/* Outer Glow */}
+                  <div className="absolute -inset-0.5 rounded-2xl bg-emerald-500/20 blur opacity-70" />
                 </motion.div>
               </motion.div>
             </div>

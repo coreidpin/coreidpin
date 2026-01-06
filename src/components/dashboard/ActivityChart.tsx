@@ -74,25 +74,11 @@ export function ActivityChart({
   // Shared Background Component
   const PremiumBackground = () => (
     <>
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-          ],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)' }} />
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       />
@@ -104,10 +90,10 @@ export function ActivityChart({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6"
+      className="relative overflow-hidden w-[calc(100%+2rem)] -mx-4 sm:w-full sm:mx-0 rounded-xl p-4 md:p-6 border border-slate-200"
       style={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        background: '#ffffff',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
       }}
     >
       <PremiumBackground />
@@ -117,7 +103,7 @@ export function ActivityChart({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2
-              className="text-white mb-1"
+              className="text-slate-900 mb-1"
               style={{
                 fontSize: typography.fontSize.xl,
                 fontWeight: typography.fontWeight.bold,
@@ -126,7 +112,7 @@ export function ActivityChart({
               PIN Activity
             </h2>
             <p
-              className="text-gray-400"
+              className="text-slate-500"
               style={{
                 fontSize: typography.fontSize.sm,
               }}
@@ -142,7 +128,7 @@ export function ActivityChart({
         </div>
 
         {/* Period Selector */}
-        <div className="flex gap-1 mb-6 p-1 bg-white/5 rounded-lg inline-flex border border-white/10">
+        <div className="flex gap-1 mb-6 p-1 bg-slate-50 rounded-lg inline-flex border border-slate-200">
           {periods.map((p) => (
             <button
               key={p.value}
@@ -151,9 +137,9 @@ export function ActivityChart({
               style={{
                 fontSize: typography.fontSize.xs,
                 fontWeight: typography.fontWeight.medium,
-                backgroundColor: period === p.value ? 'rgba(255,255,255,0.1)' : 'transparent',
-                color: period === p.value ? 'white' : colors.gray400,
-                boxShadow: period === p.value ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
+                backgroundColor: period === p.value ? '#ffffff' : 'transparent',
+                color: period === p.value ? colors.coreBlue : colors.slateGray,
+                boxShadow: period === p.value ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}
             >
               {p.label}
@@ -174,9 +160,8 @@ export function ActivityChart({
                   y1={y}
                   x2={chartWidth - padding.right}
                   y2={y}
-                  stroke="rgba(255,255,255,0.1)"
+                  stroke="rgba(0,0,0,0.05)"
                   strokeWidth="1"
-                  opacity="0.5"
                 />
               );
             })}
@@ -201,13 +186,12 @@ export function ActivityChart({
             {/* Line path */}
             <motion.path
               d={linePath}
-              stroke="#60A5FA"
-              strokeWidth="2"
+              stroke="#3B82F6"
+              strokeWidth="2.5"
               fill="none"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 1, delay: 0.5, ease: 'easeInOut' }}
-              style={{ filter: 'drop-shadow(0 0 4px rgba(59, 130, 246, 0.5))' }}
             />
 
             {/* Data points */}
@@ -228,8 +212,8 @@ export function ActivityChart({
                   cx={point.x}
                   cy={point.y}
                   r={hoveredPoint === i ? 5 : 3}
-                  fill={i === points.length - 1 ? "#60A5FA" : "#1a1a1a"}
-                  stroke="#60A5FA"
+                  fill={i === points.length - 1 ? "#3B82F6" : "#ffffff"}
+                  stroke="#3B82F6"
                   strokeWidth="2"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -247,42 +231,42 @@ export function ActivityChart({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute bg-gray-900 border border-gray-700 text-white px-3 py-2 rounded-lg pointer-events-none z-20"
+              className="absolute bg-white border border-slate-200 text-slate-900 px-3 py-2 rounded-lg pointer-events-none z-20"
               style={{
                 left: points[hoveredPoint].x,
                 top: points[hoveredPoint].y - 50,
                 transform: 'translateX(-50%)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 fontSize: typography.fontSize.xs,
               }}
             >
-              <div className="font-semibold text-white">
+              <div className="font-semibold text-slate-900">
                 {points[hoveredPoint].value} verifications
               </div>
-              <div className="text-gray-400">{data[hoveredPoint].day}</div>
+              <div className="text-slate-500">{data[hoveredPoint].day}</div>
             </motion.div>
           )}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-white/10">
+        <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-slate-100">
           <div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-slate-900">
               <CountUp end={values.reduce((a, b) => a + b, 0)} duration={2} separator="," />
             </div>
-            <div className="text-xs text-gray-400">Total</div>
+            <div className="text-xs text-slate-500 font-medium">Total</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-slate-900">
               <CountUp end={Math.round(values.reduce((a, b) => a + b, 0) / values.length)} duration={2} separator="," />
             </div>
-            <div className="text-xs text-gray-400">Avg/day</div>
+            <div className="text-xs text-slate-500 font-medium">Avg/day</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-slate-900">
               <CountUp end={Math.max(...values)} duration={2} separator="," />
             </div>
-            <div className="text-xs text-gray-400">Peak</div>
+            <div className="text-xs text-slate-500 font-medium">Peak</div>
           </div>
         </div>
       </div>

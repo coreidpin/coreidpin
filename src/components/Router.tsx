@@ -240,7 +240,7 @@ const Layout: React.FC<{
   const isWhitePage = currentPage === 'developer';
   
   const containerClass = isAuthPage 
-    ? "h-[100dvh] overflow-hidden flex flex-col" 
+    ? "h-screen overflow-hidden flex flex-col" 
     : "min-h-screen flex flex-col";
 
   const containerStyle = isWhitePage 
@@ -248,7 +248,7 @@ const Layout: React.FC<{
     : { backgroundColor: '#0a0b0d' };
 
   return (
-    <div className={containerClass} style={containerStyle}>
+    <div className={containerClass} style={{ ...containerStyle, height: isAuthPage ? '100vh' : undefined }}>
       <Navbar 
         currentPage={currentPage}
         onNavigate={() => {}} // Navigation handled by React Router
@@ -257,7 +257,7 @@ const Layout: React.FC<{
         isAuthenticated={isAuthenticated}
         userType={userType}
       />
-      <main className="flex-1 pt-14 md:pt-16 lg:pt-[4.5rem]">
+      <main className="flex-1 pt-14 md:pt-16 lg:pt-20">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -439,33 +439,25 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/login" 
           element={
-            <Layout currentPage="login" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-16">
-                  <div className="text-center space-y-4">
-                    <div className="animate-spin h-8 w-8 border-2 border-[#32f08c] border-t-transparent rounded-full mx-auto" />
-                    <p className="text-white/70">Loading...</p>
-                  </div>
+            <Suspense fallback={
+              <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <div className="animate-spin h-8 w-8 border-2 border-[#32f08c] border-t-transparent rounded-full mx-auto" />
+                  <p className="text-white/70">Loading...</p>
                 </div>
-              }>
-                <div className="flex items-center justify-center py-16">
-                  <LoginPage onLoginSuccess={onLoginSuccess} />
-                </div>
-              </Suspense>
-            </Layout>
+              </div>
+            }>
+              <LoginPage onLoginSuccess={onLoginSuccess} />
+            </Suspense>
           } 
         />
 
         <Route 
           path="/get-started" 
           element={
-            <Layout currentPage="get-started" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
-              <div className="flex items-center justify-center py-8">
-                <Suspense fallback={<LoadingSpinner />}>
-                  <SimpleRegistration showChrome={false} onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
-                </Suspense>
-              </div>
-            </Layout>
+            <Suspense fallback={<LoadingSpinner />}>
+              <SimpleRegistration showChrome={false} onComplete={() => { window.location.href = '/dashboard' }} onBack={() => { window.history.back() }} />
+            </Suspense>
           } 
         />
 

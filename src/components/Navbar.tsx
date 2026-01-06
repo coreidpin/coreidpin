@@ -86,7 +86,7 @@ export function Navbar({
     {
       label: 'Solutions',
       items: [
-        { label: 'For Business', href: '/employers', icon: Building },
+        { label: 'For Employers', href: '/employers', icon: Building },
         { label: 'For Professionals', href: '/professionals', icon: UserCheck },
         // { label: 'For Universities', href: '/universities', icon: GraduationCap }
       ]
@@ -118,11 +118,14 @@ export function Navbar({
   };
 
   const DesktopDropdown = ({ item }: { item: typeof navigationItems[0] }) => (
-    <div className="relative group">
+    <div 
+      className="relative group h-full"
+      style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}
+      onMouseEnter={() => setActiveDropdown(item.label)}
+      onMouseLeave={() => setActiveDropdown(null)}
+    >
       <button
-        className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-accent/50"
-        onMouseEnter={() => setActiveDropdown(item.label)}
-        onMouseLeave={() => setActiveDropdown(null)}
+        className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200"
       >
         {item.label}
         <motion.div
@@ -140,13 +143,32 @@ export function Navbar({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full -left-4 mt-2 w-64 bg-card border border-border shadow-xl z-50 overflow-hidden"
-            onMouseEnter={() => setActiveDropdown(item.label)}
-            onMouseLeave={() => setActiveDropdown(null)}
+            style={{ 
+              marginTop: '-4px', 
+              zIndex: 100, 
+              width: '256px', 
+              minWidth: '256px', 
+              position: 'absolute', 
+              top: '100%', 
+              left: '-16px',
+              backgroundColor: isLight ? '#ffffff' : '#0a0b0d'
+            }}
+            className={cn(
+              "absolute top-full -left-4 border shadow-2xl overflow-hidden rounded-xl",
+              isLight 
+                ? "bg-white/95 backdrop-blur-xl border-slate-200/50" 
+                : "bg-[#0a0b0d]/95 backdrop-blur-xl border-white/10"
+            )}
           >
             <div className="p-1">
-              <div className="p-3 border-b border-border bg-muted/30">
-                <h4 className="font-semibold text-sm text-foreground uppercase tracking-wider">
+              <div 
+                className="p-3 border-b border-border"
+                style={{ backgroundColor: isLight ? '#f8fafc' : '#1e293b' }}
+              >
+                <h4 
+                  className="font-semibold text-xs uppercase tracking-wider"
+                  style={{ color: isLight ? '#64748b' : '#94a3b8' }}
+                >
                   {item.label}
                 </h4>
               </div>
@@ -158,7 +180,15 @@ export function Navbar({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => handleNavigate(subItem.href)}
-                    className="flex items-center gap-3 w-full px-3 py-3 text-left text-sm text-muted-foreground hover:text-foreground hover:bg-primary/5 transition-all duration-200 group/item"
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm transition-colors duration-200 group/item rounded-lg"
+                    whileHover={{ backgroundColor: isLight ? 'rgba(50, 240, 140, 0.1)' : 'rgba(50, 240, 140, 0.15)' }}
+                    style={{ 
+                      whiteSpace: 'nowrap', 
+                      minWidth: 'max-content',
+                      color: isLight ? '#475569' : '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
                   >
                     {subItem.icon && (
                       <subItem.icon className="h-4 w-4 text-primary group-hover/item:text-primary" />
@@ -178,6 +208,24 @@ export function Navbar({
 
   return (
     <>
+      <style>{`
+        @media (max-width: 1023px) {
+          .nav-desktop-container {
+            display: none !important;
+          }
+          .nav-mobile-button {
+            display: flex !important;
+          }
+        }
+        @media (min-width: 1024px) {
+          .nav-desktop-container {
+            display: flex !important;
+          }
+          .nav-mobile-button {
+            display: none !important;
+          }
+        }
+      `}</style>
       {/* <AnnouncementBanner 
         onCtaClick={() => setShowWaitlist(true)}
       /> */}
@@ -231,24 +279,28 @@ export function Navbar({
       <motion.header 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        style={{ zIndex: 100, overflow: 'visible' }}
         className={cn(
-          "border-b backdrop-blur-md fixed top-0 left-0 right-0 z-50 shadow-sm transition-colors duration-200",
+          "border-b backdrop-blur-md fixed top-0 left-0 right-0 shadow-sm transition-colors duration-200",
           isLight 
             ? "bg-white/80 border-slate-200 text-slate-900" 
             : "bg-[#0a0b0d]/95 border-white/10 text-white"
         )}
       >
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 md:h-16 lg:h-18">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: 'visible' }}>
+        <div className="flex items-center justify-between h-14 md:h-16 lg:h-18" style={{ overflow: 'visible' }}>
           {/* Logo */}
           {/* Logo with Holiday Hat */}
           <div className="relative group">
-            <SantaHat className="top-[-28px] left-[-6px] scale-75 rotate-[-10deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
+            <SantaHat className="top-[-12px] left-[-8px] scale-75 rotate-[-15deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
             <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-2 flex-1 justify-center">
+          <nav 
+            className="hidden lg:flex items-center gap-2 flex-1 justify-center nav-desktop-container h-full"
+            style={{ height: '100%', overflow: 'visible' }}
+          >
             {!isAuthenticated && navigationItems.map((item) => (
               <DesktopDropdown key={item.label} item={item} />
             ))}
@@ -258,7 +310,7 @@ export function Navbar({
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                   <span className="text-sm font-medium text-foreground">
-                    {userType === 'employer' && 'Business Dashboard'}
+                    {userType === 'employer' && 'Employer Dashboard'}
                     {userType === 'professional' && 'Professional Dashboard'}
                     {userType === 'admin' && 'Admin Dashboard'}
                     {/* {userType === 'university' && 'University Dashboard'} */}
@@ -269,17 +321,17 @@ export function Navbar({
           </nav>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0 nav-desktop-container">
             {!isAuthenticated ? (
               <>
                 <Button 
                   variant="ghost" 
                   size="sm"
+                  disabled={import.meta.env.PROD}
                   onClick={() => navigate('/login')}
-                  style={!isLight ? { color: '#ffffff' } : undefined}
                   className={cn(
                     "transition-colors",
-                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : "hover:bg-white/10 hover:text-white"
+                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : "hover:bg-white/10 text-white"
                   )}
                 >
                   Login
@@ -288,6 +340,7 @@ export function Navbar({
                 <Button 
                   variant={isLight ? "ghost" : "default"}
                   size="sm"
+                  disabled={import.meta.env.PROD}
                   onClick={() => handleLogin('professional')}
                   className={cn(
                     isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : ""
@@ -354,7 +407,7 @@ export function Navbar({
                 <Button 
                   variant="ghost" 
                   className={cn(
-                    "lg:hidden flex-shrink-0",
+                    "lg:hidden flex-shrink-0 nav-mobile-button",
                     // Mobile: 44px minimum touch target
                     "h-11 w-11 p-0",
                     // Desktop: Smaller
@@ -549,7 +602,8 @@ export function Navbar({
                               <Button 
                                 variant="outline" 
                                 className="relative w-full justify-between h-14 px-4 border-white/20 text-white hover:bg-white/10 hover:border-[#bfa5ff]/50 hover:shadow-lg hover:shadow-[#bfa5ff]/20 overflow-hidden group"
-                                onClick={() => { handleLogin('employer'); }}
+                                disabled={isProd}
+                                onClick={() => { if (isProd) return; handleLogin('employer'); }}
                               >
                                 {/* Ripple background on hover */}
                                 <span className="absolute inset-0 bg-gradient-to-r from-[#bfa5ff]/0 via-[#bfa5ff]/10 to-[#bfa5ff]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
@@ -563,7 +617,7 @@ export function Navbar({
                                     <Building className="h-5 w-5 text-[#bfa5ff]" />
                                   </motion.div>
                                   <div className="text-left">
-                                    <div className="font-semibold">Business</div>
+                                    <div className="font-semibold">Employer</div>
                                     <div className="text-xs text-white/60">Hire verified talent</div>
                                   </div>
                                 </div>
@@ -590,7 +644,7 @@ export function Navbar({
                           <p className="text-sm text-muted-foreground">Logged in as</p>
                         </div>
                         <p className="font-medium">
-                          {userType === 'employer' && 'Business Dashboard'}
+                          {userType === 'employer' && 'Employer Dashboard'}
                           {userType === 'professional' && 'Professional Dashboard'}
                           {userType === 'admin' && 'Admin Dashboard'}
                         </p>

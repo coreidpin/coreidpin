@@ -52,13 +52,13 @@ export function BasicInfoForm({
           {formData.userType === 'business' ? 'Company Name' : 'Full Name'}
         </Label>
         <div className="flex items-center h-14 px-4 bg-white/5 border border-white/10 rounded-xl focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all group">
-          <Users className="h-5 w-5 text-white/40 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+          <Users className="h-5 w-5 text-white/70 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
           <input
             id="quick-name"
             placeholder={formData.userType === 'business' ? "Acme Corp" : "John Doe"}
             value={formData.name}
             onChange={(e) => updateField('name', e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 h-full w-full text-base"
+            className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/60 h-full w-full text-base"
             aria-invalid={!!errors.name}
           />
         </div>
@@ -70,13 +70,13 @@ export function BasicInfoForm({
           <div className="space-y-2">
             <Label htmlFor="industry" className="text-sm font-medium text-white/80 ml-1">Industry</Label>
             <div className="flex items-center h-14 px-4 bg-white/5 border border-white/10 rounded-xl focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all group">
-              <Briefcase className="h-5 w-5 text-white/40 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+              <Briefcase className="h-5 w-5 text-white/70 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
               <input
                 id="industry"
                 placeholder="Fintech, Health, etc."
                 value={formData.industry || ''}
                 onChange={(e) => updateField('industry', e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 h-full w-full text-base"
+                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/60 h-full w-full text-base"
               />
             </div>
           </div>
@@ -84,13 +84,13 @@ export function BasicInfoForm({
           <div className="space-y-2">
             <Label htmlFor="website" className="text-sm font-medium text-white/80 ml-1">Website</Label>
             <div className="flex items-center h-14 px-4 bg-white/5 border border-white/10 rounded-xl focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all group">
-              <Globe className="h-5 w-5 text-white/40 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+              <Globe className="h-5 w-5 text-white/70 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
               <input
                 id="website"
                 placeholder="https://example.com"
                 value={formData.website || ''}
                 onChange={(e) => updateField('website', e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 h-full w-full text-base"
+                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/60 h-full w-full text-base"
               />
             </div>
           </div>
@@ -141,14 +141,14 @@ export function BasicInfoForm({
           <div className="space-y-2">
             <Label htmlFor="quick-email" className="text-sm font-medium text-white/80 ml-1">Email Address</Label>
             <div className="flex items-center h-14 px-4 bg-white/5 border border-white/10 rounded-xl focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all group">
-              <Mail className="h-5 w-5 text-white/40 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
+              <Mail className="h-5 w-5 text-white/70 group-focus-within:text-blue-400 transition-colors shrink-0 mr-3" />
               <input
                 id="quick-email"
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
                 onChange={(e) => updateField('email', e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/40 h-full w-full text-base"
+                className="flex-1 bg-transparent border-none outline-none text-white placeholder-white/60 h-full w-full text-base"
                 aria-invalid={!!errors.email}
               />
             </div>
@@ -165,20 +165,20 @@ export function BasicInfoForm({
         {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Continue'}
       </Button>
 
-      {/* {formData.userType !== 'business' && (
-        <>
-          <div className="relative py-2">
+      {formData.userType !== 'business' && (
+        <div className="pt-2">
+          <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/10" />
+              <div className="w-full border-t border-white/10" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0a0b0d] px-2 text-white/40">Or register with</span>
+            <div className="relative flex justify-center text-xs uppercase tracking-wider">
+              <span className="px-2 bg-[#0a0b0d] text-white/70">Or register with</span>
             </div>
           </div>
 
           <Button
             type="button"
-            className="w-full h-14 bg-white text-black hover:bg-white/90 rounded-xl font-medium text-base shadow-lg shadow-white/5 transition-all"
+            className="w-full h-11 bg-white text-black hover:bg-white/90 font-medium"
             disabled={isLoading}
             onClick={onGoogleSignIn}
           >
@@ -194,8 +194,8 @@ export function BasicInfoForm({
               </>
             )}
           </Button>
-        </>
-      )} */}
+        </div>
+      )}
     </div>
   )
 }

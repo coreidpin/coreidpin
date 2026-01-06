@@ -34,7 +34,7 @@ export function OTPVerification({
         <span>Back to form</span>
       </button>
       
-      <div className="flex justify-center py-4">
+      <div className="flex justify-start py-4">
         <OTPInput
           value={otp}
           onChange={setOtp}
@@ -52,19 +52,18 @@ export function OTPVerification({
           {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verify Code'}
         </Button>
         
-        <div className="text-center text-sm">
+        <div className="text-left text-sm pt-2">
           <p className="text-white/60 mb-2">Didn't receive a code?</p>
-          <Button
+          <button
             onClick={onResend}
             disabled={!canResend || resendCountdown > 0 || isLoading}
-            variant="ghost"
-            className="text-white hover:text-white/80 hover:bg-white/5"
+            className="text-blue-400 hover:text-blue-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {resendCountdown > 0 
               ? `Resend code in ${resendCountdown}s`
               : 'Resend Code'
             }
-          </Button>
+          </button>
         </div>
       </div>
     </div>

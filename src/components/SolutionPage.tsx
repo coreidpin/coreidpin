@@ -55,7 +55,7 @@ export function SolutionPage() {
           <h2 className="text-6xl md:text-7xl mb-8 text-gray-900">
             Our Solution —<br />
             <span className="text-black">
-              Phone Number as PIN
+              Phone Number as Verified PIN
             </span>
           </h2>
           

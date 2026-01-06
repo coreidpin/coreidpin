@@ -109,10 +109,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               What is PIN?
             </Badge>
             <h2 className="text-4xl sm:text-5xl mb-6 text-white">
-              A Passport for Your Career
+              A Verified Global PIN for Your Career
             </h2>
             <p className="text-xl text-white/70 max-w-3xl mx-auto">
-              PIN transforms your professional experience into a globally recognized, verified digital identity
+              PIN transforms your professional experience into a globally recognized, Verified Global PIN
             </p>
           </motion.div>
 
@@ -274,10 +274,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             className="text-center mb-16"
           >
             <h2 className="text-4xl sm:text-5xl mb-6 text-white">
-              Why Professionals Love PIN
+              Why Professionals Love Their Verified PIN
             </h2>
             <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Join thousands of verified professionals building their global careers
+              Join thousands of verified professionals building their global careers with a Verified Global PIN
             </p>
           </motion.div>
 
@@ -342,8 +342,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         </div>
       </section>
 
-      {/* GLOBAL EMPLOYER TRUST - Dark Section with Map */}
-      <section className="py-24 px-4" style={{ backgroundColor: '#ffffff' }}>
+      {/* WHAT YOU SEE ON YOUR DASHBOARD - Dark Section */}
+      <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -351,11 +351,11 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl mb-6 text-black">
-              Trusted by Global Employers
+            <h2 className="text-4xl sm:text-5xl mb-6 text-white font-bold">
+              What you see on your dashboard
             </h2>
-            <p className="text-xl text-black max-w-3xl mx-auto">
-              Leading companies worldwide use PIN to discover and hire verified talent
+            <p className="text-xl text-white/70 max-w-4xl mx-auto leading-relaxed">
+              Unlock a trusted, universal identity layer powered by PIN — enabling professionals, employers, and platforms to verify and connect instantly across borders.
             </p>
           </motion.div>
 
@@ -417,10 +417,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
           {/* Stats Grid */}
           <div className="grid md:grid-cols-4 gap-6">
             {[
-              { number: "195+", label: "Countries", icon: Globe, color: "#7bb8ff" },
-              { number: "50K+", label: "Verified Professionals", icon: Users, color: "#bfa5ff" },
-              { number: "1,200+", label: "Hiring Companies", icon: Briefcase, color: "#32f08c" },
-              { number: "99.9%", label: "Verification Accuracy", icon: ShieldCheck, color: "#7bb8ff" }
+              { number: "128,400+", label: "Active PIN Identities", icon: Fingerprint, color: "#32f08c" },
+              { number: "3,200+", label: "Connected Companies", icon: Briefcase, color: "#bfa5ff" },
+              { number: "2.8M+", label: "Instant Verifications Processed", icon: ShieldCheck, color: "rgba(123, 184, 255, 1)" },
+              { number: "60+", label: "Countries with PIN Coverage", icon: Globe, color: "rgba(123, 184, 255, 1)" }
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -429,15 +429,21 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="p-6 text-center bg-white/5 backdrop-blur-xl border-white/10 hover:shadow-xl transition-all">
-                  <div 
-                    className="w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center"
-                    style={{ backgroundColor: `${stat.color}20` }}
-                  >
-                    <stat.icon className="h-6 w-6" style={{ color: stat.color }} />
+                <Card 
+                  className="p-8 text-left border-white/5 transition-all hover:bg-white/5"
+                  style={{ backgroundColor: '#111827', minHeight: '220px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+                >
+                  <div>
+                    <div 
+                      className="w-10 h-10 rounded-lg mb-6 flex items-center justify-center"
+                      style={{ backgroundColor: `${stat.color}20` }}
+                    >
+                      <stat.icon className="h-5 w-5" style={{ color: stat.color }} />
+                    </div>
+                    <div className="text-sm font-medium mb-4" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{stat.label}</div>
+                    <div className="text-3xl font-bold text-white mb-2">{stat.number}</div>
                   </div>
-                  <div className="text-4xl font-bold mb-2 text-black">{stat.number}</div>
-                  <div className="text-sm text-black">{stat.label}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-white/20 mt-4">Live updates</div>
                 </Card>
               </motion.div>
             ))}
@@ -593,7 +599,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             viewport={{ once: true }}
           >
             <h2 className="text-4xl sm:text-5xl md:text-6xl mb-6 text-white">
-              Ready to Own Your<br />Professional Future?
+              Ready to Claim Your<br />Verified Global PIN?
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
               Join 50,000+ verified professionals using PIN to unlock global opportunities

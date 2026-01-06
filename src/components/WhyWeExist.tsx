@@ -65,7 +65,7 @@ export function WhyWeExist() {
 
             <p className="text-xl text-white/70 mb-12 leading-relaxed">
               A global pain point — fragmented professional credentials, high fraud, 
-              slow verification, and poor cross-platform identity.
+              slow verification, and the lack of a universal, Verified Global PIN.
             </p>
 
             {/* Problem cards */}

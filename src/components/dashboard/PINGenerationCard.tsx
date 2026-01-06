@@ -52,25 +52,11 @@ export function PINGenerationCard({
   // Shared Background Component
   const PremiumBackground = () => (
     <>
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)',
-            'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%)',
-          ],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
+      <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 50%)' }} />
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       />
@@ -83,23 +69,22 @@ export function PINGenerationCard({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden w-full rounded-xl p-4 md:p-6"
+        className="relative overflow-hidden w-full rounded-xl p-4 md:p-6 border border-slate-200"
         style={{
-          background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          background: '#ffffff',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
         }}
       >
         <PremiumBackground />
         
         <div className="relative z-10">
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="mb-2 text-sm font-medium text-gray-400 uppercase tracking-wider">Your Professional PIN</div>
+            <div className="mb-2 text-sm font-semibold text-slate-500 uppercase tracking-wider">Your Professional PIN</div>
             
             <div className="relative group w-full flex items-center justify-center gap-3">
               <div 
-                className="flex-1 text-xl md:text-2xl font-mono font-bold text-white my-4 px-3 py-4 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm text-center"
+                className="flex-1 text-xl md:text-2xl font-mono font-bold text-slate-900 my-4 px-3 py-4 bg-slate-50 rounded-2xl border border-slate-200 text-center"
                 style={{ 
-                  textShadow: '0 2px 10px rgba(0,0,0,0.2)',
                   letterSpacing: '0.1em',
                   display: 'flex',
                   alignItems: 'center',
@@ -111,7 +96,7 @@ export function PINGenerationCard({
                 }}
               >
                 {isLoading || currentPin === 'Loading...' ? (
-                  <span className="animate-pulse opacity-70">Loading...</span>
+                  <span className="animate-pulse opacity-40">Loading...</span>
                 ) : (
                   pinVisible ? currentPin : '••••••'
                 )}
@@ -120,7 +105,7 @@ export function PINGenerationCard({
               {!(isLoading || currentPin === 'Loading...') && (
                 <button
                   onClick={onTogglePinVisibility}
-                  className="flex-shrink-0 p-3 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5"
+                  className="flex-shrink-0 p-3 text-slate-400 hover:text-slate-600 transition-colors rounded-xl hover:bg-slate-100"
                   aria-label={pinVisible ? "Hide PIN" : "Show PIN"}
                 >
                   {pinVisible ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
@@ -143,7 +128,7 @@ export function PINGenerationCard({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onSharePin?.('twitter')}
-                className="p-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors border border-white/5"
+                className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200"
                 title="Share on X"
               >
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -155,7 +140,7 @@ export function PINGenerationCard({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onSharePin?.('linkedin')}
-                className="p-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors border border-white/5"
+                className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200"
                 title="Share on LinkedIn"
               >
                 <svg className="h-4 w-4 md:h-5 md:w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -166,12 +151,12 @@ export function PINGenerationCard({
           </div>
 
           {/* Benefits Grid (Compact) */}
-          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-white/10">
+          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100">
             {benefits.map((benefit) => (
               <div key={benefit.title} className="flex flex-col items-center text-center">
-                <benefit.icon className="h-5 w-5 text-blue-400 mb-2" />
-                <div className="text-xs font-semibold text-white">{benefit.title}</div>
-                <div className="text-[10px] text-gray-400 leading-tight mt-1">{benefit.description}</div>
+                <benefit.icon className="h-5 w-5 text-blue-500 mb-2" />
+                <div className="text-xs font-bold text-slate-900">{benefit.title}</div>
+                <div className="text-[10px] text-slate-500 leading-tight mt-1">{benefit.description}</div>
               </div>
             ))}
           </div>
@@ -186,10 +171,10 @@ export function PINGenerationCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
-      className="relative overflow-hidden w-full rounded-xl p-4 md:p-6"
+      className="relative overflow-hidden w-full rounded-xl p-4 md:p-6 border border-slate-200"
       style={{
-        background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+        background: '#ffffff',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
       }}
     >
       <PremiumBackground />
@@ -326,50 +311,50 @@ export function PINGenerationCard({
           </motion.button>
         </div>
 
-        {/* Benefits Grid */}
-        <div className="grid grid-cols-1 gap-4 pt-4 border-t border-white/10">
-          {benefits.map((benefit, index) => (
-            <motion.div
-              key={benefit.title}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
-              className="flex items-start gap-3"
+      {/* Benefits Grid */}
+      <div className="grid grid-cols-1 gap-4 pt-4 border-t border-slate-100">
+        {benefits.map((benefit, index) => (
+          <motion.div
+            key={benefit.title}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
+            className="flex items-start gap-3"
+          >
+            <div
+              className="flex-shrink-0 flex items-center justify-center"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: borderRadius.md,
+                backgroundColor: 'rgba(58, 102, 255, 0.05)',
+              }}
             >
-              <div
-                className="flex-shrink-0 flex items-center justify-center"
+              <benefit.icon className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h3
+                className="text-slate-900 mb-1"
                 style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: borderRadius.md,
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.semibold,
                 }}
               >
-                <benefit.icon className="h-5 w-5 text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <h3
-                  className="text-white mb-1"
-                  style={{
-                    fontSize: typography.fontSize.sm,
-                    fontWeight: typography.fontWeight.semibold,
-                  }}
-                >
-                  {benefit.title}
-                </h3>
-                <p
-                  className="text-gray-400"
-                  style={{
-                    fontSize: typography.fontSize.xs,
-                    lineHeight: typography.lineHeight.relaxed,
-                  }}
-                >
-                  {benefit.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+                {benefit.title}
+              </h3>
+              <p
+                className="text-slate-500"
+                style={{
+                  fontSize: typography.fontSize.xs,
+                  lineHeight: typography.lineHeight.relaxed,
+                }}
+              >
+                {benefit.description}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
       </div>
     </motion.div>
   );

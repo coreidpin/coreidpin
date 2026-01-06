@@ -1,3 +1,4 @@
+// Auth v1.1.0 - Splited layout
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
@@ -7,6 +8,7 @@ import { supabase } from '../utils/supabase/client';
 import { OTPRequestForm } from '../features/auth/OTPRequestForm';
 import { OTPVerifyForm } from '../features/auth/OTPVerifyForm';
 import { UserTypeSelector } from './UserTypeSelector';
+import { AuthLayout } from './AuthLayout';
 
 interface LoginPageProps {
   onLoginSuccess?: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
@@ -114,79 +116,109 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-lg">
-      {step === 'request' && (
-        <>
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold mb-2 text-white">Welcome Back</h1>
-            <p className="text-sm text-white/70">Sign in to your account</p>
-          </div>
-
-          {/* User Type Selector */}
-          <UserTypeSelector 
-            selectedType={userType}
-            onTypeChange={handleUserTypeChange}
-          />
-
-          {error && (
-            <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50/10 text-sm text-red-400">
-              {error}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Auth Flow Components */}
-      <div className="mb-6">
+    <AuthLayout>
+      <div className="w-full">
         {step === 'request' && (
-          <OTPRequestForm onSuccess={handleOTPRequestSuccess} />
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2 text-white">Welcome Back</h1>
+            <p style={{ color: '#94a3b8' }}>Sign in to your global professional identity</p>
+          </div>
         )}
 
-        {step === 'verify_otp' && (
-          <OTPVerifyForm 
-            contact={contact} 
-            contactType={contactType} 
-            onSuccess={handleOTPVerifySuccess}
-            onBack={handleBackToRequest}
-          />
+        {/* User Type Tab-style selector for left-aligned layout */}
+        {step === 'request' && (
+          <div className="mb-8 p-1 bg-white/5 rounded-xl border border-white/10 flex">
+            <button
+              onClick={() => handleUserTypeChange('professional')}
+              style={{ 
+                flex: 1, 
+                padding: '8px 16px', 
+                borderRadius: '8px', 
+                fontSize: '14px', 
+                fontWeight: 500, 
+                transition: 'all 0.2s',
+                backgroundColor: userType === 'professional' ? 'white' : 'transparent',
+                color: userType === 'professional' ? 'black' : '#94a3b8'
+              }}
+            >
+              Professional
+            </button>
+            <button
+              onClick={() => handleUserTypeChange('business')}
+              style={{ 
+                flex: 1, 
+                padding: '8px 16px', 
+                borderRadius: '8px', 
+                fontSize: '14px', 
+                fontWeight: 500, 
+                transition: 'all 0.2s',
+                backgroundColor: userType === 'business' ? 'white' : 'transparent',
+                color: userType === 'business' ? 'black' : '#94a3b8'
+              }}
+            >
+              Business
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Auth Flow Components */}
+        <div className="mb-8">
+          {step === 'request' && (
+            <OTPRequestForm onSuccess={handleOTPRequestSuccess} />
+          )}
+
+          {step === 'verify_otp' && (
+            <OTPVerifyForm 
+              contact={contact} 
+              contactType={contactType} 
+              onSuccess={handleOTPVerifySuccess}
+              onBack={handleBackToRequest}
+            />
+          )}
+        </div>
+
+        {step === 'request' && userType !== 'business' && (
+          <>
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-2 bg-[#0a0b0d] uppercase tracking-wider" style={{ color: '#64748b' }}>Or continue with</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              className="w-full h-11 bg-white text-black hover:bg-white/90 font-medium"
+              disabled={isLoading}
+              onClick={handleGoogleSignIn}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <Chrome className="h-5 w-5 mr-2" />
+                  Google
+                </>
+              )}
+            </Button>
+            
+            <p className="text-center text-[10px] sm:text-xs mt-8 px-4 leading-relaxed" style={{ color: '#64748b' }}>
+              By signing in, you agree to our <a href="/terms" className="underline hover:text-white" style={{ color: '#94a3b8' }}>Terms</a> and <a href="/privacy" className="underline hover:text-white" style={{ color: '#94a3b8' }}>Privacy Policy</a>.
+            </p>
+          </>
         )}
       </div>
-
-      {step === 'request' && (
-        <>
-{/*           <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-transparent text-white/40 uppercase tracking-wider">Or continue with</span>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            className="w-full h-11 bg-white text-black hover:bg-white/90 font-medium"
-            disabled={isLoading}
-            onClick={handleGoogleSignIn}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                <Chrome className="h-5 w-5 mr-2" />
-                Google
-              </>
-            )}
-          </Button> */}
-          
-          <p className="text-center text-white/40 text-[10px] sm:text-xs mt-6 px-4 leading-relaxed">
-            By creating an account, you agree to the <a href="/terms" className="underline hover:text-white/60">Terms of Service</a>. For more information about GidiPIN's privacy practices, see the <a href="/privacy" className="underline hover:text-white/60">GidiPIN Privacy Statement</a>. We'll occasionally send you account-related emails.
-          </p>
-        </>
-      )}
-    </div>
+    </AuthLayout>
   );
 }
