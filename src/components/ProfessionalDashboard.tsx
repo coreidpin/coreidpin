@@ -1696,13 +1696,13 @@ export function ProfessionalDashboard() {
 
 
         {/* Main Dashboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full overflow-x-hidden">
-          <TabsList className="inline-flex w-full bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto scrollbar-hide" style={{ flexWrap: 'nowrap', WebkitOverflowScrolling: 'touch' }}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
+          <TabsList className="flex w-full bg-slate-100 p-1 rounded-full gap-1 overflow-x-auto scrollbar-hide border border-slate-200 justify-start items-center px-1" style={{ WebkitOverflowScrolling: 'touch' }}>
             <TabsTrigger 
               value="overview"
-              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
+              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
               style={{
-                color: activeTab === 'overview' ? '#ffffff' : '#334155',
+                color: activeTab === 'overview' ? '#ffffff' : '#64748b',
                 backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
@@ -1713,9 +1713,9 @@ export function ProfessionalDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="projects"
-              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
+              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
               style={{
-                color: activeTab === 'projects' ? '#ffffff' : '#334155',
+                color: activeTab === 'projects' ? '#ffffff' : '#64748b',
                 backgroundColor: activeTab === 'projects' ? '#000000' : 'transparent',
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
@@ -1726,9 +1726,9 @@ export function ProfessionalDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="endorsements"
-              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
+              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
               style={{
-                color: activeTab === 'endorsements' ? '#ffffff' : '#334155',
+                color: activeTab === 'endorsements' ? '#ffffff' : '#64748b',
                 backgroundColor: activeTab === 'endorsements' ? '#000000' : 'transparent',
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
@@ -1739,9 +1739,9 @@ export function ProfessionalDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="inquiries"
-              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
+              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
               style={{
-                color: activeTab === 'inquiries' ? '#ffffff' : '#334155',
+                color: activeTab === 'inquiries' ? '#ffffff' : '#64748b',
                 backgroundColor: activeTab === 'inquiries' ? '#000000' : 'transparent',
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
@@ -1752,9 +1752,9 @@ export function ProfessionalDashboard() {
             </TabsTrigger>
             <TabsTrigger 
               value="analytics"
-              className="text-xs sm:text-sm md:text-base px-3 sm:px-4 py-2"
+              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
               style={{
-                color: activeTab === 'analytics' ? '#ffffff' : '#334155',
+                color: activeTab === 'analytics' ? '#ffffff' : '#64748b',
                 backgroundColor: activeTab === 'analytics' ? '#000000' : 'transparent',
                 fontWeight: '600',
                 whiteSpace: 'nowrap',
