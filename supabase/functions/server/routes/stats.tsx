@@ -80,6 +80,16 @@ stats.get("/dashboard", async (c) => {
     // Companies - placeholder until verification source tracking is implemented
     const companies = 0;
 
+    // ✨ REAL DATA: Demand Metrics & Pings
+    const { data: demandData } = await supabase
+      .from('pin_demand_metrics')
+      .select('demand_score, percentile_rank')
+      .eq('user_id', user.id)
+      .single();
+
+    const { data: geoPings } = await supabase
+      .rpc('get_recent_geographic_pings', { p_user_id: user.id });
+
     return c.json({
       success: true,
       stats: {
@@ -90,7 +100,10 @@ stats.get("/dashboard", async (c) => {
         countries,
         companies,
         projects: projectsCount || 0,
-        endorsements: endorsementsCount || 0
+        endorsements: endorsementsCount || 0,
+        demandScore: demandData?.demand_score || 0,
+        percentileRank: demandData?.percentile_rank || 50,
+        geoPings: geoPings || []
       }
     });
   } catch (error: any) {

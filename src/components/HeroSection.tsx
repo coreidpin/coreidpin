@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -11,9 +11,27 @@ interface HeroSectionProps {
   setShowWaitlist: (show: boolean) => void;
 }
 
+const roles = [
+  "Software Engineers",
+  "Product Managers",
+  "Product Designers",
+  "Data Scientists",
+  "HR Professionals",
+  "Creative Directors",
+  "Developers"
+];
+
 export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: HeroSectionProps) {
   const navigate = useNavigate();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [roleIndex, setRoleIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRoleIndex((prev) => (prev + 1) % roles.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
   
   const handleNavigate = (page: string) => {
     setIsNavigating(true);
@@ -90,10 +108,22 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 sm:mb-5 md:mb-6 leading-tight font-bold"
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-4 sm:mb-5 md:mb-6 leading-tight font-bold"
                   style={{ color: '#0A0B0D' }}
                 >
-                  Your Phone Number. Your Verified Global PIN.
+                  Your Phone Number. Your Verified Global PIN for{' '}
+                  <span className="relative inline-block min-w-[200px]">
+                    <motion.span
+                      key={roles[roleIndex]}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500"
+                    >
+                      {roles[roleIndex]}
+                    </motion.span>
+                  </span>
                 </motion.h1>
 
                 {/* Subheadline */}

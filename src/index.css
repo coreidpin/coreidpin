@@ -284,6 +284,30 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  /* Marquee Animation */
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee 40s linear infinite;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  .brand-shadow-green {
+    box-shadow: 0 0 20px rgba(50, 240, 140, 0.15);
+  }
+  
+  .brand-shadow-purple {
+    box-shadow: 0 0 20px rgba(191, 165, 255, 0.15);
+  }
 }
 
 @layer base {

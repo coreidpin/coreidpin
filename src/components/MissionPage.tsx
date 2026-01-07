@@ -164,8 +164,8 @@ export function MissionPage() {
           className="relative mb-24"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.3 }}
         >
           <div className="relative p-12 md:p-16 rounded-3xl overflow-hidden mt-6" style={{ backgroundColor: '#29273d' }}>
             {/* Decorative elements */}
@@ -265,8 +265,8 @@ export function MissionPage() {
           className="grid lg:grid-cols-2 gap-12"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.5 }}
         >
           {/* Technical Notes */}
           <Card className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border-white/10 mt-8 md:mt-10">

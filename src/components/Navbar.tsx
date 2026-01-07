@@ -47,9 +47,18 @@ export function Navbar({
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   // Consider dashboard pages as "light" theme if they are rendering on white background
   const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
   const isProd = import.meta.env.PROD;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     try {
@@ -281,10 +290,16 @@ export function Navbar({
         animate={{ opacity: 1, y: 0 }}
         style={{ zIndex: 100, overflow: 'visible' }}
         className={cn(
-          "border-b backdrop-blur-md fixed top-0 left-0 right-0 shadow-sm transition-colors duration-200",
-          isLight 
-            ? "bg-white/80 border-slate-200 text-slate-900" 
-            : "bg-[#0a0b0d]/95 border-white/10 text-white"
+          "fixed top-0 left-0 right-0 transition-all duration-300",
+          isScrolled 
+            ? cn(
+                "border-b backdrop-blur-md shadow-sm h-14 md:h-16 lg:h-18 flex items-center",
+                isLight ? "bg-white/90 border-slate-200" : "bg-[#0a0b0d]/90 border-white/10"
+              )
+            : cn(
+                "bg-transparent border-transparent h-16 md:h-20 flex items-center",
+                isLight ? "text-slate-900" : "text-white"
+              )
         )}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: 'visible' }}>
@@ -324,31 +339,21 @@ export function Navbar({
           <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0 nav-desktop-container">
             {!isAuthenticated ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
+                <button 
                   disabled={import.meta.env.PROD}
                   onClick={() => navigate('/login')}
-                  className={cn(
-                    "transition-colors",
-                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : "hover:bg-white/10 text-white"
-                  )}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-50"
                 >
                   Login
-                </Button>
-                <div className="w-px h-6 bg-border"></div>
-                <Button 
-                  variant={isLight ? "ghost" : "default"}
-                  size="sm"
+                </button>
+                <button 
                   disabled={import.meta.env.PROD}
                   onClick={() => handleLogin('professional')}
-                  className={cn(
-                    isLight ? "hover:bg-slate-100 text-slate-600 hover:text-slate-900" : ""
-                  )}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-50"
                 >
-                  <UserCheck className="h-4 w-4 mr-2" />
+                  <UserCheck className="h-4 w-4 mr-2 text-muted-foreground group-hover:text-foreground transition-colors" />
                   Get Started
-                </Button>
+                </button>
               </>
             ) : (
               <>

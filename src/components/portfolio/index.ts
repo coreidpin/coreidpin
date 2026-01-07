@@ -30,6 +30,4 @@ export { PortfolioAnalytics } from './PortfolioAnalytics';
 export { PortfolioHealth } from './PortfolioHealth';
 export { SkillsGap } from './SkillsGap';
 export { SocialShare } from './SocialShare';
-
-
-
+export { IdentityMarketPulse } from './IdentityMarketPulse';

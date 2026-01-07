@@ -215,7 +215,7 @@ export function SolutionPage() {
                   {'\n'}<span className="text-white/50">{'}'}</span>
                   {'\n\n'}
                   <span className="text-white/50">// Response</span>
-                  {'\n'}<span className="text-white/50">{'{'}</span>
+                  {'\n'}<span className="text-white/80">{'{'}</span>
                   {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
                     "pin"
                   </span>: <span style={{ color: 'var(--brand-secondary)' }}>

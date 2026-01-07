@@ -95,7 +95,11 @@ import { NetworkStatus } from './NetworkStatus';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { GlobalSearch } from './GlobalSearch';
 import type { SearchableItem } from '../utils/searchUtils';
-import { FeaturedSection, AddFeaturedItemModal, TechStackManager, AddTechSkillModal, CaseStudyCreator, CaseStudyList, CaseStudyViewer, ProjectCreator, ProjectList, ContributionGraph, PortfolioSearch, FeaturedShowcase, PortfolioAnalytics, PortfolioHealth, SkillsGap, SocialShare } from './portfolio';
+import { FeaturedSection, AddFeaturedItemModal, TechStackManager, AddTechSkillModal, CaseStudyCreator, CaseStudyList, CaseStudyViewer, ProjectCreator, ProjectList, ContributionGraph, PortfolioSearch, FeaturedShowcase, PortfolioAnalytics,  PortfolioHealth,
+  SkillsGap,
+  SocialShare,
+  IdentityMarketPulse
+} from './portfolio';
 import { addFeaturedItem } from '../utils/portfolio-api';
 import { addTechSkill, updateTechSkill } from '../utils/tech-stack-api';
 import { createCaseStudy } from '../utils/case-study-api';
@@ -103,6 +107,7 @@ import { createProject } from '../utils/project-api';
 import { PortfolioExporter } from '../utils/portfolio-export';
 import { QuickStats } from './dashboard/QuickStats';
 import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
+import { getDemandMetrics, getGeographicPings, getIndustryTrends } from '../utils/demandAnalytics';
 
 
 export function ProfessionalDashboard() {
@@ -231,7 +236,11 @@ export function ProfessionalDashboard() {
     countries: 0,
     companies: 0,
     projects: 0,
-    endorsements: 0
+    endorsements: 0,
+    demandScore: 0,
+    percentileRank: 0,
+    geoPings: [] as any[],
+    industryTrends: [] as any[]
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsTrends, setStatsTrends] = useState({
@@ -903,10 +912,29 @@ export function ProfessionalDashboard() {
         if (contentType && contentType.includes('application/json')) {
           const data = await response.json();
           if (data.success && data.stats) {
-            setStats(data.stats);
+            // Fetch extra market pulse data
+            const { data: { user } } = await supabase.auth.getUser();
+            let extraStats = {};
+            if (user) {
+              const [demandData, geoData, industryData] = await Promise.all([
+                getDemandMetrics(user.id),
+                getGeographicPings(user.id),
+                getIndustryTrends(user.id)
+              ]);
+              extraStats = {
+                demandScore: demandData?.demandScore || 0,
+                percentileRank: demandData?.percentileRank || 0,
+                geoPings: geoData || [],
+                industryTrends: industryData || []
+              };
+            }
+
+            setStats({
+              ...data.stats,
+              ...extraStats
+            });
 
             // Fetch real trends if user is logged in
-            const { data: { user } } = await supabase.auth.getUser();
             if (user) {
               const [endorsementsTrend, viewsTrend, pinTrend] = await Promise.all([
                  getTrend('professional_endorsements_v2', 'professional_id', user.id),
@@ -965,6 +993,32 @@ export function ProfessionalDashboard() {
 
     fetchPinAnalytics();
   }, []);
+
+  // ✨ Activate Demand Scoring Engine (Phase 2)
+  useEffect(() => {
+    const triggerDemandScore = async () => {
+      try {
+        const token = await ensureValidSession();
+        if (!token || !userId) return;
+
+        console.log('🚀 Activating Demand Scoring Engine...');
+        await fetch(`${supabaseUrl}/functions/v1/calculate-demand-score`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ userId })
+        });
+      } catch (error) {
+        console.error('Failed to trigger demand scoring:', error);
+      }
+    };
+
+    triggerDemandScore();
+    const interval = setInterval(triggerDemandScore, 300000); // Trigger every 5 minutes
+    return () => clearInterval(interval);
+  }, [userId]);
 
   // Fetch activity feed and notifications
   useEffect(() => {
@@ -1697,73 +1751,75 @@ export function ProfessionalDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
-          <TabsList className="flex w-full bg-slate-100 p-1 rounded-full gap-1 overflow-x-auto scrollbar-hide border border-slate-200 justify-start items-center px-1" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <TabsTrigger 
-              value="overview"
-              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
-              style={{
-                color: activeTab === 'overview' ? '#ffffff' : '#64748b',
-                backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                flex: '0 0 auto'
-              }}
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger 
-              value="projects"
-              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
-              style={{
-                color: activeTab === 'projects' ? '#ffffff' : '#64748b',
-                backgroundColor: activeTab === 'projects' ? '#000000' : 'transparent',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                flex: '0 0 auto'
-              }}
-            >
-              Projects
-            </TabsTrigger>
-            <TabsTrigger 
-              value="endorsements"
-              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
-              style={{
-                color: activeTab === 'endorsements' ? '#ffffff' : '#64748b',
-                backgroundColor: activeTab === 'endorsements' ? '#000000' : 'transparent',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                flex: '0 0 auto'
-              }}
-            >
-              Endorsements
-            </TabsTrigger>
-            <TabsTrigger 
-              value="inquiries"
-              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
-              style={{
-                color: activeTab === 'inquiries' ? '#ffffff' : '#64748b',
-                backgroundColor: activeTab === 'inquiries' ? '#000000' : 'transparent',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                flex: '0 0 auto'
-              }}
-            >
-              Inquiries
-            </TabsTrigger>
-            <TabsTrigger 
-              value="analytics"
-              className="text-xs sm:text-sm md:text-base px-4 sm:px-6 py-2 rounded-full transition-all duration-200"
-              style={{
-                color: activeTab === 'analytics' ? '#ffffff' : '#64748b',
-                backgroundColor: activeTab === 'analytics' ? '#000000' : 'transparent',
-                fontWeight: '600',
-                whiteSpace: 'nowrap',
-                flex: '0 0 auto'
-              }}
-            >
-              Analytics
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex justify-center w-full">
+            <TabsList className="flex w-fit bg-slate-100 p-1 rounded-full gap-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide border border-slate-200 justify-center items-center px-2 shadow-sm mx-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <TabsTrigger 
+                value="overview"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'overview' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="projects"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'projects' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'projects' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Projects
+              </TabsTrigger>
+              <TabsTrigger 
+                value="endorsements"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'endorsements' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'endorsements' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Endorsements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="inquiries"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'inquiries' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'inquiries' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Inquiries
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'analytics' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'analytics' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Analytics
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
@@ -2317,6 +2373,11 @@ export function ProfessionalDashboard() {
           transition={reducedMotion ? undefined : { duration: 0.2 }}
         >
           <TabsContent value="analytics" className="space-y-6">
+            {/* GidiPIN Market Pulse - Identity Demand Analytics */}
+            <IdentityMarketPulse stats={stats as any} />
+
+            <div className="h-px bg-slate-100 my-10" />
+
             {/* Portfolio Analytics Overview */}
             <PortfolioAnalytics
               stats={{
