@@ -192,7 +192,7 @@ export function SolutionPage() {
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff5f57' }} />
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ffbd2e' }} />
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#28ca42' }} />
-              <span className="ml-4 text-sm text-white/50">API Example</span>
+              <span className="ml-4 text-sm text-white/80">API Example</span>
             </div>
             
             {/* Code */}
@@ -201,7 +201,7 @@ export function SolutionPage() {
                 <code>
                   <span style={{ color: 'var(--brand-accent)' }}>POST</span> <span className="text-white">/api/v1/pin/create</span>
                   {'\n\n'}
-                  <span className="text-white/50">{'{'}</span>
+                  <span className="text-white/70">{'{'}</span>
                   {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
                     "phone"
                   </span>: <span style={{ color: 'var(--brand-secondary)' }}>
@@ -212,9 +212,9 @@ export function SolutionPage() {
                   </span>: <span style={{ color: 'var(--brand-secondary)' }}>
                     "pk_live_..."
                   </span>
-                  {'\n'}<span className="text-white/50">{'}'}</span>
+                  {'\n'}<span className="text-white/70">{'}'}</span>
                   {'\n\n'}
-                  <span className="text-white/50">// Response</span>
+                  <span className="text-white/80">// Response</span>
                   {'\n'}<span className="text-white/80">{'{'}</span>
                   {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
                     "pin"
@@ -231,7 +231,7 @@ export function SolutionPage() {
                   </span>: <span style={{ color: 'var(--brand-secondary)' }}>
                     0.92
                   </span>
-                  {'\n'}<span className="text-white/50">{'}'}</span>
+                  {'\n'}<span className="text-white/70">{'}'}</span>
                 </code>
               </pre>
             </div>

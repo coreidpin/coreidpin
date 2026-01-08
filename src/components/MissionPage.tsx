@@ -100,59 +100,102 @@ export function MissionPage() {
             return (
               <motion.div
                 key={stakeholder.title}
-                className="group"
+                className="group cursor-pointer"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.15 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -8 }}
+                whileHover={{ y: -12, scale: 1.02 }}
               >
-                <Card className="relative h-full p-8 rounded-3xl bg-white text-black border-white transition-all duration-300 hover:shadow-2xl">
-                  {/* Gradient border on hover */}
+                <Card className="relative h-full p-8 rounded-3xl bg-white text-black border-2 transition-all duration-500 shadow-lg hover:shadow-2xl overflow-hidden"
+                  style={{
+                    borderColor: `${stakeholder.color}30`,
+                  }}
+                >
+                  {/* Subtle gradient overlay on hover */}
                   <div 
-                    className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     style={{
-                      backgroundColor: '#64748b',
-                      padding: '1px',
-                      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                      WebkitMaskComposite: 'xor',
-                      maskComposite: 'exclude',
+                      background: `linear-gradient(135deg, ${stakeholder.color}10 0%, transparent 50%)`,
                     }}
                   />
                   
-                  <div className="relative">
-                    {/* Icon */}
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-                      style={{ backgroundColor: `${stakeholder.color}20` }}
+                  <div className="relative z-10">
+                    {/* Enhanced Icon with glow */}
+                    <motion.div
+                      className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 relative"
+                      style={{ 
+                        backgroundColor: `${stakeholder.color}15`,
+                        boxShadow: `0 8px 24px ${stakeholder.color}30`,
+                      }}
+                      whileHover={{ 
+                        scale: 1.1,
+                        rotate: 5,
+                      }}
+                      transition={{ type: "spring", stiffness: 300 }}
                     >
-                      <Icon className="w-8 h-8" style={{ color: stakeholder.color }} />
-                    </div>
+                      <Icon className="w-10 h-10" style={{ color: stakeholder.color }} />
+                      {/* Glow effect */}
+                      <div 
+                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
+                        style={{ backgroundColor: `${stakeholder.color}40` }}
+                      />
+                    </motion.div>
 
                     {/* Title & Description */}
-                    <h3 className="text-2xl mb-4 text-black">{stakeholder.title}</h3>
-                    <p className="text-black mb-6 leading-relaxed">
+                    <h3 className="text-2xl font-bold mb-4 text-gray-900">{stakeholder.title}</h3>
+                    <p className="text-base text-gray-700 mb-6 leading-relaxed">
                       {stakeholder.description}
                     </p>
 
-                    {/* Benefits */}
+                    {/* Separator */}
+                    <div 
+                      className="h-px my-6 opacity-20"
+                      style={{ backgroundColor: stakeholder.color }}
+                    />
+
+                    {/* Enhanced Benefits with Checkmarks */}
                     <div className="space-y-3">
                       {stakeholder.benefits.map((benefit, i) => (
-                        <div key={i} className="flex items-center gap-3">
+                        <motion.div 
+                          key={i} 
+                          className="flex items-center gap-3"
+                          initial={{ opacity: 0, x: -10 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 + (i * 0.1) }}
+                          viewport={{ once: true }}
+                        >
+                          {/* Checkmark instead of dot */}
                           <div
                             className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                             style={{ backgroundColor: `${stakeholder.color}20` }}
                           >
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: stakeholder.color }}
-                            />
+                            <svg 
+                              className="w-3 h-3" 
+                              viewBox="0 0 12 12" 
+                              fill="none"
+                              style={{ color: stakeholder.color }}
+                            >
+                              <path 
+                                d="M10 3L4.5 8.5L2 6" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
                           </div>
-                          <span className="text-sm text-black">{benefit}</span>
-                        </div>
+                          <span className="text-sm font-medium text-gray-800">{benefit}</span>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
+
+                  {/* Subtle corner accent */}
+                  <div 
+                    className="absolute bottom-0 right-0 w-32 h-32 rounded-tl-full opacity-5"
+                    style={{ backgroundColor: stakeholder.color }}
+                  />
                 </Card>
               </motion.div>
             );

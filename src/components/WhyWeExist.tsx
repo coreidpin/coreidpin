@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Shield, Zap, CheckCircle, Users } from 'lucide-react';
+import { Shield, Zap, CheckCircle, Users, Phone } from 'lucide-react';
 
 const problems = [
   {
@@ -130,18 +130,19 @@ export function WhyWeExist() {
                   {/* Phone number */}
                   <div className="relative">
                     <motion.div
-                      className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64 flex flex-col items-center gap-2"
+                      className="bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-8 text-center w-64 sm:w-72 lg:w-64 xl:w-72 flex flex-col items-center gap-3"
                       animate={{
                         boxShadow: [
-                          '0 0 20px rgba(191, 165, 255, 0.3)',
-                          '0 0 40px rgba(191, 165, 255, 0.5)',
-                          '0 0 20px rgba(191, 165, 255, 0.3)',
+                          '0 0 20px rgba(191, 165, 255, 0.2)',
+                          '0 0 30px rgba(191, 165, 255, 0.4)',
+                          '0 0 20px rgba(191, 165, 255, 0.2)',
                         ],
                       }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={{ duration: 3, repeat: Infinity }}
                     >
-                      <div className="text-sm text-white/60">Phone Number</div>
-                      <div className="text-2xl text-white font-mono tracking-wider">+234 812 345 6789</div>
+                      <Phone className="w-10 h-10 mb-2" style={{ color: '#bfa5ff' }} />
+                      <div className="text-sm text-white/90 font-medium uppercase tracking-wide">Phone Number</div>
+                      <div className="text-2xl text-white font-mono font-bold tracking-wide whitespace-nowrap">+234 812 345 6789</div>
                     </motion.div>
                   </div>
 
@@ -153,51 +154,70 @@ export function WhyWeExist() {
                     transition={{ delay: 0.8, duration: 0.6 }}
                     viewport={{ once: true }}
                   >
-                    <svg width="120" height="24" viewBox="0 0 120 24" fill="none">
-                      <motion.path
-                        d="M0 12H118M118 12L108 2M118 12L108 22"
-                        stroke="url(#gradient)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        initial={{ pathLength: 0 }}
-                        whileInView={{ pathLength: 1 }}
-                        transition={{ delay: 1, duration: 1 }}
-                        viewport={{ once: true }}
-                      />
-                      <defs>
-                        <linearGradient id="gradient" x1="0" y1="12" x2="118" y2="12">
-                          <stop offset="0%" stopColor="#bfa5ff" />
-                          <stop offset="50%" stopColor="#32f08c" />
-                          <stop offset="100%" stopColor="#7bb8ff" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                    <motion.div
+                      animate={{
+                        x: [0, 10, 0],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <svg width="120" height="24" viewBox="0 0 120 24" fill="none">
+                        <motion.path
+                          d="M0 12H118M118 12L108 2M118 12L108 22"
+                          stroke="url(#gradient)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          transition={{ delay: 1, duration: 1.2 }}
+                          viewport={{ once: true }}
+                        />
+                        <defs>
+                          <linearGradient id="gradient" x1="0" y1="12" x2="118" y2="12">
+                            <stop offset="0%" stopColor="#bfa5ff" />
+                            <stop offset="50%" stopColor="#32f08c" />
+                            <stop offset="100%" stopColor="#7bb8ff" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </motion.div>
                   </motion.div>
 
                   {/* Verified PIN */}
                   <div className="relative">
                     <motion.div
-                      className="backdrop-blur-md rounded-2xl p-6 text-center w-56 sm:w-64 lg:w-56 xl:w-64 flex flex-col items-center gap-2"
-                      style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))', borderColor: 'rgba(143, 208, 202, 0.4)', borderStyle: 'solid', borderWidth: '1px' }}
+                      className="backdrop-blur-md rounded-2xl p-8 text-center w-64 sm:w-72 lg:w-64 xl:w-72 flex flex-col items-center gap-3"
+                      style={{ 
+                        backgroundImage: 'linear-gradient(to bottom right, rgba(50, 240, 140, 0.15), rgba(143, 208, 202, 0.15))', 
+                        borderColor: '#32f08c', 
+                        borderStyle: 'solid', 
+                        borderWidth: '2px' 
+                      }}
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
                       viewport={{ once: true }}
                       animate={{
                         boxShadow: [
-                          '0 0 20px rgba(50, 240, 140, 0.3)',
-                          '0 0 40px rgba(50, 240, 140, 0.5)',
-                          '0 0 20px rgba(50, 240, 140, 0.3)',
+                          '0 0 20px rgba(50, 240, 140, 0.4)',
+                          '0 0 40px rgba(50, 240, 140, 0.6)',
+                          '0 0 20px rgba(50, 240, 140, 0.4)',
                         ],
                       }}
                       transition={{
                         scale: { delay: 1.2, duration: 0.5, type: 'spring' },
-                        boxShadow: { duration: 2, repeat: Infinity },
+                        boxShadow: { duration: 3, repeat: Infinity },
                       }}
                     >
-                      <CheckCircle className="w-8 h-8 mx-auto mb-2" style={{ color: '#8fd0ca' }} />
-                      <div className="text-sm text-white/60 mb-2">Verified PIN</div>
-                      <div className="text-xl text-white">PIN-234-812345</div>
+                      <CheckCircle className="w-12 h-12 mx-auto mb-2" style={{ color: '#32f08c' }} />
+                      <div className="text-sm text-white font-medium uppercase tracking-wide">Verified PIN</div>
+                      <div className="text-2xl text-white font-mono font-bold">PIN-234-812345</div>
+                      <div className="mt-2 px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: 'rgba(50, 240, 140, 0.2)', color: '#32f08c' }}>
+                        ✓ Secure & Portable
+                      </div>
                     </motion.div>
                   </div>
                 </motion.div>
