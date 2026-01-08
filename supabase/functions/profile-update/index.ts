@@ -116,7 +116,23 @@ app.put('*', async (c) => {
     const body = await c.req.json();
 
     // Remove sensitive fields that shouldn't be updated via this endpoint
-    const { user_id, created_at, ...updates } = body;
+    const { user_id, created_at, ...rawUpdates } = body;
+
+    // Map frontend field names to database column names
+    const fieldMapping: Record<string, string> = {
+      'name': 'full_name',
+      'role': 'job_title',
+      'linkedin': 'linkedin_url'
+    };
+
+    // Transform the updates object
+    const updates: Record<string, any> = {};
+    for (const [key, value] of Object.entries(rawUpdates)) {
+      const dbKey = fieldMapping[key] || key;
+      updates[dbKey] = value;
+    }
+
+    console.log('Mapped updates:', { original: Object.keys(rawUpdates), mapped: Object.keys(updates) });
 
     // STRICT CHECK: Phone Uniqueness & Identity Sync
     if (updates.phone) {

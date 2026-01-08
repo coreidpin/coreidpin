@@ -59,7 +59,7 @@ export function TrustBanner({
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
               {title}
             </h2>
-            <p className="text-lg text-white/60 leading-relaxed font-light">
+            <p className="text-lg text-white/90 leading-relaxed font-light">
               {description}
             </p>
           </motion.div>
@@ -90,7 +90,7 @@ export function TrustBanner({
                     >
                       <metric.icon className="h-6 w-6" style={{ color: metric.color }} />
                     </div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50 group-hover:text-white/80 transition-colors">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
                       {metric.label}
                     </div>
                   </div>
@@ -114,7 +114,7 @@ export function TrustBanner({
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: metric.color }}></span>
                       <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: metric.color }}></span>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 group-hover:text-white/60 transition-colors">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 group-hover:text-white/90 transition-colors">
                       Live Network Active
                     </span>
                   </div>

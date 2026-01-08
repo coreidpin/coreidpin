@@ -167,7 +167,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                     <feature.icon className="h-7 w-7" style={{ color: feature.color }} />
                   </div>
                   <h3 className="text-lg mb-2 text-white">{feature.title}</h3>
-                  <p className="text-sm text-white/80 leading-relaxed">{feature.description}</p>
+                  <p className="text-sm text-white/90 leading-relaxed">{feature.description}</p>
                 </Card>
               </motion.div>
             ))}
@@ -494,24 +494,25 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             <h2 className="text-3xl sm:text-4xl md:text-5xl mb-4 text-white font-bold tracking-tight">
               Choose Your Plan
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto mb-8">
               Start free, upgrade when you need more features
             </p>
 
             {/* Pricing Toggle */}
             <div className="flex items-center justify-center gap-3 sm:gap-4 mb-10">
-              <span className={cn("text-xs sm:text-sm transition-colors", billingCycle === 'monthly' ? "text-white" : "text-gray-500")}>Monthly</span>
+              <span className={cn("text-xs sm:text-sm transition-all", billingCycle === 'monthly' ? "text-white font-bold" : "text-white/90 font-medium")}>Monthly</span>
               <button 
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className="relative w-12 h-6 sm:w-14 sm:h-7 rounded-full bg-white/10 border border-white/20 p-1 transition-colors"
+                className="relative w-12 h-6 sm:w-14 sm:h-7 rounded-full bg-white/10 border border-white/20 p-1 transition-colors hover:bg-white/15"
                 aria-label="Toggle billing cycle"
               >
                 <motion.div 
                    animate={{ x: billingCycle === 'monthly' ? 0 : (window.innerWidth < 640 ? 24 : 28) }}
                   className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#32f08c] shadow-[0_0_10px_rgba(50,240,140,0.5)]"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               </button>
-              <div className={cn("text-xs sm:text-sm transition-colors flex items-center gap-1.5", billingCycle === 'yearly' ? "text-white" : "text-gray-500")}>
+              <div className={cn("text-xs sm:text-sm transition-all flex items-center gap-1.5", billingCycle === 'yearly' ? "text-white font-bold" : "text-white/90 font-medium")}>
                 <span>Yearly</span>
                 <Badge className="bg-[#32f08c]/20 text-[#32f08c] border-[#32f08c]/50 text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 whitespace-nowrap">Save 20%</Badge>
               </div>

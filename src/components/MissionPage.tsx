@@ -319,7 +319,7 @@ export function MissionPage() {
             <h4 className="text-3xl sm:text-4xl mb-4 text-white leading-snug mx-auto max-w-[22ch]">
               Ready to Build?
             </h4>
-            <p className="text-white/60 mb-8 leading-relaxed mx-auto max-w-[38ch] sm:max-w-[56ch] px-2 sm:px-0">
+            <p className="text-white/90 mb-8 leading-relaxed mx-auto max-w-[38ch] sm:max-w-[56ch] px-2 sm:px-0">
               Join the future of professional identity infrastructure
             </p>
               
@@ -341,7 +341,7 @@ export function MissionPage() {
                 />
               </motion.button>
 
-              <div className="mt-8 mx-auto w-full max-w-[28rem] flex items-center justify-between text-sm text-white/40 px-4">
+              <div className="mt-8 mx-auto w-full max-w-[28rem] flex items-center justify-between text-sm text-white px-4">
                 <div className="text-center">5 min integration</div>
                 <div className="text-center">Free sandbox</div>
                 <div className="text-center">24/7 support</div>
