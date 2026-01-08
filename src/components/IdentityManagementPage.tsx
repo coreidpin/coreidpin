@@ -40,6 +40,8 @@ import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availabili
 import { validators } from '../utils/validation';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
 import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
+import { HRISConnectModal } from './hris/HRISConnectModal';
+import { syncFinchData } from '../utils/hris-api';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -69,6 +71,57 @@ export const IdentityManagementPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview');
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+
+  // Updated to handle Real Finch Code (string) or Mock Object
+  const handleHRISSuccess = async (result: any) => {
+    if (!profile?.user_id) return;
+    
+    // Determine public token based on input type
+    const publicToken = typeof result === 'string' ? result : result.publicToken;
+
+    try {
+      toast.loading('Syncing employment data via Finch (Real)...');
+      
+      // Call Real Edge Function
+      const employeeData = await syncFinchData(publicToken);
+      
+      toast.dismiss();
+
+      // Save to DB
+      const { data: newExp, error } = await supabase
+        .from('work_experiences')
+        .insert({
+          user_id: profile.user_id,
+          company_name: employeeData.company_name,
+          job_title: employeeData.job_title,
+          start_date: employeeData.start_date,
+          end_date: null,
+          is_current: true,
+          employment_type: employeeData.employment_type === 'Full-time' ? 'full_time' : 'contract',
+          verification_status: 'verified',
+          verification_source: 'hris_integration',
+          verification_metadata: { provider: employeeData.provider }
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update Local State
+      setFormData(prev => ({
+          ...prev,
+          work_experience: [newExp, ...prev.work_experience]
+      }));
+
+      toast.success('Work history verified via ' + (employeeData.provider === 'workday' ? 'Workday' : 'Payroll Provider'));
+      setShowConnectModal(false);
+    } catch (err) {
+      console.error('Error saving HRIS data', err);
+      toast.dismiss();
+      toast.error('Failed to sync/save verified data');
+    }
+  };
 
   // Data State
   const [profile, setProfile] = useState<any>(null);
@@ -2130,13 +2183,24 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <Briefcase className="h-5 w-5 text-blue-600" />
                   Work Experience
                 </CardTitle>
-                <Button 
-                  onClick={() => setShowWorkModal(true)}
-                  size="sm" 
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200"
-                >
-                  Add Position
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setShowConnectModal(true)}
+                    size="sm" 
+                    variant="outline"
+                    className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Connect Payroll
+                  </Button>
+                  <Button 
+                    onClick={() => setShowWorkModal(true)}
+                    size="sm" 
+                    className="bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200"
+                  >
+                    Add Position
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {workExperienceList.length === 0 ? (
@@ -2159,7 +2223,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                             <div className="mt-2">
                                 {work.verification_status === 'verified' ? (
                                     <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 gap-1 pl-1 pr-2">
-                                        <CheckCircle2 className="h-3 w-3" /> Verified Employee
+                                        <CheckCircle2 className="h-3 w-3" /> 
+                                        {work.verification_source === 'hris_integration' ? 'Verified (Payroll)' : 'Verified Employee'}
                                     </Badge>
                                 ) : (
                                     <div className="flex items-center gap-2">
@@ -2287,6 +2352,12 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 </DialogContent>
               </Dialog>
             </Card>
+
+            <HRISConnectModal 
+                open={showConnectModal}
+                onOpenChange={setShowConnectModal}
+                onSuccess={handleHRISSuccess}
+            />
 
             {/* Education Section */}
             <Card className="bg-white border-slate-200 shadow-sm">

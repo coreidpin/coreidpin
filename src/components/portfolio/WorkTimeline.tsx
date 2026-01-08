@@ -22,6 +22,7 @@ export interface WorkExperience {
   skills?: string[]; // 🆕 NEW: Array of skills used in this role
   achievements?: string[]; // 🆕 NEW: Array of key achievements
   verification_status?: string | boolean;
+  verification_source?: string;
   proof_documents?: ProofDocument[];
 }
 
@@ -219,7 +220,7 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                                     <div className="bg-green-500 rounded-full p-0.5">
                                       <CheckCircle2 className="h-3 w-3 text-white" />
                                     </div>
-                                    Verified Employee
+                                    {exp.verification_source === 'hris_integration' ? 'Verified (Payroll)' : 'Verified Employee'}
                                  </Badge>
                                </div>
                             )}

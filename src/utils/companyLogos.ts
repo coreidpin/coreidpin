@@ -133,18 +133,10 @@ export const autoFetchCompanyLogo = async (
   website?: string
 ): Promise<string | null> => {
   try {
-    // Try Clearbit Logo API
+    // Use Google Favicons as primary source (much more reliable)
+    // It rarely fails and doesn't cause DNS resolution errors like Clearbit
     const domain = website || `${companyName.toLowerCase().replace(/\s+/g, '')}.com`;
-    const clearbitUrl = `https://logo.clearbit.com/${domain}`;
-
-    // Test if logo exists
-    const response = await fetch(clearbitUrl, { method: 'HEAD' });
-    
-    if (response.ok) {
-      return clearbitUrl;
-    }
-
-    return null;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
   } catch (error) {
     console.error('Error auto-fetching logo:', error);
     return null;

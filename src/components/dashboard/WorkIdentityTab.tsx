@@ -14,6 +14,8 @@ import { ensureValidSession } from '../../utils/session';
 import { toast } from 'sonner';
 import { EMPLOYMENT_TYPE_OPTIONS } from '../../utils/employmentTypes';
 import type { EmploymentType } from '../../utils/employmentTypes';
+import { HRISConnectModal } from '../hris/HRISConnectModal';
+import { mockSyncFinchData } from '../../utils/hris-api'; // Simulate Backend Call
 
 interface WorkIdentityTabProps {
   userId: string;
@@ -22,6 +24,7 @@ interface WorkIdentityTabProps {
 export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
   const [experiences, setExperiences] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showConnectModal, setShowConnectModal] = useState(false);
   
   // Verification State
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
@@ -65,6 +68,42 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
     }
   };
 
+  const handleHRISSuccess = async (result: any) => {
+    try {
+      // 1. Simulate Backend Token Exchange & Data Sync
+      toast.loading('Syncing employment data via Finch...');
+      const employeeData = await mockSyncFinchData(result.providerId);
+      
+      toast.dismiss();
+
+      // 2. Insert the verified experience from HRIS
+      const { error } = await supabase
+        .from('work_experiences')
+        .insert({
+          user_id: userId,
+          company_name: employeeData.company_name,
+          job_title: employeeData.job_title,
+          start_date: employeeData.start_date,
+          end_date: null,
+          is_current: true,
+          employment_type: employeeData.employment_type === 'Full-time' ? 'full_time' : 'contract',
+          verification_status: 'verified', // Mark as verified immediately
+          verification_source: 'hris_integration', // Tag source
+          // You could store "verification_provider: result.providerId" in a metadata column if available
+        } as any);
+
+      if (error) throw error;
+      
+      toast.success('Work history verified via ' + (employeeData.provider === 'workday' ? 'Workday' : 'Payroll Provider'));
+      fetchExperiences(); // Refresh
+      setShowConnectModal(false);
+    } catch (err) {
+      console.error('Error saving HRIS data', err);
+      toast.dismiss();
+      toast.error('Failed to sync/save verified data');
+    }
+  };
+
   const handleAddExperience = async () => {
     if (!newExp.company_name || !newExp.job_title || !newExp.start_date) {
         toast.error('Please fill in required fields');
@@ -85,7 +124,7 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                 employment_type: newExp.employment_type || null,
                 skills: newExp.skills.length > 0 ? newExp.skills : null,
                 achievements: newExp.achievements.length > 0 ? newExp.achievements : null
-            });
+            } as any);
 
         if (error) throw error;
 
@@ -203,7 +242,7 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                  Work Identity Verification
                </h3>
                <p className="text-sm text-blue-700 mt-1">
-                 Verify your employment email to earn the "Verified Employee" badge and boost your trust score.
+                 Verify your employment via HRIS or work email to earn the "Verified Employee" badge.
                </p>
             </div>
             <div className="bg-white/50 px-4 py-2 rounded-lg border border-blue-100 text-center">
@@ -214,9 +253,14 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
             </div>
            </div>
            
-           <Button onClick={() => setShowAddModal(true)} className="h-full py-6">
-             <Plus className="h-4 w-4 mr-2" /> Add Role
-           </Button>
+           <div className="flex flex-col gap-2 h-full"> 
+             <Button onClick={() => setShowConnectModal(true)} variant="outline" className="h-auto py-3 border-blue-200 text-blue-700 hover:bg-blue-50">
+               <Building2 className="h-4 w-4 mr-2" /> Connect Payroll
+             </Button>
+             <Button onClick={() => setShowAddModal(true)} className="h-auto py-3">
+               <Plus className="h-4 w-4 mr-2" /> Add Role
+             </Button>
+           </div>
       </div>
 
       <div className="grid gap-6">
@@ -282,14 +326,24 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                                          <Lock className="h-4 w-4 text-gray-400" />
                                          Verify ownership of a company email address (e.g. name@{exp.company_name.toLowerCase().replace(/\s+/g,'')}.com)
                                       </div>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline"
-                                        className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                                        onClick={() => startVerification(exp.id)}
-                                      >
-                                        Verify Work Email
-                                      </Button>
+                                      <div className="flex gap-2">
+                                         <Button 
+                                           size="sm" 
+                                           variant="outline"
+                                           className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                           onClick={() => setShowConnectModal(true)}
+                                         >
+                                           Connect HRIS
+                                         </Button>
+                                         <Button 
+                                           size="sm" 
+                                           variant="outline"
+                                           className="border-gray-200 text-gray-600 hover:bg-gray-50"
+                                           onClick={() => startVerification(exp.id)}
+                                         >
+                                           Use Work Email
+                                         </Button>
+                                      </div>
                                   </div>
                               </div>
                           )}
@@ -402,9 +456,9 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                         <div className="space-y-2">
                            <label className="text-sm font-medium text-gray-700">Company Email</label>
                            <Input 
-                              placeholder="you@company.com" 
-                              value={emailInput}
-                              onChange={(e) => setEmailInput(e.target.value)}
+                               placeholder="you@company.com" 
+                               value={emailInput}
+                               onChange={(e) => setEmailInput(e.target.value)}
                            />
                         </div>
                     </div>
@@ -413,11 +467,11 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
                          <div className="space-y-2">
                            <label className="text-sm font-medium text-gray-700">Verification Code</label>
                            <Input 
-                              placeholder="123456" 
-                              className="text-center text-lg tracking-widest"
-                              maxLength={6}
-                              value={codeInput}
-                              onChange={(e) => setCodeInput(e.target.value)}
+                               placeholder="123456" 
+                               className="text-center text-lg tracking-widest"
+                               maxLength={6}
+                               value={codeInput}
+                               onChange={(e) => setCodeInput(e.target.value)}
                            />
                         </div>
                     </div>
@@ -442,6 +496,12 @@ export function WorkIdentityTab({ userId }: WorkIdentityTabProps) {
             </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <HRISConnectModal 
+        open={showConnectModal} 
+        onOpenChange={setShowConnectModal}
+        onSuccess={handleHRISSuccess}
+      />
     </div>
   );
 }

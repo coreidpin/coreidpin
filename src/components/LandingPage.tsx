@@ -41,6 +41,7 @@ import { WhyNowPage } from "./WhyNowPage";
 import { WhyWeExist } from "./WhyWeExist";
 import { WaitlistForm } from "./WaitlistForm";
 import { HeroSection } from "./HeroSection";
+import { FAQSection } from "./FAQSection";
 import "../styles/hero-mobile.css";
 
 interface LandingPageProps {
@@ -374,27 +375,27 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             <div className="overflow-hidden">
               <div className="animate-marquee flex gap-12 items-center py-4">
                 {[
-                  { name: 'Paystack', logo: 'https://logo.clearbit.com/paystack.com', url: 'https://paystack.com' },
-                  { name: 'Microsoft', logo: 'https://logo.clearbit.com/microsoft.com', url: 'https://www.microsoft.com' },
+                  { name: 'Paystack', logo: 'https://www.google.com/s2/favicons?domain=paystack.com&sz=128', url: 'https://paystack.com' },
+                  { name: 'Microsoft', logo: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128', url: 'https://www.microsoft.com' },
                   { name: 'AWS', logo: '/logos/Amazon Web Services_idS5TK0MYh_1.png', url: 'https://aws.amazon.com' },
                   { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
-                  { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com', url: 'https://stripe.com' },
+                  { name: 'Stripe', logo: 'https://www.google.com/s2/favicons?domain=stripe.com&sz=128', url: 'https://stripe.com' },
                   { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
                   { name: 'Google', logo: '/logos/icons8-google-logo-96.png', url: 'https://www.google.com' },
                   { name: 'LinkedIn', logo: '/logos/LI-Logo.png', url: 'https://www.linkedin.com' },
-                  { name: 'Meta', logo: 'https://logo.clearbit.com/meta.com', url: 'https://www.meta.com' },
-                  { name: 'Shopify', logo: 'https://logo.clearbit.com/shopify.com', url: 'https://www.shopify.com' },
+                  { name: 'Meta', logo: 'https://www.google.com/s2/favicons?domain=meta.com&sz=128', url: 'https://www.meta.com' },
+                  { name: 'Shopify', logo: 'https://www.google.com/s2/favicons?domain=shopify.com&sz=128', url: 'https://www.shopify.com' },
                 ].concat([
-                  { name: 'Paystack', logo: 'https://logo.clearbit.com/paystack.com', url: 'https://paystack.com' },
-                  { name: 'Microsoft', logo: 'https://logo.clearbit.com/microsoft.com', url: 'https://www.microsoft.com' },
+                  { name: 'Paystack', logo: 'https://www.google.com/s2/favicons?domain=paystack.com&sz=128', url: 'https://paystack.com' },
+                  { name: 'Microsoft', logo: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128', url: 'https://www.microsoft.com' },
                   { name: 'AWS', logo: '/logos/Amazon Web Services_idS5TK0MYh_1.png', url: 'https://aws.amazon.com' },
                   { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
-                  { name: 'Stripe', logo: 'https://logo.clearbit.com/stripe.com', url: 'https://stripe.com' },
+                  { name: 'Stripe', logo: 'https://www.google.com/s2/favicons?domain=stripe.com&sz=128', url: 'https://stripe.com' },
                   { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
                   { name: 'Google', logo: '/logos/icons8-google-logo-96.png', url: 'https://www.google.com' },
                   { name: 'LinkedIn', logo: '/logos/LI-Logo.png', url: 'https://www.linkedin.com' },
-                  { name: 'Meta', logo: 'https://logo.clearbit.com/meta.com', url: 'https://www.meta.com' },
-                  { name: 'Shopify', logo: 'https://logo.clearbit.com/shopify.com', url: 'https://www.shopify.com' },
+                  { name: 'Meta', logo: 'https://www.google.com/s2/favicons?domain=meta.com&sz=128', url: 'https://www.meta.com' },
+                  { name: 'Shopify', logo: 'https://www.google.com/s2/favicons?domain=shopify.com&sz=128', url: 'https://www.shopify.com' },
                 ]).map((company, index) => (
                   <div key={`${company.name}-${index}`} className="flex-shrink-0">
                     <div className="px-8 py-4 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#bfa5ff]/50 transition-all flex items-center justify-center group">
@@ -633,6 +634,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         </div>
       </section>
 
+      <FAQSection />
+
       {/* FINAL CTA - High Intensity Section */}
       <section className="py-32 px-4 relative overflow-hidden" style={{ backgroundColor: '#0A0B0D' }}>
         {/* Animated Gradient Background */}
@@ -684,6 +687,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 <Button
                   size="lg"
                   variant="outline"
+                  onClick={() => setShowWaitlist(true)}
                   className="h-16 w-full text-lg font-bold rounded-2xl hover:bg-white/10 transition-all"
                   style={{ borderColor: 'rgba(255,255,255,0.2)', color: '#ffffff', backgroundColor: 'transparent' }}
                 >

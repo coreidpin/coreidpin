@@ -23,11 +23,12 @@ interface InDemandSkill {
 
 interface SkillsGapProps {
   userSkills: string[];
+  userRole?: string;
   className?: string;
 }
 
-// Market demand data (in real app, fetch from API)
-const IN_DEMAND_SKILLS: InDemandSkill[] = [
+// Market demand data by role
+const ENGINEERING_DEMAND: InDemandSkill[] = [
   { name: 'React', demand: 'high', category: 'Frontend', averageSalaryIncrease: '+15%' },
   { name: 'TypeScript', demand: 'high', category: 'Language', averageSalaryIncrease: '+12%' },
   { name: 'Node.js', demand: 'high', category: 'Backend', averageSalaryIncrease: '+10%' },
@@ -38,21 +39,54 @@ const IN_DEMAND_SKILLS: InDemandSkill[] = [
   { name: 'GraphQL', demand: 'medium', category: 'API', averageSalaryIncrease: '+8%' },
   { name: 'Next.js', demand: 'high', category: 'Frontend', averageSalaryIncrease: '+12%' },
   { name: 'PostgreSQL', demand: 'medium', category: 'Database', averageSalaryIncrease: '+7%' },
-  { name: 'MongoDB', demand: 'medium', category: 'Database', averageSalaryIncrease: '+9%' },
-  { name: 'Vue.js', demand: 'medium', category: 'Frontend', averageSalaryIncrease: '+10%' },
-  { name: 'Angular', demand: 'medium', category: 'Frontend', averageSalaryIncrease: '+9%' },
-  { name: 'Terraform', demand: 'high', category: 'DevOps', averageSalaryIncrease: '+15%' },
   { name: 'Go', demand: 'high', category: 'Language', averageSalaryIncrease: '+17%' },
+];
+
+const PRODUCT_DEMAND: InDemandSkill[] = [
+  { name: 'Product Strategy', demand: 'high', category: 'Strategy', averageSalaryIncrease: '+20%' },
+  { name: 'Data Analysis', demand: 'high', category: 'Analytics', averageSalaryIncrease: '+15%' },
+  { name: 'SQL', demand: 'medium', category: 'Technical', averageSalaryIncrease: '+10%' },
+  { name: 'User Research', demand: 'high', category: 'Research', averageSalaryIncrease: '+12%' },
+  { name: 'Agile/Scrum', demand: 'medium', category: 'Process', averageSalaryIncrease: '+8%' },
+  { name: 'Roadmapping', demand: 'high', category: 'Strategy', averageSalaryIncrease: '+14%' },
+  { name: 'A/B Testing', demand: 'medium', category: 'Growth', averageSalaryIncrease: '+11%' },
+  { name: 'Stakeholder Management', demand: 'high', category: 'Soft Skill', averageSalaryIncrease: '+15%' },
+];
+
+const DESIGN_DEMAND: InDemandSkill[] = [
+  { name: 'Figma', demand: 'high', category: 'Tool', averageSalaryIncrease: '+10%' },
+  { name: 'UI Design', demand: 'high', category: 'Core', averageSalaryIncrease: '+12%' },
+  { name: 'UX Research', demand: 'high', category: 'Research', averageSalaryIncrease: '+18%' },
+  { name: 'Prototyping', demand: 'medium', category: 'Interaction', averageSalaryIncrease: '+8%' },
+  { name: 'Design Systems', demand: 'high', category: 'Architecture', averageSalaryIncrease: '+20%' },
+  { name: 'Accessibility', demand: 'medium', category: 'Standards', averageSalaryIncrease: '+10%' },
+  { name: 'Adobe Creative Suite', demand: 'medium', category: 'Tool', averageSalaryIncrease: '+5%' },
 ];
 
 export const SkillsGap: React.FC<SkillsGapProps> = ({
   userSkills,
+  userRole = 'Engineer',
   className,
 }) => {
   const normalizedUserSkills = userSkills.map(s => s.toLowerCase());
 
+  // Determine which demand list to use based on role
+  const getDemandList = () => {
+    const roleLower = userRole.toLowerCase();
+    if (roleLower.includes('product') || roleLower.includes('manager') || roleLower.includes('pm')) {
+      return PRODUCT_DEMAND;
+    }
+    if (roleLower.includes('design') || roleLower.includes('ux') || roleLower.includes('ui') || roleLower.includes('artist')) {
+      return DESIGN_DEMAND;
+    }
+    // Default to engineering
+    return ENGINEERING_DEMAND;
+  };
+
+  const targetSkills = getDemandList();
+
   // Analyze skills
-  const skillsAnalysis = IN_DEMAND_SKILLS.map(skill => ({
+  const skillsAnalysis = targetSkills.map(skill => ({
     ...skill,
     hasSkill: normalizedUserSkills.some(
       us => us.includes(skill.name.toLowerCase()) || skill.name.toLowerCase().includes(us)
@@ -67,7 +101,7 @@ export const SkillsGap: React.FC<SkillsGapProps> = ({
     s => !s.hasSkill && s.demand === 'medium'
   );
 
-  const skillMatchPercentage = (matchedSkills.length / IN_DEMAND_SKILLS.length) * 100;
+  const skillMatchPercentage = (matchedSkills.length / targetSkills.length) * 100;
 
   const getDemandColor = (demand: 'high' | 'medium' | 'low') => {
     switch (demand) {
@@ -88,8 +122,9 @@ export const SkillsGap: React.FC<SkillsGapProps> = ({
           <Target className="h-5 w-5" />
           Skills Gap Analysis
         </h3>
+
         <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-          {matchedSkills.length}/{IN_DEMAND_SKILLS.length} In-Demand Skills
+          {matchedSkills.length}/{targetSkills.length} In-Demand Skills
         </Badge>
       </div>
 

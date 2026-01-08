@@ -426,6 +426,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                           skills: exp.skills || [],
                           achievements: exp.achievements || [],
                           verification_status: exp.verification_status,
+                          verification_source: exp.verification_source,
                           proof_documents: exp.proof_documents || []
                         })) : profile.work_experience.map((exp: any) => ({
                           id: exp.id || `${exp.company}-${exp.start_date}`,
@@ -441,6 +442,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                           skills: exp.skills || [],
                           achievements: exp.achievements || [],
                           verification_status: exp.verification_status,
+                          verification_source: exp.verification_source,
                           proof_documents: exp.proof_documents || []
                         }))}
                         showProofBadges={true}

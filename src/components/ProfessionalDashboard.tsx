@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { requestEndorsementViaServer } from '@/utils/requestEndorsementServer';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
+import type { TechSkill } from '../types/portfolio';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 
 import { supabase, supabaseUrl } from '../utils/supabase/client';
@@ -101,7 +102,7 @@ import { FeaturedSection, AddFeaturedItemModal, TechStackManager, AddTechSkillMo
   IdentityMarketPulse
 } from './portfolio';
 import { addFeaturedItem } from '../utils/portfolio-api';
-import { addTechSkill, updateTechSkill } from '../utils/tech-stack-api';
+import { addTechSkill, updateTechSkill, getTechStack } from '../utils/tech-stack-api';
 import { createCaseStudy } from '../utils/case-study-api';
 import { createProject } from '../utils/project-api';
 import { PortfolioExporter } from '../utils/portfolio-export';
@@ -317,6 +318,7 @@ export function ProfessionalDashboard() {
   const [showAddSkillModal, setShowAddSkillModal] = React.useState(false);
   const [editingSkill, setEditingSkill] = React.useState<any | null>(null);
   const [techStackRefresh, setTechStackRefresh] = React.useState(0);
+  const [techStack, setTechStack] = useState<TechSkill[]>([]);
 
   // ✨ Case Study State
   const [showCaseStudyCreator, setShowCaseStudyCreator] = React.useState(false);
@@ -804,10 +806,25 @@ export function ProfessionalDashboard() {
             .select('*')
             .eq('user_id', session.userId)
             .single();
-          return { profile, profileError };
+
+          // Fetch Tech Stack
+          let stack: TechSkill[] = [];
+          if (session.userId) {
+            try {
+              stack = await getTechStack(session.userId);
+            } catch (err) {
+              console.error('Error fetching tech stack:', err);
+            }
+          }
+
+          return { profile, profileError, stack };
         })();
         
-        const [_, { profile, profileError }] = await Promise.all([minDelay, fetchPromise]);
+        const [_, { profile, profileError, stack }] = await Promise.all([minDelay, fetchPromise]);
+        
+        if (stack) {
+          setTechStack(stack);
+        }
         
         // Check email verification status from Auth
         const { data: { user } } = await supabase.auth.getUser();
@@ -2422,7 +2439,8 @@ export function ProfessionalDashboard() {
 
               {/* Skills Gap Analysis */}
               <SkillsGap
-                userSkills={userProfile?.skills || []}
+                userSkills={techStack.length > 0 ? techStack.map(s => s.name) : (userProfile?.skills || [])}
+                userRole={userProfile?.role || userProfile?.job_title || 'Engineer'}
               />
             </div>
 
