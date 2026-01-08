@@ -128,9 +128,9 @@ export function WhyWeExist() {
                   viewport={{ once: true }}
                 >
                   {/* Phone number */}
-                  <div className="relative">
+                  <div className="relative w-full sm:w-auto flex justify-center">
                     <motion.div
-                      className="bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-8 text-center w-64 sm:w-72 lg:w-64 xl:w-72 flex flex-col items-center gap-3"
+                      className="bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl p-6 sm:p-8 text-center w-full max-w-[280px] sm:w-72 lg:w-64 xl:w-72 flex flex-col items-center gap-3"
                       animate={{
                         boxShadow: [
                           '0 0 20px rgba(191, 165, 255, 0.2)',
@@ -140,9 +140,9 @@ export function WhyWeExist() {
                       }}
                       transition={{ duration: 3, repeat: Infinity }}
                     >
-                      <Phone className="w-10 h-10 mb-2" style={{ color: '#bfa5ff' }} />
-                      <div className="text-sm text-white/90 font-medium uppercase tracking-wide">Phone Number</div>
-                      <div className="text-2xl text-white font-mono font-bold tracking-wide whitespace-nowrap">+234 812 345 6789</div>
+                      <Phone className="w-8 h-8 sm:w-10 sm:h-10 mb-2" style={{ color: '#bfa5ff' }} />
+                      <div className="text-xs sm:text-sm text-white/90 font-medium uppercase tracking-wide">Phone Number</div>
+                      <div className="text-xl sm:text-2xl text-white font-mono font-bold tracking-wide whitespace-nowrap">+234 812 345 6789</div>
                     </motion.div>
                   </div>
 
@@ -187,10 +187,51 @@ export function WhyWeExist() {
                     </motion.div>
                   </motion.div>
 
+                  {/* Vertical Arrow (Mobile Only) */}
+                  <motion.div
+                    className="block sm:hidden my-4"
+                    initial={{ y: -20, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.8, duration: 0.6 }}
+                    viewport={{ once: true }}
+                  >
+                     <motion.div
+                      animate={{
+                        y: [0, 10, 0],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <svg width="24" height="60" viewBox="0 0 24 60" fill="none">
+                        <motion.path
+                          d="M12 0V58M12 58L2 48M12 58L22 48"
+                          stroke="url(#gradient-mobile)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          transition={{ delay: 1, duration: 1.2 }}
+                          viewport={{ once: true }}
+                        />
+                        <defs>
+                          <linearGradient id="gradient-mobile" x1="12" y1="0" x2="12" y2="60">
+                            <stop offset="0%" stopColor="#bfa5ff" />
+                            <stop offset="50%" stopColor="#32f08c" />
+                            <stop offset="100%" stopColor="#7bb8ff" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </motion.div>
+                  </motion.div>
+
                   {/* Verified PIN */}
-                  <div className="relative">
+                  <div className="relative w-full sm:w-auto flex justify-center">
                     <motion.div
-                      className="backdrop-blur-md rounded-2xl p-8 text-center w-64 sm:w-72 lg:w-64 xl:w-72 flex flex-col items-center gap-3"
+                      className="backdrop-blur-md rounded-2xl p-6 sm:p-8 text-center w-full max-w-[280px] sm:w-72 lg:w-64 xl:w-72 flex flex-col items-center gap-3"
                       style={{ 
                         backgroundImage: 'linear-gradient(to bottom right, rgba(50, 240, 140, 0.15), rgba(143, 208, 202, 0.15))', 
                         borderColor: '#32f08c', 
@@ -212,10 +253,10 @@ export function WhyWeExist() {
                         boxShadow: { duration: 3, repeat: Infinity },
                       }}
                     >
-                      <CheckCircle className="w-12 h-12 mx-auto mb-2" style={{ color: '#32f08c' }} />
-                      <div className="text-sm text-white font-medium uppercase tracking-wide">Verified PIN</div>
-                      <div className="text-2xl text-white font-mono font-bold">PIN-234-812345</div>
-                      <div className="mt-2 px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: 'rgba(50, 240, 140, 0.2)', color: '#32f08c' }}>
+                      <CheckCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2" style={{ color: '#32f08c' }} />
+                      <div className="text-xs sm:text-sm text-white font-medium uppercase tracking-wide">Verified PIN</div>
+                      <div className="text-xl sm:text-2xl text-white font-mono font-bold whitespace-nowrap">PIN-234-812345</div>
+                      <div className="mt-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold" style={{ backgroundColor: 'rgba(50, 240, 140, 0.2)', color: '#32f08c' }}>
                         ✓ Secure & Portable
                       </div>
                     </motion.div>
