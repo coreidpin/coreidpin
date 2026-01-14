@@ -19,10 +19,11 @@ import {
   LogIn,
   User,
   Loader2,
-  Users
+  Users,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
-import { SantaHat } from './ui/christmas-effects';
 
 interface NavbarProps {
   currentPage?: string;
@@ -31,6 +32,8 @@ interface NavbarProps {
   onLogout?: () => void;
   isAuthenticated?: boolean;
   userType?: string;
+  theme?: 'light' | 'dark';
+  onToggleTheme?: () => void;
 }
 
 export function Navbar({ 
@@ -39,7 +42,9 @@ export function Navbar({
   onLogin, 
   onLogout, 
   isAuthenticated = false,
-  userType 
+  userType,
+  theme,
+  onToggleTheme
 }: NavbarProps) {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -48,8 +53,7 @@ export function Navbar({
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // Consider dashboard pages as "light" theme if they are rendering on white background
-  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
+  const isLight = theme ? theme === 'light' : currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
   const isProd = import.meta.env.PROD;
 
   useEffect(() => {
@@ -304,12 +308,7 @@ export function Navbar({
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: 'visible' }}>
         <div className="flex items-center justify-between h-14 md:h-16 lg:h-18" style={{ overflow: 'visible' }}>
-          {/* Logo */}
-          {/* Logo with Holiday Hat */}
-          <div className="relative group">
-            <SantaHat className="top-[-12px] left-[-8px] scale-75 rotate-[-15deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
-            <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
-          </div>
+          <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
 
           {/* Desktop Navigation */}
           <nav 
@@ -358,6 +357,25 @@ export function Navbar({
             ) : (
               <>
                 <NotificationBell />
+                {onToggleTheme && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onToggleTheme}
+                    className={cn(
+                      "h-9 w-9 rounded-full border",
+                      (theme ? theme === 'light' : isLight)
+                        ? "bg-transparent text-slate-900 border-slate-200 hover:bg-slate-100"
+                        : "bg-[#0a0b0d] text-white border-white/20 hover:bg-white/10"
+                    )}
+                  >
+                    {(theme ? theme === 'light' : isLight) ? (
+                      <Moon className="h-4 w-4" />
+                    ) : (
+                      <Sun className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
                 <Button 
                   variant="default" 
                   size="sm"

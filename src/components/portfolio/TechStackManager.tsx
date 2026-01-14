@@ -14,6 +14,7 @@ import { supabase } from '../../utils/supabase/client';
 import { MetricBadge } from './MetricCard';
 import { toast } from '../../utils/toast';
 import { EndorsersModal } from './EndorsersModal';
+import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
 
 interface TechStackManagerProps {
   userId: string;
@@ -167,6 +168,14 @@ export const TechStackManager: React.FC<TechStackManagerProps> = ({
     return acc;
   }, {} as Record<SkillCategory, TechSkill[]>);
 
+  const radarData = distribution.map(item => {
+    const total = item.skills.reduce((sum: number, s: { percentage: number }) => sum + (s.percentage || 0), 0);
+    return {
+      category: item.category,
+      value: total || item.skills.length ? Math.max(total, 5) : 0
+    };
+  });
+
   if (loading) {
     return <div className="animate-pulse space-y-4">
       {[1, 2, 3].map(i => (
@@ -233,6 +242,23 @@ export const TechStackManager: React.FC<TechStackManagerProps> = ({
               {cat} ({groupedSkills[cat as SkillCategory].length})
             </button>
           ))}
+        </div>
+      )}
+
+      {distribution.length > 0 && radarData.length > 0 && (
+        <div className="w-full h-64 bg-white rounded-xl border border-gray-200 flex items-center justify-center">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart data={radarData}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="category" />
+              <Radar
+                dataKey="value"
+                stroke="#2563eb"
+                fill="#60a5fa"
+                fillOpacity={0.4}
+              />
+            </RadarChart>
+          </ResponsiveContainer>
         </div>
       )}
 
