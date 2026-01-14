@@ -184,7 +184,8 @@ export const IdentityManagementPage: React.FC = () => {
     name: '',
     issuer: '',
     date: '',
-    url: ''
+    url: '',
+    status: 'unverified'
   });
 
   const [showEducationModal, setShowEducationModal] = useState(false);
@@ -208,6 +209,7 @@ export const IdentityManagementPage: React.FC = () => {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [actionLoading, setActionLoading] = useState(false);
 
+
   // Phone Verification State
   const [showPhoneVerifyModal, setShowPhoneVerifyModal] = useState(false);
   const [phoneOTP, setPhoneOTP] = useState('');
@@ -217,6 +219,34 @@ export const IdentityManagementPage: React.FC = () => {
 
   // Work Modal Tab State
   const [workModalTab, setWorkModalTab] = useState('basic');
+
+  // Auto-send OTP when phone verification modal opens
+  useEffect(() => {
+    const autoSendOTP = async () => {
+      if (showPhoneVerifyModal && formData.phone && !devOTP) {
+        try {
+          setSendingOTP(true);
+          const token = await ensureValidSession();
+          const result = await api.sendPhoneOTP(formData.phone, token);
+          setDevOTP(result._dev_otp);
+          toast.success('Verification code sent!', {
+            description: result._dev_otp ? 'Check the yellow box below' : 'Check your phone for the code',
+            duration: 3000
+          });
+        } catch (error: any) {
+          console.error('Auto-send OTP failed:', error);
+          toast.error('Failed to send code', {
+            description: error.message || 'Please try clicking "Send Code" manually'
+          });
+        } finally {
+          setSendingOTP(false);
+        }
+      }
+    };
+
+    autoSendOTP();
+  }, [showPhoneVerifyModal]); // Only run when modal opens/closes
+
 
   // Load profile data on component mount
   useEffect(() => {
@@ -543,7 +573,7 @@ export const IdentityManagementPage: React.FC = () => {
     }));
 
     setShowCertModal(false);
-    setTempCert({ name: '', issuer: '', date: '', url: '' });
+    setTempCert({ name: '', issuer: '', date: '', url: '', status: 'unverified' });
   };
 
   const handleRemoveCert = (index: number) => {
@@ -561,7 +591,7 @@ export const IdentityManagementPage: React.FC = () => {
 
     setFormData(prev => ({
       ...prev,
-      education: [...prev.education, tempEducation]
+      education: [...(prev.education || []), tempEducation]
     }));
 
     setShowEducationModal(false);
@@ -571,7 +601,7 @@ export const IdentityManagementPage: React.FC = () => {
   const handleRemoveEducation = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      education: prev.education.filter((_, i) => i !== index)
+      education: (prev.education || []).filter((_, i) => i !== index)
     }));
   };
 
@@ -1020,7 +1050,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         skills: formData.skills,
         tools: formData.tools,
         industry_tags: formData.industry_tags,
-        certifications: formData.certifications
+        certifications: formData.certifications,
+        education: formData.education
       };
 
       // Construct the full URL to avoid proxy issues
@@ -2239,6 +2270,14 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                                         >
                                             Verify Work Email
                                         </Button>
+                                        <Button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            className="h-6 text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-2"
+                                            onClick={() => setShowConnectModal(true)}
+                                        >
+                                            <Shield className="h-3 w-3 mr-1" /> Connect HRIS
+                                        </Button>
                                     </div>
                                 )}
                             </div>
@@ -2565,7 +2604,14 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     {formData.certifications.map((cert, index) => (
                       <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 flex justify-between items-start group">
                         <div>
-                          <h4 className="text-slate-900 font-semibold">{cert.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-slate-900 font-semibold">{cert.name}</h4>
+                            {cert.status === 'verified' && (
+                              <Badge className="bg-green-100 text-green-700 border-green-200 h-5 px-1.5 text-[10px] gap-1">
+                                <CheckCircle2 className="h-2.5 w-2.5" /> Verified
+                              </Badge>
+                            )}
+                          </div>
                           <p className="text-slate-600 text-sm">{cert.issuer}</p>
                           <p className="text-slate-500 text-xs mt-1">{cert.date}</p>
                         </div>
@@ -2905,7 +2951,16 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         </Dialog>
 
         {/* Phone Verification Modal */}
-        <Dialog open={showPhoneVerifyModal} onOpenChange={setShowPhoneVerifyModal}>
+        <Dialog open={showPhoneVerifyModal} onOpenChange={(open) => {
+          setShowPhoneVerifyModal(open);
+          // Reset state when closing
+          if (!open) {
+            setPhoneOTP('');
+            setDevOTP(null);
+            setSendingOTP(false);
+            setVerifyingOTP(false);
+          }
+        }}>
           <DialogContent className="sm:max-w-md bg-white text-slate-900 border-slate-200">
             <DialogHeader>
               <div className="mx-auto w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center mb-4">
@@ -2913,7 +2968,13 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </div>
               <DialogTitle className="text-center text-slate-900">Verify Phone Number</DialogTitle>
               <div className="text-center text-slate-500 text-sm">
-                We'll send a verification code to {formData.phone}
+                {sendingOTP ? (
+                  <>Sending verification code to {formData.phone}...</>
+                ) : devOTP ? (
+                  <>Code sent! Enter the 6-digit code below.</>
+                ) : (
+                  <>We'll send a verification code to {formData.phone}</>
+                )}
               </div>
             </DialogHeader>
 

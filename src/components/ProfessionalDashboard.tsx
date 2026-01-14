@@ -109,6 +109,9 @@ import { PortfolioExporter } from '../utils/portfolio-export';
 import { QuickStats } from './dashboard/QuickStats';
 import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
 import { getDemandMetrics, getGeographicPings, getIndustryTrends } from '../utils/demandAnalytics';
+import { ProfessionalReadmeEditor } from './dashboard/ProfessionalReadmeEditor';
+import { AchievementsDisplay } from './dashboard/AchievementsDisplay';
+import { PinnedItemsManager } from './dashboard/PinnedItemsManager';
 
 
 export function ProfessionalDashboard() {
@@ -1044,24 +1047,31 @@ export function ProfessionalDashboard() {
         const token = await ensureValidSession();
         if (!token) return;
 
-        const response = await fetch(`${supabaseUrl}/functions/v1/server/stats/activity`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.activities) {
+        // Direct DB Query (Bypassing Edge Function)
+        const { data: events, error } = await supabase
+          .from('profile_analytics_events')
+          .select('event_type, event_category, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (!error && events) {
+            // Map DB events to Activity format
+            const activities = events.map(e => ({
+                text: e.event_type || 'New activity',
+                type: e.event_category || 'info', 
+                timestamp: e.created_at
+            }));
+
             // Transform activities into notification format for activity feed
-            const formattedNotifications = data.activities.slice(0, 3).map((activity: any) => ({
+            const formattedNotifications = activities.slice(0, 3).map((activity: any) => ({
               text: activity.text,
               type: activity.type
             }));
             setNotifications(formattedNotifications);
             
             // Transform activities into notification center format
-            const notificationCenterData = data.activities.map((activity: any, index: number) => ({
+            const notificationCenterData = activities.map((activity: any, index: number) => ({
               id: `activity-${index}`,
               type: activity.type === 'verification' ? 'success' : activity.type === 'view' ? 'info' : 'info',
               title: activity.type === 'verification' ? 'Verification' : activity.type === 'view' ? 'Profile View' : 'Activity',
@@ -1071,7 +1081,6 @@ export function ProfessionalDashboard() {
               category: 'notification' as const,
             }));
             setRealTimeNotifications(notificationCenterData);
-          }
         }
       } catch (error) {
         console.error('Error fetching activities:', error);
@@ -1835,6 +1844,45 @@ export function ProfessionalDashboard() {
               >
                 Analytics
               </TabsTrigger>
+              <TabsTrigger 
+                value="readme"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'readme' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'readme' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                README
+              </TabsTrigger>
+              <TabsTrigger 
+                value="achievements"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'achievements' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'achievements' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger 
+                value="showcase"
+                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                style={{
+                  color: activeTab === 'showcase' ? '#ffffff' : '#64748b',
+                  backgroundColor: activeTab === 'showcase' ? '#000000' : 'transparent',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap',
+                  flex: '0 0 auto'
+                }}
+              >
+                Showcase
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -2455,6 +2503,52 @@ export function ProfessionalDashboard() {
       )}
 
     </AnimatePresence>
+    
+      {/* README Tab */}
+      {activeTab === 'readme' && (
+        <motion.div
+          key="readme"
+          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={reducedMotion ? undefined : { duration: 0.2 }}
+        >
+          <TabsContent value="readme" className="space-y-6">
+            <ProfessionalReadmeEditor />
+          </TabsContent>
+        </motion.div>
+      )}
+
+      {/* Achievements Tab */}
+      {activeTab === 'achievements' && (
+        <motion.div
+          key="achievements"
+          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={reducedMotion ? undefined : { duration: 0.2 }}
+        >
+          <TabsContent value="achievements" className="space-y-6">
+            <AchievementsDisplay />
+          </TabsContent>
+        </motion.div>
+      )}
+
+      {/* Showcase Tab (Pinned Items) */}
+      {activeTab === 'showcase' && (
+        <motion.div
+          key="showcase"
+          initial={reducedMotion ? undefined : { opacity: 0, x: 20 }}
+          animate={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+          exit={reducedMotion ? undefined : { opacity: 0, x: -20 }}
+          transition={reducedMotion ? undefined : { duration: 0.2 }}
+        >
+          <TabsContent value="showcase" className="space-y-6">
+            <PinnedItemsManager />
+          </TabsContent>
+        </motion.div>
+      )}
+
   </Tabs>
 </div>
 

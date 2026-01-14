@@ -216,12 +216,32 @@ export function WorkTimeline({ experiences = [], showProofBadges = true }: WorkT
                             {/* Verified Employee Badge */}
                             {(exp.verification_status === 'verified' || exp.verification_status === true) && (
                                <div className="pt-2">
-                                 <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 gap-1 pl-1 pr-2.5 py-1 w-fit">
-                                    <div className="bg-green-500 rounded-full p-0.5">
-                                      <CheckCircle2 className="h-3 w-3 text-white" />
-                                    </div>
-                                    {exp.verification_source === 'hris_integration' ? 'Verified (Payroll)' : 'Verified Employee'}
+                                 <Badge className={`gap-1.5 pl-1.5 pr-3 py-1 w-fit border shadow-sm transition-colors ${
+                                    exp.verification_source === 'hris_integration' 
+                                      ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                                      : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                 }`}>
+                                    {exp.verification_source === 'hris_integration' ? (
+                                        <>
+                                            <div className="bg-blue-600 rounded-full p-0.5">
+                                                <Shield className="h-3 w-3 text-white" />
+                                            </div>
+                                            <span className="font-medium">Verified by Employer</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="bg-green-500 rounded-full p-0.5">
+                                                <CheckCircle2 className="h-3 w-3 text-white" />
+                                            </div>
+                                            <span className="font-medium">Verified Employee</span>
+                                        </>
+                                    )}
                                  </Badge>
+                                 {exp.verification_source === 'hris_integration' && (
+                                     <p className="text-[10px] text-blue-400 mt-1 pl-1">
+                                          Verified via data link
+                                     </p>
+                                 )}
                                </div>
                             )}
 

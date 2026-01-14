@@ -78,7 +78,8 @@ app.put('*', async (c) => {
       skills, 
       tools, 
       industry_tags, 
-      certifications 
+      certifications,
+      education
     } = body;
 
     const updates: any = {};
@@ -87,6 +88,7 @@ app.put('*', async (c) => {
     if (tools !== undefined) updates.tools = tools;
     if (industry_tags !== undefined) updates.industry_tags = industry_tags;
     if (certifications !== undefined) updates.certifications = certifications;
+    if (education !== undefined) updates.education = education;
 
     if (Object.keys(updates).length === 0) {
       return c.json({ error: 'No valid fields to update' }, 400);

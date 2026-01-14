@@ -38,6 +38,13 @@ import type { AvailabilityStatus, WorkPreference } from '../types/availability';
 import { ContactModal } from './public/ContactModal';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 import { FeaturedSection, TechStackManager, CaseStudyList } from './portfolio';
+import { ProfessionalReadme } from './public/ProfessionalReadme';
+import { ProfessionalActivityGraph } from './public/ProfessionalActivityGraph';
+import { PublicAchievements } from './public/PublicAchievements';
+import { PinnedItemsGrid } from './public/PinnedItemsGrid';
+import { FollowButton } from './public/FollowButton';
+import { NetworkModal } from './public/NetworkModal';
+import { OrganizationList } from './public/OrganizationList';
 
 
 interface PublicPINPageProps {
@@ -53,6 +60,8 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [networkModalOpen, setNetworkModalOpen] = useState(false);
+  const [networkModalTab, setNetworkModalTab] = useState<'followers' | 'following'>('followers');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -210,7 +219,12 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                             <div className="flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2.5 min-w-max px-1">
                               {profile.email_verified && (
                                 <Badge variant="secondary" className="snap-start bg-blue-50 text-blue-700 border-blue-100 text-[10px] sm:text-sm px-2 sm:px-4 py-1 sm:py-2 rounded-full flex-shrink-0">
-                                  <CheckCircle2 className="h-2.5 w-2.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" /> Verified
+                                  <CheckCircle2 className="h-2.5 w-2.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" /> Verified Email
+                                </Badge>
+                              )}
+                              {workExperiences.some((e: any) => e.verification_status === 'verified') && (
+                                <Badge variant="secondary" className="snap-start bg-indigo-50 text-indigo-700 border-indigo-100 text-[10px] sm:text-sm px-2 sm:px-4 py-1 sm:py-2 rounded-full flex-shrink-0">
+                                  <Shield className="h-2.5 w-2.5 sm:h-4 sm:w-4 mr-0.5 sm:mr-1 fill-indigo-200" /> Verified Pro
                                 </Badge>
                               )}
                               <div className="snap-start flex-shrink-0 text-[10px] sm:text-sm">
@@ -299,6 +313,35 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                       </div>
                     </div>
 
+                    {/* Network Stats - Clickable */}
+                    <div className="flex items-center justify-center gap-6 mt-4 mb-2">
+                      <button 
+                        onClick={() => {
+                          setNetworkModalTab('followers');
+                          setNetworkModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group"
+                      >
+                        <span className="font-bold text-gray-900 group-hover:text-blue-600">
+                          {profile.followers_count || 0}
+                        </span>
+                        <span className="text-sm text-gray-500 group-hover:text-blue-600">followers</span>
+                      </button>
+                      <div className="w-1 h-1 rounded-full bg-gray-300"></div>
+                      <button 
+                        onClick={() => {
+                          setNetworkModalTab('following');
+                          setNetworkModalOpen(true);
+                        }}
+                        className="flex items-center gap-1.5 hover:text-blue-600 transition-colors group"
+                      >
+                        <span className="font-bold text-gray-900 group-hover:text-blue-600">
+                          {profile.following_count || 0}
+                        </span>
+                        <span className="text-sm text-gray-500 group-hover:text-blue-600">following</span>
+                      </button>
+                    </div>
+
                     {/* Social Links - Visible on all devices */}
                     {profile.social_links && profile.social_links.length > 0 && (
                       <div className="flex flex-wrap items-center gap-3 mt-6 justify-center sm:justify-start">
@@ -329,8 +372,19 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                         })}
                       </div>
                     )}
+
+                    {/* Organizations List */}
+                    <OrganizationList workExperience={workExperiences.length > 0 ? workExperiences : profile.work_experience || []} />
                     
-                    {/* Desktop Action Buttons - Inside card */}
+                    <div className="flex flex-wrap gap-2 justify-center w-full mt-4">
+                      <FollowButton 
+                        targetUserId={profile.user_id} 
+                        targetUserName={profile.full_name || profile.name}
+                        variant="default"
+                        className="flex-1 w-full"
+                      />
+                    </div>
+    {/* Desktop Action Buttons - Inside card */}
                     <div className="hidden sm:flex items-center gap-4 mt-8">
                       <Button 
                         onClick={() => setShowContactModal(true)}
@@ -400,6 +454,27 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                 </Card>
               )}
 
+              {/* Professional README - GitHub Style */}
+              <ProfessionalReadme
+                name={profile.full_name || profile.name || 'Professional User'}
+                role={profile.role || profile.job_title}
+                bio={profile.bio}
+                headline={profile.headline}
+                specialties={[
+                  profile.industry ? `${profile.industry} professional` : 'Professional with diverse experience',
+                  profile.years_of_experience ? `Over ${profile.years_of_experience} years of experience` : 'Experienced professional',
+                  'Building innovative solutions and driving impact'
+                ]}
+                currentFocus={[
+                  profile.role || profile.job_title || 'Professional development',
+                  'Expanding professional network',
+                  'Sharing knowledge and insights'
+                ]}
+              />
+              
+              {/* ✨ Pinned Items - Showcase Best Work */}
+              <PinnedItemsGrid userId={profile.user_id} />
+
               {/* Experience Section */}
               {((workExperiences && workExperiences.length > 0) || (profile.work_experience && profile.work_experience.length > 0)) && (
                 <Card className="border-none shadow-sm">
@@ -451,6 +526,17 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Professional Activity Graph - GitHub Style */}
+              <ProfessionalActivityGraph
+                userName={profile.full_name || profile.name || 'Professional User'}
+                userId={profile.user_id}
+              />
+
+              {/* ✨ Achievements Section */}
+              <div className="mt-8">
+                <PublicAchievements userId={profile.user_id} />
+              </div>
 
               {/* ✨ Featured Section - Read Only */}
               {profile?.user_id && (
@@ -535,10 +621,21 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                       {profile.certifications.map((cert: any, index: number) => (
                         <div key={index} className="flex gap-3 items-start">
                           <div className="mt-1">
-                            <Award className="h-4 w-4 text-gray-400" />
+                            {cert.status === 'verified' ? (
+                                <Shield className="h-4 w-4 text-green-600 fill-green-50" />
+                            ) : (
+                                <Award className="h-4 w-4 text-gray-400" />
+                            )}
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900 text-sm">{cert.name}</div>
+                            <div className="flex items-center gap-2">
+                                <div className="font-medium text-gray-900 text-sm">{cert.name}</div>
+                                {cert.status === 'verified' && (
+                                    <Badge className="h-4 px-1 text-[9px] bg-green-50 text-green-700 border-green-200">
+                                        Verified
+                                    </Badge>
+                                )}
+                            </div>
                             <div className="text-xs text-gray-500">{cert.issuer} • {cert.date}</div>
                           </div>
                         </div>
@@ -628,6 +725,13 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
         onOpenChange={setShowContactModal}
         professionalId={profile?.user_id}
         professionalName={profile?.full_name || profile?.name || 'Professional'}
+      />
+
+      <NetworkModal 
+        isOpen={networkModalOpen}
+        onClose={() => setNetworkModalOpen(false)}
+        userId={profile.user_id}
+        initialTab={networkModalTab}
       />
     </>
   );

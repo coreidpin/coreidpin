@@ -32,6 +32,7 @@ const AcceptAdminInvitationPage = lazy(() => import('../admin/pages/AcceptAdminI
 const IdentityManagementPage = lazy(() => import('./IdentityManagementPage').then(m => ({ default: m.IdentityManagementPage })));
 const IdentityCard = lazy(() => import('./IdentityCard').then(m => ({ default: m.IdentityCard })));
 const PublicProfile = lazy(() => import('./PublicProfile').then(m => ({ default: m.PublicProfile })));
+const PublicProfileV2 = lazy(() => import('./PublicProfileV2').then(m => ({ default: m.PublicProfileV2 })));
 const SecuritySettingsPage = lazy(() => import('./SecuritySettingsPage').then(m => ({ default: m.SecuritySettingsPage })));
 const EndorsementPage = lazy(() => import('./EndorsementPage').then(m => ({ default: m.EndorsementPage })));
 const MonitoringPage = lazy(() => import('../pages/Monitoring'));
@@ -862,6 +863,16 @@ export const AppRouter: React.FC<RouterProps> = ({
                 <ReferralDashboard />
               </Suspense>
             </DashboardAuthWrapper>
+          } 
+        />
+
+        {/* Public Profile V2 (Dev) */}
+        <Route 
+          path="/p_v2/:slug" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <PublicProfileV2 />
+            </Suspense>
           } 
         />
 

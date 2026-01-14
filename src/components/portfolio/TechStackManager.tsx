@@ -13,6 +13,7 @@ import { endorseSkill, removeEndorsement, getUserEndorsements } from '../../util
 import { supabase } from '../../utils/supabase/client';
 import { MetricBadge } from './MetricCard';
 import { toast } from '../../utils/toast';
+import { EndorsersModal } from './EndorsersModal';
 
 interface TechStackManagerProps {
   userId: string;
@@ -58,6 +59,7 @@ export const TechStackManager: React.FC<TechStackManagerProps> = ({
   const [distribution, setDistribution] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<SkillCategory | 'all'>('all');
+  const [selectedSkillForEndorsers, setSelectedSkillForEndorsers] = useState<{id: string, name: string} | null>(null);
   
   // Endorsement State
   const [viewerId, setViewerId] = useState<string | null>(null);
@@ -280,10 +282,13 @@ export const TechStackManager: React.FC<TechStackManagerProps> = ({
 
                   {/* Static Endorsement Count for Owner */}
                   {(editable || userId === viewerId) && (Number(skill.endorsementCount) || 0) > 0 && (
-                     <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium ml-2">
+                     <button 
+                       onClick={() => setSelectedSkillForEndorsers({id: skill.id, name: skill.name})}
+                       className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium ml-2 hover:bg-blue-100 transition-colors"
+                     >
                         <ThumbsUp className="h-3 w-3 fill-blue-700" />
                         <span>{skill.endorsementCount}</span>
-                     </div>
+                     </button>
                   )}
 
                   {editable && (
@@ -371,6 +376,15 @@ export const TechStackManager: React.FC<TechStackManagerProps> = ({
             );
           })}
         </div>
+      )}
+      {/* Endorsers Modal */}
+      {selectedSkillForEndorsers && (
+        <EndorsersModal
+          isOpen={!!selectedSkillForEndorsers}
+          onClose={() => setSelectedSkillForEndorsers(null)}
+          skillId={selectedSkillForEndorsers.id}
+          skillName={selectedSkillForEndorsers.name}
+        />
       )}
     </div>
   );

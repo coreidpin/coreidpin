@@ -3,19 +3,25 @@ import { api } from '../../utils/api';
 import { toast } from 'sonner';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 
 interface OTPRequestFormProps {
   onSuccess: (contact: string, contactType: 'phone' | 'email') => void;
 }
 
+
 export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => {
+  const navigate = useNavigate();
   const [contact, setContact] = useState('');
   const [contactType, setContactType] = useState<'phone' | 'email'>('email');
   const [loading, setLoading] = useState(false);
+  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setShowSignUpPrompt(false);
 
     try {
       // Basic validation
@@ -30,7 +36,8 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
     } catch (error: any) {
       console.error('OTP Request Error:', error);
       if (error.message?.includes('Account not found')) {
-        toast.error('Account does not exist. Please create an account first.');
+        setShowSignUpPrompt(true);
+        // Optional: toast.error('Account does not exist.');
       } else {
         toast.error(error.message || 'Failed to send OTP');
       }
@@ -38,6 +45,40 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
       setLoading(false);
     }
   };
+
+  if (showSignUpPrompt) {
+    return (
+      <div className="space-y-6 text-center animate-in fade-in zoom-in duration-300">
+        <div className="mb-6">
+          <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2 text-white">Account Not Found</h2>
+          <p className="text-sm text-slate-400">
+            We couldn't find an account associated with <span className="text-white font-medium">{contact}</span>.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <Button 
+            onClick={() => navigate('/get-started')}
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Create New Account
+          </Button>
+          <Button
+            variant="ghost" 
+            onClick={() => setShowSignUpPrompt(false)}
+            className="w-full h-11 text-slate-400 hover:text-white hover:bg-white/5"
+          >
+            Try Different Email
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -20,6 +20,8 @@ import { BetaBadge } from './ui/BetaBadge';
 import { TopTalentBadge } from './ui/TopTalentBadge';
 import { ContributionBadge } from './ui/ContributionBadge';
 import { ContactModal } from './public/ContactModal';
+import { ProfessionalReadme } from './public/ProfessionalReadme';
+import { ProfessionalActivityGraph } from './public/ProfessionalActivityGraph';
 
 export const PublicProfile: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -305,6 +307,24 @@ export const PublicProfile: React.FC = () => {
             </CardContent>
           </Card>
 
+          {/* Professional README - GitHub Style */}
+          <ProfessionalReadme
+            name={profile.name}
+            role={profile.role}
+            bio={profile.bio}
+            headline={profile.headline}
+            specialties={[
+              profile.industry ? `${profile.industry} professional` : 'Professional with diverse experience',
+              profile.years_of_experience ? `${profile.years_of_experience}+ years of experience` : 'Experienced professional',
+              'Building innovative solutions and driving impact'
+            ]}
+            currentFocus={[
+              profile.role || 'Professional development',
+              'Expanding professional network',
+              'Sharing knowledge and insights'
+            ]}
+          />
+
           {/* Achievements & Badges */}
           <Card className="bg-[#0e0f12]/80 border-[#1a1b1f]/50">
             <CardContent className="p-6">
@@ -340,6 +360,11 @@ export const PublicProfile: React.FC = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Professional Activity Graph - GitHub Style */}
+          <ProfessionalActivityGraph
+            userName={profile.name}
+          />
 
           {/* Portfolio & Case Studies Section */}
           {projects.length > 0 && (

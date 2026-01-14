@@ -221,17 +221,25 @@ app.post("/send-otp", async (c) => {
     const { user, supabase } = await getAuthUser(c);
     
     if (!user) {
+      console.log('[SEND-OTP] Unauthorized - no user');
       return c.json({ success: false, error: "Unauthorized" }, 401);
     }
 
     const { phone } = await c.req.json();
 
     if (!phone) {
+      console.log('[SEND-OTP] Missing phone number');
       return c.json({ success: false, error: "Phone number is required" }, 400);
     }
 
     // Sanitize phone number
     const sanitizedPhone = phone.replace(/\D/g, '');
+
+    console.log('[SEND-OTP] Request details:', {
+      user_id: user.id,
+      phone_original: phone,
+      phone_sanitized: sanitizedPhone
+    });
 
     // Check if phone number is already used by another account
     const serviceClient = createClient(
@@ -247,6 +255,7 @@ app.post("/send-otp", async (c) => {
       .maybeSingle();
 
     if (existingPhone) {
+      console.log('[SEND-OTP] Phone already registered to another user');
       return c.json({ 
         success: false, 
         error: "This phone number is already registered to another account" 
@@ -257,29 +266,37 @@ app.post("/send-otp", async (c) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Store OTP in database
-    const serviceClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    console.log('[SEND-OTP] Generated OTP:', {
+      otp_preview: otp.substring(0, 2) + '****',
+      expires_at: expiresAt.toISOString()
+    });
 
-    const { error: otpError } = await serviceClient
+    // Store OTP in database
+    const { error: otpError, data: otpData } = await serviceClient
       .from('phone_verification_otps')
       .insert({
         user_id: user.id,
         phone_number: sanitizedPhone,
         otp_code: otp,
         expires_at: expiresAt.toISOString()
-      });
+      })
+      .select()
+      .single();
 
     if (otpError) {
-      console.error('Failed to store OTP:', otpError);
+      console.error('[SEND-OTP] Failed to store OTP:', otpError);
       return c.json({ success: false, error: "Failed to generate OTP" }, 500);
     }
 
+    console.log('[SEND-OTP] OTP stored successfully:', {
+      otp_id: otpData.id,
+      user_id: user.id,
+      phone_sanitized: sanitizedPhone
+    });
+
     // TODO: Integrate with SMS provider to actually send SMS
     // For now, we'll just log it (in production, send actual SMS)
-    console.log(`[DEV] OTP for ${sanitizedPhone}: ${otp}`);
+    console.log(`[SEND-OTP] [DEV] OTP for ${sanitizedPhone}: ${otp}`);
 
     // In production, you would call your SMS provider here:
     // await sendSMS(sanitizedPhone, `Your verification code is: ${otp}`);
@@ -292,7 +309,7 @@ app.post("/send-otp", async (c) => {
       _dev_otp: otp 
     });
   } catch (error: any) {
-    console.error("Send OTP error:", error);
+    console.error("[SEND-OTP] Error:", error);
     return c.json({ success: false, error: error.message || "Failed to send OTP" }, 500);
   }
 });
@@ -303,17 +320,27 @@ app.post("/verify-phone", async (c) => {
     const { user, supabase } = await getAuthUser(c);
     
     if (!user) {
+      console.log('[VERIFY-PHONE] Unauthorized - no user');
       return c.json({ success: false, error: "Unauthorized" }, 401);
     }
 
     const { phone, otp } = await c.req.json();
 
     if (!phone || !otp) {
+      console.log('[VERIFY-PHONE] Missing required fields:', { hasPhone: !!phone, hasOTP: !!otp });
       return c.json({ success: false, error: "Phone number and OTP are required" }, 400);
     }
 
     // Sanitize phone number
     const sanitizedPhone = phone.replace(/\D/g, '');
+
+    console.log('[VERIFY-PHONE] Request details:', {
+      user_id: user.id,
+      phone_original: phone,
+      phone_sanitized: sanitizedPhone,
+      otp_length: otp.length,
+      otp_preview: otp?.substring(0, 2) + '****'
+    });
 
     // Get the latest unused OTP for this user and phone
     const serviceClient = createClient(
@@ -321,29 +348,73 @@ app.post("/verify-phone", async (c) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: otpRecord, error: fetchError } = await serviceClient
+    // First, get ALL OTPs for this user/phone to provide better error messages
+    const { data: allOTPs, error: allError } = await serviceClient
       .from('phone_verification_otps')
       .select('*')
       .eq('user_id', user.id)
       .eq('phone_number', sanitizedPhone)
-      .eq('used', false)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .order('created_at', { ascending: false });
 
-    if (fetchError || !otpRecord) {
-      return c.json({ success: false, error: "No OTP found. Please request a new one." }, 404);
+    console.log('[VERIFY-PHONE] All OTPs query result:', {
+      found_count: allOTPs?.length || 0,
+      error: allError?.message,
+      records: allOTPs?.map(r => ({
+        id: r.id,
+        created_at: r.created_at,
+        expires_at: r.expires_at,
+        used: r.used,
+        attempts: r.attempts
+      }))
+    });
+
+    if (!allOTPs || allOTPs.length === 0) {
+      console.error('[VERIFY-PHONE] No OTP records found in database');
+      return c.json({ 
+        success: false, 
+        error: "No verification code found. Please click 'Send Code' first.",
+        hint: "Make sure you've requested a code before trying to verify."
+      }, 404);
     }
 
-    // Check if OTP expired
-    if (new Date(otpRecord.expires_at) < new Date()) {
-      return c.json({ success: false, error: "OTP has expired. Please request a new one." }, 410);
+    // Find the most recent valid OTP
+    const validOTP = allOTPs.find(otp => 
+      !otp.used && 
+      new Date(otp.expires_at) > new Date() &&
+      otp.attempts < 5
+    );
+
+    if (!validOTP) {
+      const latestOTP = allOTPs[0];
+      console.log('[VERIFY-PHONE] No valid OTP found, latest OTP state:', {
+        id: latestOTP.id,
+        used: latestOTP.used,
+        expired: new Date(latestOTP.expires_at) < new Date(),
+        attempts: latestOTP.attempts,
+        expires_at: latestOTP.expires_at
+      });
+
+      if (latestOTP.used) {
+        return c.json({ 
+          success: false, 
+          error: "This code has already been used. Please request a new one." 
+        }, 400);
+      }
+      if (new Date(latestOTP.expires_at) < new Date()) {
+        return c.json({ 
+          success: false, 
+          error: "Your code has expired (codes expire after 5 minutes). Please request a new one." 
+        }, 410);
+      }
+      if (latestOTP.attempts >= 5) {
+        return c.json({ 
+          success: false, 
+          error: "Too many incorrect attempts. Please request a new code." 
+        }, 429);
+      }
     }
 
-    // Check attempts
-    if (otpRecord.attempts >= 5) {
-      return c.json({ success: false, error: "Too many attempts. Please request a new OTP." }, 429);
-    }
+    const otpRecord = validOTP;
 
     // Increment attempts
     await serviceClient
@@ -353,8 +424,19 @@ app.post("/verify-phone", async (c) => {
 
     // Verify OTP
     if (otpRecord.otp_code !== otp) {
-      return c.json({ success: false, error: "Invalid OTP code" }, 400);
+      console.log('[VERIFY-PHONE] OTP mismatch:', {
+        expected_preview: otpRecord.otp_code.substring(0, 2) + '****',
+        received_preview: otp.substring(0, 2) + '****',
+        attempts_used: otpRecord.attempts + 1
+      });
+      return c.json({ 
+        success: false, 
+        error: "Invalid code. Please check and try again.",
+        remaining_attempts: 5 - (otpRecord.attempts + 1)
+      }, 400);
     }
+
+    console.log('[VERIFY-PHONE] OTP matched successfully');
 
     // Mark OTP as used
     await serviceClient
@@ -373,7 +455,7 @@ app.post("/verify-phone", async (c) => {
       .eq('user_id', user.id);
 
     if (profileError) {
-      console.error('Failed to update profile:', profileError);
+      console.error('[VERIFY-PHONE] Failed to update profile:', profileError);
       return c.json({ success: false, error: "Failed to verify phone" }, 500);
     }
 
@@ -384,13 +466,15 @@ app.post("/verify-phone", async (c) => {
       meta: { phone_hash: sanitizedPhone.slice(-4) }
     });
 
+    console.log('[VERIFY-PHONE] Success - phone verified for user:', user.id);
+
     return c.json({ 
       success: true,
       message: "Phone verified successfully"
     });
   } catch (error: any) {
-    console.error("Verify OTP error:", error);
-    return c.json({ success: false, error: error.message || "Failed to verify OTP" }, 500);
+    console.error("[VERIFY-PHONE] Error:", error);
+    return c.json({ success: false, error: error.message || "Failed to verify phone" }, 500);
   }
 });
 
