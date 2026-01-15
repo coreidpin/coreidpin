@@ -7,6 +7,7 @@ import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { CompanyLogo } from './shared/CompanyLogo';
+import { Logo } from './Logo';
 import { 
   Shield, 
   Briefcase, 
@@ -35,6 +36,7 @@ import { TopTalentBadge } from './ui/TopTalentBadge';
 import { ActivityTracker } from '../utils/activityTracker';
 import { trackProfileView } from '../utils/demandAnalytics';
 import type { AvailabilityStatus, WorkPreference } from '../types/availability';
+import type { CaseStudy as PortfolioCaseStudy } from '../types/portfolio';
 import { ContactModal } from './public/ContactModal';
 import { AVAILABILITY_LABELS, WORK_PREFERENCE_LABELS } from '../types/availability';
 import { FeaturedSection, TechStackManager, CaseStudyList } from './portfolio';
@@ -58,6 +60,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
   const [profile, setProfile] = useState<any>(null);
   const [workExperiences, setWorkExperiences] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCaseStudy, setSelectedCaseStudy] = useState<PortfolioCaseStudy | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [networkModalOpen, setNetworkModalOpen] = useState(false);
@@ -248,11 +251,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                           </div>
                           {/* CoreIDPin Logo Badge - LinkedIn style */}
                           <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                            <img 
-                              src="/logos/gidipin-logo-color.svg" 
-                              alt="CoreIDPin" 
-                              className="h-3 w-auto sm:h-4"
-                            />
+                            <Logo size="sm" isLight showText={false} />
                           </div>
                         </div>
 
@@ -569,6 +568,7 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
                     <CaseStudyList
                       userId={profile.user_id}
                       editable={false}
+                      onEditClick={setSelectedCaseStudy}
                     />
                   </CardContent>
                 </Card>
@@ -690,6 +690,94 @@ export default function PublicPINPage({ pinNumber }: PublicPINPageProps) {
           </div>
         </div>
       </div>
+        
+      {/* Case Study Viewer Modal */}
+      <Dialog open={!!selectedCaseStudy} onOpenChange={() => setSelectedCaseStudy(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          {selectedCaseStudy && (
+            <div className="space-y-6">
+              {selectedCaseStudy.coverImage && (
+                <div className="w-full h-64 overflow-hidden rounded-xl">
+                  <img
+                    src={selectedCaseStudy.coverImage}
+                    alt={selectedCaseStudy.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedCaseStudy.title}</h2>
+                <div className="text-gray-600 text-sm flex flex-wrap gap-3">
+                  {selectedCaseStudy.client && <span>{selectedCaseStudy.client}</span>}
+                  {selectedCaseStudy.year && <span>{selectedCaseStudy.year}</span>}
+                  {selectedCaseStudy.role && <span>{selectedCaseStudy.role}</span>}
+                </div>
+                {selectedCaseStudy.tags && selectedCaseStudy.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedCaseStudy.tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                {selectedCaseStudy.problem && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">Problem</h3>
+                    <p className="text-gray-700 whitespace-pre-line">
+                      {selectedCaseStudy.problem.statement}
+                    </p>
+                    {selectedCaseStudy.problem.context && (
+                      <p className="text-gray-700 whitespace-pre-line">
+                        {selectedCaseStudy.problem.context}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {selectedCaseStudy.process && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">Process</h3>
+                    {selectedCaseStudy.process.research && (
+                      <p className="text-gray-700 whitespace-pre-line">
+                        {selectedCaseStudy.process.research}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {selectedCaseStudy.solution && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">Solution</h3>
+                    {selectedCaseStudy.solution.finalDesigns &&
+                      selectedCaseStudy.solution.finalDesigns.length > 0 &&
+                      selectedCaseStudy.solution.finalDesigns[0].caption && (
+                        <p className="text-gray-700 whitespace-pre-line">
+                          {selectedCaseStudy.solution.finalDesigns[0].caption}
+                        </p>
+                      )}
+                  </div>
+                )}
+                {selectedCaseStudy.impact && selectedCaseStudy.impact.metrics && selectedCaseStudy.impact.metrics.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-900">Impact</h3>
+                    <ul className="space-y-1 text-gray-700">
+                      {selectedCaseStudy.impact.metrics.map(metric => (
+                        <li key={metric.label}>
+                          <span className="font-medium">{metric.label}:</span> {metric.value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* QR Code Modal */}
       <Dialog open={showQR} onOpenChange={setShowQR}>

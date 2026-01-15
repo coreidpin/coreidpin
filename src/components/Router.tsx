@@ -283,8 +283,7 @@ const DashboardAuthWrapper: React.FC<{
   userType: string;
   onLogout: () => void;
   currentPage?: string;
-  theme?: 'dark' | 'light';
-}> = ({ children, isAuthenticated, userType, onLogout, currentPage = 'dashboard', theme = 'dark' }) => {
+}> = ({ children, isAuthenticated, userType, onLogout, currentPage = 'dashboard' }) => {
   const [authChecked, setAuthChecked] = React.useState(false);
   const [isValidAuth, setIsValidAuth] = React.useState(false);
 
@@ -353,7 +352,7 @@ const DashboardAuthWrapper: React.FC<{
     return <Navigate to="/login" replace />;
   }
 
-  const isWhitePage = currentPage === 'developer' || theme === 'light';
+  const isWhitePage = currentPage === 'developer';
   
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: isWhitePage ? '#ffffff' : '#0a0b0d', color: isWhitePage ? '#0f172a' : '#ffffff' }}>
@@ -801,7 +800,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/dashboard" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} theme="light">
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 {userType === 'business' ? <Navigate to="/developer" replace /> :
                  userType === 'employer' ? <Navigate to="/employers" replace /> :

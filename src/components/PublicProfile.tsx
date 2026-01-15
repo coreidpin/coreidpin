@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Shield, Phone, Mail, Briefcase, MapPin, Calendar,
   CheckCircle2, ExternalLink, Globe, FolderOpen,
   Linkedin, Twitter, Github, Instagram, Facebook, Youtube,
-  ArrowLeft
+  ArrowLeft, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 import { supabase } from '../utils/supabase/client';
 import { Card, CardContent } from './ui/card';
@@ -33,6 +35,8 @@ export const PublicProfile: React.FC = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (slug) {
@@ -115,6 +119,40 @@ export const PublicProfile: React.FC = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!profileRef.current || !profile) return;
+    setDownloading(true);
+    try {
+      const element = profileRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#0a0b0d'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+      const fileNameBase = profile.name ? profile.name.replace(/\s+/g, '_') : 'Professional';
+      pdf.save(`${fileNameBase}_GidiPIN_Profile.pdf`);
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate profile PDF');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center">
@@ -148,7 +186,7 @@ export const PublicProfile: React.FC = () => {
         Back
       </Button>
 
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container mx-auto px-4 max-w-4xl" ref={profileRef}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -203,7 +241,7 @@ export const PublicProfile: React.FC = () => {
                   <p className="text-xl text-white/90 font-medium">{profile.role}</p>
 
                   <div className="pt-4 pb-2">
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-wrap justify-center">
                       <Button 
                         onClick={() => {
                           console.log('Contact Me clicked! Setting showContactModal to true');
@@ -214,7 +252,7 @@ export const PublicProfile: React.FC = () => {
                         <Mail className="mr-2 h-5 w-5" />
                         Contact Me
                       </Button>
-                      
+
                       {profile.booking_url && (
                         <Button 
                           onClick={() => window.open(profile.booking_url, '_blank')}
@@ -224,6 +262,16 @@ export const PublicProfile: React.FC = () => {
                           Book Call
                         </Button>
                       )}
+
+                      <Button
+                        onClick={handleDownloadPDF}
+                        disabled={downloading}
+                        variant="outline"
+                        className="border-white/40 text-white hover:bg-white/10 font-semibold px-8 py-6 rounded-full text-lg"
+                      >
+                        <Download className="mr-2 h-5 w-5" />
+                        {downloading ? 'Preparing PDF...' : 'Download Profile PDF'}
+                      </Button>
                     </div>
                   </div>
 

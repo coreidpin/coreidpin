@@ -10,7 +10,14 @@ interface LogoProps {
   style?: React.CSSProperties;
 }
 
-export function Logo({ size = 'md', className = '', showText = true, onClick, isLight = false, style = {} }: LogoProps) {
+export function Logo({
+  size = 'md',
+  className = '',
+  showText = true,
+  onClick,
+  isLight = false,
+  style = {}
+}: LogoProps) {
   const sizes = {
     sm: { icon: 'h-8 w-auto', text: 'text-lg' },
     md: { icon: 'h-10 w-auto', text: 'text-xl' },
@@ -23,21 +30,18 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
     }
   };
 
-  // Dynamic logo source based on background brightness (isLight)
-  // isLight = true (Light background) -> Use Dark Logo
-  // isLight = false (Dark background) -> Use Light Logo
-  const logoSrc = isLight 
-    ? '/logos/gidipin-logo-dark.svg' 
+  const logoSrc = isLight
+    ? '/logos/gidipin-logo-dark.svg'
     : '/logos/gidipin-logo-light.svg';
 
   return (
-    <div 
+    <div
       className={`flex items-center gap-2 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={handleClick}
       style={style}
     >
       <motion.img
-        key={logoSrc} // Ensure re-render on source change
+        key={logoSrc}
         src={logoSrc}
         alt="GidiPIN logo"
         className={`${sizes[size].icon} object-contain`}
@@ -48,18 +52,17 @@ export function Logo({ size = 'md', className = '', showText = true, onClick, is
         draggable="false"
         onError={(e) => {
           const el = e.currentTarget as HTMLImageElement;
-          // Fallback to PNGs if SVGs fail
           if (el.src.includes('gidipin-logo-dark.svg')) {
             el.src = '/logos/gidipin-logo-dark.png';
           } else if (el.src.includes('gidipin-logo-light.svg')) {
             el.src = '/logos/gidipin-logo-light.png';
           } else {
-             console.warn('Logo failed to load:', el.src);
+            console.warn('Logo failed to load:', el.src);
           }
         }}
       />
       {showText && (
-        <motion.span 
+        <motion.span
           className={`font-bold ${sizes[size].text}`}
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
