@@ -134,7 +134,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   className="text-base sm:text-lg md:text-xl mb-6 sm:mb-7 md:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
                   style={{ color: 'rgba(10,11,13,0.70)' }}
                 >
-                  Gidi-PIN turns your phone number into a secure, universal Professional Identity Number (PIN). One identity, recognized across companies, platforms, and borders — powered by enterprise-grade infrastructure.
+                  Transform your phone number into a secure, universal Professional Identity Number. A verified career passport that travels with you—proving your skills and history across platforms, instantly.
                 </motion.p>
 
                 {/* CTAs */}

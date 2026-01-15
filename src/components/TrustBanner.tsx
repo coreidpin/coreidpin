@@ -25,8 +25,8 @@ const metrics: Metric[] = [
 ];
 
 export function TrustBanner({
-  title = 'What you see on your dashboard',
-  description = 'Unlock a trusted, universal identity layer powered by PIN — enabling professionals, employers, and platforms to verify and connect instantly across borders.',
+  title = 'Global Scale, Instant Trust',
+  description = 'Your phone number, upgraded. A universal, fraud-proof identity layer that validates your professional history instantly—eliminating paperwork and unlocking global trust.',
   className = '',
 }: TrustBannerProps) {
   const containerRef = useRef(null);
@@ -56,10 +56,18 @@ export function TrustBanner({
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6 }}
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-[#32f08c]"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#32f08c]"></span>
+              </span>
+              <span className="text-xs font-bold tracking-widest text-white uppercase">Live Network Active</span>
+            </div>
+            
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
               {title}
             </h2>
-            <p className="text-lg text-white/90 leading-relaxed font-light">
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto font-normal">
               {description}
             </p>
           </motion.div>
@@ -75,7 +83,7 @@ export function TrustBanner({
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
               className="group relative"
             >
-              <div className="h-full rounded-3xl p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-[#32f08c]/30 hover:bg-white/[0.05] transition-all duration-300">
+              <div className="h-full rounded-3xl p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-[#32f08c]/30 hover:bg-white/[0.05] transition-all duration-300 shadow-2xl hover:shadow-[#32f08c]/10">
                 {/* Decorative glow on hover */}
                 <div 
                   className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500"
@@ -83,40 +91,33 @@ export function TrustBanner({
                 />
                 
                 <div className="relative z-10">
-                  <div className="flex items-center gap-4 mb-8">
+                  <div className="flex items-center justify-between mb-8">
                     <div 
                       className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 sm:group-hover:scale-110"
                       style={{ backgroundColor: `${metric.color}15`, border: `1px solid ${metric.color}30` }}
                     >
                       <metric.icon className="h-6 w-6" style={{ color: metric.color }} />
                     </div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
-                      {metric.label}
-                    </div>
                   </div>
 
-                  <div className="text-5xl font-bold text-white tracking-tighter tabular-nums flex items-baseline gap-1">
+                  <div className="text-5xl font-bold text-white tracking-tighter tabular-nums flex items-baseline gap-1 mb-4">
                     {isInView ? (
-                      <CountUp
-                        end={metric.value}
-                        decimals={metric.value % 1 !== 0 ? 1 : 0}
-                        duration={2.5}
-                        separator=","
-                      />
+                      <span className="text-white">
+                        <CountUp
+                          end={metric.value}
+                          decimals={metric.value % 1 !== 0 ? 1 : 0}
+                          duration={2.5}
+                          separator=","
+                        />
+                      </span>
                     ) : (
-                      <span>0</span>
+                      <span className="text-white">0</span>
                     )}
-                    <span className="text-[#32f08c] font-medium">{metric.suffix}</span>
+                    <span className="text-[#32f08c] font-medium ml-1">{metric.suffix}</span>
                   </div>
 
-                  <div className="mt-10 flex items-center gap-2.5">
-                    <div className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: metric.color }}></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: metric.color }}></span>
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 group-hover:text-white/90 transition-colors">
-                      Live Network Active
-                    </span>
+                  <div className="text-sm font-bold uppercase tracking-wider text-white/80 group-hover:text-white transition-colors">
+                    {metric.label}
                   </div>
                 </div>
               </div>

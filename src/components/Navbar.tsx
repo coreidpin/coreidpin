@@ -19,9 +19,7 @@ import {
   LogIn,
   User,
   Loader2,
-  Users,
-  Moon,
-  Sun
+  Users
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
 
@@ -32,8 +30,6 @@ interface NavbarProps {
   onLogout?: () => void;
   isAuthenticated?: boolean;
   userType?: string;
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
 }
 
 export function Navbar({ 
@@ -42,9 +38,7 @@ export function Navbar({
   onLogin, 
   onLogout, 
   isAuthenticated = false,
-  userType,
-  theme,
-  onToggleTheme
+  userType
 }: NavbarProps) {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -53,7 +47,7 @@ export function Navbar({
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const isLight = theme ? theme === 'light' : currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
+  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
   const isProd = import.meta.env.PROD;
 
   useEffect(() => {
@@ -357,25 +351,6 @@ export function Navbar({
             ) : (
               <>
                 <NotificationBell />
-                {onToggleTheme && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onToggleTheme}
-                    className={cn(
-                      "h-9 w-9 rounded-full border",
-                      (theme ? theme === 'light' : isLight)
-                        ? "bg-transparent text-slate-900 border-slate-200 hover:bg-slate-100"
-                        : "bg-[#0a0b0d] text-white border-white/20 hover:bg-white/10"
-                    )}
-                  >
-                    {(theme ? theme === 'light' : isLight) ? (
-                      <Moon className="h-4 w-4" />
-                    ) : (
-                      <Sun className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
                 <Button 
                   variant="default" 
                   size="sm"

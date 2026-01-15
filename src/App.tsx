@@ -21,7 +21,6 @@ import { initAmplitude, identifyUser, resetAmplitude, trackEvent } from './utils
 import { sessionManager } from './utils/session-manager';
 
 type UserType = 'landing' | 'employer' | 'professional' | 'university' | 'business' | 'admin';
-type Theme = 'light' | 'dark';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<UserType>('professional');
@@ -41,34 +40,6 @@ export default function App() {
   const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [passwordRecoveryEmail, setPasswordRecoveryEmail] = useState<string | null>(null);
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'light';
-    try {
-      const stored = localStorage.getItem('theme');
-      if (stored === 'light' || stored === 'dark') return stored;
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return prefersDark ? 'dark' : 'light';
-    } catch {
-      return 'light';
-    }
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    try {
-      localStorage.setItem('theme', theme);
-    } catch {}
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
 
   // Check for existing session on mount and handle OAuth callback
   useEffect(() => {
@@ -585,8 +556,6 @@ export default function App() {
         onLoginSuccess={handleLoginSuccess}
         onLogout={handleLogout}
         onOnboardingComplete={handleOnboardingComplete}
-        theme={theme}
-        onToggleTheme={toggleTheme}
       />
       
       {/* Global Dialogs */}

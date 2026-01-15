@@ -147,8 +147,6 @@ interface RouterProps {
   onLoginSuccess: (userType: 'employer' | 'professional' | 'university', userData: any) => void;
   onLogout: () => void;
   onOnboardingComplete: () => void;
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
 }
 
 // Protected Route Component
@@ -285,9 +283,7 @@ const DashboardAuthWrapper: React.FC<{
   userType: string;
   onLogout: () => void;
   currentPage?: string;
-  theme?: 'dark' | 'light';
-  onToggleTheme?: () => void;
-}> = ({ children, isAuthenticated, userType, onLogout, currentPage = 'dashboard', theme = 'dark', onToggleTheme }) => {
+}> = ({ children, isAuthenticated, userType, onLogout, currentPage = 'dashboard' }) => {
   const [authChecked, setAuthChecked] = React.useState(false);
   const [isValidAuth, setIsValidAuth] = React.useState(false);
 
@@ -341,8 +337,6 @@ const DashboardAuthWrapper: React.FC<{
           onLogout={onLogout}
           isAuthenticated={isAuthenticated}
           userType={userType}
-          theme={theme === 'light' ? 'light' : 'dark'}
-          onToggleTheme={onToggleTheme}
         />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
@@ -358,7 +352,7 @@ const DashboardAuthWrapper: React.FC<{
     return <Navigate to="/login" replace />;
   }
 
-  const isWhitePage = currentPage === 'developer' || theme === 'light';
+  const isWhitePage = currentPage === 'developer';
   
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: isWhitePage ? '#ffffff' : '#0a0b0d', color: isWhitePage ? '#0f172a' : '#ffffff' }}>
@@ -368,8 +362,6 @@ const DashboardAuthWrapper: React.FC<{
         onLogout={onLogout}
         isAuthenticated={isAuthenticated}
         userType={userType}
-        theme={theme === 'light' ? 'light' : 'dark'}
-        onToggleTheme={onToggleTheme}
       />
       <main className="flex-1 container mx-auto px-4 py-6 sm:py-8 pt-20 sm:pt-24">
         <motion.div
@@ -391,9 +383,7 @@ export const AppRouter: React.FC<RouterProps> = ({
   onLogin,
   onLoginSuccess,
   onLogout,
-  onOnboardingComplete,
-  theme,
-  onToggleTheme
+  onOnboardingComplete
 }) => {
   void userData;
   void onOnboardingComplete;
@@ -810,7 +800,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/dashboard" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 {userType === 'business' ? <Navigate to="/developer" replace /> :
                  userType === 'employer' ? <Navigate to="/employers" replace /> :
@@ -823,7 +813,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/developer" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} currentPage="developer" theme={theme} onToggleTheme={onToggleTheme}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} currentPage="developer">
               <Suspense fallback={<DashboardSkeleton />}>
                 <DeveloperConsole />
               </Suspense>
@@ -834,7 +824,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/identity-management" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 <IdentityManagementPage />
               </Suspense>
@@ -845,7 +835,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/card" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 <IdentityCard />
               </Suspense>
@@ -856,7 +846,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/security" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 <SecuritySettingsPage />
               </Suspense>
@@ -867,7 +857,7 @@ export const AppRouter: React.FC<RouterProps> = ({
         <Route 
           path="/referrals" 
           element={
-            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout} theme={theme} onToggleTheme={onToggleTheme}>
+            <DashboardAuthWrapper isAuthenticated={isAuthenticated} userType={userType} onLogout={onLogout}>
               <Suspense fallback={<DashboardSkeleton />}>
                 <ReferralDashboard />
               </Suspense>
