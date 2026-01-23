@@ -43,8 +43,11 @@ export interface DashboardStats {
 }
 
 export interface ActivityNotification {
+  id?: string;
   text: string;
-  type: 'verification' | 'api' | 'view' | string;
+  type: 'verification' | 'api' | 'view' | 'endorsement' | 'pin_scan' | 'update' | string;
+  timestamp?: string; // ISO string
+  meta?: any;
 }
 
 export interface ChartDataPoint {

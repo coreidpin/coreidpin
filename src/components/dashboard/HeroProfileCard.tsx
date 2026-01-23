@@ -3,9 +3,8 @@ import { MapPin, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '../ui/badge';
 import { BetaBadge } from '../ui/BetaBadge';
-import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
-import { gradients, glassMorphism } from '../../styles/shadows';
-
+// ✅ NEW: Using centralized design system
+import { colors, typography, spacing, borderRadius, shadows, gradients } from '../../styles/designSystem';
 
 interface HeroProfileCardProps {
   name: string;
@@ -71,7 +70,7 @@ export function HeroProfileCard({
           <h1
             className="text-white"
             style={{
-              fontSize: typography.fontSize['3xl'],
+              fontSize: typography.fontSize['3xl'][0],  // Extract string from tuple
               fontWeight: typography.fontWeight.bold,
               lineHeight: typography.lineHeight.tight,
             }}
@@ -81,8 +80,10 @@ export function HeroProfileCard({
 
           <div className="flex flex-wrap items-center gap-2 text-white">
             <div className="flex items-center gap-1.5">
-              <Briefcase className="h-4 w-4 text-white" />
-              <span style={{ fontSize: typography.fontSize.sm, color: '#ffffff' }}>
+              <Briefcase className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-400" style={{
+                fontSize: typography.fontSize.sm[0]  // Extract string from tuple
+              }}>
                 {role}
               </span>
             </div>
@@ -90,25 +91,20 @@ export function HeroProfileCard({
             <span className="text-white">•</span>
 
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-white" />
-              <span style={{ fontSize: typography.fontSize.sm, color: '#ffffff' }}>
+              <MapPin className="h-4 w-4 text-gray-400" />
+              <span className="text-sm text-gray-400" style={{
+                fontSize: typography.fontSize.sm[0]  // Extract string from tuple
+              }}>
                 {country}
               </span>
             </div>
 
             {isVerified && (
-              <>
-                <span className="text-white/50">•</span>
-                <Badge
-                  className="bg-white/20 text-white border-white/30 hover:bg-white/20"
-                  style={{
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.medium,
-                  }}
-                >
-                  ✓ Verified
-                </Badge>
-              </>
+              <Badge variant="secondary" style={{
+                fontSize: typography.fontSize.xs[0]  // Extract string from tuple
+              }}>
+                ✓ Verified
+              </Badge>
             )}
           </div>
         </div>

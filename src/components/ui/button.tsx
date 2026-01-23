@@ -4,6 +4,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "./utils";
 
+// ✅ Design System: Centralized colors
+import { colors } from "../../styles/designSystem";
+
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold tracking-wide transition-all duration-300 hover:scale-[1.02] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
   {
@@ -59,16 +62,29 @@ const Button = React.forwardRef<
     switch (variant) {
       case 'default':
       case 'destructive':
-        return { ...baseStyle, color: '#ffffff', backgroundColor: variant === 'default' ? '#000000' : '#dc2626' };
+        return { 
+          ...baseStyle, 
+          color: colors.white, 
+          backgroundColor: variant === 'default' ? colors.black : colors.semantic.error 
+        };
       case 'outline':
-        return { ...baseStyle, color: '#000000', backgroundColor: '#ffffff', borderColor: '#000000' };
+        return { 
+          ...baseStyle, 
+          color: colors.black, 
+          backgroundColor: colors.white, 
+          borderColor: colors.black 
+        };
       case 'secondary':
-        return { ...baseStyle, color: '#111827', backgroundColor: '#f3f4f6' };
+        return { 
+          ...baseStyle, 
+          color: colors.neutral[900], 
+          backgroundColor: colors.neutral[100] 
+        };
       case 'ghost':
       case 'link':
-        return { ...baseStyle, color: '#111827' };
+        return { ...baseStyle, color: colors.neutral[900] };
       default:
-        return { ...baseStyle, color: '#ffffff', backgroundColor: '#000000' };
+        return { ...baseStyle, color: colors.white, backgroundColor: colors.black };
     }
   };
 

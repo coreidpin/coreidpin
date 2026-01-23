@@ -12,6 +12,9 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 
+// ✅ Design System: Centralized design tokens
+import { colors, typography, spacing, borderRadius, shadows } from '../styles/designSystem';
+
 import { 
   Phone, 
   Eye, 
@@ -56,6 +59,7 @@ import { PINGenerationCard } from './dashboard/PINGenerationCard';
 import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { ActivityChart } from './dashboard/ActivityChart';
 import { ActivityFeed } from './dashboard/ActivityFeed';
+import { QuickStats } from './dashboard/QuickStats';
 import { QuickActions } from './dashboard/QuickActions';
 import { CaseStudyForm } from './dashboard/CaseStudyForm';
 import { MarketValueCard } from './dashboard/MarketValueCard';
@@ -106,7 +110,6 @@ import { addTechSkill, updateTechSkill, getTechStack } from '../utils/tech-stack
 import { createCaseStudy } from '../utils/case-study-api';
 import { createProject } from '../utils/project-api';
 import { PortfolioExporter } from '../utils/portfolio-export';
-import { QuickStats } from './dashboard/QuickStats';
 import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
 import { getDemandMetrics, getGeographicPings, getIndustryTrends } from '../utils/demandAnalytics';
 
@@ -227,6 +230,9 @@ export function ProfessionalDashboard() {
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info' | 'warning'; message: string }>>([]);
   const [realTimeNotifications, setRealTimeNotifications] = useState<Array<any>>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
+  
+
+
   
   // Stats state - now fetched from API
   const [stats, setStats] = useState({
@@ -367,6 +373,8 @@ export function ProfessionalDashboard() {
     
     fetchHeatmap();
   }, [userId]);
+
+
 
   // Prepare searchable data
   React.useEffect(() => {
@@ -1774,8 +1782,8 @@ export function ProfessionalDashboard() {
                 value="overview"
                 className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
                 style={{
-                  color: activeTab === 'overview' ? '#ffffff' : '#64748b',
-                  backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
+                  color: activeTab === 'overview' ? colors.white : colors.neutral[500],
+                  backgroundColor: activeTab === 'overview' ? colors.black : 'transparent',
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
                   flex: '0 0 auto'
@@ -1787,8 +1795,8 @@ export function ProfessionalDashboard() {
                 value="projects"
                 className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
                 style={{
-                  color: activeTab === 'projects' ? '#ffffff' : '#64748b',
-                  backgroundColor: activeTab === 'projects' ? '#000000' : 'transparent',
+                  color: activeTab === 'projects' ? colors.white : colors.neutral[500],
+                  backgroundColor: activeTab === 'projects' ? colors.black : 'transparent',
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
                   flex: '0 0 auto'
@@ -1800,8 +1808,8 @@ export function ProfessionalDashboard() {
                 value="endorsements"
                 className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
                 style={{
-                  color: activeTab === 'endorsements' ? '#ffffff' : '#64748b',
-                  backgroundColor: activeTab === 'endorsements' ? '#000000' : 'transparent',
+                  color: activeTab === 'endorsements' ? colors.white : colors.neutral[500],
+                  backgroundColor: activeTab === 'endorsements' ? colors.black : 'transparent',
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
                   flex: '0 0 auto'
@@ -1813,8 +1821,8 @@ export function ProfessionalDashboard() {
                 value="inquiries"
                 className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
                 style={{
-                  color: activeTab === 'inquiries' ? '#ffffff' : '#64748b',
-                  backgroundColor: activeTab === 'inquiries' ? '#000000' : 'transparent',
+                  color: activeTab === 'inquiries' ? colors.white : colors.neutral[500],
+                  backgroundColor: activeTab === 'inquiries' ? colors.black : 'transparent',
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
                   flex: '0 0 auto'
@@ -1826,8 +1834,8 @@ export function ProfessionalDashboard() {
                 value="analytics"
                 className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
                 style={{
-                  color: activeTab === 'analytics' ? '#ffffff' : '#64748b',
-                  backgroundColor: activeTab === 'analytics' ? '#000000' : 'transparent',
+                  color: activeTab === 'analytics' ? colors.white : colors.neutral[500],
+                  backgroundColor: activeTab === 'analytics' ? colors.black : 'transparent',
                   fontWeight: '600',
                   whiteSpace: 'nowrap',
                   flex: '0 0 auto'
@@ -1894,76 +1902,39 @@ export function ProfessionalDashboard() {
                       </div>
                       
                       {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-                        {statsLoading ? (
-// ... rest of code
-                      Array(8).fill(0).map((_, i) => <StatCardSkeleton key={i} />)
-                    ) : (
-                      [
-                        { key: 'profileViews', label: 'Profile Views', color: 'purple', value: stats.profileViews },
-                        { key: 'pinUsage', label: 'PIN Usage', color: 'green', value: stats.pinUsage },
-                        { key: 'verifications', label: 'Verifications', color: 'blue', value: stats.verifications },
-                        { key: 'apiCalls', label: 'API Calls', color: 'purple', value: stats.apiCalls },
-                        { key: 'countries', label: 'Countries', color: 'purple', value: stats.countries },
-                        { key: 'companies', label: 'Companies', color: 'blue', value: stats.companies },
-                        { key: 'projects', label: 'Projects', color: 'purple', value: stats.projects },
-                        { key: 'endorsements', label: 'Endorsements', color: 'green', value: endorsements.length > 0 ? endorsements.length : stats.endorsements }
-                      ].map((stat, index) => {
-                        const trend = statsTrends[stat.key as keyof typeof statsTrends];
-                        return (
-                          <motion.div
-                            key={stat.key}
-                            initial={reducedMotion ? undefined : { opacity: 0, y: 20 }}
-                            animate={reducedMotion ? undefined : { opacity: 1, y: 0 }}
-                            whileHover={reducedMotion ? undefined : { y: -4, transition: { duration: 0.2 } }}
-                            transition={reducedMotion ? undefined : { delay: index * 0.1, duration: 0.3 }}
-                          >
-                            <Card className="bg-white border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-200 group">
-                              <CardContent className="p-4 md:p-6 text-center relative">
-                                <button
-                                  className="absolute top-2 md:top-3 right-2 md:right-3 opacity-40 hover:opacity-100 transition-opacity"
-                                  title={statTooltips[stat.key as keyof typeof statTooltips]}
-                                >
-                                  <div className="h-4 w-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">i</div>
-                                </button>
-                                <div className={`text-2xl md:text-3xl lg:text-4xl font-bold mb-2 ${stat.color === 'purple' ? 'text-purple-600' : stat.color === 'green' ? 'text-green-600' : 'text-blue-600'}`}>
-                                  {reducedMotion ? (
-                                    stat.value
-                                  ) : (
-                                    <CountUp
-                                      end={stat.value}
-                                      duration={1.5}
-                                      separator=","
-                                      delay={index * 0.1}
-                                    />
-                                  )}
-                                </div>
-                                <div className={`flex items-center justify-center gap-1 text-xs font-medium mb-2 ${
-                                  trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                  {trend.direction === 'up' ? (
-                                    <TrendingUp className="h-3 w-3" />
-                                  ) : (
-                                    <TrendingDown className="h-3 w-3" />
-                                  )}
-                                  <span>{trend.change}%</span>
-                                </div>
-                                <div className="text-xs md:text-sm text-gray-600 font-medium">{stat.label}</div>
-                              </CardContent>
-                            </Card>
-                          </motion.div>
-                        );
-                      })
-                    )}
-                  </div>
+                      {/* Sparkline Enhanced Stats */}
+                      <QuickStats 
+                        stats={{
+                          profileViews: stats.profileViews,
+                          profileViewsChange: statsTrends.profileViews.change,
+                          endorsements: endorsements.length > 0 ? endorsements.length : stats.endorsements,
+                          endorsementsChange: statsTrends.endorsements.change,
+                          pinUsage: stats.pinUsage,
+                          pinUsageChange: statsTrends.pinUsage.change,
+                          verifications: stats.verifications,
+                          verificationsChange: statsTrends.verifications.change
+                        }}
+                      />
+
                   
-                  <motion.div initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} transition={reducedMotion ? undefined : { delay: 0.1 }}>
-                    <ActivityChart 
-                      data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} 
-                      period={activityPeriod} 
-                      onPeriodChange={setActivityPeriod} 
-                    />
-                  </motion.div>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <motion.div 
+                      className="lg:col-span-2"
+                      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} 
+                      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} 
+                      transition={reducedMotion ? undefined : { delay: 0.1 }}
+                    >
+                      <ActivityChart 
+                        data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} 
+                        period={activityPeriod} 
+                        onPeriodChange={setActivityPeriod} 
+                      />
+                    </motion.div>
+                    
+                    <div className="lg:col-span-1">
+                      <ActivityFeed activities={realTimeNotifications} />
+                    </div>
+                  </div>
                     </>
                   )}
                 </TabsContent>

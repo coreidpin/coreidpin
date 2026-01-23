@@ -43,6 +43,7 @@ const PublicPINPage = lazy(() => import('./PublicPINPage'));
 const ConsentPage = lazy(() => import('./ConsentPage').then(m => ({ default: m.ConsentPage })));
 const DeveloperConsole = lazy(() => import('./DeveloperConsole').then(m => ({ default: m.DeveloperConsole })));
 const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
+const DesignSystemShowcase = lazy(() => import('./DesignSystemShowcase').then(m => ({ default: m.DesignSystemShowcase })));
 
 // Legal & Policy Pages
 const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
@@ -829,6 +830,16 @@ export const AppRouter: React.FC<RouterProps> = ({
                 <IdentityManagementPage />
               </Suspense>
             </DashboardAuthWrapper>
+          } 
+        />
+
+        {/* Design System Showcase - View all design tokens */}
+        <Route 
+          path="/design-system" 
+          element={
+            <Suspense fallback={<LoadingSpinner />}>
+              <DesignSystemShowcase />
+            </Suspense>
           } 
         />
 
