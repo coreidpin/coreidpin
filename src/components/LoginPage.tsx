@@ -1,9 +1,10 @@
 // Auth v1.1.0 - Splited layout
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
-import { Loader2, Chrome, Shield } from 'lucide-react';
+import { Loader2, Chrome, Shield, ArrowLeft } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
 import { OTPRequestForm } from '../features/auth/OTPRequestForm';
 import { OTPVerifyForm } from '../features/auth/OTPVerifyForm';
@@ -116,47 +117,72 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout
+      sidebarData={{
+        name: contact || undefined,
+        role: userType === 'business' ? 'Business Account' : 'Professional Identity',
+        pin: step === 'verify_otp' ? 'PIN-VERIFYING' : undefined
+      }}
+    >
       <div className="w-full">
+        {/* Progress Indicator */}
+        <div className="mb-6 flex space-x-1">
+          <div 
+            className="h-1 flex-1 rounded-full transition-all duration-500"
+            style={{ 
+              backgroundColor: '#6366f1' 
+            }}
+          />
+          <div 
+            className="h-1 flex-1 rounded-full transition-all duration-500"
+            style={{ 
+              backgroundColor: step === 'verify_otp' ? '#6366f1' : 'rgba(255,255,255,0.1)' 
+            }}
+          />
+        </div>
         {step === 'request' && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2 text-white">Welcome Back</h1>
-            <p style={{ color: '#94a3b8' }}>Sign in to your global professional identity</p>
+            <p style={{ color: '#9ca3af' }}>Sign in to your global professional identity</p>
           </div>
         )}
 
         {/* User Type Tab-style selector for left-aligned layout */}
         {step === 'request' && (
-          <div className="mb-8 p-1 bg-white/5 rounded-xl border border-white/10 flex">
+          <div className="mb-8 p-1 bg-white/5 rounded-xl border border-white/10 flex relative overflow-hidden">
             <button
+              type="button"
               onClick={() => handleUserTypeChange('professional')}
+              className="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors relative"
               style={{ 
-                flex: 1, 
-                padding: '8px 16px', 
-                borderRadius: '8px', 
-                fontSize: '14px', 
-                fontWeight: 500, 
-                transition: 'all 0.2s',
-                backgroundColor: userType === 'professional' ? 'white' : 'transparent',
-                color: userType === 'professional' ? 'black' : '#94a3b8'
+                color: userType === 'professional' ? 'black' : '#94a3b8',
               }}
             >
-              Professional
+              <span className="relative z-10">Professional</span>
+              {userType === 'professional' && (
+                <motion.div 
+                  layoutId="activeLoginTab"
+                  className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
             </button>
             <button
+              type="button"
               onClick={() => handleUserTypeChange('business')}
+              className="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors relative"
               style={{ 
-                flex: 1, 
-                padding: '8px 16px', 
-                borderRadius: '8px', 
-                fontSize: '14px', 
-                fontWeight: 500, 
-                transition: 'all 0.2s',
-                backgroundColor: userType === 'business' ? 'white' : 'transparent',
-                color: userType === 'business' ? 'black' : '#94a3b8'
+                color: userType === 'business' ? 'black' : '#94a3b8',
               }}
             >
-              Business
+              <span className="relative z-10">Business</span>
+              {userType === 'business' && (
+                <motion.div 
+                  layoutId="activeLoginTab"
+                  className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
             </button>
           </div>
         )}
@@ -168,19 +194,49 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
         )}
 
         {/* Auth Flow Components */}
-        <div className="mb-8">
-          {step === 'request' && (
-            <OTPRequestForm onSuccess={handleOTPRequestSuccess} />
-          )}
-
-          {step === 'verify_otp' && (
-            <OTPVerifyForm 
-              contact={contact} 
-              contactType={contactType} 
-              onSuccess={handleOTPVerifySuccess}
-              onBack={handleBackToRequest}
-            />
-          )}
+        <div className="relative min-h-[350px]">
+          <AnimatePresence mode="wait" initial={false}>
+            {step === 'request' && (
+              <motion.div
+                key="login-request"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <div className="mb-8 font-inherit">
+                  <button 
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 hover:opacity-80 text-sm transition-colors -mt-2 mb-4"
+                    style={{ color: '#9ca3af' }}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back</span>
+                  </button>
+                  <OTPRequestForm onSuccess={handleOTPRequestSuccess} />
+                </div>
+              </motion.div>
+            )}
+  
+            {step === 'verify_otp' && (
+              <motion.div
+                key="login-verify"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <div className="mb-8 font-inherit">
+                  <OTPVerifyForm 
+                    contact={contact} 
+                    contactType={contactType} 
+                    onSuccess={handleOTPVerifySuccess}
+                    onBack={handleBackToRequest}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {step === 'request' && userType !== 'business' && (
@@ -190,7 +246,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
                 <div className="w-full border-t border-white/10" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-2 bg-[#0a0b0d] uppercase tracking-wider" style={{ color: '#64748b' }}>Or continue with</span>
+                <span className="px-2 bg-transparent uppercase tracking-wider" style={{ color: '#94a3b8' }}>Or continue with</span>
               </div>
             </div>
 
@@ -213,7 +269,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
               )}
             </Button>
             
-            <p className="text-center text-[10px] sm:text-xs mt-8 px-4 leading-relaxed" style={{ color: '#64748b' }}>
+            <p className="text-center text-[10px] sm:text-xs mt-8 px-4 leading-relaxed" style={{ color: '#9ca3af' }}>
               By signing in, you agree to our <a href="/terms" className="underline hover:text-white" style={{ color: '#94a3b8' }}>Terms</a> and <a href="/privacy" className="underline hover:text-white" style={{ color: '#94a3b8' }}>Privacy Policy</a>.
             </p>
           </>

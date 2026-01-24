@@ -3,6 +3,9 @@ import { api } from '../../utils/api';
 import { toast } from 'sonner';
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
+import { colors } from '../../styles/designSystem';
 
 interface OTPRequestFormProps {
   onSuccess: (contact: string, contactType: 'phone' | 'email') => void;
@@ -40,12 +43,16 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
       <div className="text-left mb-6">
         <h2 className="text-2xl font-semibold mb-2 text-white">
           Verify Identity
         </h2>
-        <p className="text-sm" style={{ color: '#94a3b8' }}>
+        <p className="text-sm" style={{ color: '#9ca3af' }}>
           We'll send you a one-time code to verify your identity.
         </p>
       </div>
@@ -57,7 +64,7 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
           </TabsTrigger>
           <TabsTrigger 
             value="phone"
-            className="group flex items-center justify-center gap-2"
+            className="group flex items-center justify-center gap-2 cursor-not-allowed"
             onClick={(e) => e.preventDefault()}
             style={{ pointerEvents: 'none', color: '#64748b' }}
           >
@@ -71,23 +78,39 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
         <TabsContent value="email" className="mt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.9)' }}>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#d1d5db' }}>
                 Email Address
               </label>
-              <input
-                type="email"
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full h-11 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all"
+                  required
+                  autoFocus
+                />
+                <AnimatePresence>
+                  {contact.includes('@') && contact.includes('.') && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-indigo-500/20"
+              style={{ backgroundColor: colors.brand.primary[600] }}
             >
               {loading ? (
                 <>
@@ -101,6 +124,6 @@ export const OTPRequestForm: React.FC<OTPRequestFormProps> = ({ onSuccess }) => 
           </form>
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 };

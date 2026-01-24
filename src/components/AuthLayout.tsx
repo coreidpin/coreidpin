@@ -8,9 +8,20 @@ interface AuthLayoutProps {
   title?: string;
   subtitle?: string;
   showSidebar?: boolean;
+  sidebarData?: {
+    name?: string;
+    role?: string;
+    pin?: string;
+  };
 }
 
-export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle, showSidebar = true }) => {
+export const AuthLayout: React.FC<AuthLayoutProps> = ({ 
+  children, 
+  title, 
+  subtitle, 
+  showSidebar = true,
+  sidebarData
+}) => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -54,9 +65,56 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
             padding: '64px'
           }}
         >
-          {/* Ambient Background Glows */}
-          <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', backgroundColor: 'rgba(52, 211, 153, 0.15)', borderRadius: '50%', filter: 'blur(120px)' }} />
-          <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '400px', height: '400px', backgroundColor: 'rgba(59, 130, 246, 0.15)', borderRadius: '50%', filter: 'blur(120px)' }} />
+          {/* Ambient Background Glows & Animated Blobs */}
+          <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '500px', height: '500px', backgroundColor: 'rgba(99, 102, 241, 0.15)', borderRadius: '50%', filter: 'blur(120px)' }} />
+          <div style={{ position: 'absolute', bottom: '-10%', right: '-10%', width: '400px', height: '400px', backgroundColor: 'rgba(52, 211, 153, 0.15)', borderRadius: '50%', filter: 'blur(120px)' }} />
+          
+          <motion.div
+            animate={{
+              x: [0, 20, 0],
+              y: [0, -30, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 12,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            style={{ 
+              position: 'absolute', 
+              top: '20%', 
+              right: '10%', 
+              width: '150px', 
+              height: '150px', 
+              backgroundColor: 'rgba(99, 102, 241, 0.08)', 
+              borderRadius: '50%', 
+              filter: 'blur(60px)',
+              zIndex: 1
+            }} 
+          />
+          <motion.div
+            animate={{
+              x: [0, -40, 0],
+              y: [0, 40, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            style={{ 
+              position: 'absolute', 
+              bottom: '30%', 
+              left: '10%', 
+              width: '200px', 
+              height: '200px', 
+              backgroundColor: 'rgba(52, 211, 153, 0.08)', 
+              borderRadius: '50%', 
+              filter: 'blur(80px)',
+              zIndex: 1
+            }} 
+          />
 
           <div style={{ position: 'relative', zIndex: 10 }}>
             <Logo size="lg" style={{ marginBottom: '48px' }} />
@@ -73,49 +131,104 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
                 Connect your phone number to a trusted professional PIN and unlock instant verification worldwide.
               </p>
 
-              {/* Identity Card Visualization */}
+              {/* Holographic Identity Card Visualization */}
               <motion.div
+                whileHover={{ scale: 1.02, rotateY: 5, rotateX: -2 }}
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.4, duration: 0.8 }}
                 style={{ 
-                  backgroundColor: 'rgba(10, 11, 13, 0.8)',
+                  backgroundColor: 'rgba(20, 21, 23, 0.6)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: '24px',
                   padding: '32px',
-                  border: '1px solid rgba(52, 211, 153, 0.2)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(52, 211, 153, 0.1)',
-                  maxWidth: '300px'
+                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), 0 0 20px rgba(52, 211, 153, 0.1)',
+                  maxWidth: '300px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  perspective: '1000px'
                 }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* Holographic Shine Sweep */}
+                <motion.div
+                  animate={{
+                    x: ['-100%', '200%'],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatDelay: 4,
+                    ease: "easeInOut"
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent)',
+                    transform: 'skewX(-20deg)',
+                    zIndex: 1
+                  }}
+                />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative', zIndex: 2 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ height: '40px', width: '40px', borderRadius: '12px', backgroundColor: 'rgba(52, 211, 153, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(52, 211, 153, 0.2)' }}>
                       <CheckCircle style={{ height: '24px', width: '24px', color: '#34d399' }} />
                     </div>
-                    <div style={{ padding: '4px 12px', borderRadius: '100px', backgroundColor: 'rgba(255,255,255,0.05)', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 'bold', letterSpacing: '0.1em' }}>SECURE</div>
+                    <div style={{ padding: '4px 12px', borderRadius: '100px', backgroundColor: 'rgba(52, 211, 153, 0.1)', fontSize: '10px', color: '#34d399', fontWeight: 'bold', letterSpacing: '0.1em' }}>SECURE</div>
                   </div>
                   <div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '8px' }}>Global Identity PIN</div>
-                    <div style={{ fontSize: '1.75rem', color: 'white', fontWeight: 'bold', fontFamily: 'monospace', letterSpacing: '0.1em' }}>PIN-882-192</div>
+                    <div 
+                      key={sidebarData?.name}
+                      style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '8px' }}
+                    >
+                      {sidebarData?.name || 'Global Identity PIN'}
+                    </div>
+                    <div style={{ fontSize: '1.75rem', color: 'white', fontWeight: 'bold', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                      {sidebarData?.pin || 'PIN-882-192'}
+                    </div>
+                    {sidebarData?.role && (
+                      <div style={{ fontSize: '12px', color: '#34d399', marginTop: '4px', fontWeight: 500 }}>
+                        {sidebarData.role}
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
             </motion.div>
           </div>
 
-          <div style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', gap: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
-              <Users size={16} />
-              <span style={{ fontSize: '0.75rem' }}>128k+ users</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
-              <Globe size={16} />
-              <span style={{ fontSize: '0.75rem' }}>60+ countries</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
-              <Shield size={16} />
-              <span style={{ fontSize: '0.75rem' }}>ISO Verified</span>
+          <div style={{ position: 'relative', zIndex: 10 }}>
+             {/* Trust Ticker */}
+             <div style={{ marginBottom: '24px', overflow: 'hidden', whiteSpace: 'nowrap', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '24px' }}>
+                <motion.div
+                  animate={{ x: [0, -100] }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                  style={{ display: 'flex', gap: '32px', color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                >
+                  <span>Recently Verified: Dr. Sarah Chen</span>
+                  <span>Recently Verified: Marcus Thorne</span>
+                  <span>Recently Verified: Elena Rodriguez</span>
+                  <span>Recently Verified: Dr. Sarah Chen</span>
+                </motion.div>
+             </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                <Users size={16} />
+                <span style={{ fontSize: '0.75rem' }}>128k+ users</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                <Globe size={16} />
+                <span style={{ fontSize: '0.75rem' }}>60+ countries</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                <Shield size={16} />
+                <span style={{ fontSize: '0.75rem' }}>ISO Verified</span>
+              </div>
             </div>
           </div>
         </div>
@@ -130,7 +243,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitl
           alignItems: 'center', 
           justifyContent: 'center', 
           padding: isDesktop ? '64px' : '32px',
-          backgroundColor: '#0a0b0d',
+          background: 'radial-gradient(circle at 50% 50%, #111827 0%, #0a0b0d 100%)',
           overflowY: 'auto'
         }}
       >

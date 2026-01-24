@@ -4,6 +4,7 @@ import { Search, X, Clock, TrendingUp, Folder, Star, Activity } from 'lucide-rea
 import { useSearch } from '../hooks/useSearch';
 import { SearchableItem } from '../utils/searchUtils';
 import { cn } from '../lib/utils';
+import { colors, shadows, typography, borderRadius } from '../styles/designSystem';
 
 interface GlobalSearchProps {
   isOpen: boolean;
@@ -127,8 +128,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             >
               <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                 {/* Search Input */}
-                <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-200">
-                  <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <div className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: colors.neutral[200] }}>
+                  <Search className="h-5 w-5 flex-shrink-0" style={{ color: colors.neutral[400] }} />
                   <input
                     ref={inputRef}
                     type="text"
@@ -136,16 +137,20 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search projects, endorsements, activities..."
                     className="flex-1 outline-none text-base placeholder:text-gray-400"
+                    style={{ color: colors.neutral[900] }}
                   />
                   {query && (
                     <button
                       onClick={() => setQuery('')}
-                      className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                      className="p-1 rounded-md transition-colors"
+                      style={{ backgroundColor: 'transparent' }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[100]}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <X className="h-4 w-4 text-gray-400" />
+                      <X className="h-4 w-4" style={{ color: colors.neutral[400] }} />
                     </button>
                   )}
-                  <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded">
+                  <kbd className="hidden sm:inline-block px-2 py-1 text-xs font-semibold rounded border" style={{ backgroundColor: colors.neutral[100], borderColor: colors.neutral[200], color: colors.neutral[500] }}>
                     ESC
                   </kbd>
                 </div>
@@ -160,13 +165,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   ) : displayItems.length > 0 ? (
                     <div className="py-2">
                       {!query && history.length > 0 && (
-                        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                        <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider flex items-center gap-2" style={{ color: colors.neutral[500] }}>
                           <Clock className="h-3 w-3" />
                           Recent Searches
                         </div>
                       )}
                       {query && results.length > 0 && (
-                        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wider" style={{ color: colors.neutral[500] }}>
                           {results.length} Result{results.length !== 1 ? 's' : ''}
                         </div>
                       )}
@@ -189,26 +194,34 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                               }
                             }}
                             className={cn(
-                              'w-full flex items-start gap-3 px-4 py-3 text-left transition-colors',
-                              selectedIndex === index
-                                ? 'bg-blue-50'
-                                : 'hover:bg-gray-50'
+                              'w-full flex items-start gap-3 px-4 py-3 text-left transition-colors'
                             )}
+                            style={{
+                              backgroundColor: selectedIndex === index ? colors.brand.primary[50] : 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (selectedIndex !== index) e.currentTarget.style.backgroundColor = colors.neutral[50];
+                            }}
+                            onMouseLeave={(e) => {
+                                if (selectedIndex !== index) e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
                           >
                             <div className={cn(
-                              'p-2 rounded-lg flex-shrink-0',
-                              selectedIndex === index
-                                ? 'bg-blue-100 text-blue-600'
-                                : 'bg-gray-100 text-gray-600'
-                            )}>
+                              'p-2 rounded-lg flex-shrink-0'
+                            )}
+                            style={{
+                                backgroundColor: selectedIndex === index ? colors.brand.primary[100] : colors.neutral[100],
+                                color: selectedIndex === index ? colors.brand.primary[600] : colors.neutral[600]
+                            }}
+                            >
                               <Icon className="h-4 w-4" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-gray-900 truncate">
+                              <div className="font-medium truncate" style={{ color: colors.neutral[900] }}>
                                 {item.title}
                               </div>
                               {item.description && (
-                                <div className="text-sm text-gray-500 truncate">
+                                <div className="text-sm truncate" style={{ color: colors.neutral[500] }}>
                                   {item.description}
                                 </div>
                               )}
@@ -217,7 +230,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                                   {item.tags.slice(0, 3).map(tag => (
                                     <span
                                       key={tag}
-                                      className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded"
+                                      className="text-xs px-2 py-0.5 rounded"
+                                      style={{ backgroundColor: colors.neutral[100], color: colors.neutral[600] }}
                                     >
                                       {tag}
                                     </span>
@@ -231,9 +245,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                                   e.stopPropagation();
                                   removeFromHistory(item.title);
                                 }}
-                                className="p-1 opacity-0 group-hover:opacity-100 hover:bg-gray-200 rounded transition-opacity"
+                                className="p-1 opacity-0 group-hover:opacity-100 rounded transition-opacity"
+                                style={{ backgroundColor: 'transparent' }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[200]}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                               >
-                                <X className="h-3 w-3 text-gray-400" />
+                                <X className="h-3 w-3" style={{ color: colors.neutral[400] }} />
                               </button>
                             )}
                           </motion.button>
@@ -242,21 +259,21 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                     </div>
                   ) : query ? (
                     <div className="px-4 py-12 text-center">
-                      <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <Search className="h-8 w-8 text-gray-400" />
+                      <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors.neutral[100] }}>
+                        <Search className="h-8 w-8" style={{ color: colors.neutral[400] }} />
                       </div>
-                      <p className="text-gray-900 font-medium mb-1">No results found</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium mb-1" style={{ color: colors.neutral[900] }}>No results found</p>
+                      <p className="text-sm" style={{ color: colors.neutral[500] }}>
                         Try adjusting your search query
                       </p>
                     </div>
                   ) : (
                     <div className="px-4 py-12 text-center">
-                      <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <TrendingUp className="h-8 w-8 text-gray-400" />
+                      <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: colors.neutral[100] }}>
+                        <TrendingUp className="h-8 w-8" style={{ color: colors.neutral[400] }} />
                       </div>
-                      <p className="text-gray-900 font-medium mb-1">Start typing to search</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium mb-1" style={{ color: colors.neutral[900] }}>Start typing to search</p>
+                      <p className="text-sm" style={{ color: colors.neutral[500] }}>
                         Search across projects, endorsements, and activities
                       </p>
                     </div>
@@ -264,15 +281,15 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
+                <div className="px-4 py-3 border-t flex items-center justify-between text-xs" style={{ backgroundColor: colors.neutral[50], borderColor: colors.neutral[200], color: colors.neutral[500] }}>
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">↑</kbd>
-                      <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">↓</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white border rounded text-xs" style={{ borderColor: colors.neutral[300] }}>↑</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white border rounded text-xs" style={{ borderColor: colors.neutral[300] }}>↓</kbd>
                       to navigate
                     </span>
                     <span className="flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs">↵</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-white border rounded text-xs" style={{ borderColor: colors.neutral[300] }}>↵</kbd>
                       to select
                     </span>
                   </div>

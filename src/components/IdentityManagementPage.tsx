@@ -27,8 +27,7 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { TagInput } from './ui/TagInput';
 import { DynamicListInput } from './ui/DynamicListInput';
-import { colors, typography, spacing, borderRadius } from '../styles/designTokens';
-import { shadows, premiumCardShadow } from '../styles/shadows';
+import { colors, typography, spacing, borderRadius, gradients, shadows } from '../styles/designSystem';
 import { ActivityTracker } from '../utils/activityTracker';
 import type { ProofDocument } from './dashboard/ProofDocumentUpload';
 import { EMPLOYMENT_TYPE_OPTIONS } from '../utils/employmentTypes';
@@ -1355,8 +1354,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           transition={{ duration: 0.5 }}
           className="mb-10 relative overflow-hidden rounded-2xl"
           style={{
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            background: gradients.darkSlate,
+            boxShadow: shadows.xl,
           }}
         >
           {/* Animated gradient overlay */}
@@ -1431,8 +1430,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               value="overview" 
               className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base transition-all duration-300"
               style={{
-                color: activeTab === 'overview' ? '#ffffff' : '#334155',
-                backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
+                color: activeTab === 'overview' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'overview' ? colors.black : 'transparent',
                 fontWeight: '600'
               }}
             >
@@ -1442,8 +1441,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               value="details" 
               className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base text-center transition-all duration-300"
               style={{
-                color: activeTab === 'details' ? '#ffffff' : '#334155',
-                backgroundColor: activeTab === 'details' ? '#000000' : 'transparent',
+                color: activeTab === 'details' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'details' ? colors.black : 'transparent',
                 fontWeight: '600'
               }}
             >
@@ -1454,8 +1453,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               value="work" 
               className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base transition-all duration-300"
               style={{
-                color: activeTab === 'work' ? '#ffffff' : '#334155',
-                backgroundColor: activeTab === 'work' ? '#000000' : 'transparent',
+                color: activeTab === 'work' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'work' ? colors.black : 'transparent',
                 fontWeight: '600'
               }}
             >
@@ -1478,8 +1477,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               transition={{ duration: 0.5 }}
               className="relative overflow-hidden rounded-xl -mx-3 sm:mx-0"
               style={{
-                background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                background: gradients.darkSlate,
+                boxShadow: shadows.xl,
               }}
             >
               <PremiumBackground />

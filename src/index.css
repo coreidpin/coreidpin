@@ -301,6 +301,24 @@
     animation-play-state: paused;
   }
 
+  /* Shimmer Animation */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+  }
+
+  /* Ready Glow Animation */
+  @keyframes ready-glow {
+    0%, 100% { box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+    50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); }
+  }
+  .animate-ready-glow {
+    animation: ready-glow 2s infinite alternate ease-in-out;
+  }
+
   .brand-shadow-green {
     box-shadow: 0 0 20px rgba(50, 240, 140, 0.15);
   }

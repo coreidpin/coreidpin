@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Fingerprint, Phone, Globe, Shield, ChevronRight, Copy, Eye, EyeOff, Share2, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
-import { shadows } from '../../styles/shadows';
+import { colors, typography, spacing, borderRadius, shadows } from '../../styles/designSystem';
 
 interface PINGenerationCardProps {
   onGenerateWithPhone: () => void;
@@ -201,15 +200,14 @@ export function PINGenerationCard({
             }}
           >
             <Fingerprint
-              className="text-blue-400"
-              style={{ width: '32px', height: '32px' }}
+              style={{ width: '32px', height: '32px', color: colors.brand.primary[400] }}
             />
           </motion.div>
 
           <h2
             className="text-white mb-2"
             style={{
-              fontSize: typography.fontSize.xl,
+              fontSize: typography.fontSize.xl[0],
               fontWeight: typography.fontWeight.bold,
               lineHeight: typography.lineHeight.tight,
             }}
@@ -219,7 +217,7 @@ export function PINGenerationCard({
           <p
             className="text-gray-400"
             style={{
-              fontSize: typography.fontSize.sm,
+              fontSize: typography.fontSize.sm[0],
               lineHeight: typography.lineHeight.relaxed,
             }}
           >
@@ -239,12 +237,12 @@ export function PINGenerationCard({
             disabled={isLoading}
             className="w-full flex items-center justify-between p-4 transition-all duration-200"
             style={{
-              background: hoveredButton === 'phone' ? colors.coreBlueDark : colors.coreBlue,
+              background: hoveredButton === 'phone' ? colors.brand.primary[700] : colors.brand.primary[600],
               borderRadius: borderRadius.lg,
-              color: 'white',
-              fontSize: typography.fontSize.base,
+              color: colors.white,
+              fontSize: typography.fontSize.base[0],
               fontWeight: typography.fontWeight.semibold,
-              boxShadow: hoveredButton === 'phone' ? shadows.blue : shadows.md,
+              boxShadow: hoveredButton === 'phone' ? shadows.brand : shadows.md,
               minHeight: '56px',
             }}
           >
@@ -281,11 +279,11 @@ export function PINGenerationCard({
             disabled={isLoading}
             className="w-full flex items-center justify-between p-4 transition-all duration-200"
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: `1px solid ${hoveredButton === 'random' ? colors.coreBlue : 'rgba(255, 255, 255, 0.1)'}`,
+              background: `rgba(255, 255, 255, 0.05)`,
+              border: `1px solid ${hoveredButton === 'random' ? colors.brand.primary[600] : 'rgba(255, 255, 255, 0.1)'}`,
               borderRadius: borderRadius.lg,
               color: 'white',
-              fontSize: typography.fontSize.base,
+              fontSize: typography.fontSize.base[0],
               fontWeight: typography.fontWeight.semibold,
               minHeight: '56px',
             }}
@@ -330,13 +328,13 @@ export function PINGenerationCard({
                 backgroundColor: 'rgba(58, 102, 255, 0.05)',
               }}
             >
-              <benefit.icon className="h-5 w-5 text-blue-600" />
+              <benefit.icon className="h-5 w-5" style={{ color: colors.brand.primary[600] }} />
             </div>
             <div className="flex-1">
               <h3
                 className="text-slate-900 mb-1"
                 style={{
-                  fontSize: typography.fontSize.sm,
+                  fontSize: typography.fontSize.sm[0],
                   fontWeight: typography.fontWeight.semibold,
                 }}
               >
@@ -345,7 +343,7 @@ export function PINGenerationCard({
               <p
                 className="text-slate-500"
                 style={{
-                  fontSize: typography.fontSize.xs,
+                  fontSize: typography.fontSize.xs[0],
                   lineHeight: typography.lineHeight.relaxed,
                 }}
               >

@@ -13,7 +13,7 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 
 // ✅ Design System: Centralized design tokens
-import { colors, typography, spacing, borderRadius, shadows } from '../styles/designSystem';
+import { colors, typography, spacing, borderRadius, shadows, gradients } from '../styles/designSystem';
 
 import { 
   Phone, 
@@ -75,9 +75,6 @@ import type { UserProfile } from '../types/profile';
 import type { Project } from '../types/dashboard';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
 
-import { WelcomeModal } from './onboarding/WelcomeModal';
-import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
-import { useOnboarding } from '../hooks/useOnboarding';
 import { getSessionState, ensureValidSession } from '../utils/session';
 import { toast } from 'sonner';
 import { trackEvent } from '../utils/analytics';
@@ -131,17 +128,6 @@ export function ProfessionalDashboard() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const loading = profileLoading;
-  
-  // Onboarding modals
-  const {
-    showWelcome,
-    showNotificationPermission,
-    completeWelcome,
-    handleNotificationAllow,
-    handleNotificationDeny,
-    closeWelcome,
-    closeNotification,
-  } = useOnboarding();
 
   // Calculate profile completion dynamically
   const profileCompletion = React.useMemo(() => {
@@ -1368,28 +1354,28 @@ export function ProfessionalDashboard() {
 
   // Skeleton Components
   const StatCardSkeleton = () => (
-    <Card className="bg-white border-gray-100 shadow-sm">
+    <Card className="border" style={{ backgroundColor: colors.white, borderColor: colors.neutral[100], boxShadow: shadows.sm }}>
       <CardContent className="p-4 text-center">
-        <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mx-auto mb-2"></div>
-        <div className="h-4 w-20 bg-gray-200 animate-pulse rounded mx-auto"></div>
+        <div className="h-8 w-16 animate-pulse rounded mx-auto mb-2" style={{ backgroundColor: colors.neutral[200] }}></div>
+        <div className="h-4 w-20 animate-pulse rounded mx-auto" style={{ backgroundColor: colors.neutral[200] }}></div>
       </CardContent>
     </Card>
   );
 
   const ActivityItemSkeleton = () => (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
-      <div className="h-4 w-4 bg-gray-200 animate-pulse rounded"></div>
-      <div className="h-4 flex-1 bg-gray-200 animate-pulse rounded"></div>
+    <div className="flex items-center gap-3 p-3 rounded-lg border" style={{ backgroundColor: colors.neutral[50], borderColor: colors.neutral[100] }}>
+      <div className="h-4 w-4 animate-pulse rounded" style={{ backgroundColor: colors.neutral[200] }}></div>
+      <div className="h-4 flex-1 animate-pulse rounded" style={{ backgroundColor: colors.neutral[200] }}></div>
     </div>
   );
 
   const ProjectCardSkeleton = () => (
-    <Card className="bg-white border-gray-100 shadow-sm h-full">
+    <Card className="border h-full" style={{ backgroundColor: colors.white, borderColor: colors.neutral[100], boxShadow: shadows.sm }}>
       <CardContent className="p-6">
-        <div className="h-10 w-10 bg-gray-200 animate-pulse rounded-lg mb-4"></div>
-        <div className="h-6 w-3/4 bg-gray-200 animate-pulse rounded mb-2"></div>
-        <div className="h-4 w-full bg-gray-200 animate-pulse rounded mb-4"></div>
-        <div className="h-4 w-2/3 bg-gray-200 animate-pulse rounded"></div>
+        <div className="h-10 w-10 animate-pulse rounded-lg mb-4" style={{ backgroundColor: colors.neutral[200] }}></div>
+        <div className="h-6 w-3/4 animate-pulse rounded mb-2" style={{ backgroundColor: colors.neutral[200] }}></div>
+        <div className="h-4 w-full animate-pulse rounded mb-4" style={{ backgroundColor: colors.neutral[200] }}></div>
+        <div className="h-4 w-2/3 animate-pulse rounded" style={{ backgroundColor: colors.neutral[200] }}></div>
       </CardContent>
     </Card>
   );
@@ -1437,33 +1423,36 @@ export function ProfessionalDashboard() {
 
         {/* Welcome Section - Mobile: Stack, Desktop: Side-by-side */}
 
-        <div className="mb-6 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-gray-100 pb-6">
+        <div className="mb-6 mt-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b pb-6" style={{ borderColor: colors.neutral[100] }}>
           <div className="space-y-2 sm:space-y-4 flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight break-words">
-              Welcome back, <span className="text-slate-500">{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
-              <span className="ml-2 text-base font-normal text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">Happy Holidays! 🎄</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight break-words" style={{ color: colors.neutral[900] }}>
+              Welcome back, <span style={{ color: colors.neutral[500] }}>{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
+              <span className="ml-2 text-base font-normal px-2 py-0.5 rounded-full border" style={{ color: colors.semantic.error, backgroundColor: '#FEF2F2', borderColor: '#FECACA' }}>Happy Holidays! 🎄</span>
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 border border-green-100 w-fit">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border w-fit" style={{ backgroundColor: colors.brand.secondary[50], borderColor: colors.brand.secondary[100] }}>
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: colors.brand.secondary[400] }}></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: colors.brand.secondary[500] }}></span>
                 </span>
-                <span className="text-sm font-medium text-green-700">Identity Active</span>
+                <span className="text-sm font-medium" style={{ color: colors.brand.secondary[700] }}>Identity Active</span>
               </div>
-              <p className="text-slate-400 text-sm">
+              <p className="text-sm" style={{ color: colors.neutral[400] }}>
                 Here's what's happening with your profile today.
               </p>
             </div>
           </div>
           <button
             onClick={() => setNotificationCenterOpen(true)}
-            className="relative p-3 rounded-full bg-gray-50 hover:bg-gray-100 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+            className="relative p-3 rounded-full transition-all min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: colors.neutral[50] }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[100]}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.neutral[50]}
             aria-label="Open notifications"
           >
-            <Bell className="w-5 h-5 text-gray-700" />
+            <Bell className="w-5 h-5" style={{ color: colors.neutral[700] }} />
             {!notificationsLoadingHook && unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+              <span className="absolute -top-1 -right-1 text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5" style={{ backgroundColor: colors.semantic.error, color: colors.white }}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -1497,7 +1486,7 @@ export function ProfessionalDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <Card className="border" style={{ background: gradients.lightBlue, borderColor: colors.brand.primary[200] }}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1527,20 +1516,6 @@ export function ProfessionalDashboard() {
 
         {/* Market Value Card */}
         <MarketValueCard />
-
-        {/* ✨ Phase 2: QuickStats Analytics */}
-        <QuickStats 
-          stats={{
-            profileViews: stats.profileViews || 0,
-            profileViewsChange: statsTrends.profileViews?.change || 0,
-            endorsements: endorsements.length || stats.endorsements || 0,
-            endorsementsChange: statsTrends.endorsements?.change || 0,
-            pinUsage: stats.pinUsage || 0,
-            pinUsageChange: statsTrends.pinUsage?.change || 0,
-            verifications: stats.verifications || 0,
-            verificationsChange: statsTrends.verifications?.change || 0
-          }}
-        />
 
         {/* ✨ Featured Section - Showcase best work */}
         {userId && (
@@ -1777,7 +1752,7 @@ export function ProfessionalDashboard() {
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
           <div className="flex justify-center w-full">
-            <TabsList className="flex w-fit bg-slate-100 p-1 rounded-full gap-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide border border-slate-200 justify-center items-center px-2 shadow-sm mx-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <TabsList className="flex w-fit p-1 rounded-full gap-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide border justify-center items-center px-2 shadow-sm mx-auto" style={{ WebkitOverflowScrolling: 'touch', backgroundColor: colors.neutral[100], borderColor: colors.neutral[200] }}>
               <TabsTrigger 
                 value="overview"
                 className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
@@ -1955,28 +1930,36 @@ export function ProfessionalDashboard() {
                 <TabsContent value="projects" className="space-y-6 overflow-x-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
-                <p className="text-gray-500 text-sm mt-1">Showcase your professional work and contributions</p>
+                <h2 className="text-2xl font-bold" style={{ color: colors.neutral[900] }}>Projects</h2>
+                <p className="text-sm mt-1" style={{ color: colors.neutral[500] }}>Showcase your professional work and contributions</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <Button 
                   onClick={handleAddProject} 
                   variant="outline"
-                  className="!bg-white hover:!bg-gray-100 !text-black border-2 !border-black shadow-sm transition-all hover:scale-105 whitespace-nowrap font-semibold" 
-                  style={{ color: 'black', backgroundColor: 'white', borderColor: 'black' }}
+                  className="shadow-sm transition-all hover:scale-105 whitespace-nowrap font-semibold border-2" 
+                  style={{ 
+                    color: colors.black, 
+                    backgroundColor: colors.white, 
+                    borderColor: colors.black 
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[100]}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.white}
                   aria-label="Add new project"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  <span className="text-black font-semibold">Add Project</span>
+                  <span className="font-semibold" style={{ color: colors.black }}>Add Project</span>
                 </Button>
                 <Button 
                   onClick={handleAddCaseStudy} 
-                  className="!bg-black hover:!bg-gray-900 !text-white font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 whitespace-nowrap border-0" 
-                  style={{ color: 'white', backgroundColor: 'black' }}
+                  className="font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 whitespace-nowrap border-0" 
+                  style={{ color: colors.white, backgroundColor: colors.black }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[900]}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.black}
                   aria-label="Create case study"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  <span className="text-white font-semibold">Create Case Study</span>
+                  <span className="font-semibold" style={{ color: colors.white }}>Create Case Study</span>
                 </Button>
               </div>
             </div>
@@ -1984,20 +1967,27 @@ export function ProfessionalDashboard() {
             {/* Search and Filter */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.neutral[400] }} />
                 <Input
                   placeholder="Search projects..."
                   value={projectSearch}
                   onChange={(e) => setProjectSearch(e.target.value)}
-                  className="pl-10 bg-white border-gray-200"
+                  className="pl-10"
+                  style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
                   aria-label="Search projects by title or description"
                 />
               </div>
-              <select
-                value={projectSort}
-                onChange={(e) => setProjectSort(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black"
-              >
+                <select
+                  value={projectSort}
+                  onChange={(e) => setProjectSort(e.target.value)}
+                  className="px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: colors.white, 
+                    borderColor: colors.neutral[200],
+                    color: colors.neutral[700],
+                    borderWidth: '1px'
+                  }}
+                >
                 <option value="date-desc">Newest First</option>
                 <option value="date-asc">Oldest First</option>
                 <option value="title-asc">A-Z</option>
@@ -2015,28 +2005,31 @@ export function ProfessionalDashboard() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200"
+                className="text-center py-16 rounded-xl border border-dashed" style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
               >
-                <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center">
-                  <Briefcase className="h-12 w-12 text-purple-600" />
+                <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #E0E7FF 0%, #DBEAFE 100%)' }}>
+                  <Briefcase className="h-12 w-12" style={{ color: colors.brand.primary[600] }} />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-4">Add your professional projects to showcase your experience and skills to potential clients.</p>
-                <div className="text-sm text-gray-400 mb-6">
+                <h3 className="text-lg font-medium mb-2" style={{ color: colors.neutral[900] }}>No projects yet</h3>
+                <p className="max-w-md mx-auto mb-4" style={{ color: colors.neutral[500] }}>Add your professional projects to showcase your experience and skills to potential clients.</p>
+                <div className="text-sm mb-6" style={{ color: colors.neutral[400] }}>
                   <p>💡 Tip: Add 3-5 projects for best results</p>
                 </div>
                 <div className="flex items-center gap-2">
-                   <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleShareProfile}
-                      className="hidden sm:flex items-center gap-2 h-9"
+                  <Button 
+                     variant="outline" 
+                     size="sm" 
+                     onClick={handleShareProfile}
+                     className="hidden sm:flex items-center gap-2 h-9"
+                     style={{ borderColor: colors.neutral[200], color: colors.neutral[700] }}
+                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[50]}
+                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                    >
                     <Share2 className="w-4 h-4" />
                     <span>Share Profile</span>
                   </Button>
                   
-                  <Button variant="outline" size="icon" className="h-9 w-9">
+                  <Button variant="outline" size="icon" className="h-9 w-9" style={{ borderColor: colors.neutral[200], color: colors.neutral[700] }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[50]} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                     <Settings className="h-4 w-4" />
                   </Button>
                 </div>
@@ -2068,14 +2061,17 @@ export function ProfessionalDashboard() {
                     <Card className="bg-white border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col group">
                       <CardContent className="p-6 flex flex-col h-full">
                         <div className="flex items-start justify-between mb-4">
-                          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                          <div className="p-2 rounded-lg" style={{ backgroundColor: colors.brand.primary[50], color: colors.brand.primary[600] }}>
                             <Briefcase className="h-5 w-5" />
                           </div>
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+                              className="h-8 w-8"
+                              style={{ color: colors.neutral[400] }}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = colors.brand.primary[600]; e.currentTarget.style.backgroundColor = colors.brand.primary[50]; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.color = colors.neutral[400]; e.currentTarget.style.backgroundColor = 'transparent'; }}
                               onClick={() => handleEditProject(project)}
                             >
                               <Pencil className="h-4 w-4" />
@@ -2083,7 +2079,10 @@ export function ProfessionalDashboard() {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                              className="h-8 w-8"
+                              style={{ color: colors.neutral[400] }}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = colors.semantic.error; e.currentTarget.style.backgroundColor = '#FEF2F2'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.color = colors.neutral[400]; e.currentTarget.style.backgroundColor = 'transparent'; }}
                               onClick={() => handleDeleteProject(project.id)}
                               disabled={deletingProjectId === project.id}
                             >
@@ -2096,32 +2095,32 @@ export function ProfessionalDashboard() {
                           </div>
                         </div>
                         
-                        <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1" title={project.title}>{project.title}</h3>
-                        <p className="text-sm font-medium text-blue-600 mb-3">{project.role}</p>
+                        <h3 className="text-lg font-bold mb-1 line-clamp-1" style={{ color: colors.neutral[900] }} title={project.title}>{project.title}</h3>
+                        <p className="text-sm font-medium mb-3" style={{ color: colors.brand.primary[600] }}>{project.role}</p>
                         
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">{project.description}</p>
+                        <p className="text-sm mb-4 line-clamp-3 flex-grow" style={{ color: colors.neutral[600] }}>{project.description}</p>
                         
                         <div className="space-y-4 mt-auto">
                           <div className="flex flex-wrap gap-2">
                             {(project.skills || []).slice(0, 3).map((skill: string, i: number) => (
-                              <Badge key={i} variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200 font-normal">
+                              <Badge key={i} variant="secondary" className="font-normal" style={{ backgroundColor: colors.neutral[100], color: colors.neutral[700] }}>
                                 {skill}
                               </Badge>
                             ))}
                             {(project.skills || []).length > 3 && (
-                              <Badge variant="secondary" className="bg-gray-50 text-gray-500 font-normal">
+                              <Badge variant="secondary" className="font-normal" style={{ backgroundColor: colors.neutral[50], color: colors.neutral[500] }}>
                                 +{(project.skills || []).length - 3}
                               </Badge>
                             )}
                           </div>
                           
-                          <div className="pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-500">
+                          <div className="pt-4 border-t flex items-center justify-between text-xs" style={{ borderColor: colors.neutral[50], color: colors.neutral[500] }}>
                             <div className="flex items-center gap-1.5">
                               <Calendar className="h-3.5 w-3.5" />
                               <span>{project.timeline}</span>
                             </div>
                             {project.links && project.links.length > 0 && (
-                              <div className="flex items-center gap-1.5 text-blue-600">
+                              <div className="flex items-center gap-1.5" style={{ color: colors.brand.primary[600] }}>
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 <span>View</span>
                               </div>
@@ -2152,10 +2151,10 @@ export function ProfessionalDashboard() {
                 <TabsContent value="endorsements" className="space-y-4 sm:space-y-6 overflow-x-hidden">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Endorsements</h2>
-                <p className="text-gray-500 text-sm mt-1">Validations from your professional network</p>
+                <h2 className="text-2xl font-bold" style={{ color: colors.neutral[900] }}>Endorsements</h2>
+                <p className="text-sm mt-1" style={{ color: colors.neutral[500] }}>Validations from your professional network</p>
               </div>
-              <Button onClick={handleRequestEndorsement} className="!bg-black hover:!bg-gray-900 !text-white font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 w-full sm:w-auto whitespace-nowrap border-0" style={{ color: 'white', backgroundColor: 'black' }} aria-label="Request new endorsement">
+              <Button onClick={handleRequestEndorsement} className="font-semibold shadow-md hover:shadow-lg transition-all hover:scale-105 w-full sm:w-auto whitespace-nowrap border-0" style={{ color: colors.white, backgroundColor: colors.black }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[900]} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.black} aria-label="Request new endorsement">
                 <Plus className="h-4 w-4 mr-2" />
                 <span className="text-white font-semibold">Request Endorsement</span>
               </Button>
@@ -2174,7 +2173,11 @@ export function ProfessionalDashboard() {
                   variant={endorsementFilter === filter.value ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setEndorsementFilter(filter.value)}
-                  className={endorsementFilter === filter.value ? 'bg-black text-white' : ''}
+                  style={{
+                    backgroundColor: endorsementFilter === filter.value ? colors.black : 'transparent',
+                    color: endorsementFilter === filter.value ? colors.white : colors.neutral[700],
+                    borderColor: endorsementFilter === filter.value ? colors.black : colors.neutral[200]
+                  }}
                 >
                   {filter.label}
                 </Button>
@@ -2190,17 +2193,17 @@ export function ProfessionalDashboard() {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200"
+                className="text-center py-16 rounded-xl border border-dashed" style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
               >
-                <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-green-100 to-teal-100 rounded-full flex items-center justify-center">
-                  <Users className="h-12 w-12 text-green-600" />
+                <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #D1FAE5 0%, #CCFBF1 100%)' }}>
+                  <Users className="h-12 w-12" style={{ color: colors.brand.secondary[600] }} />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No endorsements yet</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-4">Request endorsements from colleagues and clients to build trust and credibility.</p>
-                <div className="text-sm text-gray-400 mb-6">
+                <h3 className="text-lg font-medium mb-2" style={{ color: colors.neutral[900] }}>No endorsements yet</h3>
+                <p className="max-w-md mx-auto mb-4" style={{ color: colors.neutral[500] }}>Request endorsements from colleagues and clients to build trust and credibility.</p>
+                <div className="text-sm mb-6" style={{ color: colors.neutral[400] }}>
                   <p>💡 Tip: Endorsements boost your profile visibility</p>
                 </div>
-                <Button onClick={handleRequestEndorsement} variant="outline">
+                <Button onClick={handleRequestEndorsement} variant="outline" style={{ borderColor: colors.neutral[200], color: colors.neutral[700] }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[50]} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                   Request Your First Endorsement
                 </Button>
               </motion.div>
@@ -2215,41 +2218,41 @@ export function ProfessionalDashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="bg-white border-gray-100 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative overflow-hidden group">
+                    <Card className="border transition-all h-full flex flex-col relative overflow-hidden group" style={{ backgroundColor: colors.white, borderColor: colors.neutral[100], boxShadow: shadows.sm }}>
                       <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Quote className="h-16 w-16 text-gray-900 transform rotate-180" />
+                        <Quote className="h-16 w-16 transform rotate-180" style={{ color: colors.neutral[900] }} />
                       </div>
                       
                         <CardContent className="p-6 flex flex-col h-full relative z-10">
                         <div className="flex items-start justify-between mb-6">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center text-lg font-bold text-gray-600 border-2 border-white shadow-sm">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2 shadow-sm" style={{ background: `linear-gradient(135deg, ${colors.neutral[100]} 0%, ${colors.neutral[200]} 100%)`, color: colors.neutral[600], borderColor: colors.white }}>
                               {(endorsement.endorserName || '?').charAt(0)}
                             </div>
                             <div>
-                              <h3 className="font-bold text-gray-900">{endorsement.endorserName || 'Unknown'}</h3>
-                              <p className="text-xs text-gray-500 font-medium">{endorsement.role}</p>
-                              <p className="text-xs text-gray-400">{endorsement.company}</p>
+                              <h3 className="font-bold" style={{ color: colors.neutral[900] }}>{endorsement.endorserName || 'Unknown'}</h3>
+                              <p className="text-xs font-medium" style={{ color: colors.neutral[500] }}>{endorsement.role}</p>
+                              <p className="text-xs" style={{ color: colors.neutral[400] }}>{endorsement.company}</p>
                             </div>
                           </div>
                           {endorsement.status === 'accepted' && (
-                            <Badge className="bg-green-50 text-green-600 border-green-100 hover:bg-green-100">
+                            <Badge className="border" style={{ backgroundColor: colors.brand.secondary[50], color: colors.brand.secondary[600], borderColor: colors.brand.secondary[100] }}>
                               <CheckCircleIcon className="h-3 w-3 mr-1" />
                               Verified
                             </Badge>
                           )}
                           {endorsement.status === 'pending_professional' && (
-                            <Badge className="bg-yellow-50 text-yellow-600 border-yellow-100 hover:bg-yellow-100">
+                            <Badge className="border" style={{ backgroundColor: colors.brand.accent[50], color: colors.brand.accent[600], borderColor: colors.brand.accent[100] }}>
                               Review Needed
                             </Badge>
                           )}
                           {endorsement.status === 'requested' && (
-                            <Badge className="bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100">
+                            <Badge className="border" style={{ backgroundColor: colors.brand.primary[50], color: colors.brand.primary[600], borderColor: colors.brand.primary[100] }}>
                               Request Sent
                             </Badge>
                           )}
                           {endorsement.status === 'rejected' && (
-                            <Badge className="bg-red-50 text-red-600 border-red-100 hover:bg-red-100">
+                            <Badge className="border" style={{ backgroundColor: '#FEF2F2', color: colors.semantic.error, borderColor: '#FECACA' }}>
                               Rejected
                             </Badge>
                           )}
@@ -2257,21 +2260,24 @@ export function ProfessionalDashboard() {
                         
                         <div className="mb-6 flex-grow">
                           {endorsement.status === 'requested' ? (
-                            <p className="text-gray-400 italic text-sm">Waiting for response...</p>
+                            <p className="italic text-sm" style={{ color: colors.neutral[400] }}>Waiting for response...</p>
                           ) : (
-                            <p className="text-gray-700 italic leading-relaxed">"{endorsement.text}"</p>
+                            <p className="italic leading-relaxed" style={{ color: colors.neutral[700] }}>"{endorsement.text}"</p>
                           )}
                         </div>
                         
-                        <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                          <span className="text-xs text-gray-400 font-medium">{new Date(endorsement.date).toLocaleDateString()}</span>
+                        <div className="pt-4 border-t flex items-center justify-between" style={{ borderColor: colors.neutral[50] }}>
+                          <span className="text-xs font-medium" style={{ color: colors.neutral[400] }}>{new Date(endorsement.date).toLocaleDateString()}</span>
                           
                           <div className="flex gap-2">
                             {endorsement.status === 'pending_professional' ? (
                               <>
                                 <Button 
                                   size="sm" 
-                                  className="bg-black hover:bg-gray-800 text-white h-8 px-3"
+                                  className="h-8 px-3"
+                                  style={{ backgroundColor: colors.black, color: colors.white }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[800]}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.black}
                                   onClick={() => handleRespondToEndorsement(endorsement.id, 'accept')}
                                   disabled={respondingEndorsementId === endorsement.id}
                                 >
@@ -2290,7 +2296,10 @@ export function ProfessionalDashboard() {
                                 <Button 
                                   size="sm" 
                                   variant="outline"
-                                  className="border-gray-200 text-red-600 hover:bg-red-50 h-8 px-3"
+                                  className="h-8 px-3"
+                                  style={{ borderColor: colors.neutral[200], color: colors.semantic.error }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FEF2F2'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                   onClick={() => handleRespondToEndorsement(endorsement.id, 'reject')}
                                   disabled={respondingEndorsementId === endorsement.id}
                                 >
@@ -2530,10 +2539,15 @@ export function ProfessionalDashboard() {
                   }
                 }}
                 placeholder="e.g. E-commerce Platform"
-                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${projectFormErrors.title ? 'border-red-500' : ''}`}
+                className="focus:ring-black"
+                style={{
+                  backgroundColor: colors.white,
+                  borderColor: projectFormErrors.title ? colors.semantic.error : colors.neutral[200],
+                  ...(projectFormErrors.title ? { borderWidth: '1px' } : {})
+                }}
               />
               {projectFormErrors.title && (
-                <p className="text-xs text-red-600 mt-1">{projectFormErrors.title}</p>
+                <p className="text-xs mt-1" style={{ color: colors.semantic.error }}>{projectFormErrors.title}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -2543,7 +2557,8 @@ export function ProfessionalDashboard() {
                 value={projectFormData.role}
                 onChange={(e) => setProjectFormData({ ...projectFormData, role: e.target.value })}
                 placeholder="e.g. Lead Developer"
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className="focus:ring-black"
+                style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
               />
             </div>
             <div className="space-y-2">
@@ -2558,13 +2573,18 @@ export function ProfessionalDashboard() {
                   }
                 }}
                 placeholder="Describe the project and your contribution..."
-                className={`bg-white border-gray-200 focus:border-black focus:ring-black ${projectFormErrors.description ? 'border-red-500' : ''}`}
+                className="focus:ring-black"
+                style={{
+                  backgroundColor: colors.white,
+                  borderColor: projectFormErrors.description ? colors.semantic.error : colors.neutral[200],
+                  ...(projectFormErrors.description ? { borderWidth: '1px' } : {})
+                }}
                 maxLength={500}
               />
               {projectFormErrors.description && (
-                <p className="text-xs text-red-600 mt-1">{projectFormErrors.description}</p>
+                <p className="text-xs mt-1" style={{ color: colors.semantic.error }}>{projectFormErrors.description}</p>
               )}
-              <div className={`text-xs text-right mt-1 ${(projectFormData.description?.length || 0) > 450 ? 'text-red-600 font-medium' : 'text-gray-400'}`}>
+              <div className="text-xs text-right mt-1" style={{ color: (projectFormData.description?.length || 0) > 450 ? colors.semantic.error : colors.neutral[400], fontWeight: (projectFormData.description?.length || 0) > 450 ? 500 : 400 }}>
                 {projectFormData.description?.length || 0}/500 characters
               </div>
             </div>
@@ -2576,7 +2596,8 @@ export function ProfessionalDashboard() {
                   value={projectFormData.timeline}
                   onChange={(e) => setProjectFormData({ ...projectFormData, timeline: e.target.value })}
                   placeholder="e.g. Jan 2023 - Present"
-                  className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                  className="focus:ring-black"
+                  style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
                 />
               </div>
               <div className="space-y-2">
@@ -2585,8 +2606,9 @@ export function ProfessionalDashboard() {
                   id="skills"
                   value={projectFormData.skills}
                   onChange={(e) => setProjectFormData({ ...projectFormData, skills: e.target.value })}
-                  placeholder="React, Node.js, AWS"
-                  className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                  placeholder="React, TypeScript, Node.js"
+                  className="focus:ring-black"
+                  style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
                 />
               </div>
             </div>
@@ -2597,15 +2619,16 @@ export function ProfessionalDashboard() {
                 value={projectFormData.links}
                 onChange={(e) => setProjectFormData({ ...projectFormData, links: e.target.value })}
                 placeholder="https://github.com/..., https://demo.com"
-                className="bg-white border-gray-200 focus:border-black focus:ring-black"
+                className="focus:ring-black"
+                style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
               />
             </div>
           </div>
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setShowProjectModal(false)} className="border-gray-200 text-gray-700 hover:bg-gray-50">
+            <Button variant="outline" onClick={() => setShowProjectModal(false)} className="border" style={{ borderColor: colors.neutral[200], color: colors.neutral[700] }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[50]} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
               Cancel
             </Button>
-            <Button onClick={handleSaveProject} disabled={projectSaving} className="bg-black hover:bg-gray-800 text-white">
+            <Button onClick={handleSaveProject} disabled={projectSaving} style={{ backgroundColor: colors.black, color: colors.white }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.neutral[800]} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.black}>
               {projectSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -2654,11 +2677,11 @@ export function ProfessionalDashboard() {
       <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <Phone className="h-5 w-5 text-blue-600" />
+            <DialogTitle className="text-xl font-bold flex items-center gap-2" style={{ color: colors.neutral[900] }}>
+              <Phone className="h-5 w-5" style={{ color: colors.brand.primary[600] }} />
               Use Phone Number as PIN
             </DialogTitle>
-            <DialogDescription className="text-sm text-gray-900 mt-2">
+            <DialogDescription className="text-sm mt-2" style={{ color: colors.neutral[900] }}>
               {!otpSent 
                 ? "Enter your phone number to receive an OTP."
                 : "Enter the OTP code sent to your phone number."
@@ -2669,20 +2692,21 @@ export function ProfessionalDashboard() {
           {!otpSent ? (
             <div className="space-y-4 mt-4">
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-medium text-gray-900">
+                <Label htmlFor="phone" className="text-sm font-medium" style={{ color: colors.neutral[900] }}>
                   Phone Number
                 </Label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: colors.neutral[400] }} />
                   <Input 
                     id="phone"
                     placeholder="+1234567890" 
                     value={phoneInput} 
                     onChange={(e) => setPhoneInput(e.target.value)}
-                    className="pl-10 bg-white border-gray-200 focus:border-blue-600 focus:ring-blue-600"
+                    className="pl-10 focus:ring-blue-600"
+                    style={{ backgroundColor: colors.white, borderColor: colors.neutral[200] }}
                   />
                 </div>
-                <p className="text-xs text-gray-900">
+                <p className="text-xs" style={{ color: colors.neutral[900] }}>
                   Include country code (e.g., +1 for USA, +234 for Nigeria)
                 </p>
               </div>
@@ -2697,7 +2721,10 @@ export function ProfessionalDashboard() {
                 </Button>
                 <Button 
                   onClick={handlePhoneSubmit}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  className="flex-1"
+                  style={{ backgroundColor: colors.brand.primary[600], color: colors.white }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary[700]}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = colors.brand.primary[600]}
                   disabled={!phoneInput}
                 >
                   <Mail className="h-4 w-4 mr-2" />
@@ -2756,42 +2783,42 @@ export function ProfessionalDashboard() {
       <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">Generate Random PIN</DialogTitle>
-            <DialogDescription className="text-sm text-gray-900 mt-2">
+            <DialogTitle className="text-xl font-bold" style={{ color: colors.neutral[900] }}>Generate Random PIN</DialogTitle>
+            <DialogDescription className="text-sm mt-2" style={{ color: colors.neutral[900] }}>
               Please review and accept the terms before generating your PIN.
             </DialogDescription>
           </DialogHeader>
           
           <div className="mt-4 space-y-4">
             {/* Terms List with Icons */}
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-3">
+            <div className="border rounded-lg p-4 space-y-3" style={{ backgroundColor: colors.brand.primary[50], borderColor: colors.brand.primary[100] }}>
               <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <Shield className="h-5 w-5 mt-0.5 shrink-0" style={{ color: colors.brand.primary[600] }} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Secure & Unique</p>
-                  <p className="text-xs text-gray-900">Your PIN is automatically generated and unique to your account</p>
+                  <p className="text-sm font-medium" style={{ color: colors.neutral[900] }}>Secure & Unique</p>
+                  <p className="text-xs" style={{ color: colors.neutral[900] }}>Your PIN is automatically generated and unique to your account</p>
                 </div>
               </div>
               
               <div className="flex items-start gap-3">
-                <Fingerprint className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <Fingerprint className="h-5 w-5 mt-0.5 shrink-0" style={{ color: colors.brand.primary[600] }} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Your PIN becomes your passport</p>
-                  <p className="text-xs text-gray-900">You can now share your PIN with anyone</p>
+                  <p className="text-sm font-medium" style={{ color: colors.neutral[900] }}>Your PIN becomes your passport</p>
+                  <p className="text-xs" style={{ color: colors.neutral[900] }}>You can now share your PIN with anyone</p>
                 </div>
               </div>
               
               <div className="flex items-start gap-3">
-                <BadgeCheck className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+                <BadgeCheck className="h-5 w-5 mt-0.5 shrink-0" style={{ color: colors.brand.primary[600] }} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Authentication</p>
-                  <p className="text-xs text-gray-900">Used solely for verifying your professional credentials</p>
+                  <p className="text-sm font-medium" style={{ color: colors.neutral[900] }}>Authentication</p>
+                  <p className="text-xs" style={{ color: colors.neutral[900] }}>Used solely for verifying your professional credentials</p>
                 </div>
               </div>
             </div>
             
             {/* Acceptance Checkbox */}
-            <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-start space-x-3 p-3 rounded-lg border" style={{ backgroundColor: colors.neutral[50], borderColor: colors.neutral[200] }}>
               <Checkbox 
                 id="terms" 
                 checked={termsAccepted} 
@@ -2867,24 +2894,6 @@ export function ProfessionalDashboard() {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* Onboarding Modals */}
-      <WelcomeModal
-        isOpen={showWelcome}
-        onClose={closeWelcome}
-        onGetStarted={completeWelcome}
-        userName={userProfile?.full_name?.split(' ')[0]}
-      />
-
-      <NotificationPermissionModal
-        isOpen={showNotificationPermission}
-        onClose={closeNotification}
-        onAllow={handleNotificationAllow}
-        onDeny={handleNotificationDeny}
-      />
-
-      
-
       
       <ResumeGenerator 
         isOpen={showResumeModal} 

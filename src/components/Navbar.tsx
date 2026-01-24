@@ -340,16 +340,14 @@ export function Navbar({
             {!isAuthenticated ? (
               <>
                 <button 
-                  disabled={import.meta.env.PROD}
                   onClick={() => navigate('/login')}
-                  className="flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-50"
+                  className="flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200"
                 >
                   Login
                 </button>
                 <button 
-                  disabled={import.meta.env.PROD}
-                  onClick={() => handleLogin('professional')}
-                  className="flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-50"
+                  onClick={() => navigate('/get-started')}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200"
                 >
                   <UserCheck className="h-4 w-4 mr-2 text-muted-foreground group-hover:text-foreground transition-colors" />
                   Get Started

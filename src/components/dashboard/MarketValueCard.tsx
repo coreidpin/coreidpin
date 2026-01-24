@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Skeleton } from '../ui/skeleton';
+import { colors, shadows, typography, borderRadius } from '../../styles/designSystem';
 import { 
   TrendingUp, 
   Eye, 
@@ -28,13 +29,14 @@ function MetricBox({ label, value, growth, icon: Icon }: MetricBoxProps) {
   const isPositiveGrowth = growth && growth > 0;
 
   return (
-    <div className="bg-white/50 rounded-lg p-3 border border-gray-100">
+
+    <div className="rounded-lg p-3 border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)', borderColor: colors.neutral[100] }}>
       <div className="flex items-center justify-between mb-2">
-        <Icon className="h-4 w-4 text-purple-600" />
+        <Icon className="h-4 w-4" style={{ color: colors.brand.primary[600] }} />
         {hasGrowth && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${
-            isPositiveGrowth ? 'text-green-600' : 'text-red-600'
-          }`}>
+          <div className="flex items-center gap-1 text-xs font-medium" style={{ 
+            color: isPositiveGrowth ? colors.brand.secondary[600] : colors.semantic.error 
+          }}>
             {isPositiveGrowth ? (
               <ArrowUp className="h-3 w-3" />
             ) : (
@@ -44,33 +46,36 @@ function MetricBox({ label, value, growth, icon: Icon }: MetricBoxProps) {
           </div>
         )}
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-xs text-gray-600 mt-1">{label}</p>
+      <p className="text-2xl font-bold" style={{ color: colors.neutral[900] }}>{value}</p>
+      <p className="text-xs mt-1" style={{ color: colors.neutral[600] }}>{label}</p>
     </div>
   );
 }
 
 function EmptyState() {
   return (
-    <Card className="bg-gradient-to-br from-purple-50 via-white to-pink-50 border border-purple-200">
+    <Card className="border" style={{ 
+      background: `linear-gradient(to bottom right, ${colors.brand.primary[50]}, ${colors.white}, ${colors.brand.secondary[50]})`,
+      borderColor: colors.brand.primary[200]
+    }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-purple-600" />
+          <Sparkles className="h-5 w-5" style={{ color: colors.brand.primary[600] }} />
           Your PIN Market Value
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-center py-8 px-4">
-          <div className="h-20 w-20 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
-            <TrendingUp className="h-10 w-10 text-purple-600" />
+          <div className="h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: colors.brand.primary[100] }}>
+            <TrendingUp className="h-10 w-10" style={{ color: colors.brand.primary[600] }} />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold mb-2" style={{ color: colors.neutral[900] }}>
             Building Your Market Value
           </h3>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm mb-4" style={{ color: colors.neutral[600] }}>
             We're calculating your demand score based on profile views, employer engagement, and job matches.
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs" style={{ color: colors.neutral[500] }}>
             Check back soon to see your score!
           </p>
         </div>
@@ -81,10 +86,14 @@ function EmptyState() {
 
 function LoadingSkeleton() {
   return (
-    <Card className="bg-gradient-to-br from-purple-50 via-white to-pink-50 border border-purple-200">
+
+    <Card className="border" style={{ 
+      background: `linear-gradient(to bottom right, ${colors.brand.primary[50]}, ${colors.white}, ${colors.brand.secondary[50]})`,
+      borderColor: colors.brand.primary[200]
+    }}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-purple-600" />
+          <TrendingUp className="h-5 w-5" style={{ color: colors.brand.primary[600] }} />
           Your PIN Market Value
         </CardTitle>
       </CardHeader>
@@ -117,7 +126,7 @@ export function MarketValueCard() {
   }
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return 'text-green-600';
+    if (score >= 8) return 'text-green-600'; // Keep as utility class or styles if dynamic? Tailwind colors are still available
     if (score >= 6) return 'text-blue-600';
     if (score >= 4) return 'text-purple-600';
     return 'text-gray-600';
@@ -136,15 +145,18 @@ export function MarketValueCard() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="bg-gradient-to-br from-purple-50 via-white to-pink-50 border border-purple-200 overflow-hidden relative">
+      <Card className="border overflow-hidden relative" style={{ 
+        background: `linear-gradient(to bottom right, ${colors.brand.primary[50]}, ${colors.white}, ${colors.brand.secondary[50]})`,
+        borderColor: colors.brand.primary[200]
+      }}>
         {/* Decorative background pattern */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-100 rounded-full -mr-32 -mt-32 opacity-20" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-100 rounded-full -ml-24 -mb-24 opacity-20" />
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full -mr-32 -mt-32 opacity-20" style={{ backgroundColor: colors.brand.primary[100] }} />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full -ml-24 -mb-24 opacity-20" style={{ backgroundColor: colors.brand.secondary[100] }} />
         
         <CardHeader className="relative z-10">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
+              <TrendingUp className="h-5 w-5" style={{ color: colors.brand.primary[600] }} />
               <span>Your PIN Market Value</span>
             </div>
             <Badge variant="outline" className="bg-white/80 backdrop-blur-sm">
@@ -158,11 +170,12 @@ export function MarketValueCard() {
           <div className="text-center mb-6">
             <div className={`text-6xl sm:text-7xl font-bold mb-2 ${getScoreColor(metrics.demand_score)}`}>
               {metrics.demand_score.toFixed(1)}
-              <span className="text-2xl text-gray-400">/10</span>
+              <span className="text-2xl" style={{ color: colors.neutral[400] }}>/10</span>
             </div>
             <Badge 
               variant="secondary" 
-              className="bg-purple-100 text-purple-700 px-4 py-1.5 text-sm font-semibold"
+              className="px-4 py-1.5 text-sm font-semibold"
+              style={{ backgroundColor: colors.brand.primary[100], color: colors.brand.primary[700] }}
             >
               {getPercentileLabel(metrics.percentile_rank)}
             </Badge>
@@ -194,9 +207,9 @@ export function MarketValueCard() {
           </div>
 
           {/* Last Updated */}
-          <div className="flex items-center justify-center gap-2 pt-4 border-t border-purple-100">
-            <Sparkles className="h-3 w-3 text-purple-400" />
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-2 pt-4 border-t" style={{ borderColor: colors.brand.primary[100] }}>
+            <Sparkles className="h-3 w-3" style={{ color: colors.brand.primary[400] }} />
+            <p className="text-xs" style={{ color: colors.neutral[500] }}>
               Updated {formatDistanceToNow(new Date(metrics.last_calculated_at))} ago
             </p>
           </div>

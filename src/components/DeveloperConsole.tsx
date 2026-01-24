@@ -14,9 +14,6 @@ import { BusinessSettings } from './developer/BusinessSettings';
 import { IdentityVerificationTool } from './developer/IdentityVerificationTool';
 import { FeatureLockInline } from './FeatureLock';
 import { useFeatureGate } from '../hooks/useFeatureGate';
-import { WelcomeModal } from './onboarding/WelcomeModal';
-import { NotificationPermissionModal } from './onboarding/NotificationPermissionModal';
-import { useOnboarding } from '../hooks/useOnboarding';
 import {
   Key,
   BarChart3,
@@ -37,17 +34,6 @@ export function DeveloperConsole() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const { access, loading: featureLoading } = useFeatureGate();
-  
-  // Onboarding modals
-  const {
-    showWelcome,
-    showNotificationPermission,
-    completeWelcome,
-    handleNotificationAllow,
-    handleNotificationDeny,
-    closeWelcome,
-    closeNotification,
-  } = useOnboarding();
 
   useEffect(() => {
     fetchBusinessProfile();
@@ -408,20 +394,6 @@ export function DeveloperConsole() {
           </TabsContent>
         </Tabs>
         
-        {/* Onboarding Modals */}
-        <WelcomeModal
-          isOpen={showWelcome}
-          onClose={closeWelcome}
-          onGetStarted={completeWelcome}
-          userName={businessProfile?.company_name}
-        />
-
-        <NotificationPermissionModal
-          isOpen={showNotificationPermission}
-          onClose={closeNotification}
-          onAllow={handleNotificationAllow}
-          onDeny={handleNotificationDeny}
-        />
       </div>
     </div>
   );

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Circle, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { colors, typography, spacing, borderRadius } from '../../styles/designTokens';
-import { shadows } from '../../styles/shadows';
+import { colors, typography, spacing, borderRadius, shadows } from '../../styles/designSystem';
 
 interface ChecklistItem {
   id: string;
@@ -71,7 +70,7 @@ export function ProfileCompletionWidget({
             <h2
               className="text-slate-900"
               style={{
-                fontSize: typography.fontSize.xl,
+                fontSize: typography.fontSize.xl[0],
                 fontWeight: typography.fontWeight.bold,
               }}
             >
@@ -82,17 +81,19 @@ export function ProfileCompletionWidget({
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', delay: 0.5 }}
-                className="px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-500 flex items-center gap-1.5"
+                className="px-3 py-1 rounded-full flex items-center gap-1.5"
+                style={{ background: `linear-gradient(to right, ${colors.brand.secondary[400]}, ${colors.brand.secondary[500]})` }}
               >
-                <CheckCircle2 className="h-4 w-4 text-white" />
-                <span className="text-xs font-bold text-white">Elite</span>
+                <CheckCircle2 className="h-4 w-4" style={{ color: colors.white }} />
+                <span className="text-xs font-bold" style={{ color: colors.white }}>Elite</span>
               </motion.div>
             )}
           </div>
           <p
-            className={percentage === 100 ? 'text-green-600' : 'text-slate-500'}
+            className={percentage === 100 ? '' : ''}
             style={{
-              fontSize: typography.fontSize.sm,
+              fontSize: typography.fontSize.sm[0],
+              color: percentage === 100 ? colors.brand.secondary[600] : colors.neutral[500]
             }}
           >
             {percentage === 100 
@@ -150,18 +151,19 @@ export function ProfileCompletionWidget({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
                 style={{
-                  fontSize: typography.fontSize['4xl'],
+                  fontSize: typography.fontSize['4xl'][0],
                   fontWeight: typography.fontWeight.bold,
-                  color: '#0f172a',
+                  color: colors.neutral[900],
                   lineHeight: 1,
                 }}
               >
                 {animatedPercentage}%
               </motion.div>
               <span
-                className="text-slate-400 mt-1"
+                className="mt-1"
                 style={{
-                  fontSize: typography.fontSize.xs,
+                  fontSize: typography.fontSize.xs[0],
+                  color: colors.neutral[400]
                 }}
               >
                 Complete
@@ -181,8 +183,8 @@ export function ProfileCompletionWidget({
               onClick={() => onItemClick?.(item.id)}
               className="w-full flex items-center justify-between p-4 rounded-xl transition-all duration-200 hover:bg-white/5 active:scale-[0.99] group"
               style={{
-                border: `1px solid rgba(0, 0, 0, 0.05)`,
-                background: 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${colors.neutral[200]}`,
+                background: colors.neutral[50],
                 minHeight: '56px',
               }}
             >
@@ -191,13 +193,13 @@ export function ProfileCompletionWidget({
                 <div className="flex-shrink-0">
                   {item.completed ? (
                     <CheckCircle2
-                      className="text-green-400"
-                      style={{ width: '20px', height: '20px', filter: 'drop-shadow(0 0 2px rgba(74, 222, 128, 0.5))' }}
+                      className=""
+                      style={{ width: '20px', height: '20px', color: colors.brand.secondary[400], filter: `drop-shadow(0 0 2px ${colors.brand.secondary[400]}80)` }}
                     />
                   ) : (
                     <Circle
-                      className="text-gray-600 group-hover:text-gray-500 transition-colors"
-                      style={{ width: '20px', height: '20px' }}
+                      className="transition-colors group-hover:text-gray-500"
+                      style={{ width: '20px', height: '20px', color: colors.neutral[600] }}
                     />
                   )}
                 </div>
@@ -206,7 +208,7 @@ export function ProfileCompletionWidget({
                 <span
                   className={item.completed ? 'text-slate-400 line-through' : 'text-slate-700 group-hover:text-slate-900 transition-colors'}
                   style={{
-                    fontSize: typography.fontSize.sm,
+                    fontSize: typography.fontSize.sm[0],
                     fontWeight: typography.fontWeight.medium,
                     textAlign: 'left',
                   }}

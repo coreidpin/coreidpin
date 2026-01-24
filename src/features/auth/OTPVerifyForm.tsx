@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../utils/api';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { colors } from '../../styles/designSystem';
 
 interface OTPVerifyFormProps {
   contact: string;
@@ -126,11 +128,16 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="space-y-6"
+    >
       <div className="flex items-center mb-4">
         <button 
           onClick={onBack}
-          className="text-sm text-white/80 hover:text-white flex items-center gap-1 transition-colors"
+          className="text-sm hover:opacity-80 flex items-center gap-1 transition-colors"
+          style={{ color: '#9ca3af' }}
         >
           ← Back
         </button>
@@ -140,14 +147,14 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
         <h2 className="text-2xl font-semibold mb-2 text-white">
           Verify your {contactType}
         </h2>
-        <p className="text-sm text-white/80">
+        <p className="text-sm" style={{ color: '#9ca3af' }}>
           Enter the 6-digit code sent to <span className="font-medium text-white">{contact}</span>
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-white/90 mb-1.5">
+          <label className="block text-sm font-medium mb-1.5" style={{ color: '#d1d5db' }}>
             Verification Code
           </label>
           <input
@@ -155,7 +162,7 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="123456"
-            className="w-full h-14 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all text-center text-3xl tracking-[0.5em] font-mono"
+            className="w-full h-14 px-4 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/60 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 outline-none transition-all text-center text-3xl tracking-[0.5em] font-mono"
             required
             autoFocus
           />
@@ -164,7 +171,8 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
         <button
           type="submit"
           disabled={loading || otp.length < 6}
-          className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-indigo-500/20"
+          style={{ backgroundColor: colors.brand.primary[600] }}
         >
           {loading ? (
             <>
@@ -177,19 +185,19 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
         </button>
 
         <div className="text-left pt-2">
-          <p className="text-sm text-white/80">
+          <p className="text-sm" style={{ color: '#9ca3af' }}>
             Didn't receive code?{' '}
             <button
               type="button"
               onClick={handleResend}
               disabled={timeLeft > 0 || loading}
-              className="text-blue-400 hover:text-blue-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="text-indigo-400 hover:text-indigo-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {timeLeft > 0 ? `Resend in ${timeLeft}s` : 'Resend'}
             </button>
           </p>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 };

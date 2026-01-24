@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from './ui/card'
 import { Navbar } from './Navbar'
 import { Sparkles } from 'lucide-react'
@@ -50,8 +50,36 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
   };
 
   return (
-    <AuthLayout>
+    <AuthLayout
+      sidebarData={{
+        name: formData.name || undefined,
+        role: formData.userType === 'business' ? formData.industry : 'Professional',
+        pin: stage === 'otp-verification' ? 'PIN-VERIFYING' : (stage === 'success' ? 'PIN-ACTIVE' : undefined)
+      }}
+    >
       <div className="w-full" aria-busy={isLoading}>
+        {/* Progress Indicator */}
+        <div className="mb-6 flex space-x-1">
+          <div 
+            className="h-1 flex-1 rounded-full transition-all duration-500"
+            style={{ 
+              backgroundColor: stage === 'basic' || stage === 'otp-verification' || stage === 'success' ? '#6366f1' : 'rgba(255,255,255,0.1)' 
+            }}
+          />
+          <div 
+            className="h-1 flex-1 rounded-full transition-all duration-500"
+            style={{ 
+              backgroundColor: stage === 'otp-verification' || stage === 'success' ? '#6366f1' : 'rgba(255,255,255,0.1)' 
+            }}
+          />
+          <div 
+            className="h-1 flex-1 rounded-full transition-all duration-500"
+            style={{ 
+              backgroundColor: stage === 'success' ? '#6366f1' : 'rgba(255,255,255,0.1)' 
+            }}
+          />
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
             {stage === 'basic' && 'Create your account'}
@@ -65,75 +93,102 @@ export default function SimpleRegistration({ onComplete, onBack, showChrome = tr
           </p>
         </div>
 
-        <div className="space-y-6">
-          {stage === 'basic' && (
-            <>
-              {/* User Type Tab-style selector for left-aligned layout */}
-              <div className="mb-8 p-1 bg-white/5 rounded-xl border border-white/10 flex">
-                <button
-                  onClick={() => handleUserTypeChange('professional')}
-                  style={{ 
-                    flex: 1, 
-                    padding: '8px 16px', 
-                    borderRadius: '8px', 
-                    fontSize: '14px', 
-                    fontWeight: 500, 
-                    transition: 'all 0.2s',
-                    backgroundColor: userType === 'professional' ? 'white' : 'transparent',
-                    color: userType === 'professional' ? 'black' : '#94a3b8'
-                  }}
-                >
-                  Professional
-                </button>
-                <button
-                  onClick={() => handleUserTypeChange('business')}
-                  style={{ 
-                    flex: 1, 
-                    padding: '8px 16px', 
-                    borderRadius: '8px', 
-                    fontSize: '14px', 
-                    fontWeight: 500, 
-                    transition: 'all 0.2s',
-                    backgroundColor: userType === 'business' ? 'white' : 'transparent',
-                    color: userType === 'business' ? 'black' : '#94a3b8'
-                  }}
-                >
-                  Business
-                </button>
-              </div>
-              
-              <BasicInfoForm
-                formData={formData}
-                errors={errors}
-                isLoading={isLoading}
-                countryCode={countryCode}
-                countryError={countryError}
-                setCountryCode={setCountryCode}
-                setCountryError={setCountryError}
-                updateField={updateField}
-                onSubmit={handleStartRegistration}
-                onGoogleSignIn={handleGoogleSignIn}
-                onBack={onBack}
-              />
-            </>
-          )}
+        <div className="relative min-h-[400px]">
+          <AnimatePresence mode="wait" initial={false}>
+            {stage === 'basic' && (
+              <motion.div
+                key="basic-stage"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                {/* User Type Tab-style selector for left-aligned layout */}
+                <div className="mb-8 p-1 bg-white/5 rounded-xl border border-white/10 flex relative overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => handleUserTypeChange('professional')}
+                    className="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors relative"
+                    style={{ 
+                      color: userType === 'professional' ? 'black' : '#9ca3af',
+                    }}
+                  >
+                    <span className="relative z-10">Professional</span>
+                    {userType === 'professional' && (
+                      <motion.div 
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUserTypeChange('business')}
+                    className="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors relative"
+                    style={{ 
+                      color: userType === 'business' ? 'black' : '#9ca3af',
+                    }}
+                  >
+                    <span className="relative z-10">Business</span>
+                    {userType === 'business' && (
+                      <motion.div 
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-white rounded-lg shadow-sm"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                  </button>
+                </div>
+                
+                <BasicInfoForm
+                  formData={formData}
+                  errors={errors}
+                  isLoading={isLoading}
+                  countryCode={countryCode}
+                  countryError={countryError}
+                  setCountryCode={setCountryCode}
+                  setCountryError={setCountryError}
+                  updateField={updateField}
+                  onSubmit={handleStartRegistration}
+                  onGoogleSignIn={handleGoogleSignIn}
+                  onBack={onBack}
+                />
+              </motion.div>
+            )}
 
-          {stage === 'otp-verification' && (
-            <OTPVerification
-              otp={otp}
-              setOtp={setOtp}
-              isLoading={isLoading}
-              resendCountdown={resendCountdown}
-              canResend={canResend}
-              onVerify={handleVerifyOTP}
-              onResend={handleResendOTP}
-              onBack={() => setStage('basic')}
-            />
-          )}
+            {stage === 'otp-verification' && (
+              <motion.div
+                key="otp-stage"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                <OTPVerification
+                  otp={otp}
+                  setOtp={setOtp}
+                  isLoading={isLoading}
+                  resendCountdown={resendCountdown}
+                  canResend={canResend}
+                  onVerify={handleVerifyOTP}
+                  onResend={handleResendOTP}
+                  onBack={() => setStage('basic')}
+                />
+              </motion.div>
+            )}
 
-          {stage === 'success' && (
-            <SuccessView />
-          )}
+            {stage === 'success' && (
+              <motion.div
+                key="success-stage"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, type: "spring", bounce: 0.3 }}
+              >
+                <SuccessView />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {stage === 'basic' && (
