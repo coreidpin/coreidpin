@@ -1454,7 +1454,6 @@ export function ProfessionalDashboard() {
           <div className="space-y-2 sm:space-y-4 flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight break-words" style={{ color: colors.neutral[900] }}>
               Welcome back, <span style={{ color: colors.neutral[500] }}>{(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0] || 'Professional'}</span>
-              <span className="ml-2 text-base font-normal px-2 py-0.5 rounded-full border" style={{ color: colors.semantic.error, backgroundColor: '#FEF2F2', borderColor: '#FECACA' }}>Happy Holidays! 🎄</span>
             </h1>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border w-fit" style={{ backgroundColor: colors.brand.secondary[50], borderColor: colors.brand.secondary[100] }}>

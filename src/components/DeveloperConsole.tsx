@@ -134,7 +134,6 @@ export function DeveloperConsole() {
               <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                 <LayoutDashboard className="w-8 h-8 text-purple-600" />
                 Business Console
-                <span className="ml-2 text-sm font-normal text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">Happy Holidays! 🎁</span>
               </h1>
               <p className="text-gray-500 mt-2">
                 {businessProfile?.company_name || 'Welcome to GidiPIN API'}

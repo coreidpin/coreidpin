@@ -48,7 +48,7 @@ export function WelcomeModal() {
                <Sparkles className="w-4 h-4 text-amber-400" />
               </h3>
               <p className="text-zinc-400 text-sm leading-relaxed mb-3">
-                Wishing you a season of success and growth. Happy Holidays! 🎄
+                Your professional identity hub is ready. Explore your stats and manage your PIN securely.
               </p>
               <Button 
                 size="sm" 

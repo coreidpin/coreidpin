@@ -8,6 +8,7 @@ import { Logo } from './Logo';
 // import { AnnouncementBanner } from './AnnouncementBanner';
 import { WaitlistForm } from './WaitlistForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { supabase } from '../utils/supabase/client';
 import { 
   Menu, 
   ChevronDown,
@@ -19,7 +20,13 @@ import {
   LogIn,
   User,
   Loader2,
-  Users
+  Users,
+  LayoutDashboard,
+  ShieldCheck,
+  Award,
+  LogOut,
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
 import { SantaHat } from './ui/christmas-effects';
@@ -43,6 +50,7 @@ export function Navbar({
 }: NavbarProps) {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [showCookieConsent, setShowCookieConsent] = useState(false);
   const [showWaitlist, setShowWaitlist] = useState(false);
@@ -66,6 +74,35 @@ export function Navbar({
       if (!existing) setShowCookieConsent(true);
     } catch {}
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserProfile();
+    } else {
+      setUserProfile(null);
+    }
+  }, [isAuthenticated, userType]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const session = await import('../utils/session');
+      const state = session.getSessionState();
+      
+      if (!state?.userId) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', state.userId)
+        .single();
+
+      if (data) {
+        setUserProfile(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch user profile for navbar:', err);
+    }
+  };
 
   const acceptAllCookies = () => {
     try {
@@ -355,6 +392,17 @@ export function Navbar({
             ) : (
               <>
                 <NotificationBell />
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden cursor-pointer"
+                  onClick={() => navigate('/identity-management')}
+                >
+                  {userProfile?.profile_picture_url ? (
+                    <img src={userProfile.profile_picture_url} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4 text-primary" />
+                  )}
+                </motion.div>
                 <Button 
                   variant="default" 
                   size="sm"
@@ -631,49 +679,126 @@ export function Navbar({
                       </div>
                     </>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="flex-1 flex flex-col pt-2">
+                      {/* Premium Profile Header */}
                       <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl border border-primary/20 backdrop-blur-sm"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-5 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl border border-white/20 backdrop-blur-md mb-6 relative overflow-hidden group"
                       >
-                        <div className="flex items-center gap-2 mb-2">
-                          <motion.div 
-                            className="w-2 h-2 bg-emerald-500 rounded-full"
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                          />
-                          <p className="text-sm text-muted-foreground">Logged in as</p>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#32f08c]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                        <div className="flex items-center gap-4 relative z-10">
+                          <div className="relative">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border border-white/20 shadow-inner overflow-hidden">
+                              {userProfile?.profile_picture_url ? (
+                                <img src={userProfile.profile_picture_url} alt="Profile" className="w-full h-full object-cover" />
+                              ) : (
+                                <User className="w-7 h-7 text-[#32f08c]" />
+                              )}
+                            </div>
+                            <motion.div 
+                              className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0a0b0d]"
+                              animate={{ scale: [1, 1.2, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-[#32f08c] uppercase tracking-wider mb-0.5">Logged in as</p>
+                            <h3 className="font-bold text-lg text-white truncate leading-tight">
+                              {userProfile?.full_name || userProfile?.name || 'Professional'}
+                            </h3>
+                            <p className="text-sm text-white/50 truncate">
+                              {userProfile?.job_title || (userType === 'admin' ? 'Administrator' : 'GidiPIN Member')}
+                            </p>
+                          </div>
                         </div>
-                        <p className="font-medium">
-                          {userType === 'employer' && 'Employer Dashboard'}
-                          {userType === 'professional' && 'Professional Dashboard'}
-                          {userType === 'admin' && 'Admin Dashboard'}
-                        </p>
                       </motion.div>
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button 
-                          variant="ghost" 
-                          className="w-full justify-start h-12 hover:bg-white/10"
-                          onClick={() => {
-                            setIsMobileMenuOpen(false);
-                            navigate('/referrals');
-                          }}
-                        >
-                          <Users className="h-5 w-5 mr-3" />
-                          Invite & Earn
-                          <span className="ml-auto bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse shadow-lg shadow-blue-500/20">NEW</span>
-                        </Button>
-                      </motion.div>
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+
+                      {/* Navigation Sections */}
+                      <div className="space-y-6">
+                        <div>
+                          <h4 className="px-2 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-3">Main Navigation</h4>
+                          <div className="space-y-1">
+                            {[
+                              { label: 'Dashboard', icon: LayoutDashboard, href: userType === 'admin' ? '/admin/dashboard' : '/dashboard' },
+                              { label: 'Manage Identity', icon: ShieldCheck, href: '/identity-management' },
+                              { label: 'Waitlist', icon: Users, href: '/waitlist' },
+                            ].map((item, idx) => (
+                              <motion.button
+                                key={item.label}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                onClick={() => handleNavigate(item.href)}
+                                className="flex items-center gap-3 w-full px-4 py-3.5 text-white/70 hover:text-[#32f08c] hover:bg-white/5 rounded-2xl transition-all duration-300 group/nav"
+                              >
+                                <item.icon className="w-5 h-5 transition-transform group-hover/nav:scale-110" />
+                                <span className="font-semibold text-base">{item.label}</span>
+                                <ChevronRight className="ml-auto w-4 h-4 opacity-0 group-hover/nav:opacity-100 transition-all group-hover/nav:translate-x-1" />
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="px-2 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-3">Community & Rewards</h4>
+                          <motion.button
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                            onClick={() => handleNavigate('/referrals')}
+                            className="flex items-center gap-3 w-full px-4 py-3.5 text-white/70 hover:text-[#32f08c] hover:bg-white/5 rounded-2xl transition-all duration-300 group/nav"
+                          >
+                            <Award className="w-5 h-5 text-amber-400 transition-transform group-hover/nav:scale-110" />
+                            <span className="font-semibold text-base">Invite & Earn</span>
+                            <span className="ml-auto bg-[#32f08c] text-black text-[10px] px-2 py-0.5 rounded-lg font-bold shadow-[0_0_15px_rgba(50,240,140,0.3)]">NEW</span>
+                          </motion.button>
+                        </div>
+                      </div>
+
+                      {/* Bottom Actions */}
+                      <div className="mt-auto pt-8 pb-4">
+                        <motion.div 
+                          className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-6"
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                        />
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                           <Button 
+                            variant="ghost" 
+                            className="h-12 rounded-2xl bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                            onClick={() => {
+                              let target = '/security';
+                              if (userType === 'business') target = '/developer';
+                              if (userType === 'admin') target = '/admin/settings';
+                              handleNavigate(target);
+                            }}
+                          >
+                            <Settings className="w-4 h-4 mr-2" />
+                            Settings
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            className="h-12 rounded-2xl bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                            onClick={() => handleNavigate('/help')}
+                          >
+                            <HelpCircle className="w-4 h-4 mr-2" />
+                            Support
+                          </Button>
+                        </div>
                         <Button 
                           variant="outline" 
-                          className="w-full h-12 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all duration-300"
-                          onClick={onLogout}
+                          className="w-full h-14 rounded-2xl bg-transparent border-white/10 text-white/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all duration-300 font-bold group"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            onLogout?.();
+                          }}
                         >
-                          Logout
+                          <LogOut className="w-5 h-5 mr-3 transition-transform group-hover:-translate-x-1" />
+                          Sign Out of Platform
                         </Button>
-                      </motion.div>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -834,6 +834,11 @@ export const AppRouter: React.FC<RouterProps> = ({
             </DashboardAuthWrapper>
           } 
         />
+        
+        <Route 
+          path="/settings" 
+          element={<Navigate to={userType === 'admin' ? '/admin/settings' : userType === 'business' ? '/developer' : '/security'} replace />} 
+        />
 
         <Route 
           path="/identity-management" 
