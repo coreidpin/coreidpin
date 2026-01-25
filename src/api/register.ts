@@ -274,6 +274,4 @@ async function sendVerificationEmail(email: string, name: string, token: string)
 
   // Send email using your preferred service (SendGrid, AWS SES, etc.)
   // This is a placeholder - implement with your email service
-  console.log(`Verification email sent to ${email}`)
-  console.log(`Verification URL: ${verificationUrl}`)
 }

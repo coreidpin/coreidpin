@@ -155,13 +155,10 @@ export function PINOnboarding({ onComplete, onSkip }: PINOnboardingProps) {
           phoneNumber: formData.phone
         };
 
-        console.log('Creating PIN with payload:', pinPayload);
-
         // Create PIN via API
         const result = await api.createPIN(pinPayload, accessToken);
         
         if (result.success) {
-          console.log('PIN created successfully:', result.pinNumber);
           
           // Fetch the complete PIN data
           const pinData = await api.getUserPIN(userId, accessToken);

@@ -188,7 +188,6 @@ class MonitoringService {
     
     // For development, log to console
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Metric: ${name} = ${value}`, tags)
     }
   }
 

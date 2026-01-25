@@ -27,13 +27,11 @@ export class SessionManager {
    * Call this once on app startup
    */
   async init(): Promise<boolean> {
-    console.log('🔐 Initializing SessionManager...');
     
     // Check if we have valid tokens
     const hasTokens = this.hasValidTokens();
     
     if (!hasTokens) {
-      console.log('⚠️ No valid tokens found');
       return false;
     }
 
@@ -50,10 +48,8 @@ export class SessionManager {
     if (refreshed) {
       // Setup auto-refresh timer
       this.setupAutoRefresh();
-      console.log('✅ Session initialized successfully');
       return true;
     } else {
-      console.log('❌ Session initialization failed');
       return false;
     }
   }
@@ -83,13 +79,11 @@ export class SessionManager {
 
     // Refresh if expiring in next 5 minutes
     if (timeUntilExpiry < 5 * 60 * 1000) {
-      console.log('🔄 Token expiring soon, refreshing...');
       return await this.refreshToken();
     }
 
     // Token still valid
     const minutesRemaining = Math.floor(timeUntilExpiry / 1000 / 60);
-    console.log(`✅ Token valid for ${minutesRemaining} more minutes`);
     return true;
   }
 
@@ -99,7 +93,6 @@ export class SessionManager {
   async refreshToken(): Promise<boolean> {
     // Prevent concurrent refreshes
     if (this.isRefreshing) {
-      console.log('⏳ Refresh already in progress...');
       return false;
     }
 
@@ -111,8 +104,6 @@ export class SessionManager {
       if (!refreshToken) {
         throw new Error('No refresh token found');
       }
-
-      console.log('🔄 Refreshing token...');
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -144,8 +135,6 @@ export class SessionManager {
 
       // Sync with Supabase client
       await this.syncSupabaseSession(data.accessToken, data.refreshToken);
-
-      console.log('✅ Token refreshed successfully');
       return true;
 
     } catch (error: any) {
@@ -176,7 +165,6 @@ export class SessionManager {
         console.warn('⚠️ Supabase session sync warning:', error.message);
         // Don't fail - custom auth might not work with Supabase session
       } else {
-        console.log('✅ Supabase session synced');
       }
     } catch (err) {
       console.warn('⚠️ Failed to sync Supabase session:', err);
@@ -205,7 +193,6 @@ export class SessionManager {
    * Handle refresh failure (likely token expired)
    */
   private handleRefreshFailure() {
-    console.log('❌ Session expired, logging out...');
     
     // Clear all session data
     this.clearSession();
@@ -234,15 +221,12 @@ export class SessionManager {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
-
-    console.log('🗑️ Session cleared');
   }
 
   /**
    * Manually logout
    */
   async logout() {
-    console.log('🚪 Logging out...');
     
     // Could call logout endpoint here to invalidate session on server
     const refreshToken = localStorage.getItem('refreshToken');
@@ -310,7 +294,6 @@ export class SessionManager {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
-    console.log('🔒 SessionManager destroyed');
   }
 }
 

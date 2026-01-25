@@ -99,7 +99,6 @@ export function SwipeInterface({
   };
 
   const handleViewProfile = (id: string) => {
-    console.log('View full profile:', id);
   };
 
   const handleCloseMatch = () => {

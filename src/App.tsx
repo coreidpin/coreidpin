@@ -102,9 +102,7 @@ export default function App() {
       try {
         const initialized = await sessionManager.init();
         if (initialized) {
-          console.log('✅ SessionManager initialized - auto-refresh enabled');
         } else {
-          console.log('ℹ️ No active session for SessionManager');
         }
       } catch (error) {
         console.warn('Failed to initialize SessionManager:', error);
@@ -174,7 +172,6 @@ export default function App() {
       const restoredSession = await restoreSession();
       
       if (restoredSession) {
-        console.log('Session restored from localStorage');
         setIsAuthenticated(true);
         setCurrentView(restoredSession.userType as UserType);
         
@@ -185,13 +182,11 @@ export default function App() {
         cleanupCrossTab = setupCrossTabSync((session: SessionState | null) => {
           if (!session) {
             // Session cleared in another tab
-            console.log('Session cleared in another tab');
             setIsAuthenticated(false);
             setCurrentView('landing');
             setUserData(null);
           } else {
             // Session updated in another tab
-            console.log('Session updated in another tab');
             setIsAuthenticated(true);
             setCurrentView(session.userType as UserType);
           }

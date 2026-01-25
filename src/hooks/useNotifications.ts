@@ -18,13 +18,10 @@ export interface Notification {
 }
 
 export function useNotifications() {
-  console.log('🚀 useNotifications HOOK STARTED');
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
-
-  console.log('🚀 Hook state initialized, will fetch notifications...');
 
   // Fetch notifications from database
   const fetchNotifications = async () => {
@@ -54,11 +51,9 @@ export function useNotifications() {
 
       // Fetch active announcements
       const userType = localStorage.getItem('userType') || 'professional';
-      console.log('🔔 Fetching announcements for user type:', userType);
       let announcements: any[] = [];
       try {
         announcements = await notificationService.getActiveAnnouncements(userType);
-        console.log('🔔 Fetched announcements:', announcements);
       } catch (error) {
         console.warn('Could not fetch announcements:', error);
       }
@@ -79,16 +74,11 @@ export function useNotifications() {
         read_at: null
       }));
 
-      console.log('🔔 Formatted announcements:', formattedAnnouncements);
-
       // Combine and sort by date
       const combined = [
         ...(userNotifications || []),
         ...formattedAnnouncements
       ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      console.log('🔔 Combined notifications + announcements:', combined);
-      console.log('🔔 Total count:', combined.length);
 
       setNotifications(combined);
       
@@ -176,14 +166,11 @@ export function useNotifications() {
 
   // Subscribe to real-time updates
   useEffect(() => {
-    console.log('🔵 useEffect RUNNING - will call fetchNotifications');
     let cleanup: (() => void) | null = null;
 
     const initSubscription = async () => {
       try {
-        console.log('🔵 Calling fetchNotifications...');
         await fetchNotifications();
-        console.log('🔵 fetchNotifications completed');
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -200,7 +187,6 @@ export function useNotifications() {
               filter: `user_id=eq.${user.id}`
             },
             (payload) => {
-              console.log('New notification received:', payload);
               setNotifications(prev => [payload.new as Notification, ...prev]);
               setUnreadCount(prev => prev + 1);
             }
@@ -214,7 +200,6 @@ export function useNotifications() {
               filter: `user_id=eq.${user.id}`
             },
             (payload) => {
-              console.log('Notification updated:', payload);
               setNotifications(prev =>
                 prev.map(n => (n.id === payload.new.id ? payload.new as Notification : n))
               );

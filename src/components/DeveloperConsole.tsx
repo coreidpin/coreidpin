@@ -40,7 +40,6 @@ export function DeveloperConsole() {
   }, []);
 
   const fetchBusinessProfile = async () => {
-    console.log('🔄 Fetching business profile...');
     setLoading(true);
     
     try {
@@ -50,13 +49,10 @@ export function DeveloperConsole() {
       const refreshToken = localStorage.getItem('refreshToken');
       
       if (!userId) {
-        console.log('❌ No userId in localStorage');
         setBusinessProfile(null);
         setLoading(false);
         return;
       }
-
-      console.log('👤 User ID from localStorage:', userId);
 
       // CRITICAL: Sync Supabase session for RLS to work
       // This ensures auth.uid() in RLS policies returns the correct user
@@ -71,7 +67,6 @@ export function DeveloperConsole() {
             console.warn('⚠️ Session sync failed (will retry with userId):', sessionError);
             // Continue anyway - we'll try with userId as fallback
           } else {
-            console.log('✅ Supabase session synchronized');
           }
         } catch (err) {
           console.warn('⚠️ Session sync error:', err);
@@ -90,7 +85,6 @@ export function DeveloperConsole() {
       if (error) {
         if (error.code === 'PGRST116') {
           // No rows found - this is okay, profile doesn't exist yet
-          console.log('⚠️ No business profile found for user');
           setBusinessProfile(null);
           return;
         }
@@ -101,10 +95,8 @@ export function DeveloperConsole() {
       }
 
       if (data) {
-        console.log('✅ Business profile found:', data);
         setBusinessProfile(data);
       } else {
-        console.log('⚠️ No business profile found');
         setBusinessProfile(null);
       }
     } catch (error: any) {

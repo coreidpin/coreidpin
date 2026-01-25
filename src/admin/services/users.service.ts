@@ -191,7 +191,6 @@ export class UsersService extends BaseAPIClient {
   async resendVerificationEmail(email: string): Promise<void> {
     try {
       // This would call your email sending service
-      console.log('Resending verification email to:', email);
     } catch (error) {
       this.handleError(error);
     }

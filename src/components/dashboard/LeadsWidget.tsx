@@ -45,12 +45,9 @@ export function LeadsWidget({ professionalId, currentPin }: LeadsWidgetProps) {
         
         if (!userId) {
           const { data: { user } } = await supabase.auth.getUser();
-          console.log('[LeadsWidget] Current User:', user?.id);
           userId = user?.id;
           setCurrentUserId(userId || null);
         }
-        
-        console.log('[LeadsWidget] Fetching leads for:', userId);
         
         // Try RPC first (more reliable permissions)
         let { data, error } = await supabase.rpc('get_my_leads');
@@ -73,8 +70,6 @@ export function LeadsWidget({ professionalId, currentPin }: LeadsWidgetProps) {
         } else {
            setRpcErrorMsg(null);
         }
-
-        console.log('[LeadsWidget] Fetch Result:', { data, error });
 
         if (error) throw error;
         setLeads(data || []);
@@ -105,7 +100,6 @@ export function LeadsWidget({ professionalId, currentPin }: LeadsWidgetProps) {
           filter: `professional_id=eq.${currentUserId}`
         },
         (payload) => {
-          console.log('New lead received:', payload);
           // Refetch leads manually since we can't easily call fetchLeads from here without adding it to dependency array and creating loop
           // Simplified: just update local state if we knew the shape, or simpler: trigger a re-fetch.
           // For now, let's just trigger a reload of window or re-call fetch logic.

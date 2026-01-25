@@ -56,7 +56,6 @@ export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }
       // Get current user
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        console.log('No userId found, checking auth...');
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setLoading(false);
@@ -78,7 +77,6 @@ export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }
 
       if (data) {
         // Profile exists - load it
-        console.log('Business profile found:', data);
         const bizData = data as any;
         setProfile({
           id: bizData.id,
@@ -91,7 +89,6 @@ export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }
         });
       } else {
         // No profile exists yet - prefill from auth metadata
-        console.log('No business profile found, using auth metadata');
         await prefillFromAuth();
       }
     } catch (error) {
@@ -223,15 +220,12 @@ export function BusinessSettings({ businessId, initialProfile, onProfileUpdate }
             .upsert(updates as any, { onConflict: 'user_id' });
 
         if (error) throw error;
-        console.log('✅ Business profile saved successfully');
         toast.success('Business profile saved successfully');
         
         // Call parent callback to refresh business profile in DeveloperConsole
         if (onProfileUpdate) {
-          console.log('🔄 Calling onProfileUpdate callback...');
           onProfileUpdate();
         } else {
-          console.log('⚠️ No onProfileUpdate callback provided');
         }
     } catch (error: any) {
         console.error('Error updating profile:', error);

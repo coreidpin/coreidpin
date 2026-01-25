@@ -22,14 +22,12 @@ export class EndorsementAPI {
     try {
       // Check localStorage for auth tokens
       const allKeys = Object.keys(localStorage);
-      console.log('All localStorage keys:', allKeys);
       allKeys.forEach(key => {
         const value = localStorage.getItem(key);
         console.log(key + ':', value?.substring(0, 150));
       });
       
       const authKeys = allKeys.filter(k => k.includes('auth') || k.includes('supabase') || k.includes('sb-') || k.includes('gidipin'));
-      console.log('Auth storage keys found:', authKeys);
       
       // Get userId from localStorage (custom auth system)
       const userId = localStorage.getItem('userId');
@@ -39,8 +37,6 @@ export class EndorsementAPI {
         console.error('No userId or not authenticated');
         throw new Error('Not authenticated - Please log in again');
       }
-      
-      console.log('Using userId from localStorage:', userId);
 
       // Check if endorser is a platform user
       let endorser_id: string | null = null;
@@ -93,9 +89,6 @@ export class EndorsementAPI {
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const functionUrl = `${supabaseUrl}/functions/v1/send-endorsement-email`;
           
-          console.log('📧 Sending email...');
-          console.log('Function URL:', functionUrl);
-          
           const emailResponse = await fetch(functionUrl, {
             method: 'POST',
             headers: { 
@@ -112,7 +105,6 @@ export class EndorsementAPI {
           });
           
           const emailResult = await emailResponse.json();
-          console.log('Email result:', emailResult);
           
           if (!emailResult.success) {
             console.error('❌ Email failed:', emailResult.error);

@@ -437,8 +437,6 @@ export const IdentityManagementPage: React.FC = () => {
       const firstErrorField = Object.keys(errors)[0];
       const firstError = errors[firstErrorField];
       toast.error(firstError);
-      
-      console.log('Validation errors:', errors);
       return; // STOP - don't proceed with save
     }
 
@@ -666,7 +664,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       }
 
       const data = await response.json();
-      console.log('Gemini Response:', data);
 
       const textResponse = data.candidates[0].content.parts[0].text;
       
@@ -818,7 +815,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       // 1. Ensure Valid Session
       const token = await ensureValidSession();
       if (!token) {
-        console.log('Session expired or invalid');
         navigate('/login');
         return;
       }
@@ -897,7 +893,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           .single();
         setPinData(pin);
       } catch (e) {
-        console.log('No PIN found or error fetching PIN');
       }
 
       // 5. Calculate Completeness
@@ -1026,8 +1021,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://evcqpapvcvmljgqiuzsq.supabase.co';
       const functionUrl = `${supabaseUrl}/functions/v1/work-identity-update`;
 
-      console.log('Sending request to:', functionUrl);
-
       const response = await fetch(functionUrl, {
         method: 'PUT',
         headers: {
@@ -1038,8 +1031,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       });
 
       const responseText = await response.text();
-      console.log('Response status:', response.status);
-      console.log('Response body:', responseText);
 
       if (!response.ok) {
         let errorMessage = `Server error (${response.status})`;
@@ -1184,8 +1175,6 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       // Construct the full URL to avoid proxy issues
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://evcqpapvcvmljgqiuzsq.supabase.co';
       const functionUrl = `${supabaseUrl}/functions/v1/profile-update`;
-
-      console.log('Sending profile update to:', functionUrl);
 
       // Call the secure Edge Function instead of direct Supabase
       const response = await fetch(functionUrl, {

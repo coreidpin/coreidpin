@@ -41,11 +41,8 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
 
       try {
         // Try to find company by name
-        console.log('[CompanyLogo] Fetching logo for:', companyName);
         const { data, error } = await supabase
           .rpc('find_company', { company_name: companyName });
-
-        console.log('[CompanyLogo] RPC result:', { data, error });
         if (error) {
           console.error('[CompanyLogo] Full error details:', {
             message: error.message,
@@ -56,11 +53,9 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
         }
 
         if (!error && data && data.length > 0 && data[0].logo_url) {
-          console.log('[CompanyLogo] Found logo URL:', data[0].logo_url);
           setLogoUrl(data[0].logo_url);
         } else if (companyId) {
           // Fallback: try by ID
-          console.log('[CompanyLogo] Trying fallback by ID:', companyId);
           const { data: companyData } = await supabase
             .from('companies')
             .select('logo_url')
@@ -68,13 +63,10 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
             .single();
 
           if (companyData?.logo_url) {
-            console.log('[CompanyLogo] Found logo via ID:', companyData.logo_url);
             setLogoUrl(companyData.logo_url);
           } else {
-            console.log('[CompanyLogo] No logo found');
           }
         } else {
-          console.log('[CompanyLogo] No logo found in RPC result');
         }
       } catch (error) {
         console.error('[CompanyLogo] Error fetching company logo:', error);

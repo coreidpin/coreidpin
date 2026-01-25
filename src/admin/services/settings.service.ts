@@ -38,19 +38,15 @@ export class SettingsService extends BaseAPIClient {
    */
   async getSystemSettings(): Promise<SystemSettings> {
     try {
-      console.log('🔍 Fetching system settings via RPC...');
       
       // Use RPC function to bypass RLS
       const { data, error } = await (this.supabase as any)
         .rpc('get_system_settings');
 
-      console.log('📊 RPC Response:', { data, error });
-
       if (error) {
         console.error('Failed to get system settings:', error);
         // If no settings found, return defaults
         if (error.code === 'PGRST116' || !data || data.length === 0) {
-          console.log('⚠️ No settings found, using defaults');
           return {
             siteName: 'CoreID Admin',
             supportEmail: 'support@coreid.com',
@@ -68,11 +64,8 @@ export class SettingsService extends BaseAPIClient {
       // RPC returns array, get first row
       const row = data && data.length > 0 ? data[0] : null;
       
-      console.log('📝 Loaded settings row:', row);
-      
       if (!row) {
         // Return defaults if no settings exist
-        console.log('⚠️ No row found, using defaults');
         return {
           siteName: 'CoreID Admin',
           supportEmail: 'support@coreid.com',
@@ -97,8 +90,6 @@ export class SettingsService extends BaseAPIClient {
         enforce2FA: row.enforce_2fa,
         sessionTimeout: row.session_timeout,
       };
-      
-      console.log('✅ Returning settings:', settings);
       return settings;
     } catch (error) {
       console.error('Get system settings error:', error);
@@ -122,7 +113,6 @@ export class SettingsService extends BaseAPIClient {
    */
   async updateSystemSettings(settings: SystemSettings): Promise<void> {
     try {
-      console.log('💾 Saving system settings:', settings);
       
       // Use RPC function to bypass RLS
       const { data, error } = await (this.supabase as any)
@@ -137,14 +127,10 @@ export class SettingsService extends BaseAPIClient {
           p_session_timeout: settings.sessionTimeout
         });
 
-      console.log('💾 Save response:', { data, error });
-
       if (error) {
         console.error('RPC error:', error);
         throw error;
       }
-
-      console.log('✅ Settings saved successfully:', data);
       
       // Log the action
       await this.logAction('update_settings', 'System Settings', 'success');
@@ -188,7 +174,6 @@ export class SettingsService extends BaseAPIClient {
    */
   async inviteAdmin(email: string, role: string): Promise<void> {
     try {
-      console.log('Inviting admin via RPC:', email, role);
 
       // Use RPC function to bypass token compatibility issues
       const { data, error } = await (this.supabase as any)
@@ -196,8 +181,6 @@ export class SettingsService extends BaseAPIClient {
           p_email: email,
           p_role: role
         });
-
-      console.log('Invite RPC response:', { data, error });
 
       if (error) {
         console.error('RPC error:', error);
@@ -207,16 +190,12 @@ export class SettingsService extends BaseAPIClient {
       if (data && !data.success) {
         throw new Error(data.error || 'Failed to invite admin');
       }
-
-      console.log('Admin invited successfully:', data);
       
       // If invitation was created (not existing user), send email
       if (data && data.invitation_token) {
-        console.log('Sending invitation email...');
         
         try {
           await this.sendInvitationEmail(email, role, data.invitation_token);
-          console.log('✅ Invitation email sent successfully');
         } catch (emailError) {
           // Log but don't fail - invitation was created successfully
           console.error('⚠️ Failed to send invitation email:', emailError);

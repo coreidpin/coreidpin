@@ -31,7 +31,6 @@ profile.get("/:userId", async (c) => {
     
     // If profile doesn't exist, create a basic one from auth metadata
     if (!userProfile) {
-      console.log(`Creating profile for user ${userId} from auth metadata`);
       
       const userType = user.user_metadata?.userType || 'professional';
       userProfile = {
@@ -65,7 +64,6 @@ profile.get("/:userId", async (c) => {
 
     return c.json({ success: true, profile: userProfile });
   } catch (error) {
-    console.log("Get profile error:", error);
     return c.json({ error: `Failed to get profile: ${error.message}` }, 500);
   }
 });
@@ -107,7 +105,6 @@ profile.put("/:userId", async (c) => {
       profile: updatedProfile
     });
   } catch (error) {
-    console.log("Profile update error:", error);
     return c.json({ error: `Failed to update profile: ${error.message}` }, 500);
   }
 });
@@ -123,12 +120,10 @@ profile.post("/analyze", async (c) => {
     
     if (isDemoUser) {
       userId = 'demo-user-' + Date.now();
-      console.log("Demo user detected, proceeding with analysis");
     } else {
       const { data: { user }, error } = await supabase.auth.getUser(accessToken);
       
       if (!user?.id || error) {
-        console.log("Authorization error during profile analysis:", error);
         return c.json({ error: "Unauthorized - Please login again" }, 401);
       }
       userId = user.id;
@@ -137,12 +132,9 @@ profile.post("/analyze", async (c) => {
     const body = await c.req.json();
     const { linkedinUrl, githubUrl, portfolioUrl, resumeUrl, name, title } = body;
 
-    console.log("Analyzing profile for user:", userId, { name, title, linkedinUrl, githubUrl, portfolioUrl, resumeUrl });
-
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     
     if (!openaiApiKey) {
-      console.log("OpenAI API key not found - using mock analysis");
       // Return mock analysis for testing
       const mockAnalysis = {
         yearsOfExperience: 5,
@@ -189,7 +181,6 @@ profile.post("/analyze", async (c) => {
     if (githubUrl) {
       try {
         const githubUsername = githubUrl.split('github.com/')[1]?.split('/')[0]?.split('?')[0];
-        console.log("Fetching GitHub data for username:", githubUsername);
         
         if (githubUsername) {
           const githubResponse = await fetch(`https://api.github.com/users/${githubUsername}`, {
@@ -234,18 +225,10 @@ profile.post("/analyze", async (c) => {
                 updatedAt: repo.updated_at
               }))
             };
-            
-            console.log("GitHub data fetched successfully:", {
-              username: githubData.login,
-              repos: githubReposCount,
-              accountAge: githubAccountAge
-            });
           } else {
-            console.log("GitHub API response not OK:", githubResponse.status);
           }
         }
       } catch (error) {
-        console.log("GitHub fetch error:", error);
         // Continue without GitHub data
       }
     }
@@ -301,7 +284,6 @@ Response format: JSON only, no markdown.`;
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("OpenAI API error:", errorData);
       return c.json({ error: "AI service error" }, 500);
     }
 
@@ -312,7 +294,6 @@ Response format: JSON only, no markdown.`;
     try {
       analysisResult = JSON.parse(aiResponse);
     } catch (parseError) {
-      console.log("Failed to parse AI response:", aiResponse);
       analysisResult = {
         yearsOfExperience: 3,
         experienceLevel: "mid",
@@ -341,7 +322,6 @@ Response format: JSON only, no markdown.`;
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.log("Profile analysis error:", error);
     return c.json({ error: `Profile analysis failed: ${error.message}` }, 500);
   }
 });
@@ -419,10 +399,8 @@ profile.post("/complete", async (c) => {
           onboarding_complete: (userProfile?.onboardingComplete === true),
         }, { onConflict: 'user_id' });
       if (upsertErr) {
-        console.log('profiles upsert error on /profile/complete:', upsertErr);
       }
     } catch (profilesErr) {
-      console.log('profiles sync failed on /profile/complete:', profilesErr);
     }
 
     // Audit trail for profile completion
@@ -440,7 +418,6 @@ profile.post("/complete", async (c) => {
       missingFields: allFields.filter(key => !filledFields.includes(key))
     });
   } catch (error) {
-    console.log("Save profile error:", error);
     return c.json({ error: `Failed to save profile: ${error.message}` }, 500);
   }
 });
@@ -468,7 +445,6 @@ profile.get("/analysis/:userId", async (c) => {
 
     return c.json({ success: true, analysis });
   } catch (error) {
-    console.log("Get analysis error:", error);
     return c.json({ error: `Failed to get analysis: ${error.message}` }, 500);
   }
 });

@@ -25,7 +25,6 @@ class SessionLogger {
     }
 
     // Console log for debugging
-    console.log(`[SessionLogger] ${event}:`, details);
 
     // Store in localStorage for persistence
     try {

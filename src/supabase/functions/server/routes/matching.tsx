@@ -67,7 +67,6 @@ matching.get("/make-server-5cd3a043/recommendations", async (c) => {
       });
     }
   } catch (error: any) {
-    console.log("Get recommendations error:", error);
     return c.json({ error: `Failed to get recommendations: ${error.message}` }, 500);
   }
 });
@@ -126,7 +125,6 @@ matching.post("/make-server-5cd3a043/swipe", async (c) => {
       message: isMatch ? "It's a match!" : "Swipe recorded"
     });
   } catch (error: any) {
-    console.log("Swipe error:", error);
     return c.json({ error: `Failed to record swipe: ${error.message}` }, 500);
   }
 });
@@ -169,7 +167,6 @@ matching.get("/make-server-5cd3a043/matches", async (c) => {
       count: enrichedMatches.length
     });
   } catch (error: any) {
-    console.log("Get matches error:", error);
     return c.json({ error: `Failed to get matches: ${error.message}` }, 500);
   }
 });
@@ -210,7 +207,6 @@ matching.put("/make-server-5cd3a043/match/:matchId/status", async (c) => {
       message: "Match status updated"
     });
   } catch (error: any) {
-    console.log("Update match status error:", error);
     return c.json({ error: `Failed to update match: ${error.message}` }, 500);
   }
 });
@@ -267,7 +263,6 @@ matching.post("/make-server-5cd3a043/match/:matchId/message", async (c) => {
       message: "Message sent"
     });
   } catch (error: any) {
-    console.log("Send message error:", error);
     return c.json({ error: `Failed to send message: ${error.message}` }, 500);
   }
 });
@@ -308,7 +303,6 @@ matching.get("/make-server-5cd3a043/match/:matchId/messages", async (c) => {
       count: messages.length
     });
   } catch (error: any) {
-    console.log("Get messages error:", error);
     return c.json({ error: `Failed to get messages: ${error.message}` }, 500);
   }
 });

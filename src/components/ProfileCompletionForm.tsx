@@ -225,14 +225,6 @@ export function ProfileCompletionForm({
         return;
       }
 
-      console.log('Starting profile analysis...', {
-        hasLinkedIn: !!formData.linkedinUrl,
-        hasGitHub: !!formData.githubUrl,
-        hasPortfolio: !!formData.portfolioUrl,
-        name: analysisName,
-        title: analysisTitle
-      });
-
       const result = await api.analyzeProfile({
         linkedinUrl: formData.linkedinUrl,
         githubUrl: formData.githubUrl,
@@ -240,8 +232,6 @@ export function ProfileCompletionForm({
         name: analysisName,
         title: analysisTitle
       }, accessToken);
-
-      console.log('Analysis result:', result);
 
       if (result.success && result.analysis) {
         // Validate analysis has required fields
@@ -309,8 +299,6 @@ export function ProfileCompletionForm({
       const firstErrorField = Object.keys(errors)[0];
       const firstError = errors[firstErrorField];
       toast.error(firstError);
-      
-      console.log('Validation errors:', errors);
       return; // STOP - don't proceed with save
     }
 
@@ -344,22 +332,12 @@ export function ProfileCompletionForm({
       };
       const setupProgress = Object.values(setupSteps).filter(Boolean).length;
 
-      console.log('Saving profile...', { 
-        name: formData.name, 
-        title: formData.title,
-        completionPercentage,
-        setupSteps,
-        setupProgress
-      });
-
       const result = await api.saveCompleteProfile({
         ...formData,
         hourlyRate: formData.hourlyRate ? parseFloat(formData.hourlyRate) : null,
         setup_steps: setupSteps,
         setup_progress: setupProgress
       }, accessToken);
-
-      console.log('Save result:', result);
 
       if (result.success) {
         onProfileSaved(result.profile);

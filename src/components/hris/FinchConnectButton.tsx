@@ -15,7 +15,6 @@ export const FinchConnectButton: React.FC<FinchConnectButtonProps> = ({ onSucces
     products: ['employment', 'directory'], // Requests read access to employment data
     sandbox: true, // Use Sandbox environment
     onSuccess: ({ code }) => {
-      console.log('Finch Connect Success, Public Token:', code);
       onSuccess(code);
     },
     onError: (e) => {

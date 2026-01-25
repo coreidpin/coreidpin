@@ -126,17 +126,13 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
   const currentSession = getSessionState();
   
   if (!currentSession) {
-    console.log('No session found, refresh not needed');
     return null;
   }
 
   // Check if token is still valid and doesn't need refresh
   if (!needsRefresh(currentSession.expiresAt)) {
-    console.log('Token still valid, refresh not needed');
     return currentSession;
   }
-
-  console.log('Token needs refresh, attempting refresh...');
 
   // 1. Try Supabase Native Refresh first
   // This handles standard users (Magic Link, OAuth) who have valid refresh tokens
@@ -144,7 +140,6 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
     const { data, error } = await supabase.auth.refreshSession();
     
     if (!error && data.session) {
-      console.log('Refreshed via Supabase native auth');
       const newSession: SessionState = {
         accessToken: data.session.access_token,
         refreshToken: data.session.refresh_token,
@@ -155,8 +150,6 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
       saveSessionState(newSession);
       return newSession;
     }
-    
-    console.log('Supabase native refresh failed/skipped, trying custom endpoint:', error?.message);
   } catch (err) {
     console.warn('Error during Supabase native refresh:', err);
   }
@@ -205,8 +198,6 @@ export async function refreshTokenIfNeeded(): Promise<SessionState | null> {
       access_token: newSession.accessToken,
       refresh_token: newSession.refreshToken
     });
-
-    console.log('Token refreshed successfully via custom endpoint');
     return newSession;
 
   } catch (error: any) {
@@ -244,24 +235,19 @@ export async function restoreSession(): Promise<SessionState | null> {
 
       // Save to localStorage
       saveSessionState(sessionState);
-      console.log('Session restored successfully from Supabase');
       return sessionState;
     }
 
     // If Supabase session is missing, try to recover from localStorage
     // This handles cases where we use custom JWTs or Supabase client hasn't initialized fully
-    console.log('No Supabase session found, checking localStorage...');
     const localSession = getSessionState();
 
     if (localSession) {
       // Check if token is expired
       if (isTokenExpired(localSession.expiresAt)) {
-        console.log('Local session expired');
         clearSessionState();
         return null;
       }
-
-      console.log('Recovering session from localStorage...');
       
       // Attempt to re-hydrate Supabase session
       const { error: setError } = await supabase.auth.setSession({
@@ -321,7 +307,6 @@ export function updateActivity(): void {
  * Handle session expiry gracefully
  */
 export async function handleSessionExpiry(reason: 'token_expired' | 'inactivity' | 'invalid'): Promise<void> {
-  console.log(`Session expired: ${reason}`);
   
   // Clear all session data
   clearSessionState();
@@ -355,20 +340,17 @@ export function setupAutoRefresh(): () => void {
     const session = getSessionState();
     
     if (!session) {
-      console.log('No session found, stopping auto-refresh');
       return;
     }
 
     // Check for inactivity
     if (isSessionInactive()) {
-      console.log('Session inactive, logging out');
       await handleSessionExpiry('inactivity');
       return;
     }
 
     // Refresh token if needed
     if (needsRefresh(session.expiresAt)) {
-      console.log('Auto-refreshing token...');
       const refreshedSession = await refreshTokenIfNeeded();
       
       if (!refreshedSession) {
@@ -379,7 +361,6 @@ export function setupAutoRefresh(): () => void {
           console.error('Token is expired and refresh failed, logging out');
           await handleSessionExpiry('token_expired');
         } else {
-          console.log('Token still valid for a short while, will retry soon');
           // We don't log out yet, we'll try again on next tick or user action will trigger ensureValidSession
         }
       }
@@ -400,7 +381,6 @@ export function setupAutoRefresh(): () => void {
 
   // Return cleanup function
   return () => {
-    console.log('Cleaning up auto-refresh');
     clearInterval(intervalId);
   };
 }
@@ -415,8 +395,6 @@ export function setupCrossTabSync(onSessionChange: (session: SessionState | null
       return;
     }
 
-    console.log('Session changed in another tab:', event.key);
-
     // If access token was removed, session is cleared
     if (event.key === STORAGE_KEYS.ACCESS_TOKEN && !event.newValue) {
       onSessionChange(null);
@@ -430,11 +408,8 @@ export function setupCrossTabSync(onSessionChange: (session: SessionState | null
 
   window.addEventListener('storage', handleStorageChange);
 
-  console.log('Cross-tab sync setup complete');
-
   // Return cleanup function
   return () => {
-    console.log('Cleaning up cross-tab sync');
     window.removeEventListener('storage', handleStorageChange);
   };
 }
@@ -447,13 +422,11 @@ export async function ensureValidSession(): Promise<string | null> {
   let session = getSessionState();
 
   if (!session) {
-    console.log('No session found');
     return null;
   }
 
   // Check if token needs refresh
   if (needsRefresh(session.expiresAt)) {
-    console.log('Token expiring soon, refreshing before request...');
     const refreshedSession = await refreshTokenIfNeeded();
     
     if (refreshedSession) {

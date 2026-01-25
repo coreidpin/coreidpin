@@ -38,13 +38,11 @@ export function LeadReplyModal({ isOpen, onClose, lead, onReplySent }: LeadReply
       if (!token) {
         console.error('LeadReplyModal: ensureValidSession returned null. Session might be expired or missing.');
         const sessionState = localStorage.getItem('accessToken'); // detailed check
-        console.log('LeadReplyModal: Raw token in storage:', sessionState ? 'Present' : 'Missing');
         toast.error('Session expired. Please log in again.');
         return;
       }
 
       const functionUrl = `${supabaseUrl}/functions/v1/send-lead-reply`;
-      console.log('Sending reply to:', functionUrl);
       
       const response = await fetch(functionUrl, {
         method: 'POST',

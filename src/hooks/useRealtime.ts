@@ -107,7 +107,6 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
           setStatus('connected');
           isSubscribedRef.current = true;
           retryCountRef.current = 0; // Reset on successful connection
-          console.log(`[useRealtime] ✅ Connected to ${table}`);
         } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
           retryCountRef.current++;
           setStatus('error');
@@ -121,7 +120,6 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
         } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
           setStatus('disconnected');
           isSubscribedRef.current = false;
-          console.log(`[useRealtime] 🔌 Disconnected from ${table}`);
         }
       });
 
@@ -141,7 +139,6 @@ export function useRealtime(config: RealtimeConfig): UseRealtimeReturn {
       isSubscribedRef.current = false;
       retryCountRef.current = 0; // Reset retry count
       setStatus('disconnected');
-      console.log(`[useRealtime] Unsubscribed from ${table}`);
     }
   }, [table]);
 

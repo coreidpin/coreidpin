@@ -55,7 +55,6 @@ export function useFeatureGate(): UseFeatureGateResult {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchAccess = async () => {
-    console.log('🚀 fetchAccess called in useFeatureGate');
     try {
       setLoading(true);
       setError(null);
@@ -63,8 +62,6 @@ export function useFeatureGate(): UseFeatureGateResult {
       // Check user type from localStorage FIRST (before auth check)
       const userType = localStorage.getItem('userType');
       const userId = localStorage.getItem('userId');
-      
-      console.log('🔍 DEBUG: Checking user type...', { userType, userId });
       
       // Business users get full access immediately (they use custom OTP auth, not Supabase auth)
       if (userType === 'business' && userId) {
@@ -84,8 +81,6 @@ export function useFeatureGate(): UseFeatureGateResult {
       console.log('🔐 Getting user from Supabase auth (professional user)...');
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      console.log('🔐 getUser result:', { user: user?.id, userError });
-      
       if (userError) {
         console.error('❌ User error:', userError);
         throw userError;
@@ -94,8 +89,6 @@ export function useFeatureGate(): UseFeatureGateResult {
         console.error('❌ No user found');
         throw new Error('Not authenticated');
       }
-
-      console.log('✅ User authenticated:', user.id);
 
       // Query user_feature_access view (for professionals)
       const { data, error: viewError } = await supabase
@@ -169,7 +162,6 @@ export function useFeatureGate(): UseFeatureGateResult {
           table: 'profiles',
         },
         () => {
-          console.log('Profile updated, refetching feature access...');
           fetchAccess();
         }
       )

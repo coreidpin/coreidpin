@@ -21,7 +21,6 @@ export function AcceptAdminInvitation() {
 
   const validateInvitation = async () => {
     try {
-      console.log('🔍 Validating invitation token:', token);
       
       const { data, error } = await supabase
         .from('admin_invitations')
@@ -44,8 +43,6 @@ export function AcceptAdminInvitation() {
         setTimeout(() => navigate('/admin/login'), 2000);
         return;
       }
-
-      console.log('✅ Valid invitation:', data);
       setInvitation(data);
       setStep('otp-request');
     } catch (err) {
@@ -77,8 +74,6 @@ export function AcceptAdminInvitation() {
       if (otp.length < 6) {
         throw new Error('Please enter a valid 6-digit code');
       }
-
-      console.log('🔑 Verifying OTP and creating account...');
       
       const response = await api.verifyOTP(
         invitation.email,
@@ -90,8 +85,6 @@ export function AcceptAdminInvitation() {
       if (!response.access_token) {
         throw new Error('Invalid response from server');
       }
-
-      console.log('✅ Account created, granting admin access...');
 
       // Add user to admin_users table
       const { error: adminError } = await supabase
@@ -125,8 +118,6 @@ export function AcceptAdminInvitation() {
       localStorage.setItem('isAdmin', 'true');
       localStorage.setItem('adminRole', invitation.role);
       localStorage.setItem('adminSession', Date.now().toString());
-
-      console.log('✅ Admin access granted successfully');
       toast.success('Welcome! Redirecting to admin dashboard...');
 
       setTimeout(() => {

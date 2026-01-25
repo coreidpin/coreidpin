@@ -204,7 +204,6 @@ export const PublicProfile: React.FC = () => {
                     <div className="flex gap-4">
                       <Button 
                         onClick={() => {
-                          console.log('Contact Me clicked! Setting showContactModal to true');
                           setShowContactModal(true);
                         }}
                         className="bg-white text-black hover:bg-white/90 font-semibold px-8 py-6 rounded-full text-lg shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all hover:scale-105"

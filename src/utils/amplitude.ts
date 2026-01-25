@@ -26,7 +26,6 @@ export const initAmplitude = () => {
     }).promise;
     
     isInitialized = true;
-    console.log('Amplitude initialized successfully');
   } catch (error) {
     console.error('Failed to initialize Amplitude:', error);
   }

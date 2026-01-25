@@ -52,7 +52,6 @@ export function EnhancedUsers() {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('📊 Fetching users with filters:', filters);
       
       const result = await userManagementService.getUsers(
         filters,
@@ -61,8 +60,6 @@ export function EnhancedUsers() {
         sortBy,
         sortOrder
       );
-      
-      console.log('✅ Users fetched:', result.users.length, 'Total:', result.total);
       setUsers(result.users);
       setTotal(result.total);
       setTotalPages(result.totalPages);
@@ -76,9 +73,7 @@ export function EnhancedUsers() {
 
   const loadStatistics = async () => {
     try {
-      console.log('📊 Fetching user statistics...');
       const stats = await userManagementService.getUserStatistics();
-      console.log('✅ Statistics loaded:', stats);
       setStatistics(stats);
     } catch (error) {
       console.error('❌ Failed to load statistics:', error);

@@ -61,7 +61,6 @@ export function useOnboarding() {
   const handleNotificationAllow = async () => {
     try {
       const permission = await Notification.requestPermission();
-      console.log('Notification permission:', permission);
       
       if (permission === 'granted') {
         // Show a test notification

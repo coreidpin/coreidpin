@@ -73,8 +73,6 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
               }
             })
           });
-          
-          console.log('✅ Session created in database');
         } catch (sessionError) {
           console.error('⚠️ Failed to create session in database:', sessionError);
           // Continue anyway - session creation is not critical for immediate login
@@ -87,7 +85,6 @@ export const OTPVerifyForm: React.FC<OTPVerifyFormProps> = ({ contact, contactTy
             access_token: response.access_token,
             refresh_token: refreshToken
           });
-          console.log('✅ Supabase session synced for RLS');
         } catch (syncError) {
           console.warn('⚠️ Failed to sync Supabase session:', syncError);
           // Non-critical - continue with login

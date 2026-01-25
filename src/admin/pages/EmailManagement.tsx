@@ -35,17 +35,12 @@ export default function EmailManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log('📧 Loading email data...');
       
       const [statsData, queueData, logsData] = await Promise.all([
         emailService.getStatistics(),
         emailService.getEmailQueue({ limit: 50 }),
         emailService.getEmailLogs({ limit: 50 })
       ]);
-
-      console.log('📊 Stats:', statsData);
-      console.log('📬 Queue:', queueData);
-      console.log('📜 Logs:', logsData);
 
       setStats(statsData);
       setQueue(queueData.emails);

@@ -52,7 +52,6 @@ auth.post("/register", async (c) => {
     });
 
     if (authError) {
-      console.log("Registration error during auth creation:", authError);
       return c.json({ error: `Registration failed: ${authError.message}` }, 400);
     }
 
@@ -88,7 +87,6 @@ auth.post("/register", async (c) => {
       userType
     });
   } catch (error) {
-    console.log("Registration error:", error);
     return c.json({ error: `Registration failed: ${error.message}` }, 500);
   }
 });
@@ -119,7 +117,6 @@ auth.post("/signup", async (c) => {
       user: data.user 
     });
   } catch (error) {
-    console.log("Signup error:", error);
     return c.json({ error: error.message }, 500);
   }
 });
@@ -164,7 +161,6 @@ auth.post('/login', async (c) => {
     await kv.set(bucketKey, { count: count + 1, resetAt: now > resetAt ? new Date(now + windowMs).toISOString() : new Date(resetAt).toISOString() });
 
     if (error) {
-      console.log('Login error:', error);
       // Log failed attempt
       const logKey = `login_history:${email}:${Date.now()}`;
       await kv.set(logKey, {
@@ -201,7 +197,6 @@ auth.post('/login', async (c) => {
       userData,
     });
   } catch (error: any) {
-    console.log('Login error:', error);
     return c.json({ error: `Login failed: ${error?.message || 'Unknown error'}` }, 500);
   }
 });

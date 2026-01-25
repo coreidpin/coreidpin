@@ -63,7 +63,6 @@ export function APIKeysManager() {
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        console.log('No userId found');
         setLoading(false);
         return;
       }

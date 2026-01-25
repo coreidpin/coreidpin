@@ -49,15 +49,11 @@ export const AdminLoginForm: React.FC = () => {
   const handleOTPVerifySuccess = async (accessToken: string, user: any) => {
     setIsLoading(true);
     try {
-      console.log('🔍 Checking admin status for user:', user.id);
-      console.log('User object:', user);
       
       // 1. Verify Admin Status using RPC function (bypasses RLS)
       // RPC function call wrapped to handle typing issues with dynamically generated types
       const { data: adminCheckResult, error: adminError } = await (supabase as any)
         .rpc('check_admin_status', { check_user_id: user.id });
-
-      console.log('Admin RPC result:', { adminCheckResult, adminError });
 
       const adminData = adminCheckResult && adminCheckResult[0];
 
@@ -74,8 +70,6 @@ export const AdminLoginForm: React.FC = () => {
         toast.error('Unauthorized access attempt logged.');
         return;
       }
-
-      console.log('✅ Admin verified:', adminData);
 
       // 2. Success - Supabase session is already set
       localStorage.setItem('isAdmin', 'true');
@@ -106,7 +100,6 @@ export const AdminLoginForm: React.FC = () => {
       
       // Delay redirect to ensure everything is persisted
       setTimeout(() => {
-        console.log('🚀 Redirecting to /admin/dashboard');
         navigate('/admin/dashboard');
       }, 1000);
       
@@ -245,15 +238,12 @@ export const AdminLoginForm: React.FC = () => {
                   );
                   
                   if (response.access_token) {
-                    console.log('🔑 OTP verified, tokens received');
                     
                     // Save tokens to localStorage (don't use Supabase session for admin login)
                     localStorage.setItem('accessToken', response.access_token);
                     localStorage.setItem('userId', response.user.id);
                     localStorage.setItem('isAuthenticated', 'true');
                     localStorage.setItem('userType', 'admin');
-                    
-                    console.log('✅ Tokens saved to localStorage');
                     
                     // Now check admin status
                     await handleOTPVerifySuccess(response.access_token, response.user);

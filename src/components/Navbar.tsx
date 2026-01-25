@@ -5,7 +5,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { Logo } from './Logo';
-// import { AnnouncementBanner } from './AnnouncementBanner';
 import { WaitlistForm } from './WaitlistForm';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { supabase } from '../utils/supabase/client';
@@ -29,7 +28,6 @@ import {
   Settings
 } from 'lucide-react';
 import { NotificationBell } from './notifications/NotificationBell';
-import { SantaHat } from './ui/christmas-effects';
 
 interface NavbarProps {
   currentPage?: string;
@@ -342,9 +340,7 @@ export function Navbar({
         <div className="container mx-auto px-4 sm:px-6 lg:px-8" style={{ overflow: 'visible' }}>
         <div className="flex items-center justify-between h-14 md:h-16 lg:h-18" style={{ overflow: 'visible' }}>
           {/* Logo */}
-          {/* Logo with Holiday Hat */}
           <div className="relative group">
-            <SantaHat className="top-[-12px] left-[-8px] scale-75 rotate-[-15deg] group-hover:rotate-[-5deg] transition-transform duration-300" />
             <Logo size="md" isLight={isLight} showText={false} onClick={() => handleNavigate('/')} />
           </div>
 

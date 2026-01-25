@@ -54,7 +54,6 @@ export function APIUsageDashboard() {
       // Get userId from localStorage (custom OTP auth)
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        console.log('No userId found');
         setLoading(false);
         return;
       }

@@ -77,13 +77,6 @@ export const checkAdminAccess = (): boolean => {
   const adminSession = localStorage.getItem('adminSession');
   const adminRole = localStorage.getItem('adminRole');
   
-  console.log('[checkAdminAccess] Checking:', {
-    isAdmin,
-    adminSession,
-    adminRole,
-    hasAccess: isAdmin === 'true' && !!adminSession
-  });
-  
   return isAdmin === 'true' && !!adminSession;
 };
 

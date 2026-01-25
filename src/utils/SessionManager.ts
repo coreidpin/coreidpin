@@ -54,9 +54,7 @@ export class SessionManager {
         if (session.expiresAt > Date.now()) {
           this.session = session;
           this.scheduleRefresh();
-          console.log('✅ Session restored from storage');
         } else {
-          console.log('⚠️ Stored session expired, clearing...');
           this.clearSession();
         }
       }
@@ -90,8 +88,6 @@ export class SessionManager {
 
       // Schedule auto-refresh
       this.scheduleRefresh();
-
-      console.log('✅ Session established, auto-refresh scheduled');
       
       // Create session record in database
       await this.createSessionRecord();
@@ -146,8 +142,6 @@ export class SessionManager {
 
     // Clear localStorage
     localStorage.removeItem(this.STORAGE_KEY);
-
-    console.log('✅ Session cleared');
   }
 
   /**
@@ -173,7 +167,6 @@ export class SessionManager {
       }, timeUntilRefresh);
     } else {
       // Token is about to expire or already expired, refresh immediately
-      console.log('⚠️ Token expiring soon, refreshing immediately...');
       this.refreshToken();
     }
   }
@@ -189,14 +182,12 @@ export class SessionManager {
 
     // Prevent concurrent refresh attempts
     if (this.isRefreshing) {
-      console.log('⏳ Refresh already in progress...');
       return;
     }
 
     this.isRefreshing = true;
 
     try {
-      console.log('🔄 Refreshing access token...');
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-refresh`,
@@ -224,8 +215,6 @@ export class SessionManager {
         data.access_token,
         data.refresh_token || this.session.refreshToken // Use new refresh_token if rotated
       );
-
-      console.log('✅ Token refreshed successfully');
     } catch (error) {
       console.error('❌ Token refresh failed:', error);
       
@@ -271,7 +260,6 @@ export class SessionManager {
       if (!response.ok) {
         console.warn('⚠️ Failed to create session record (non-critical)');
       } else {
-        console.log('✅ Session record created in database');
       }
     } catch (error) {
       // Non-critical error, don't fail the session

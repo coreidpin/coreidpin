@@ -91,8 +91,6 @@ import { professionalDashboardTour } from './dashboard/tourSteps';
 import { NoProjects, NoEndorsements, NoActivity } from './dashboard/EmptyStates';
 import { ExportActions } from './dashboard/ExportActions';
 import { ProjectCardSkeleton, EndorsementCardSkeleton, StatsCardSkeleton } from './dashboard/LoadingSkeletons';
-// import { useRealtime } from '../hooks/useRealtime'; // DISABLED - causing connection issues
-// import { RealtimeStatus } from './RealtimeStatus'; // DISABLED - real-time is off
 import { NetworkStatus } from './NetworkStatus';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { GlobalSearch } from './GlobalSearch';
@@ -174,8 +172,6 @@ export function ProfessionalDashboard() {
               completion_percentage: 100
             })
             .eq('user_id', userId);
-          
-          console.log('✅ Profile completion tracked in database');
         } catch (error) {
           console.error('Failed to update profile completion:', error);
         }
@@ -428,7 +424,6 @@ export function ProfessionalDashboard() {
   }, []);
 
   const handleSelectSearchItem = (item: SearchableItem) => {
-    console.log('Selected:', item);
     // Navigate or show details based on item type
     if (item.type === 'project') {
       // Could scroll to project or open modal
@@ -611,7 +606,6 @@ export function ProfessionalDashboard() {
   };
 
   const handleShareProfile = () => {
-    console.log('Opening Share Profile Dialog');
     setShowShareDialog(true);
   };
 
@@ -806,7 +800,6 @@ export function ProfessionalDashboard() {
         // Ensure session is valid
         const token = await ensureValidSession();
         if (!token) {
-          console.log('Session expired or invalid');
           return;
         }
 
@@ -853,7 +846,6 @@ export function ProfessionalDashboard() {
         
         // Self-healing: If user is logged in but not verified, force verify
         if (user && !isVerified) {
-          console.log('User logged in but not verified. Attempting self-healing...');
           try {
             const response = await fetch(`${supabaseUrl}/functions/v1/server/pin/verify-email`, {
               method: 'POST',
@@ -864,7 +856,6 @@ export function ProfessionalDashboard() {
             });
             
             if (response.ok) {
-              console.log('Self-healing successful: Email verified');
               // Refresh user to get updated status
               await supabase.auth.refreshSession();
             }
@@ -872,8 +863,6 @@ export function ProfessionalDashboard() {
             console.error('Self-healing failed:', err);
           }
         }
-
-        console.log('Profile fetch result:', { profile, profileError, isVerified });
         console.log('Profile data fields:', profile ? Object.keys(profile) : 'none');
         console.log('Location-related fields:', {
           location: (profile as any)?.location,
@@ -884,22 +873,18 @@ export function ProfessionalDashboard() {
           residence: (profile as any)?.residence,
           nationality: (profile as any)?.nationality
         });
-        console.log('All profile data:', profile);
         
         if (profileError) {
           console.error('Error fetching profile:', profileError);
         } else if (profile) {
-          console.log('Setting profile with data:', profile);
           setUserProfile({
             ...(profile as any),
             email_verified: isVerified || (profile as any).email_verified
           });
         } else {
-          console.log('No profile data returned');
         }
 
         // Fetch PIN via Edge Function (bypasses RLS)
-        console.log('Fetching PIN for user:', session.userId);
         try {
           const pinResponse = await fetch(`${supabaseUrl}/functions/v1/server/pin/current`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -908,10 +893,8 @@ export function ProfessionalDashboard() {
           if (pinResponse.ok) {
             const pinData = await pinResponse.json();
             if (pinData.success && pinData.pin) {
-              console.log('Setting PIN:', pinData.pin);
               setPhonePin(pinData.pin);
             } else {
-              console.log('No PIN found');
               setPhonePin(null);
             }
           } else {
@@ -1038,8 +1021,6 @@ export function ProfessionalDashboard() {
       try {
         const token = await ensureValidSession();
         if (!token || !userId) return;
-
-        console.log('🚀 Activating Demand Scoring Engine...');
         await fetch(`${supabaseUrl}/functions/v1/calculate-demand-score`, {
           method: 'POST',
           headers: {
@@ -1148,10 +1129,8 @@ export function ProfessionalDashboard() {
       });
 
       if (result.success && result.endorsements) {
-        console.log('Fetched endorsements:', result.endorsements);
         setEndorsements(result.endorsements);
       } else {
-        console.log('No endorsements found or error:', result);
       }
     } catch (error) {
       console.error('Error fetching endorsements:', error);
@@ -2924,7 +2903,6 @@ export function ProfessionalDashboard() {
         onClose={() => setNotificationCenterOpen(false)}
         notifications={realTimeNotifications}
         onNotificationClick={(notification) => {
-          console.log('Notification clicked:', notification);
           toast.success('Notification opened');
         }}
         onMarkAsRead={(id) => {
@@ -2963,11 +2941,9 @@ export function ProfessionalDashboard() {
       <ProductTour
         steps={professionalDashboardTour}
         onComplete={() => {
-          console.log('✅ Product tour completed!');
           trackEvent('product_tour_completed', { tour: 'professional-dashboard' });
         }}
         onSkip={() => {
-          console.log('⏩ Product tour skipped');
           trackEvent('product_tour_skipped', { tour: 'professional-dashboard' });
         }}
         storageKey="professional-dashboard-tour-v1"

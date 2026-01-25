@@ -11,10 +11,6 @@ export default function EmailVerificationCallback() {
   useEffect(() => {
     const handleVerification = async () => {
       try {
-        console.log('Starting email verification process...');
-        console.log('Current URL:', window.location.href);
-        console.log('URL search params:', window.location.search);
-        console.log('URL hash:', window.location.hash);
         
         // Check for custom token in URL (primary method for Resend API verification)
         const urlParams = new URLSearchParams(window.location.search);
@@ -23,15 +19,11 @@ export default function EmailVerificationCallback() {
         const token = urlParams.get('token') || hashParams.get('token') || 
                      urlParams.get('access_token') || hashParams.get('access_token');
         
-        console.log('Custom token found:', token ? 'Yes' : 'No');
-        
         if (token) {
-          console.log('Attempting to verify custom token...');
           // Use the API method to verify the token
           const result = await api.verifyLinkToken(token);
           
           if (result.success) {
-            console.log('Custom token verification successful');
             // Update verification status
             localStorage.setItem('emailVerified', 'true');
             try {
@@ -62,7 +54,6 @@ export default function EmailVerificationCallback() {
         const { data, error } = await supabase.auth.getSession();
         
         if (data.session?.user && data.session.user.email_confirmed_at) {
-          console.log('Fallback: User found in Supabase session');
           localStorage.setItem('emailVerified', 'true');
           localStorage.setItem('isAuthenticated', 'true');
           localStorage.setItem('userType', data.session.user.user_metadata?.userType || 'professional');
@@ -78,8 +69,6 @@ export default function EmailVerificationCallback() {
           }, 2000);
           return;
         }
-        
-        console.log('No token or verified session found');
         throw new Error('No verification token found. Please try clicking the verification link again or request a new verification email.');
         
       } catch (error: any) {

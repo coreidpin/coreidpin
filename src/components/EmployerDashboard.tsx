@@ -146,7 +146,6 @@ export function EmployerDashboard() {
         <VerificationBanner 
           userEmail={userEmail} 
           onDismiss={() => {
-            console.log('Verification modal dismissed temporarily');
           }}
         />
       )}
@@ -383,13 +382,10 @@ export function EmployerDashboard() {
               type="employer"
               matches={matches}
               onMessage={(matchId) => {
-                console.log('Opening message for:', matchId);
               }}
               onScheduleInterview={(matchId) => {
-                console.log('Scheduling interview for:', matchId);
               }}
               onSendOffer={(matchId) => {
-                console.log('Sending offer to:', matchId);
               }}
             />
           </TabsContent>

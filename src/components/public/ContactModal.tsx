@@ -17,7 +17,6 @@ interface ContactModalProps {
 }
 
 export function ContactModal({ open, onOpenChange, professionalId, professionalName }: ContactModalProps) {
-  console.log('ContactModal render:', { open, professionalId });
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,7 +57,6 @@ export function ContactModal({ open, onOpenChange, professionalId, professionalN
       if (!professionalId) throw new Error('Professional ID is missing');
       
       const cleanId = professionalId.trim();
-      console.log('Inserting Lead for:', cleanId);
 
       const { error } = await supabase.from('job_leads').insert({
         professional_id: cleanId,

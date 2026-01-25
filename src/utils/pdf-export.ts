@@ -284,7 +284,6 @@ export async function downloadPDFResume(userId: string, fileName?: string): Prom
     await generatePDFResume(userId);
     
     // Note: Browser's print-to-PDF will handle the actual download
-    console.log('PDF generation initiated. Use browser Print > Save as PDF');
   } catch (error) {
     console.error('Failed to generate PDF:', error);
     throw error;

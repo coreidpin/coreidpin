@@ -81,7 +81,6 @@ export function useDemandScore(): UseDemandScoreResult {
           table: 'pin_demand_metrics',
         },
         (payload) => {
-          console.log('Demand metrics updated:', payload);
           fetchDemandScore();
         }
       )

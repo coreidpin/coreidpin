@@ -64,23 +64,7 @@ export function IdentityVerificationTool() {
       }
 
       setResult(data.data || {});
-      console.log('✅ Verification successful! Received data:', data.data);
       console.log('Available fields:', Object.keys(data.data || {}).filter(k => data.data[k] !== null));
-      console.log('📊 Professional Details:', {
-        job_title: data.data?.job_title,
-        role: data.data?.role,
-        company_name: data.data?.company_name,
-        current_company: data.data?.current_company,
-        city: data.data?.city,
-        location: data.data?.location,
-        industry: data.data?.industry,
-        years_of_experience: data.data?.years_of_experience,
-        seniority: data.data?.seniority,
-        bio: data.data?.bio,
-        headline: data.data?.headline,
-        skills: data.data?.skills,
-        work_experiences: data.data?.work_experiences
-      });
       toast.success('Identity verified successfully!', { id: toastId });
 
     } catch (err: any) {

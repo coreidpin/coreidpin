@@ -22,7 +22,6 @@ export const AuthVerifyEmail: React.FC = () => {
   useEffect(() => {
     const handleMagicLink = async () => {
       try {
-        console.log('Handling Resend magic link...');
         
         // Check for token from Resend email
         const token = searchParams.get('token');
@@ -36,8 +35,6 @@ export const AuthVerifyEmail: React.FC = () => {
               throw new Error('Email is required for magic link authentication');
             }
           }
-          
-          console.log('Magic link token found, auto-authenticating user');
           
           // Mark as verified and authenticated (magic link = instant login)
           localStorage.setItem('emailVerified', 'true');
@@ -60,7 +57,6 @@ export const AuthVerifyEmail: React.FC = () => {
         }
 
         // No token found, invalid magic link
-        console.log('No token found in URL');
         
         setState({
           loading: false,

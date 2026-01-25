@@ -168,14 +168,12 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   React.useEffect(() => {
     const checkAdmin = async () => {
       try {
-        console.log('[AdminRoute] Checking admin access...');
         
         // FIRST: Check localStorage for admin session (from admin OTP login)
         const localIsAdmin = localStorage.getItem('isAdmin') === 'true';
         const localAdminSession = localStorage.getItem('adminSession');
         
         if (localIsAdmin && localAdminSession) {
-          console.log('[AdminRoute] ✅ Admin access granted via localStorage');
           setIsAdmin(true);
           setIsLoading(false);
           return;
@@ -184,10 +182,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         // FALLBACK: Check Supabase session
         const { data: { user } } = await supabase.auth.getUser();
         
-        console.log('[AdminRoute] Supabase user:', user?.id);
-        
         if (!user) {
-          console.log('[AdminRoute] ❌ No Supabase user found and no localStorage session');
           setIsAdmin(false);
           setIsLoading(false);
           return;
@@ -198,18 +193,14 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         const { data: adminCheckResult } = await supabase
           .rpc('check_admin_status', { check_user_id: user.id } as any);
 
-        console.log('[AdminRoute] Admin check result:', adminCheckResult);
-
         const isAdminUser = adminCheckResult && (adminCheckResult as any)?.[0]?.is_admin === true;
         setIsAdmin(isAdminUser);
         
         if (isAdminUser) {
-          console.log('[AdminRoute] ✅ Admin access granted via Supabase');
           localStorage.setItem('isAdmin', 'true');
           localStorage.setItem('adminRole', (adminCheckResult as any)[0].role);
           localStorage.setItem('adminSession', Date.now().toString());
         } else {
-          console.log('[AdminRoute] ❌ Admin access denied - not an admin');
         }
       } catch (error) {
         console.error('[AdminRoute] Admin check error:', error);

@@ -221,8 +221,6 @@ class APIClient {
         try { localStorage.setItem('csrfToken', token) } catch {}
       } catch {}
     }
-    console.log('Login request headers:', headers);
-    console.log('Login URL:', `${BASE_URL}/login`);
     
     const response = await this.fetchWithRetry(`${BASE_URL}/login`, {
       method: 'POST',
@@ -545,7 +543,6 @@ class APIClient {
         headers: { 'Content-Type': 'application/json' }
       });
     } catch (error) {
-      console.log('Share tracking failed:', error);
       // Non-fatal error, don't throw
     }
   }
@@ -806,7 +803,6 @@ class APIClient {
     }
     
     const data = await response.json();
-    console.log('OTP Request Response:', data);
     return data;
   }
 

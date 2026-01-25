@@ -71,7 +71,6 @@ matching.get("/recommendations", async (c) => {
       });
     }
   } catch (error) {
-    console.log("Get recommendations error:", error);
     return c.json({ error: `Failed to get recommendations: ${error.message}` }, 500);
   }
 });
@@ -130,7 +129,6 @@ matching.post("/swipe", async (c) => {
       message: isMatch ? "It's a match!" : "Swipe recorded"
     });
   } catch (error) {
-    console.log("Swipe error:", error);
     return c.json({ error: `Failed to record swipe: ${error.message}` }, 500);
   }
 });
@@ -173,7 +171,6 @@ matching.get("/matches", async (c) => {
       count: enrichedMatches.length
     });
   } catch (error) {
-    console.log("Get matches error:", error);
     return c.json({ error: `Failed to get matches: ${error.message}` }, 500);
   }
 });
@@ -214,7 +211,6 @@ matching.put("/match/:matchId/status", async (c) => {
       message: "Match status updated"
     });
   } catch (error) {
-    console.log("Update match status error:", error);
     return c.json({ error: `Failed to update match: ${error.message}` }, 500);
   }
 });
@@ -271,7 +267,6 @@ matching.post("/match/:matchId/message", async (c) => {
       message: "Message sent"
     });
   } catch (error) {
-    console.log("Send message error:", error);
     return c.json({ error: `Failed to send message: ${error.message}` }, 500);
   }
 });
@@ -312,7 +307,6 @@ matching.get("/match/:matchId/messages", async (c) => {
       count: messages.length
     });
   } catch (error) {
-    console.log("Get messages error:", error);
     return c.json({ error: `Failed to get messages: ${error.message}` }, 500);
   }
 });

@@ -84,9 +84,7 @@ export function PINIdentityCard({
     // Track share event via API
     try {
       await api.trackPINShare(data.pinNumber);
-      console.log('Share tracked for PIN:', data.pinNumber);
     } catch (error) {
-      console.log('Failed to track share:', error);
       // Non-fatal, continue with copy
     }
     

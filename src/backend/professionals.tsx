@@ -37,7 +37,6 @@ professionals.get("/", async (c) => {
       count: professionals.length 
     });
   } catch (error) {
-    console.log("Get professionals error:", error);
     return c.json({ error: `Failed to get professionals: ${error.message}` }, 500);
   }
 });
@@ -95,7 +94,6 @@ professionals.post("/search", async (c) => {
       count: filtered.length 
     });
   } catch (error) {
-    console.log("Search professionals error:", error);
     return c.json({ error: `Search failed: ${error.message}` }, 500);
   }
 });

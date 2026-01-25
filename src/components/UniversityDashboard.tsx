@@ -200,7 +200,6 @@ export function UniversityDashboard() {
         <VerificationBanner 
           userEmail={userEmail} 
           onDismiss={() => {
-            console.log('Verification modal dismissed temporarily');
           }}
         />
       )}
@@ -265,7 +264,6 @@ export function UniversityDashboard() {
           <AIRecommendationsEngine 
             userType="university"
             onRecommendationAction={(rec, action) => {
-              console.log('University recommendation action:', rec.title, action);
             }}
           />
         </div>

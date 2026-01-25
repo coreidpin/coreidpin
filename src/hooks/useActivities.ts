@@ -121,7 +121,6 @@ export function useActivities(limit: number = 10) {
               filter: `user_id=eq.${userData.id}`
             },
             (payload) => {
-              console.log('New activity:', payload);
               setActivities(prev => [payload.new as Activity, ...prev].slice(0, limit));
               setUnreadCount(prev => prev + 1);
             }

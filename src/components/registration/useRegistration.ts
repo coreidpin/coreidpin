@@ -100,9 +100,6 @@ export function useRegistration() {
       
       // FAILSAFE: Log the OTP if provided (for testing/debugging when SMS fails)
       if (response?.debug_otp) {
-        console.log('----------------------------------------------------');
-        console.log('🚧 DEBUG OTP:', response.debug_otp);
-        console.log('----------------------------------------------------');
         toast.info(`DEBUG MODE: Your OTP is ${response.debug_otp}`);
       }
       

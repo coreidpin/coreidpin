@@ -131,7 +131,6 @@ app.post("/make-server-5cd3a043/register", async (c) => {
     });
 
     if (authError) {
-      console.log("Registration error during auth creation:", authError);
       return c.json({ error: `Registration failed: ${authError.message}` }, 400);
     }
 
@@ -166,7 +165,6 @@ app.post("/make-server-5cd3a043/register", async (c) => {
       userType
     });
   } catch (error) {
-    console.log("Registration error:", error);
     return c.json({ error: `Registration failed: ${error.message}` }, 500);
   }
 });
@@ -187,7 +185,6 @@ app.post("/make-server-5cd3a043/login", async (c) => {
     });
 
     if (error) {
-      console.log("Login error:", error);
       return c.json({ error: `Login failed: ${error.message}` }, 401);
     }
 
@@ -202,7 +199,6 @@ app.post("/make-server-5cd3a043/login", async (c) => {
       userData
     });
   } catch (error) {
-    console.log("Login error:", error);
     return c.json({ error: `Login failed: ${error.message}` }, 500);
   }
 });
@@ -232,7 +228,6 @@ app.get("/make-server-5cd3a043/profile/:userId", async (c) => {
 
     return c.json({ success: true, user: userData });
   } catch (error) {
-    console.log("Profile retrieval error:", error);
     return c.json({ error: `Failed to get profile: ${error.message}` }, 500);
   }
 });
@@ -271,7 +266,6 @@ app.put("/make-server-5cd3a043/profile/:userId", async (c) => {
 
     return c.json({ success: true, user: updatedData });
   } catch (error) {
-    console.log("Profile update error:", error);
     return c.json({ error: `Failed to update profile: ${error.message}` }, 500);
   }
 });
@@ -321,7 +315,6 @@ app.post("/make-server-5cd3a043/ai/match-talent", async (c) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("OpenAI API error:", errorData);
       return c.json({ error: "AI service error" }, 500);
     }
 
@@ -334,7 +327,6 @@ app.post("/make-server-5cd3a043/ai/match-talent", async (c) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.log("AI matching error:", error);
     return c.json({ error: `AI matching failed: ${error.message}` }, 500);
   }
 });
@@ -383,7 +375,6 @@ app.post("/make-server-5cd3a043/ai/compliance-check", async (c) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("OpenAI API error:", errorData);
       return c.json({ error: "AI service error" }, 500);
     }
 
@@ -396,7 +387,6 @@ app.post("/make-server-5cd3a043/ai/compliance-check", async (c) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.log("AI compliance check error:", error);
     return c.json({ error: `Compliance check failed: ${error.message}` }, 500);
   }
 });
@@ -420,7 +410,6 @@ app.get("/make-server-5cd3a043/professionals", async (c) => {
       count: professionals?.length || 0
     });
   } catch (error) {
-    console.log("Get professionals error:", error);
     return c.json({ error: `Failed to get professionals: ${error.message}` }, 500);
   }
 });
@@ -436,12 +425,10 @@ app.post("/make-server-5cd3a043/profile/analyze", async (c) => {
     
     if (isDemoUser) {
       userId = 'demo-user-' + Date.now();
-      console.log("Demo user detected, proceeding with analysis");
     } else {
       const { data: { user }, error } = await supabase.auth.getUser(accessToken);
       
       if (!user?.id || error) {
-        console.log("Authorization error during profile analysis:", error);
         return c.json({ error: "Unauthorized - Please login again" }, 401);
       }
       userId = user.id;
@@ -450,12 +437,9 @@ app.post("/make-server-5cd3a043/profile/analyze", async (c) => {
     const body = await c.req.json();
     const { linkedinUrl, githubUrl, portfolioUrl, name, title } = body;
 
-    console.log("Analyzing profile for user:", userId, { name, title, linkedinUrl, githubUrl, portfolioUrl });
-
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     
     if (!openaiApiKey) {
-      console.log("OpenAI API key not found - using mock analysis");
       // Return mock analysis for testing
       const mockAnalysis = {
         yearsOfExperience: 5,
@@ -500,7 +484,6 @@ app.post("/make-server-5cd3a043/profile/analyze", async (c) => {
     if (githubUrl) {
       try {
         const githubUsername = githubUrl.split('github.com/')[1]?.split('/')[0]?.split('?')[0];
-        console.log("Fetching GitHub data for username:", githubUsername);
         
         if (githubUsername) {
           const githubResponse = await fetch(`https://api.github.com/users/${githubUsername}`, {
@@ -545,18 +528,10 @@ app.post("/make-server-5cd3a043/profile/analyze", async (c) => {
                 updatedAt: repo.updated_at
               }))
             };
-            
-            console.log("GitHub data fetched successfully:", {
-              username: githubData.login,
-              repos: githubReposCount,
-              accountAge: githubAccountAge
-            });
           } else {
-            console.log("GitHub API response not OK:", githubResponse.status);
           }
         }
       } catch (error) {
-        console.log("GitHub fetch error:", error);
         // Continue without GitHub data
       }
     }
@@ -588,8 +563,6 @@ Provide a JSON response with:
 
 Respond with ONLY valid JSON, no other text.`;
 
-    console.log("Calling OpenAI API...");
-
     let aiAnalysis: any;
     
     try {
@@ -619,11 +592,8 @@ Respond with ONLY valid JSON, no other text.`;
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("OpenAI API error status:", response.status);
-        console.log("OpenAI API error body:", errorText);
         
         // Fallback to mock analysis if OpenAI fails
-        console.log("OpenAI failed, using fallback analysis");
         aiAnalysis = {
           yearsOfExperience: githubAccountAge || 3,
           experienceLevel: githubAccountAge >= 5 ? "senior" : githubAccountAge >= 3 ? "mid" : "junior",
@@ -637,13 +607,10 @@ Respond with ONLY valid JSON, no other text.`;
         };
       } else {
         const data = await response.json();
-        console.log("OpenAI response received");
         
         aiAnalysis = JSON.parse(data.choices[0]?.message?.content || '{}');
-        console.log("Parsed AI analysis:", aiAnalysis);
       }
     } catch (openaiError: any) {
-      console.log("OpenAI API exception:", openaiError.message);
       
       // Use intelligent fallback based on available data
       aiAnalysis = {
@@ -681,8 +648,6 @@ Respond with ONLY valid JSON, no other text.`;
       portfolioUrl
     });
 
-    console.log("Analysis stored successfully for user:", userId);
-
     return c.json({ 
       success: true,
       analysis: aiAnalysis,
@@ -690,8 +655,6 @@ Respond with ONLY valid JSON, no other text.`;
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
-    console.log("Profile analysis error:", error?.message);
-    console.log("Error stack:", error?.stack);
     
     // Return a user-friendly error with fallback
     return c.json({ 
@@ -790,7 +753,6 @@ app.post("/make-server-5cd3a043/profile/complete", async (c) => {
       missingFields: allFields.filter(field => !body[field])
     });
   } catch (error) {
-    console.log("Profile completion error:", error);
     return c.json({ error: `Failed to save profile: ${error.message}` }, 500);
   }
 });
@@ -819,7 +781,6 @@ app.get("/make-server-5cd3a043/profile/analysis/:userId", async (c) => {
       analysis
     });
   } catch (error) {
-    console.log("Get analysis error:", error);
     return c.json({ error: `Failed to get analysis: ${error.message}` }, 500);
   }
 });
@@ -1244,7 +1205,6 @@ app.post("/make-server-5cd3a043/pin/convert-phone", async (c) => {
         await kv.del(`pin:${existingPin.pin_number}`);
       }
     } catch (kvErr) {
-      console.log('KV update warning:', kvErr);
       // Non-fatal, continue
     }
 
@@ -1302,7 +1262,6 @@ app.post("/pin/send-otp", async (c) => {
 
     // TODO: Integrate with SMS provider to actually send SMS
     // For now, we'll just log it (in production, send actual SMS)
-    console.log(`[DEV] OTP for ${sanitizedPhone}: ${otp}`);
 
     // In production, you would call your SMS provider here:
     // await sendSMS(sanitizedPhone, `Your verification code is: ${otp}`);

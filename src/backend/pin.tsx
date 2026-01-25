@@ -30,7 +30,6 @@ async function flushAnalytics() {
   try {
     await supabase.from('pin_analytics').insert(batch);
   } catch (err) {
-    console.log('Batch analytics insert failed, falling back to single inserts:', err);
     for (const ev of batch) {
       try { await supabase.from('pin_analytics').insert(ev); } catch {}
     }
@@ -109,8 +108,6 @@ pin.post("/create", async (c) => {
       phoneNumber = null
     } = body;
 
-    console.log(`Creating PIN for user ${user.id}:`, { name, title, location, phoneNumber });
-
     // Check if user already has a PIN
     const { data: existingPin } = await supabase
       .from('professional_pins')
@@ -119,7 +116,6 @@ pin.post("/create", async (c) => {
       .single();
 
     if (existingPin) {
-      console.log(`User ${user.id} already has PIN: ${existingPin.pin_number}`);
       return c.json({ 
         error: "You already have a PIN",
         pinNumber: existingPin.pin_number 
@@ -132,7 +128,6 @@ pin.post("/create", async (c) => {
     if (phoneNumber) {
       // Use phone number as PIN (sanitize to just digits)
       pinNumber = phoneNumber.replace(/\D/g, '');
-      console.log(`Using phone number as PIN: ${pinNumber}`);
     } else {
       // Fallback for users without phone: simple sequential PIN
       // This is rare and only happens in edge cases
@@ -155,11 +150,8 @@ pin.post("/create", async (c) => {
       .single();
 
     if (pinError) {
-      console.log('PIN insert error:', pinError);
       throw pinError;
     }
-
-    console.log(`PIN record created with ID: ${pinRecord.id}`);
 
     // Update user profile with PIN data
     try {
@@ -172,7 +164,6 @@ pin.post("/create", async (c) => {
         })
         .eq('user_id', user.id);
     } catch (profileErr) {
-      console.log('Profile update warning:', profileErr);
       // Non-fatal, continue
     }
 
@@ -192,9 +183,7 @@ pin.post("/create", async (c) => {
         .insert(experienceRecords);
 
       if (expError) {
-        console.log('Experience insert warning:', expError);
       } else {
-        console.log(`Added ${experienceRecords.length} experiences`);
       }
     }
 
@@ -213,9 +202,7 @@ pin.post("/create", async (c) => {
         .insert(skillRecords);
 
       if (skillError) {
-        console.log('Skill insert warning:', skillError);
       } else {
-        console.log(`Added ${skillRecords.length} skills`);
       }
     }
 
@@ -254,9 +241,7 @@ pin.post("/create", async (c) => {
         .insert(encryptedAccounts);
 
       if (accountError) {
-        console.log('Linked accounts insert warning:', accountError);
       } else {
-        console.log(`Added ${accountInserts.length} linked accounts`);
       }
     }
 
@@ -276,7 +261,6 @@ pin.post("/create", async (c) => {
       await kv.set(`pin_sensitive:${pinNumber}`, { userId: user.id, hash: hashed, createdAt: new Date().toISOString() });
       await kv.set(`audit:pin:create:${user.id}:${pinNumber}:${Date.now()}`, { actor: user.id, pinNumber, ts: new Date().toISOString() });
     } catch (kvErr) {
-      console.log('KV store warning:', kvErr);
     }
 
     // Queue for background AI verification
@@ -293,10 +277,8 @@ pin.post("/create", async (c) => {
         });
 
       if (queueError) {
-        console.log('Verification queue warning:', queueError);
       }
     } catch (err) {
-      console.log('Failed to queue verification:', err);
     }
 
     return c.json({ 
@@ -306,7 +288,6 @@ pin.post("/create", async (c) => {
       message: "PIN created successfully. Verification in progress."
     });
   } catch (error) {
-    console.log("PIN creation error:", error);
     return c.json({ error: `Failed to create PIN: ${error.message}` }, 500);
   }
 });
@@ -343,7 +324,6 @@ pin.get("/user/:userId", async (c) => {
       .single();
 
     if (error || !pinData) {
-      console.log('No PIN found for user:', userId, error);
       return c.json({ success: false, message: "No PIN found" }, 404);
     }
 
@@ -392,7 +372,6 @@ pin.get("/user/:userId", async (c) => {
 
     return c.json({ success: true, data: transformedData });
   } catch (error) {
-    console.log("Get PIN error:", error);
     return c.json({ error: `Failed to get PIN: ${error.message}` }, 500);
   }
 });
@@ -404,14 +383,11 @@ pin.get("/public/:pinNumber", async (c) => {
   try {
     const pinNumber = c.req.param('pinNumber');
 
-    console.log(`Fetching public PIN: ${pinNumber}`);
-
     // Check KV cache first for performance
     let cachedPin = null;
     try {
       cachedPin = await kv.get(`pin:${pinNumber}`);
     } catch (err) {
-      console.log('KV cache miss:', err);
     }
 
     // Fetch PIN with all related data
@@ -428,7 +404,6 @@ pin.get("/public/:pinNumber", async (c) => {
       .single();
 
     if (error || !pinData) {
-      console.log('PIN not found or not verified:', pinNumber, error);
       return c.json({ error: "PIN not found or not verified" }, 404);
     }
 
@@ -436,7 +411,6 @@ pin.get("/public/:pinNumber", async (c) => {
     try {
       await supabase.rpc('increment_pin_views', { p_pin_number: pinNumber });
     } catch (err) {
-      console.log('View increment warning:', err);
     }
 
     // Track analytics
@@ -450,7 +424,6 @@ pin.get("/public/:pinNumber", async (c) => {
       });
       await kv.set(`audit:pin:view:${pinNumber}:${Date.now()}`, { pinId: pinData.id, ip: c.req.header('x-forwarded-for') || 'unknown', ua: c.req.header('user-agent') || 'unknown', ts: new Date().toISOString() });
     } catch (err) {
-      console.log('Analytics tracking warning:', err);
     }
 
     // Get associated profile
@@ -502,7 +475,6 @@ pin.get("/public/:pinNumber", async (c) => {
     } catch {}
     return c.json({ success: true, data: transformedData });
   } catch (error) {
-    console.log("Get public PIN error:", error);
     return c.json({ error: `Failed to get PIN: ${error.message}` }, 500);
   }
 });
@@ -513,8 +485,6 @@ pin.get("/public/:pinNumber", async (c) => {
 pin.post("/:pinNumber/share", async (c) => {
   try {
     const pinNumber = c.req.param('pinNumber');
-    
-    console.log(`Tracking share for PIN: ${pinNumber}`);
 
     const { data: pinData } = await supabase
       .from('professional_pins')
@@ -530,7 +500,6 @@ pin.post("/:pinNumber/share", async (c) => {
     try {
       await supabase.rpc('increment_pin_shares', { p_pin_number: pinNumber });
     } catch (err) {
-      console.log('Share increment warning:', err);
     }
 
     // Track analytics
@@ -538,12 +507,10 @@ pin.post("/:pinNumber/share", async (c) => {
       enqueueAnalytics({ pin_id: pinData.id, event_type: 'share' });
       await kv.set(`audit:pin:share:${pinNumber}:${Date.now()}`, { pinId: pinData.id, ts: new Date().toISOString() });
     } catch (err) {
-      console.log('Analytics tracking warning:', err);
     }
 
     return c.json({ success: true });
   } catch (error) {
-    console.log("Share tracking error:", error);
     return c.json({ error: "Failed to track share" }, 500);
   }
 });
@@ -590,7 +557,6 @@ pin.get("/:pinNumber/analytics", async (c) => {
       }
     });
   } catch (error) {
-    console.log("Analytics error:", error);
     return c.json({ error: "Failed to get analytics" }, 500);
   }
 });
@@ -697,7 +663,6 @@ pin.post('/convert-phone', async (c) => {
         await kv.del(`pin:${existingPin.pin_number}`);
       }
     } catch (err) {
-      console.log('KV update warning:', err);
     }
 
     return c.json({ success: true, pinNumber: newPin });

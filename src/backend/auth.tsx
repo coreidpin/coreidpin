@@ -38,7 +38,6 @@ auth.post("/register", async (c) => {
     });
 
     if (authError) {
-      console.log("Registration error during auth creation:", authError);
       return c.json({ error: `Registration failed: ${authError.message}` }, 400);
     }
 
@@ -74,7 +73,6 @@ auth.post("/register", async (c) => {
       userType
     });
   } catch (error) {
-    console.log("Registration error:", error);
     return c.json({ error: `Registration failed: ${error.message}` }, 500);
   }
 });
@@ -105,7 +103,6 @@ auth.post("/signup", async (c) => {
       user: data.user 
     });
   } catch (error) {
-    console.log("Signup error:", error);
     return c.json({ error: error.message }, 500);
   }
 });

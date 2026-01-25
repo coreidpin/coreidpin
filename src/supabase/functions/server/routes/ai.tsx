@@ -50,7 +50,6 @@ ai.post("/match-talent", async (c) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("OpenAI API error:", errorData);
       return c.json({ error: "AI service error" }, 500);
     }
 
@@ -63,7 +62,6 @@ ai.post("/match-talent", async (c) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.log("AI matching error:", error);
     return c.json({ error: `AI matching failed: ${error.message}` }, 500);
   }
 });
@@ -111,7 +109,6 @@ ai.post("/compliance-check", async (c) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log("OpenAI API error:", errorData);
       return c.json({ error: "AI service error" }, 500);
     }
 
@@ -124,7 +121,6 @@ ai.post("/compliance-check", async (c) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.log("Compliance check error:", error);
     return c.json({ error: `Compliance check failed: ${error.message}` }, 500);
   }
 });

@@ -96,7 +96,6 @@ export function MatchesView({
 
   const handleSendMessage = () => {
     if (messageText.trim() && selectedMatch) {
-      console.log('Sending message:', messageText, 'to:', selectedMatch.id);
       onMessage(selectedMatch.id);
       setMessageText('');
     }
