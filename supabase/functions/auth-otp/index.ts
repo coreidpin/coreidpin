@@ -120,16 +120,44 @@ const handleRequest = async (c: any) => {
       }
     }
 
+    // PROFILES CHECK: Also check if this user exists in profiles table
+    // This handles existing users who were created via email/password flow
+    let existingProfile = null;
+    if (contact_type === 'email') {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('user_id, email')
+        .eq('email', contact)
+        .maybeSingle();
+      
+      if (profileData) {
+        console.log('✅ Profile user found:', { email: contact.replace(/.(?=.{4})/g, '*') });
+        existingProfile = profileData;
+      }
+    } else if (contact_type === 'phone') {
+      // For phone-based login, check profiles table by phone number
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('user_id, phone')
+        .eq('phone', contact)
+        .maybeSingle();
+      
+      if (profileData) {
+        console.log('✅ Profile user found:', { phone: contact.replace(/.(?=.{4})/g, '*') });
+        existingProfile = profileData;
+      }
+    }
+
     const isRegistration = body.create_account === true;
 
     if (isRegistration) {
-      if (existingUser || existingAdmin) {
+      if (existingUser || existingAdmin || existingProfile) {
         console.log('Block Registration: User already exists', { contact_masked: contact.replace(/.(?=.{4})/g, '*') });
         return c.json({ error: 'Account already exists. Please log in.' }, 400);
       }
     } else {
       // Login attempt
-      if (!existingUser && !existingAdmin) {
+      if (!existingUser && !existingAdmin && !existingProfile) {
         console.log('Block Login: User not found', { contact_masked: contact.replace(/.(?=.{4})/g, '*') });
         return c.json({ error: 'Account not found. Please sign up.' }, 404);
       }
@@ -372,6 +400,54 @@ const handleVerify = async (c: any) => {
         const { data: authData } = await supabase.auth.admin.getUserById(userId);
         if (authData?.user?.email) {
           userEmail = authData.user.email;
+        }
+      }
+    }
+
+    // PROFILES CHECK: If still not found, check profiles table
+    // This handles existing users who were created via email/password flow
+    if (!userId) {
+      let profileQuery = supabase
+        .from('profiles')
+        .select('user_id, email, phone, name');
+      
+      // Query by email or phone depending on contact type
+      if (contact.includes('@')) {
+        profileQuery = profileQuery.eq('email', contact);
+      } else {
+        profileQuery = profileQuery.eq('phone', contact);
+      }
+      
+      const { data: profileUser } = await profileQuery.maybeSingle();
+      
+      if (profileUser) {
+        console.log('✅ Profile login - user found in profiles:', { contact: contact.replace(/.(?=.{4})/g, '*') });
+        userId = profileUser.user_id;
+        userEmail = profileUser.email || null;
+        
+        // Fetch auth user email for JWT if not in profile
+        if (!userEmail) {
+          const { data: authData } = await supabase.auth.admin.getUserById(userId);
+          if (authData?.user?.email) {
+            userEmail = authData.user.email;
+          }
+        }
+        
+        // Optionally create identity_users record for future compatibility
+        // This bridges the gap between old and new auth systems
+        try {
+          await supabase.from('identity_users').upsert({
+            user_id: userId,
+            phone_hash: contactHash,
+            phone_encrypted: 'migrated',
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
+          console.log('✅ Created identity_users record for existing profile user');
+        } catch (identityError) {
+          console.warn('Could not create identity_users record:', identityError);
+          // Non-critical, continue with login
         }
       }
     }
@@ -788,63 +864,189 @@ const handleIdentityVerification = async (c: any) => {
     
     if (!pin_number) {
       statusCode = 400;
-      errorMessage = 'PIN required';
+      errorMessage = 'PIN or phone number required';
       await logUsage();
-      return c.json({ error: 'PIN required' }, 400);
+      return c.json({ error: 'PIN or phone number required' }, 400);
     }
 
-    // 1. Verify PIN (This tracks usage and fires webhooks)
-    const result = await verifyPin(pin_number, 'business', verifier_id || 'anonymous');
+    // Auto-detect input type: Phone number (primary) or PIN (alternative)
+    const inputStr = pin_number.toString().trim();
+    const isPhoneNumber = /^[\d+]{10,15}$/.test(inputStr);
+    
+    let userId: string;
+    let verificationMethod: string;
 
-    if (!result.success || !result.userId) {
-        console.error('Verification failed result:', result);
+    if (isPhoneNumber) {
+      // Primary method: Phone number verification
+      console.log('Phone number verification:', inputStr.replace(/.(?=.{4})/g, '*'));
+      
+      // Look up user by phone number
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('phone', inputStr)
+        .single();
+
+      if (profileError || !profile) {
+        console.error('Phone lookup failed:', profileError);
+        statusCode = 404;
+        errorMessage = 'Phone number not found';
+        await logUsage();
         return c.json({ 
-          error: result.error || 'Verification failed',
+          error: 'Phone number not found',
+          details: 'No professional account is associated with this phone number'
+        }, 404);
+      }
+
+      userId = profile.user_id;
+      verificationMethod = 'phone';
+
+      // Log phone verification (same as PIN verification)
+      const verificationHash = await hashData(`${userId}:${inputStr}:business:${verifier_id || 'anonymous'}:${Date.now()}`);
+      
+      // Record in pin_verifications table (reusing for phone)
+      const { error: verifyError } = await supabase
+        .from('pin_verifications')
+        .insert({
+          user_id: userId,
+          pin: inputStr, // Store phone as "pin"
+          verifier_type: 'business',
+          verifier_id: verifier_id || 'anonymous',
+          verification_hash: verificationHash
+        });
+
+      if (verifyError) {
+        console.error('Failed to log phone verification:', verifyError);
+      }
+
+      // Increment API usage
+      if (businessUserId) {
+        await supabase.rpc('increment_api_usage', { p_user_id: businessUserId });
+      }
+
+      console.log('✅ Phone verification successful:', { userId, phone: inputStr.replace(/.(?=.{4})/g, '*') });
+
+    } else {
+      // Alternative method: PIN verification
+      console.log('PIN verification:', inputStr);
+      const result = await verifyPin(inputStr, 'business', verifier_id || 'anonymous');
+
+      if (!result.success || !result.userId) {
+        console.error('PIN verification failed:', result);
+        statusCode = 400;
+        errorMessage = result.error || 'Verification failed';
+        await logUsage();
+        return c.json({ 
+          error: result.error || 'Invalid PIN',
           details: result
         }, 400);
+      }
+
+      userId = result.userId;
+      verificationMethod = 'pin';
     }
 
+    // Continue with profile data fetching (same for both methods)...
+
     // 2. Fetch Professional Public Profile (Best Effort)
-    let profileData = {
+    let profileData: any = {
+        id: userId,
+        full_name: 'Verified Professional',
         name: 'Verified Professional',
         job_title: 'Professional',
+        role: null,
         city: null,
+        location: null,
         email_verified: false,
-        avatar_url: null
+        avatar_url: null,
+        bio: null,
+        headline: null,
+        industry: null,
+        company: null,
+        company_name: null,
+        current_company: null,
+        seniority: null,
+        years_of_experience: null,
+        skills: [],
+        top_skills: [],
+        linkedin_url: null,
+        github_url: null,
+        portfolio_url: null,
+        website: null,
+        phone: null,
+        email: null
     };
 
     // Attempt 1: Profiles Table - Select * to be safe against schema variations
-    const { data: profile } = await supabase
+    const { data: profile, error: profileFetchError } = await supabase
         .from('profiles')
         .select('*') // Select all columns to ensure we get whatever is available
-        .eq('user_id', result.userId)
+        .eq('user_id', userId)
         .single();
     
     if (profile) {
-        // Map whatever fields we found
-        profileData.name = profile.name || profile.full_name || profile.first_name || profileData.name;
-        profileData.job_title = profile.job_title || profile.role || profileData.job_title;
-        profileData.city = profile.city || profile.location || profileData.city;
-        profileData.avatar_url = profile.avatar_url || profile.avatar || profileData.avatar_url;
-        profileData.email_verified = profile.email_verified || false;
+        console.log('✅ Profile found, mapping all fields...');
+        
+        // Map ALL available fields from profile
+        profileData = {
+            ...profileData, // Keep defaults
+            ...profile,     // Spread all profile fields
+            // Explicit mappings for known variations
+            id: userId,
+            full_name: profile.full_name || profile.name || profile.first_name || profileData.full_name,
+            name: profile.name || profile.full_name || profile.first_name || profileData.name,
+            job_title: profile.job_title || profile.role || profile.position || profileData.job_title,
+            role: profile.role || profile.job_title || profile.position || profileData.role,
+            city: profile.city || profile.location || profileData.city,
+            location: profile.location || profile.city || profileData.location,
+            avatar_url: profile.avatar_url || profile.avatar || profileData.avatar_url,
+            email_verified: profile.email_verified || false,
+            company_name: profile.company_name || profile.current_company || profile.company || profileData.company_name,
+            current_company: profile.current_company || profile.company || profile.company_name || profileData.current_company,
+            industry: profile.industry || profileData.industry,
+            bio: profile.bio || profile.about || profile.summary || profileData.bio,
+            headline: profile.headline || profile.tagline || profileData.headline,
+            skills: profile.skills || profile.top_skills || profileData.skills,
+            top_skills: profile.top_skills || profile.skills || profileData.top_skills,
+            seniority: profile.seniority || profile.level || profileData.seniority,
+            years_of_experience: profile.years_of_experience || profile.experience_years || profileData.years_of_experience,
+            phone: profile.phone || profileData.phone,
+            email: profile.email || profileData.email,
+            linkedin_url: profile.linkedin_url || profile.linkedin || profileData.linkedin_url,
+            github_url: profile.github_url || profile.github || profileData.github_url,
+            portfolio_url: profile.portfolio_url || profile.portfolio || profileData.portfolio_url,
+            website: profile.website || profileData.website
+        };
+        
+        console.log('Mapped profile fields:', Object.keys(profileData).filter(k => profileData[k] !== null).join(', '));
     } else {
-        console.warn('Profile row missing for user:', result.userId);
+        console.warn('Profile row missing for user:', userId);
+        if (profileFetchError) {
+            console.error('Profile fetch error:', profileFetchError);
+        }
 
         // Attempt 2: Auth User Metadata (Service Role)
-        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(result.userId);
+        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
         if (!userError && user) {
             const meta = user.user_metadata || {};
-            console.log('Found user metadata:', meta);
+            console.log('Found user metadata:', Object.keys(meta));
             
             // Try all possible name combinations
-            profileData.name = meta.full_name || meta.name || 
+            profileData.full_name = meta.full_name || meta.name || 
                               (meta.first_name ? `${meta.first_name} ${meta.last_name || ''}`.trim() : null) || 
-                              profileData.name;
+                              profileData.full_name;
+            profileData.name = profileData.full_name;
                               
             profileData.job_title = meta.job_title || meta.role || meta.position || profileData.job_title;
+            profileData.role = profileData.job_title;
             profileData.city = meta.city || meta.location || profileData.city;
+            profileData.location = profileData.city;
             profileData.avatar_url = meta.avatar_url || meta.picture || meta.avatar || profileData.avatar_url;
             profileData.email_verified = !!user.email_confirmed_at;
+            profileData.industry = meta.industry || profileData.industry;
+            profileData.bio = meta.bio || meta.about || profileData.bio;
+            profileData.company_name = meta.company_name || meta.company || profileData.company_name;
+            profileData.email = user.email || meta.email || profileData.email;
         }
     }
 
@@ -854,7 +1056,7 @@ const handleIdentityVerification = async (c: any) => {
         const { data: weData, error: weError } = await supabase
             .from('work_experiences')
             .select('*')
-            .eq('user_id', result.userId)
+            .eq('user_id', userId)
             .order('start_date', { ascending: false })
             .limit(3);
         
@@ -875,7 +1077,7 @@ const handleIdentityVerification = async (c: any) => {
                 is_current: exp.is_current ?? exp.current ?? (!exp.end_date && !exp.endDate)
             }));
         } else {
-             console.log('No work experience records found in database for user', result.userId);
+             console.log('No work experience records found in database for user', userId);
         }
     } catch (e) {
         console.warn('Failed to fetch work experiences:', e);

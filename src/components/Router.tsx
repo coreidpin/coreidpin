@@ -42,8 +42,10 @@ const EmailVerificationCallback = lazy(() => import('./EmailVerificationCallback
 const PublicPINPage = lazy(() => import('./PublicPINPage'));
 const ConsentPage = lazy(() => import('./ConsentPage').then(m => ({ default: m.ConsentPage })));
 const DeveloperConsole = lazy(() => import('./DeveloperConsole').then(m => ({ default: m.DeveloperConsole })));
-const ProfessionalDashboard = lazy(() => import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
+const ProfessionalDashboard = lazy(() =>import('./ProfessionalDashboard').then(m => ({ default: m.ProfessionalDashboard })));
 const DesignSystemShowcase = lazy(() => import('./DesignSystemShowcase').then(m => ({ default: m.DesignSystemShowcase })));
+const InfluentialDirectory = lazy(() => import('./influential/InfluentialDirectory').then(m => ({ default: m.InfluentialDirectory })));
+
 
 // Legal & Policy Pages
 const TermsOfService = lazy(() => import('./TermsOfService').then(m => ({ default: m.TermsOfService })));
@@ -660,6 +662,17 @@ export const AppRouter: React.FC<RouterProps> = ({
             <Layout currentPage="professionals" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
               <Suspense fallback={<LoadingSpinner />}>
                 <SolutionsPage onNavigate={() => {}} onLogin={onLogin} />
+              </Suspense>
+            </Layout>
+          } 
+        />
+
+        <Route 
+          path="/influential" 
+          element={
+            <Layout currentPage="influential" isAuthenticated={isAuthenticated} userType={userType} onLogin={onLogin} onLogout={onLogout}>
+              <Suspense fallback={<LoadingSpinner />}>
+                <InfluentialDirectory />
               </Suspense>
             </Layout>
           } 

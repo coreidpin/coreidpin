@@ -109,6 +109,11 @@ import { createProject } from '../utils/project-api';
 import { PortfolioExporter } from '../utils/portfolio-export';
 import { ActivityHeatmap } from './dashboard/ActivityHeatmap';
 import { getDemandMetrics, getGeographicPings, getIndustryTrends } from '../utils/demandAnalytics';
+import { FlagshipProjects } from './influential/FlagshipProjects';
+import { InfluentialStatusCard } from './influential/InfluentialStatusCard';
+import { getInfluentialByUserId } from '../utils/influentialProfessionals';
+import type { InfluentialProfessional } from '../types/influential';
+
 
 
 export function ProfessionalDashboard() {
@@ -333,6 +338,11 @@ export function ProfessionalDashboard() {
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [heatmapLoading, setHeatmapLoading] = useState(true);
 
+  // ✨ Influential Professionals State
+  const [influentialStatus, setInfluentialStatus] = useState<InfluentialProfessional | null>(null);
+  const [isInfluential, setIsInfluential] = useState(false);
+
+
   // Fetch heatmap data
   useEffect(() => {
     const fetchHeatmap = async () => {
@@ -359,6 +369,23 @@ export function ProfessionalDashboard() {
     
     fetchHeatmap();
   }, [userId]);
+
+  // Fetch influential status
+  useEffect(() => {
+    const fetchInfluentialStatus = async () => {
+      if (!userId) return;
+      try {
+        const status = await getInfluentialByUserId(userId);
+        setInfluentialStatus(status);
+        setIsInfluential(status?.status === 'active');
+      } catch (err) {
+        console.error('Error fetching influential status:', err);
+      }
+    };
+    
+    fetchInfluentialStatus();
+  }, [userId]);
+
 
 
 
@@ -1516,6 +1543,38 @@ export function ProfessionalDashboard() {
 
         {/* Market Value Card */}
         <MarketValueCard />
+
+        {/* ✨ Influential Status Card - For All Users */}
+        {userId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-8"
+          >
+            <InfluentialStatusCard
+              influentialStatus={influentialStatus}
+              isInfluential={isInfluential}
+              onManageProjects={() => {
+                // Scroll to flagship projects section
+                const element = document.getElementById('flagship-projects');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                  toast.info('Flagship projects section will appear below');
+                }
+              }}
+              onViewDirectory={() => window.location.href = '/influential'}
+            />
+          </motion.div>
+        )}
+
+        {/* ✨ Flagship Projects - Influential Professionals Only */}
+        {isInfluential && userId && (
+          <div id="flagship-projects">
+            <FlagshipProjects userId={userId} isOwnProfile={true} />
+          </div>
+        )}
 
         {/* ✨ Featured Section - Showcase best work */}
         {userId && (

@@ -64,6 +64,23 @@ export function IdentityVerificationTool() {
       }
 
       setResult(data.data || {});
+      console.log('✅ Verification successful! Received data:', data.data);
+      console.log('Available fields:', Object.keys(data.data || {}).filter(k => data.data[k] !== null));
+      console.log('📊 Professional Details:', {
+        job_title: data.data?.job_title,
+        role: data.data?.role,
+        company_name: data.data?.company_name,
+        current_company: data.data?.current_company,
+        city: data.data?.city,
+        location: data.data?.location,
+        industry: data.data?.industry,
+        years_of_experience: data.data?.years_of_experience,
+        seniority: data.data?.seniority,
+        bio: data.data?.bio,
+        headline: data.data?.headline,
+        skills: data.data?.skills,
+        work_experiences: data.data?.work_experiences
+      });
       toast.success('Identity verified successfully!', { id: toastId });
 
     } catch (err: any) {
@@ -94,7 +111,7 @@ export function IdentityVerificationTool() {
                 <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Enter PIN (e.g. PIN-NG-2025-3E634F)"
+                  placeholder="Enter Phone Number or PIN (e.g. 2349030646976 or PIN-NG-2025-3E634F)"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   className="pl-10 h-12 text-lg tracking-widest font-mono bg-gray-50 border-gray-200"
@@ -103,13 +120,13 @@ export function IdentityVerificationTool() {
               <Button 
                 type="submit" 
                 className="h-12 px-8 bg-transparent hover:bg-gray-100 text-black font-semibold border border-gray-300"
-                disabled={loading || pin.length < 18}
+                disabled={loading || pin.length < 10}
               >
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verify'}
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-2 ml-1">
-              Enter the full PIN code provided by the professional.
+              Enter the phone number or PIN code of the professional.
             </p>
           </form>
         </CardContent>
@@ -169,7 +186,17 @@ export function IdentityVerificationTool() {
                  )}
               </div>
 
-              <p className="text-lg text-gray-600 font-medium mb-6">{result.role || result.job_title || 'Professional'}</p>
+              <p className="text-lg text-gray-600 font-medium mb-2">{result.job_title || result.role || 'Professional'}</p>
+              
+              {/* Company Name */}
+              {(result.company_name || result.current_company) && (
+                <p className="text-md text-gray-500 mb-2">@ {result.company_name || result.current_company}</p>
+              )}
+              
+              {/* Bio/Headline */}
+              {(result.bio || result.headline) && (
+                <p className="text-sm text-gray-600 mb-4 max-w-lg px-4">{result.headline || result.bio}</p>
+              )}
 
               {/* Work Status Box */}
               {/* Work Status & Location Row */}
@@ -183,11 +210,13 @@ export function IdentityVerificationTool() {
                   <span className="font-semibold text-sm">Actively Working</span>
                 </div>
 
-                {/* Location Pill */}
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full shadow-sm">
-                  <MapPin className="h-4 w-4" />
-                  <span className="font-semibold text-sm">Remote</span>
-                </div>
+                {/* Location/Company Pill */}
+                {(result.city || result.location || result.company_name) && (
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-100 text-blue-700 rounded-full shadow-sm">
+                    <MapPin className="h-4 w-4" />
+                    <span className="font-semibold text-sm">{result.city || result.location || 'Remote'}</span>
+                  </div>
+                )}
               </div>
 
               {/* Stats/Info Row */}
@@ -202,9 +231,16 @@ export function IdentityVerificationTool() {
                       <Briefcase className="h-4 w-4" /> {result.industry}
                     </Badge>
                   )}
-                  <Badge variant="outline" className="text-gray-500 bg-white border-gray-200 px-4 py-2 font-normal text-sm gap-2 h-auto">
-                      <span className="text-base">📅</span> 10 Years Exp.
-                  </Badge>
+                  {result.years_of_experience && (
+                    <Badge variant="outline" className="text-gray-500 bg-white border-gray-200 px-4 py-2 font-normal text-sm gap-2 h-auto">
+                      <span className="text-base">📅</span> {result.years_of_experience} Years Exp.
+                    </Badge>
+                  )}
+                  {result.seniority && (
+                    <Badge variant="outline" className="text-gray-500 bg-white border-gray-200 px-4 py-2 font-normal text-sm gap-2 h-auto">
+                      <span className="text-base">⭐</span> {result.seniority}
+                    </Badge>
+                  )}
               </div>
 
               {/* Work Experience Section */}

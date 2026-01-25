@@ -320,15 +320,14 @@ export function Navbar({
               <DesktopDropdown key={item.label} item={item} />
             ))}
             
-            {isAuthenticated && (
+            {isAuthenticated && currentPage !== 'influential' && !window.location.pathname.includes('influential') && (
               <div className="flex items-center gap-4 ml-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20" style={{ display: (currentPage === 'influential' || window.location.pathname.includes('influential')) ? 'none' : 'flex' }}>
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                   <span className="text-sm font-medium text-foreground">
                     {userType === 'employer' && 'Employer Dashboard'}
                     {userType === 'professional' && 'Professional Dashboard'}
                     {userType === 'admin' && 'Admin Dashboard'}
-                    {/* {userType === 'university' && 'University Dashboard'} */}
                   </span>
                 </div>
               </div>

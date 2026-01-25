@@ -859,7 +859,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
         name: (profileData as any)?.name || '',
         email: (profileData as any)?.email || '',
         phone: (profileData as any)?.phone || '',
-        role: (profileData as any)?.role || '',
+        role: (profileData as any)?.job_title || '',
         bio: (profileData as any)?.bio || '',
         years_of_experience: (profileData as any)?.years_of_experience || '',
         industry: (profileData as any)?.industry || '',
@@ -882,9 +882,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       });
 
       // Handle custom role
-      if (profileData?.role && !PROFESSIONAL_ROLES.includes(profileData.role)) {
+      if (profileData?.job_title && !PROFESSIONAL_ROLES.includes(profileData.job_title)) {
         setIsCustomRole(true);
-        setCustomRoleText(profileData.role);
+        setCustomRoleText(profileData.job_title);
         setFormData(prev => ({ ...prev, role: 'Custom' }));
       }
 
@@ -1249,7 +1249,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
       // Track activity - determine what changed
       const changedFields: string[] = [];
       if (formData.name !== profile.name) changedFields.push('Name');
-      if (formData.role !== profile.role) changedFields.push('Role');
+      if (formData.role !== profile.job_title) changedFields.push('Role');
       if (formData.bio !== profile.bio) changedFields.push('Bio');
       if (formData.industry !== profile.industry) changedFields.push('Industry');
       if (changedFields.length > 0) {
