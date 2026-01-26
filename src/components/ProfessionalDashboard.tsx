@@ -71,6 +71,8 @@ import { PhoneToPinWidget } from './dashboard/PhoneToPinWidget';
 import { ErrorBoundary } from './ui/error-boundary';
 import { OverviewSkeleton } from './dashboard/OverviewSkeleton';
 import { DigitalBusinessCard } from './dashboard/DigitalBusinessCard';
+import { ProfessionalMobileNav } from './dashboard/ProfessionalMobileNav';
+import { FullWidthCard } from './ui/FullWidthCard';
 import type { UserProfile } from '../types/profile';
 import type { Project } from '../types/dashboard';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
@@ -122,6 +124,7 @@ export function ProfessionalDashboard() {
   const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
   const [copiedPin, setCopiedPin] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showCaseStudyModal, setShowCaseStudyModal] = useState(false);
   const [showEndorsementModal, setShowEndorsementModal] = useState(false);
@@ -138,6 +141,16 @@ export function ProfessionalDashboard() {
     const { completion } = calculateProfileCompletion(userProfile);
     return completion;
   }, [userProfile]);
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const location = useLocation();
 
@@ -1390,7 +1403,10 @@ export function ProfessionalDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-white scroll-smooth overflow-x-hidden pt-20 sm:pt-24 w-full">
+    <div 
+      className="min-h-screen bg-white scroll-smooth overflow-x-hidden pt-20 sm:pt-24 w-full"
+      style={{ paddingBottom: isMobile ? '80px' : '0' }}
+    >
       {/* ✨ Phase 1: Network & Realtime Status Indicators */}
       <NetworkStatus showWhenOnline position="top" />
       {/* RealtimeStatus disabled since real-time is turned off */}
@@ -1415,12 +1431,14 @@ export function ProfessionalDashboard() {
         {/* Profile Completion Progress - High Visibility at Top */}
         <AnimatePresence>
           {userProfile && (
-            <div id="identity-completion">
-              <ProfileCompletionBanner 
-                {...calculateProfileCompletion(userProfile)}
-                userName={(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0]}
-              />
-            </div>
+            <FullWidthCard>
+              <div id="identity-completion">
+                <ProfileCompletionBanner 
+                  {...calculateProfileCompletion(userProfile)}
+                  userName={(userProfile as any)?.full_name?.split(' ')[0] || (userProfile as any)?.name?.split(' ')[0]}
+                />
+              </div>
+            </FullWidthCard>
           )}
         </AnimatePresence>
 
@@ -1486,11 +1504,7 @@ export function ProfessionalDashboard() {
 
         {/* Availability Status Card */}
         {userProfile && (userProfile as any)?.availability_status && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
+          <FullWidthCard motionProps={{ initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.1 } }}>
             <Card className="border" style={{ background: gradients.lightBlue, borderColor: colors.brand.primary[200] }}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -1516,18 +1530,18 @@ export function ProfessionalDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* Market Value Card */}
-        <MarketValueCard />
+        <FullWidthCard>
+          <MarketValueCard />
+        </FullWidthCard>
 
         {/* ✨ Influential Status Card - For All Users */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.15 } }}
             className="mb-8"
           >
             <InfluentialStatusCard
@@ -1544,22 +1558,22 @@ export function ProfessionalDashboard() {
               }}
               onViewDirectory={() => window.location.href = '/influential'}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Flagship Projects - Influential Professionals Only */}
         {isInfluential && userId && (
-          <div id="flagship-projects">
-            <FlagshipProjects userId={userId} isOwnProfile={true} />
-          </div>
+          <FullWidthCard noPadding>
+            <div id="flagship-projects">
+              <FlagshipProjects userId={userId} isOwnProfile={true} />
+            </div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Featured Section - Showcase best work */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.2 } }}
             className="mb-8"
           >
             <FeaturedSection
@@ -1568,15 +1582,13 @@ export function ProfessionalDashboard() {
               onAddClick={() => setShowAddFeaturedModal(true)}
               refreshTrigger={featuredRefresh}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Tech Stack Manager */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.3 } }}
             className="mb-8"
           >
             <TechStackManager
@@ -1588,7 +1600,7 @@ export function ProfessionalDashboard() {
                 setShowAddSkillModal(true);
               }}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Case Studies Section */}
@@ -1616,14 +1628,7 @@ export function ProfessionalDashboard() {
         )}
 
         {/* ✨ Phase 3: Activity Heatmap */}
-        <div 
-          className="px-4"
-          style={{
-            width: '100vw',
-            marginLeft: 'calc(-50vw + 50%)',
-            marginRight: 'calc(-50vw + 50%)'
-          }}
-        >
+        <FullWidthCard>
           <ActivityHeatmap 
             data={heatmapLoading ? [] : heatmapData}
             onDayClick={(day) => {
@@ -1634,14 +1639,12 @@ export function ProfessionalDashboard() {
               }
             }}
           />
-        </div>
+        </FullWidthCard>
 
         {/* ✨ Portfolio Search */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.3 } }}
             className="mb-8"
           >
             <PortfolioSearch
@@ -1654,15 +1657,13 @@ export function ProfessionalDashboard() {
                 'UI/UX', 'Mobile', 'Web', 'API', 'Cloud'
               ]}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Featured Projects Showcase */}
         {userId && projects.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.32 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.32 } }}
             className="mb-8"
           >
             <FeaturedShowcase
@@ -1681,20 +1682,17 @@ export function ProfessionalDashboard() {
               onProjectClick={(id) => {
                 const project = projects.find((p: any) => p.id === id);
                 if (project) {
-                  // View project logic here
                   toast.info(`Opening project: ${project.title || project.name}`);
                 }
               }}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ GitHub-style Contribution Graph (for engineers) */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.35 } }}
             className="mb-8"
           >
             <ContributionGraph
@@ -1704,15 +1702,13 @@ export function ProfessionalDashboard() {
                 level: day.level as 0 | 1 | 2 | 3 | 4
               }))}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Case Studies List */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.4 } }}
             className="mb-8"
           >
             <CaseStudyList
@@ -1740,15 +1736,13 @@ export function ProfessionalDashboard() {
               }}
               refreshTrigger={caseStudyRefresh}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         {/* ✨ Engineering Projects List */}
         {userId && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+          <FullWidthCard
+            motionProps={{ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { delay: 0.5 } }}
             className="mb-8"
           >
             <ProjectList
@@ -1777,7 +1771,7 @@ export function ProfessionalDashboard() {
               }}
               refreshTrigger={projectRefresh}
             />
-          </motion.div>
+          </FullWidthCard>
         )}
 
         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8">
@@ -1788,75 +1782,83 @@ export function ProfessionalDashboard() {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 w-full">
-          <div className="flex justify-center w-full">
-            <TabsList className="flex w-fit p-1 rounded-full gap-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide border justify-center items-center px-2 shadow-sm mx-auto" style={{ WebkitOverflowScrolling: 'touch', backgroundColor: colors.neutral[100], borderColor: colors.neutral[200] }}>
-              <TabsTrigger 
-                value="overview"
-                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
-                style={{
-                  color: activeTab === 'overview' ? colors.white : colors.neutral[500],
-                  backgroundColor: activeTab === 'overview' ? colors.black : 'transparent',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  flex: '0 0 auto'
-                }}
-              >
-                Overview
-              </TabsTrigger>
-              <TabsTrigger 
-                value="projects"
-                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
-                style={{
-                  color: activeTab === 'projects' ? colors.white : colors.neutral[500],
-                  backgroundColor: activeTab === 'projects' ? colors.black : 'transparent',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  flex: '0 0 auto'
-                }}
-              >
-                Projects
-              </TabsTrigger>
-              <TabsTrigger 
-                value="endorsements"
-                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
-                style={{
-                  color: activeTab === 'endorsements' ? colors.white : colors.neutral[500],
-                  backgroundColor: activeTab === 'endorsements' ? colors.black : 'transparent',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  flex: '0 0 auto'
-                }}
-              >
-                Endorsements
-              </TabsTrigger>
-              <TabsTrigger 
-                value="inquiries"
-                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
-                style={{
-                  color: activeTab === 'inquiries' ? colors.white : colors.neutral[500],
-                  backgroundColor: activeTab === 'inquiries' ? colors.black : 'transparent',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  flex: '0 0 auto'
-                }}
-              >
-                Inquiries
-              </TabsTrigger>
-              <TabsTrigger 
-                value="analytics"
-                className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
-                style={{
-                  color: activeTab === 'analytics' ? colors.white : colors.neutral[500],
-                  backgroundColor: activeTab === 'analytics' ? colors.black : 'transparent',
-                  fontWeight: '600',
-                  whiteSpace: 'nowrap',
-                  flex: '0 0 auto'
-                }}
-              >
-                Analytics
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <div className="flex justify-center w-full">
+              <TabsList className="flex w-fit p-1 rounded-full gap-1 overflow-x-auto sm:overflow-x-visible scrollbar-hide border justify-center items-center px-2 shadow-sm mx-auto" style={{ WebkitOverflowScrolling: 'touch', backgroundColor: colors.neutral[100], borderColor: colors.neutral[200] }}>
+                <TabsTrigger 
+                  value="overview"
+                  className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                  style={{
+                    color: activeTab === 'overview' ? colors.white : colors.neutral[500],
+                    backgroundColor: activeTab === 'overview' ? colors.black : 'transparent',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    flex: '0 0 auto'
+                  }}
+                >
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="projects"
+                  className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                  style={{
+                    color: activeTab === 'projects' ? colors.white : colors.neutral[500],
+                    backgroundColor: activeTab === 'projects' ? colors.black : 'transparent',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    flex: '0 0 auto'
+                  }}
+                >
+                  Projects
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="endorsements"
+                  className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                  style={{
+                    color: activeTab === 'endorsements' ? colors.white : colors.neutral[500],
+                    backgroundColor: activeTab === 'endorsements' ? colors.black : 'transparent',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    flex: '0 0 auto'
+                  }}
+                >
+                  Endorsements
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="inquiries"
+                  className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                  style={{
+                    color: activeTab === 'inquiries' ? colors.white : colors.neutral[500],
+                    backgroundColor: activeTab === 'inquiries' ? colors.black : 'transparent',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    flex: '0 0 auto'
+                  }}
+                >
+                  Inquiries
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics"
+                  className="text-xs sm:text-sm md:text-base px-4 sm:px-6 lg:px-8 py-2 rounded-full transition-all duration-200"
+                  style={{
+                    color: activeTab === 'analytics' ? colors.white : colors.neutral[500],
+                    backgroundColor: activeTab === 'analytics' ? colors.black : 'transparent',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap',
+                    flex: '0 0 auto'
+                  }}
+                >
+                  Analytics
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          )}
+
+          {/* Mobile Navigation */}
+          {isMobile && (
+            <ProfessionalMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
+          )}
 
           <AnimatePresence mode="wait">
             {activeTab === 'overview' && (
@@ -1876,17 +1878,19 @@ export function ProfessionalDashboard() {
                     <>
                       {/* Phone to PIN Conversion Widget */}
                       {phonePin && phonePin !== 'Loading...' && (activeTab === 'overview') && (
-                        <ErrorBoundary name="PhoneToPinWidget">
-                          <div id="professional-pin-card">
-                            <PhoneToPinWidget
-                              currentPin={phonePin}
-                              phoneNumber={userProfile?.phone || userProfile?.mobile}
-                              onSuccess={(newPin) => {
-                                setPhonePin(newPin);
-                              }}
-                            />
-                          </div>
-                        </ErrorBoundary>
+                        <FullWidthCard>
+                          <ErrorBoundary name="PhoneToPinWidget">
+                            <div id="professional-pin-card">
+                              <PhoneToPinWidget
+                                currentPin={phonePin}
+                                phoneNumber={userProfile?.phone || userProfile?.mobile}
+                                onSuccess={(newPin) => {
+                                  setPhonePin(newPin);
+                                }}
+                              />
+                            </div>
+                          </ErrorBoundary>
+                        </FullWidthCard>
                       )}
                       
                       <div id="quick-actions">
@@ -1915,38 +1919,42 @@ export function ProfessionalDashboard() {
                       
                       {/* Stats Grid - Mobile: 2 cols, Tablet: 3 cols, Desktop: 4 cols */}
                       {/* Sparkline Enhanced Stats */}
-                      <QuickStats 
-                        stats={{
-                          profileViews: stats.profileViews,
-                          profileViewsChange: statsTrends.profileViews.change,
-                          endorsements: endorsements.length > 0 ? endorsements.length : stats.endorsements,
-                          endorsementsChange: statsTrends.endorsements.change,
-                          pinUsage: stats.pinUsage,
-                          pinUsageChange: statsTrends.pinUsage.change,
-                          verifications: stats.verifications,
-                          verificationsChange: statsTrends.verifications.change
-                        }}
-                      />
+                      <FullWidthCard>
+                        <QuickStats 
+                          stats={{
+                            profileViews: stats.profileViews,
+                            profileViewsChange: statsTrends.profileViews.change,
+                            endorsements: endorsements.length > 0 ? endorsements.length : stats.endorsements,
+                            endorsementsChange: statsTrends.endorsements.change,
+                            pinUsage: stats.pinUsage,
+                            pinUsageChange: statsTrends.pinUsage.change,
+                            verifications: stats.verifications,
+                            verificationsChange: statsTrends.verifications.change
+                          }}
+                        />
+                      </FullWidthCard>
 
                   
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    <motion.div 
-                      className="lg:col-span-2"
-                      initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} 
-                      animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} 
-                      transition={reducedMotion ? undefined : { delay: 0.1 }}
-                    >
-                      <ActivityChart 
-                        data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} 
-                        period={activityPeriod} 
-                        onPeriodChange={setActivityPeriod} 
-                      />
-                    </motion.div>
-                    
-                    <div className="lg:col-span-1">
-                      <ActivityFeed activities={realTimeNotifications} />
+                  <FullWidthCard>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                      <motion.div 
+                        className="lg:col-span-2"
+                        initial={reducedMotion ? undefined : { opacity: 0, y: 20 }} 
+                        animate={reducedMotion ? undefined : { opacity: 1, y: 0 }} 
+                        transition={reducedMotion ? undefined : { delay: 0.1 }}
+                      >
+                        <ActivityChart 
+                          data={chartData.map(d => ({ day: `Day ${d.day}`, value: d.actions }))} 
+                          period={activityPeriod} 
+                          onPeriodChange={setActivityPeriod} 
+                        />
+                      </motion.div>
+                      
+                      <div className="lg:col-span-1">
+                        <ActivityFeed activities={realTimeNotifications} />
+                      </div>
                     </div>
-                  </div>
+                  </FullWidthCard>
                     </>
                   )}
                 </TabsContent>

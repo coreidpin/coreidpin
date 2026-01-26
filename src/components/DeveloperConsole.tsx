@@ -14,6 +14,8 @@ import { BusinessSettings } from './developer/BusinessSettings';
 import { IdentityVerificationTool } from './developer/IdentityVerificationTool';
 import { FeatureLockInline } from './FeatureLock';
 import { useFeatureGate } from '../hooks/useFeatureGate';
+import { MobileBottomNav } from './developer/MobileBottomNav';
+import { colors, typography, spacing, shadows, borderRadius } from '../styles/designSystem';
 import {
   Key,
   BarChart3,
@@ -33,10 +35,21 @@ export function DeveloperConsole() {
   const [businessProfile, setBusinessProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
   const { access, loading: featureLoading } = useFeatureGate();
 
   useEffect(() => {
     fetchBusinessProfile();
+  }, []);
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchBusinessProfile = async () => {
@@ -112,95 +125,141 @@ export function DeveloperConsole() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div style={{ minHeight: '100vh', background: colors.neutral[50], paddingBottom: isMobile ? '80px' : '0' }}>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          style={{ marginBottom: spacing.lg }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <LayoutDashboard className="w-8 h-8 text-purple-600" />
+              <h1 
+                className="flex items-center gap-3"
+                style={{
+                  fontSize: isMobile ? typography.fontSize['2xl'][0] : typography.fontSize['3xl'][0],
+                  fontWeight: typography.fontWeight.bold,
+                  color: colors.neutral[900],
+                }}
+              >
+                <LayoutDashboard style={{ width: '32px', height: '32px', color: colors.brand.primary[600] }} />
                 Business Console
               </h1>
-              <p className="text-gray-500 mt-2">
+              <p style={{ color: colors.neutral[500], marginTop: spacing.sm, fontSize: typography.fontSize.sm[0] }}>
                 {businessProfile?.company_name || 'Welcome to GidiPIN API'}
               </p>
             </div>
             <Badge 
               variant="outline" 
-              className="text-lg px-4 py-2 border-purple-200 text-purple-700 bg-purple-50"
+              className="w-full md:w-auto text-center"
+              style={{
+                fontSize: typography.fontSize.base[0],
+                padding: `${spacing.sm} ${spacing.md}`,
+                borderColor: colors.brand.primary[200],
+                color: colors.brand.primary[700],
+                background: colors.brand.primary[50],
+              }}
             >
               {businessProfile?.api_tier?.toUpperCase() || 'FREE'} Tier
             </Badge>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <Card className="bg-white border-purple-100 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Zap className="w-5 h-5 text-purple-600" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" style={{ marginTop: spacing.lg }}>
+            <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+              <Card 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(12px)',
+                  borderColor: colors.brand.primary[100],
+                  boxShadow: shadows.md,
+                  borderRadius: borderRadius.xl,
+                }}
+              >
+                <CardContent style={{ padding: spacing.md }}>
+                  <div className="flex items-center gap-3">
+                    <div style={{ padding: spacing.sm, background: colors.brand.primary[100], borderRadius: borderRadius.lg }}>
+                      <Zap style={{ width: '20px', height: '20px', color: colors.brand.primary[600] }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: typography.fontSize.xs[0], color: colors.neutral[500] }}>Monthly Quota</p>
+                      <p style={{ fontSize: typography.fontSize.lg[0], fontWeight: typography.fontWeight.semibold, color: colors.neutral[900] }}>
+                        {businessProfile?.monthly_api_quota?.toLocaleString() || '1,000'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Monthly Quota</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {businessProfile?.monthly_api_quota?.toLocaleString() || '1,000'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-            <Card className="bg-white border-blue-100 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <BarChart3 className="w-5 h-5 text-blue-600" />
+            <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+              <Card 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(12px)',
+                  borderColor: colors.semantic.info + '20',
+                  boxShadow: shadows.md,
+                  borderRadius: borderRadius.xl,
+                }}
+              >
+                <CardContent style={{ padding: spacing.md }}>
+                  <div className="flex items-center gap-3">
+                    <div style={{ padding: spacing.sm, background: colors.semantic.info + '20', borderRadius: borderRadius.lg }}>
+                      <BarChart3 style={{ width: '20px', height: '20px', color: colors.semantic.info }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: typography.fontSize.xs[0], color: colors.neutral[500] }}>This Month</p>
+                      <p style={{ fontSize: typography.fontSize.lg[0], fontWeight: typography.fontWeight.semibold, color: colors.neutral[900] }}>
+                        {businessProfile?.current_month_usage?.toLocaleString() || '0'} requests
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">This Month</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {businessProfile?.current_month_usage?.toLocaleString() || '0'} requests
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-            <Card className="bg-white border-green-100 shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <Sparkles className="w-5 h-5 text-green-600" />
+            <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
+              <Card 
+                style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(12px)',
+                  borderColor: colors.semantic.success + '20',
+                  boxShadow: shadows.md,
+                  borderRadius: borderRadius.xl,
+                }}
+              >
+                <CardContent style={{ padding: spacing.md }}>
+                  <div className="flex items-center gap-3">
+                    <div style={{ padding: spacing.sm, background: colors.semantic.success + '20', borderRadius: borderRadius.lg }}>
+                      <Sparkles style={{ width: '20px', height: '20px', color: colors.semantic.success }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: typography.fontSize.xs[0], color: colors.neutral[500] }}>Status</p>
+                      <p style={{ fontSize: typography.fontSize.lg[0], fontWeight: typography.fontWeight.semibold, color: colors.semantic.success }}>
+                        {businessProfile?.is_verified ? 'Verified' : 'Active'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Status</p>
-                    <p className="text-lg font-semibold text-green-600">
-                      {businessProfile?.is_verified ? 'Verified' : 'Active'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </motion.div>
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white border border-gray-200 p-1 w-full justify-start overflow-x-auto flex-nowrap h-auto">
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <TabsList className="bg-white border border-gray-200 p-1 w-full justify-start overflow-x-auto flex-nowrap h-auto">
             <TabsTrigger 
               value="overview" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'overview' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'overview' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'overview' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'overview' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <BarChart3 className="w-4 h-4" />
@@ -210,9 +269,9 @@ export function DeveloperConsole() {
               value="api-keys" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'api-keys' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'api-keys' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'api-keys' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'api-keys' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <Key className="w-4 h-4" />
@@ -222,9 +281,9 @@ export function DeveloperConsole() {
               value="team" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'team' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'team' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'team' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'team' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <Users className="w-4 h-4" />
@@ -234,9 +293,9 @@ export function DeveloperConsole() {
               value="verify" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'verify' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'verify' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'verify' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'verify' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <Shield className="w-4 h-4" />
@@ -246,9 +305,9 @@ export function DeveloperConsole() {
               value="docs" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'docs' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'docs' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'docs' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'docs' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <BookOpen className="w-4 h-4" />
@@ -258,9 +317,9 @@ export function DeveloperConsole() {
               value="webhooks" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'webhooks' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'webhooks' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'webhooks' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'webhooks' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <Webhook className="w-4 h-4" />
@@ -270,15 +329,21 @@ export function DeveloperConsole() {
               value="settings" 
               className="gap-2 min-w-fit"
               style={{
-                color: activeTab === 'settings' ? '#ffffff' : '#374151',
-                backgroundColor: activeTab === 'settings' ? '#000000' : 'transparent',
-                fontWeight: '600'
+                color: activeTab === 'settings' ? colors.white : colors.neutral[700],
+                backgroundColor: activeTab === 'settings' ? colors.neutral[900] : 'transparent',
+                fontWeight: typography.fontWeight.semibold
               }}
             >
               <Settings className="w-4 h-4" />
               Settings
             </TabsTrigger>
           </TabsList>
+          )}
+
+          {/* Mobile Navigation */}
+          {isMobile && (
+            <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          )}
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
