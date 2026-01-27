@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, ChevronDown } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
+import { colors, spacing, typography } from '../styles/designSystem';
 
 const faqs = [
   {
@@ -31,7 +32,7 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = React.useState<number | null>(0);
 
   return (
-    <section className="py-24 px-4 bg-slate-50 relative overflow-hidden">
+    <section className="py-16 sm:py-24 px-4 bg-slate-50 relative overflow-hidden">
       {/* Background decoration - subtle gradients for light mode */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-[100px] pointer-events-none mix-blend-multiply" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-100/50 rounded-full blur-[100px] pointer-events-none mix-blend-multiply" />
@@ -66,8 +67,8 @@ export function FAQSection() {
               className={cn(
                 "border rounded-xl overflow-hidden transition-all duration-300",
                 openIndex === index 
-                  ? "bg-white border-[#32f08c] shadow-lg shadow-[#32f08c]/10" 
-                  : "bg-white border-slate-200 hover:border-slate-300 hover:shadow-md"
+                  ? "bg-white border-brand-secondary-500 shadow-lg shadow-brand-secondary-500/10" 
+                  : "bg-white border-neutral-200 hover:border-neutral-300 hover:shadow-md"
               )}
             >
               <button
@@ -79,7 +80,7 @@ export function FAQSection() {
                 </span>
                 <span className={cn(
                   "flex-shrink-0 p-2 rounded-full transition-all duration-300", 
-                  openIndex === index ? "bg-[#32f08c] text-black rotate-180" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"
+                  openIndex === index ? "bg-brand-secondary-500 text-black rotate-180" : "bg-neutral-100 text-neutral-500 group-hover:bg-neutral-200"
                 )}>
                   <ChevronDown className="h-5 w-5 transition-transform duration-300" />
                 </span>

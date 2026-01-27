@@ -32,6 +32,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { colors, spacing, typography } from '../styles/designSystem';
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
@@ -39,10 +40,10 @@ interface FooterProps {
 
 // PIN-focused trust metrics with brand colors
 const pinMetrics = [
-  { label: 'Verified PINs', value: '50K+', icon: CreditCard, color: '#7bb8ff' },
-  { label: 'Global Businesses', value: '2.5K+', icon: Building, color: '#32f08c' },
-  { label: 'Partner Institutions', value: '150+', icon: GraduationCap, color: '#bfa5ff' },
-  { label: 'Countries Active', value: '45+', icon: Globe, color: '#7bb8ff' }
+  { label: 'Verified PINs', value: '50K+', icon: CreditCard, color: colors.brand.accent[500] },
+  { label: 'Global Businesses', value: '2.5K+', icon: Building, color: colors.brand.secondary[500] },
+  { label: 'Partner Institutions', value: '150+', icon: GraduationCap, color: colors.brand.primary[500] },
+  { label: 'Countries Active', value: '45+', icon: Globe, color: colors.brand.accent[500] }
 ];
 
 // Navigation sections with cleaner structure
@@ -114,7 +115,7 @@ export function Footer({ onNavigate }: FooterProps = {}) {
   };
 
   return (
-    <footer className="relative text-white overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
+    <footer className="relative text-white overflow-hidden" style={{ backgroundColor: colors.black }}>
       {/* Background gradient effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0b0d] to-[#0a0b0d]" />
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#bfa5ff]/5 rounded-full blur-3xl" />
@@ -139,7 +140,8 @@ export function Footer({ onNavigate }: FooterProps = {}) {
 
               <div className="space-y-4">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white leading-tight">
-                  Your Career Passport,<br />Verified & Trusted Globally
+                  Your Career Passport,<br />
+                  <span style={{ color: colors.brand.secondary[500] }}>Verified & Trusted Globally</span>
                 </h2>
                 <p className="text-base md:text-lg text-white/60 max-w-2xl mx-auto">
                   Join 50,000+ verified professionals using PIN as their digital career identity. 
@@ -153,10 +155,9 @@ export function Footer({ onNavigate }: FooterProps = {}) {
                   className="
                     w-full sm:w-auto
                     h-12 px-6
-                    bg-gradient-to-r from-[#bfa5ff] to-[#7bb8ff] 
-                    hover:from-[#a88fe6] hover:to-[#6aa5e6] 
-                    text-white border-0 disabled:opacity-50
+                    text-black border-0 disabled:opacity-50
                   "
+                  style={{ backgroundColor: colors.brand.primary[500] }}
                   disabled={true}
                   onClick={() => handleNavigate('get-started')}
                 >

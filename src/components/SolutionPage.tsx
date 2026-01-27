@@ -1,13 +1,14 @@
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { Smartphone, Key, Lock, Webhook, LayoutDashboard, Shield } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
+import { colors, spacing, typography } from '../styles/designSystem';
 
 const steps = [
-  { icon: Smartphone, label: 'User enters phone number', color: '#bfa5ff' },
-  { icon: Key, label: 'OTP verification', color: '#32f08c' },
-  { icon: Lock, label: 'PIN minted and stored hashed', color: '#7bb8ff' },
-  { icon: Shield, label: 'API returns verified data', color: '#bfa5ff' },
+  { icon: Smartphone, label: 'User enters phone number', color: colors.brand.primary[300] },
+  { icon: Key, label: 'OTP verification', color: colors.brand.secondary[500] },
+  { icon: Lock, label: 'PIN minted and stored hashed', color: colors.brand.accent[400] },
+  { icon: Shield, label: 'API returns verified data', color: colors.brand.primary[300] },
 ];
 
 const apiFeatures = [
@@ -19,19 +20,39 @@ const apiFeatures = [
 ];
 
 export function SolutionPage() {
+  // 3D Tilt Effect for Code Terminal
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useTransform(mouseY, [-300, 300], [10, -10]);
+  const rotateY = useTransform(mouseX, [-300, 300], [-10, 10]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   return (
     <section className="relative py-24 md:py-32 overflow-hidden bg-white">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle, #0a0b0d 1px, transparent 1px)',
+          backgroundImage: `radial-gradient(circle, ${colors.black} 1px, transparent 1px)`,
           backgroundSize: '40px 40px',
         }} />
       </div>
 
       {/* Gradient orbs */}
-      <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(191, 165, 255, 0.1)' }} />
-      <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(50, 240, 140, 0.1)' }} />
+      <div className="absolute top-20 left-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: `${colors.brand.primary[300]}1a` }} />
+      <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl" style={{ backgroundColor: `${colors.brand.secondary[500]}1a` }} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-8 py-24 w-full">
         {/* Header */}
@@ -78,11 +99,43 @@ export function SolutionPage() {
           </h3>
           
           <div className="relative max-w-5xl mx-auto">
-            {/* Connection line */}
-            <div
-              className="absolute top-16 left-0 right-0"
-              style={{ height: '2px', background: 'linear-gradient(to right, #bfa5ff, #32f08c, #7bb8ff)' }}
-            />
+            {/* Connection line - Desktop only */}
+            <div className="hidden lg:block absolute top-[88px] left-[150px] right-[150px] z-0 overflow-visible pointer-events-none">
+              <svg width="100%" height="20" viewBox="0 0 100 20" preserveAspectRatio="none" className="overflow-visible">
+                <motion.path
+                  d="M 0 10 Q 25 20, 50 10 T 100 10"
+                  fill="transparent"
+                  stroke={`url(#lineGradient)`}
+                  strokeWidth="0.5"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  whileInView={{ pathLength: 1, opacity: 0.4 }}
+                  transition={{ duration: 2, ease: "easeInOut" }}
+                  viewport={{ once: true }}
+                />
+                <defs>
+                  <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={colors.brand.primary[300]} />
+                    <stop offset="50%" stopColor={colors.brand.secondary[500]} />
+                    <stop offset="100%" stopColor={colors.brand.accent[400]} />
+                  </linearGradient>
+                </defs>
+              </svg>
+              
+              {/* Moving dot */}
+              <motion.div
+                className="absolute top-[8px] w-2 h-2 rounded-full bg-white shadow-[0_0_10px_white] z-10"
+                animate={{ 
+                  left: ["0%", "100%", "0%"],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{ 
+                  duration: 4, 
+                  repeat: Infinity, 
+                  ease: "easeInOut",
+                }}
+                style={{ filter: 'blur(1px)' }}
+              />
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((step, index) => {
@@ -108,7 +161,7 @@ export function SolutionPage() {
                       >
                         {/* Number badge */}
                         <div
-                          className="absolute -top-3 -right-3 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white"
+                          className="absolute -top-3 -right-3 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-sm sm:text-base font-bold text-white shadow-lg"
                           style={{ backgroundColor: step.color }}
                         >
                           {index + 1}
@@ -157,12 +210,12 @@ export function SolutionPage() {
                   viewport={{ once: true }}
                   whileHover={{ y: -5 }}
                 >
-                  <Card className="relative p-6 rounded-2xl bg-gray-50 border border-gray-200 transition-all duration-300 hover:shadow-2xl" style={{ borderColor: 'var(--brand-accent)' }}>
+                  <Card className="relative p-6 rounded-2xl bg-gray-50 border border-gray-200 transition-all duration-300 hover:shadow-2xl">
                     {/* Hover glow */}
-                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ backgroundImage: 'linear-gradient(135deg, rgba(191,165,255,0.05), rgba(123,184,255,0.05))' }} />
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ backgroundImage: `linear-gradient(135deg, ${colors.brand.primary[300]}0d, ${colors.brand.accent[400]}0d)` }} />
                     
                     <div className="relative">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-opacity opacity-70 group-hover:opacity-100" style={{ backgroundImage: 'linear-gradient(135deg, rgba(191,165,255,0.1), rgba(123,184,255,0.1))' }}>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-opacity opacity-70 group-hover:opacity-100" style={{ backgroundImage: `linear-gradient(135deg, ${colors.brand.primary[300]}1a, ${colors.brand.accent[400]}1a)` }}>
                         <Icon className="w-6 h-6 text-gray-700" />
                       </div>
                       <div className="text-sm mb-1 text-gray-900">{feature.label}</div>
@@ -180,15 +233,18 @@ export function SolutionPage() {
 
         {/* Code snippet preview */}
         <motion.div
-          className="mt-64 pt-32 max-w-3xl mx-auto"
+          className="mt-64 pt-32 max-w-4xl mx-auto perspective-1000"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           viewport={{ once: true }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
         >
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ backgroundColor: '#0a0b0d' }}>
+          <div className="relative rounded-2xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] border border-white/10" style={{ backgroundColor: colors.black }}>
             {/* Terminal header */}
-            <div className="flex items-center gap-2 px-6 py-4 border-b border-white/10" style={{ backgroundColor: '#1a1b2d' }}>
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-white/10" style={{ backgroundColor: colors.neutral[900] }}>
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ff5f57' }} />
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#ffbd2e' }} />
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#28ca42' }} />
@@ -196,7 +252,7 @@ export function SolutionPage() {
             </div>
             
             {/* Code */}
-          <div className="p-6 overflow-x-auto" style={{ backgroundColor: '#0a0b0d' }}>
+          <div className="p-6 overflow-x-auto" style={{ backgroundColor: colors.black }}>
               <pre className="text-sm text-white/80">
                 <code>
                   <span style={{ color: 'var(--brand-accent)' }}>POST</span> <span className="text-white">/api/v1/pin/create</span>

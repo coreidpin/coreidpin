@@ -87,6 +87,8 @@ import { useNotifications } from '../hooks/useNotifications';
 import { EndorsementAPI } from '../utils/endorsementAPI';
 import { ActivityTracker, getActivitySummary, getTrend } from '../utils/activityTracker';
 import type { DisplayEndorsement, RequestEndorsementForm, RelationshipType } from '../types/endorsement';
+import { useActivities } from '../hooks/useActivities';
+import { transformActivities } from '../utils/activityTransformer';
 
 import { ProductTour } from './dashboard/ProductTour';
 import { professionalDashboardTour } from './dashboard/tourSteps';
@@ -119,6 +121,9 @@ import type { InfluentialProfessional } from '../types/influential';
 export function ProfessionalDashboard() {
   // Notifications hook
   const { notifications: hookNotifications, unreadCount, loading: notificationsLoadingHook } = useNotifications();
+  
+  // Real-time activities hook
+  const { activities: dbActivities, loading: activityFeedLoading } = useActivities(10);
   
   const [phonePin, setPhonePin] = useState<string | null>('Loading...');
   const [pinVisible, setPinVisible] = useState(true);  // ← ADD THIS LINE
@@ -1951,7 +1956,10 @@ export function ProfessionalDashboard() {
                       </motion.div>
                       
                       <div className="lg:col-span-1">
-                        <ActivityFeed activities={realTimeNotifications} />
+                        <ActivityFeed 
+                          activities={transformActivities(dbActivities)} 
+                          loading={activityFeedLoading}
+                        />
                       </div>
                     </div>
                   </FullWidthCard>

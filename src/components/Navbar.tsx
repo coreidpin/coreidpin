@@ -55,7 +55,7 @@ export function Navbar({
   const [isNavigating, setIsNavigating] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   // Consider dashboard pages as "light" theme if they are rendering on white background
-  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer';
+  const isLight = currentPage === 'landing' || currentPage === 'dashboard' || currentPage === 'referrals' || currentPage === 'employers' || currentPage === 'developer' || window.location.pathname === '/identity-management';
   const isProd = import.meta.env.PROD;
 
   useEffect(() => {

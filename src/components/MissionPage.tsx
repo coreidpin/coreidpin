@@ -1,8 +1,9 @@
-import { motion } from 'framer-motion';
-import { Users, TrendingUp, Briefcase, Heart, Shield, Zap, ArrowRight } from 'lucide-react';
+import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { Users, TrendingUp, Briefcase, Heart, Shield, Zap, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
+import { colors, spacing, typography, gradients, shadows } from '../styles/designSystem';
 
 const stakeholders = [
   {
@@ -14,7 +15,7 @@ const stakeholders = [
       'Single identity across platforms',
       'Privacy-preserving credentials',
     ],
-    color: '#bfa5ff',
+    color: colors.brand.primary[300],
   },
   {
     icon: TrendingUp,
@@ -25,7 +26,7 @@ const stakeholders = [
       'Strong network effects',
       'Infrastructure-grade product',
     ],
-    color: '#32f08c',
+    color: colors.brand.secondary[500],
   },
   {
     icon: Briefcase,
@@ -36,7 +37,7 @@ const stakeholders = [
       'Lower verification costs',
       'Reduced fraud risk',
     ],
-    color: '#7bb8ff',
+    color: colors.brand.accent[400],
   },
 ];
 
@@ -51,7 +52,7 @@ export function MissionPage() {
   const navigate = useNavigate();
 
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: '#0a0b0d' }}>
+    <section className="relative py-16 sm:py-24 overflow-hidden sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: colors.black }}>
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -75,8 +76,8 @@ export function MissionPage() {
           viewport={{ once: true }}
         >
           <motion.span
-            className="inline-block tracking-[0.2em] text-sm mb-6"
-            style={{ color: '#8fd0ca' }}
+            className="inline-block tracking-[0.3em] text-xs sm:text-sm mb-6 font-black uppercase"
+            style={{ color: colors.brand.secondary[300] }} // Very bright brand color
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -85,9 +86,9 @@ export function MissionPage() {
             OUR VISION
           </motion.span>
           
-          <h2 className="text-4xl sm:text-5xl md:text-7xl mb-8 text-white leading-snug md:leading-tight break-words">
+          <h2 className="text-4xl sm:text-5xl md:text-7xl mb-8 text-white font-bold leading-snug md:leading-tight break-words">
             What PIN Means<br />
-            <span style={{ color: '#8fd0ca' }}>
+            <span className="text-white">
               for Everyone
             </span>
           </h2>
@@ -97,65 +98,109 @@ export function MissionPage() {
         <div className="grid lg:grid-cols-3 gap-8 mb-24">
           {stakeholders.map((stakeholder, index) => {
             const Icon = stakeholder.icon;
+            
+            // Mouse motion values for 3D tilt
+            const x = useMotionValue(0);
+            const y = useMotionValue(0);
+
+            // Create smooth spring transitions
+            const springConfig = { damping: 20, stiffness: 300 };
+            const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [10, -10]), springConfig);
+            const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-10, 10]), springConfig);
+
+            const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+              const rect = event.currentTarget.getBoundingClientRect();
+              const width = rect.width;
+              const height = rect.height;
+              const mouseX = event.clientX - rect.left;
+              const mouseY = event.clientY - rect.top;
+              const xPct = mouseX / width - 0.5;
+              const yPct = mouseY / height - 0.5;
+              x.set(xPct);
+              y.set(yPct);
+            };
+
+            const handleMouseLeave = () => {
+              x.set(0);
+              y.set(0);
+            };
+
             return (
               <motion.div
                 key={stakeholder.title}
-                className="group cursor-pointer"
+                className="group cursor-pointer perspective-1000"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.15 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -12, scale: 1.02 }}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                  rotateX,
+                  rotateY,
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <Card className="relative h-full p-8 rounded-3xl bg-white text-black border-2 transition-all duration-500 shadow-lg hover:shadow-2xl overflow-hidden"
+                <Card className="relative h-full p-8 rounded-3xl bg-neutral-900/50 backdrop-blur-xl border border-white/10 transition-all duration-500 shadow-lg group-hover:shadow-2xl overflow-hidden group-hover:border-white/20"
                   style={{
-                    borderColor: `${stakeholder.color}30`,
+                    transform: "translateZ(0)",
                   }}
                 >
-                  {/* Subtle gradient overlay on hover */}
-                  <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  {/* Subtle sheen overlay on hover */}
+                  <motion.div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                     style={{
-                      background: `linear-gradient(135deg, ${stakeholder.color}10 0%, transparent 50%)`,
+                      background: `linear-gradient(135deg, ${stakeholder.color}10 0%, transparent 60%)`,
+                    }}
+                  />
+
+                  {/* Reflection Sheen */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-30 pointer-events-none bg-gradient-to-tr from-transparent via-white to-transparent"
+                    style={{
+                      transform: useTransform(x, [-0.5, 0.5], ["translateX(-100%) rotate(45deg)", "translateX(100%) rotate(45deg)"]),
                     }}
                   />
                   
-                  <div className="relative z-10">
+                  <div className="relative z-10" style={{ transform: "translateZ(50px)" }}>
                     {/* Enhanced Icon with glow */}
-                    <motion.div
-                      className="w-20 h-20 rounded-2xl flex items-center justify-center mb-6 relative"
-                      style={{ 
-                        backgroundColor: `${stakeholder.color}15`,
-                        boxShadow: `0 8px 24px ${stakeholder.color}30`,
-                      }}
-                      whileHover={{ 
-                        scale: 1.1,
-                        rotate: 5,
-                      }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      <Icon className="w-10 h-10" style={{ color: stakeholder.color }} />
-                      {/* Glow effect */}
+                    <div className="relative mb-6">
+                      <motion.div
+                        className="w-20 h-20 rounded-2xl flex items-center justify-center relative z-10"
+                        style={{ 
+                          backgroundColor: `${stakeholder.color}20`,
+                          border: `1px solid ${stakeholder.color}40`,
+                        }}
+                        whileHover={{ 
+                          scale: 1.1,
+                          rotate: 5,
+                        }}
+                        transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                      >
+                        <Icon className="w-10 h-10" style={{ color: stakeholder.color }} />
+                      </motion.div>
+                      {/* Bloom/Glow effect behind icon */}
                       <div 
-                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"
-                        style={{ backgroundColor: `${stakeholder.color}40` }}
+                        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
+                        style={{ backgroundColor: `${stakeholder.color}30` }}
                       />
-                    </motion.div>
+                    </div>
 
-                    {/* Title & Description */}
-                    <h3 className="text-2xl font-bold mb-4 text-gray-900">{stakeholder.title}</h3>
-                    <p className="text-base text-gray-700 mb-6 leading-relaxed">
+                    <h3 className="text-2xl font-bold mb-4 text-white transition-colors">
+                      {stakeholder.title}
+                    </h3>
+                    <p className="text-base text-white mb-6 leading-relaxed font-medium">
                       {stakeholder.description}
                     </p>
 
                     {/* Separator */}
                     <div 
-                      className="h-px my-6 opacity-20"
+                      className="h-px my-6 opacity-40"
                       style={{ backgroundColor: stakeholder.color }}
                     />
 
                     {/* Enhanced Benefits with Checkmarks */}
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {stakeholder.benefits.map((benefit, i) => (
                         <motion.div 
                           key={i} 
@@ -165,35 +210,26 @@ export function MissionPage() {
                           transition={{ delay: 0.5 + (i * 0.1) }}
                           viewport={{ once: true }}
                         >
-                          {/* Checkmark instead of dot */}
                           <div
-                            className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ backgroundColor: `${stakeholder.color}20` }}
+                            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ 
+                              backgroundColor: `${stakeholder.color}33`,
+                              border: `1px solid ${stakeholder.color}50`
+                            }}
                           >
-                            <svg 
-                              className="w-3 h-3" 
-                              viewBox="0 0 12 12" 
-                              fill="none"
-                              style={{ color: stakeholder.color }}
-                            >
-                              <path 
-                                d="M10 3L4.5 8.5L2 6" 
-                                stroke="currentColor" 
-                                strokeWidth="2" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round"
-                              />
-                            </svg>
+                            <CheckCircle2 className="w-4 h-4" style={{ color: stakeholder.color }} />
                           </div>
-                          <span className="text-sm font-medium text-gray-800">{benefit}</span>
+                          <span className="text-sm font-bold text-white transition-colors">
+                            {benefit}
+                          </span>
                         </motion.div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Subtle corner accent */}
+                  {/* Corner accent logic */}
                   <div 
-                    className="absolute bottom-0 right-0 w-32 h-32 rounded-tl-full opacity-5"
+                    className="absolute bottom-0 right-0 w-32 h-32 rounded-tl-full opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700"
                     style={{ backgroundColor: stakeholder.color }}
                   />
                 </Card>
@@ -210,12 +246,12 @@ export function MissionPage() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.3 }}
         >
-          <div className="relative p-12 md:p-16 rounded-3xl overflow-hidden mt-6" style={{ backgroundColor: '#29273d' }}>
+          <div className="relative p-12 md:p-16 rounded-3xl overflow-hidden mt-6" style={{ backgroundColor: colors.neutral[900] }}>
             {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }} />
-            <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: 'rgba(143, 208, 202, 0.2)' }} />
+            <div className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: `${colors.brand.secondary[500]}20` }} />
+            <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl" style={{ backgroundColor: `${colors.brand.secondary[500]}20` }} />
             
-            <div className="relative text-center max-w-4xl mx-auto mt-6 rounded-2xl p-8 sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: '#29273d' }}>
+            <div className="relative text-center max-w-4xl mx-auto mt-6 rounded-2xl p-8 sm:[content-visibility:auto] sm:[contain:layout_style_paint]" style={{ backgroundColor: colors.neutral[900] }}>
               <motion.div
                 className="inline-block mb-6"
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -223,7 +259,7 @@ export function MissionPage() {
                 transition={{ delay: 0.4 }}
                 viewport={{ once: true }}
               >
-                <div className="tracking-[0.3em] text-sm" style={{ color: '#8fd0ca' }}>MISSION</div>
+                <div className="tracking-[0.3em] text-sm" style={{ color: colors.brand.secondary[500] }}>MISSION</div>
               </motion.div>
               
               <motion.h3
@@ -238,7 +274,7 @@ export function MissionPage() {
               </motion.h3>
 
               <motion.p
-                className="text-base sm:text-lg md:text-xl text-white leading-relaxed md:leading-relaxed mb-8 px-2 sm:px-0"
+                className="text-base sm:text-lg md:text-xl text-white leading-relaxed md:leading-relaxed mb-8 px-2 sm:px-0 font-medium"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 }}
@@ -257,7 +293,7 @@ export function MissionPage() {
                   size="lg"
                   onClick={() => navigate('/get-started')}
                   className="text-black font-semibold px-8 py-4 text-lg"
-                  style={{ backgroundColor: '#8fd0ca' }}
+                  style={{ backgroundColor: colors.brand.secondary[500] }}
                 >
                   Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -291,11 +327,11 @@ export function MissionPage() {
                   whileHover={{ y: -5 }}
                 >
                   <Card className="relative p-6 rounded-2xl bg-white/5 backdrop-blur-xl border-white/10 transition-all duration-300 hover:shadow-xl">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(143, 208, 202, 0.1), rgba(143, 208, 202, 0.1))' }}>
-                      <Icon className="w-6 h-6 text-white/70" />
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ backgroundImage: 'linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1))' }}>
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
-                    <div className="text-lg mb-2 text-white">{value.label}</div>
-                    <div className="text-sm text-white">{value.description}</div>
+                    <div className="text-lg mb-2 text-white font-bold">{value.label}</div>
+                    <div className="text-sm text-white font-medium">{value.description}</div>
                   </Card>
                 </motion.div>
               );
@@ -401,8 +437,8 @@ export function MissionPage() {
           transition={{ duration: 0.8, delay: 0.6 }}
           viewport={{ once: true }}
         >
-          <div className="inline-flex items-center gap-2 text-sm text-white/40 mt-6 md:mt-8">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#8fd0ca' }} />
+          <div className="inline-flex items-center gap-2 text-sm text-white mt-6 md:mt-8 font-medium">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.brand.secondary[400] }} />
             <span>PIN Infrastructure API — Building Trust, One Identity at a Time</span>
           </div>
         </motion.div>

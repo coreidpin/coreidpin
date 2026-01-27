@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { Loader2, Chrome, Shield, ArrowLeft } from 'lucide-react';
 import { supabase } from '../utils/supabase/client';
+import { ActivityTracker } from '../utils/activityTracker';
 import { OTPRequestForm } from '../features/auth/OTPRequestForm';
 import { OTPVerifyForm } from '../features/auth/OTPVerifyForm';
 import { UserTypeSelector } from './UserTypeSelector';
@@ -72,6 +73,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps = {}) {
     
     // Update local storage with intended user type
     localStorage.setItem('userType', finalUserType);
+    
+    // Track login activity
+    try {
+      ActivityTracker.login().catch(console.error);
+    } catch (error) {
+      console.error('Failed to track login:', error);
+    }
     
     handleLoginSuccess(accessToken, user);
   };

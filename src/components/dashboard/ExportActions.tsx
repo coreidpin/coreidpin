@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { downloadPDFResume } from '../../utils/pdf-export';
 import { downloadSocialCard } from '../../utils/social-cards';
 import { supabase } from '../../utils/supabase/client';
+import { ActivityTracker } from '../../utils/activityTracker';
 
 interface ExportActionsProps {
   userId: string;
@@ -34,6 +35,13 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
     try {
       setExporting(true);
       await downloadPDFResume(userId);
+      
+      // Track export activity
+      try {
+        ActivityTracker.exportData('pdf').catch(console.error);
+      } catch (error) {
+        console.error('Failed to track export:', error);
+      }
     } catch (error) {
       console.error('PDF export failed:', error);
       alert('Failed to generate PDF. Please try again.');
@@ -77,6 +85,13 @@ export const ExportActions: React.FC<ExportActionsProps> = ({
           projects: projectCount,
         }
       });
+      
+      // Track export activity
+      try {
+        ActivityTracker.exportData('social-card').catch(console.error);
+      } catch (error) {
+        console.error('Failed to track export:', error);
+      }
     } catch (error) {
       console.error('Social card export failed:', error);
       alert('Failed to generate social card. Please try again.');

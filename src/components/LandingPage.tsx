@@ -42,6 +42,7 @@ import { WhyWeExist } from "./WhyWeExist";
 import { WaitlistForm } from "./WaitlistForm";
 import { HeroSection } from "./HeroSection";
 import { FAQSection } from "./FAQSection";
+import { colors, spacing, typography } from "../styles/designSystem";
 import "../styles/hero-mobile.css";
 
 interface LandingPageProps {
@@ -67,7 +68,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
 
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
+    <div className="min-h-screen" style={{ backgroundColor: colors.white }}>
 
       <Navbar 
         currentPage="landing"
@@ -101,15 +102,15 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       <WhyNowPage />
 
       {/* WHAT IS PIN - Dark Section */}
-      <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>
-        <div className="container mx-auto max-w-7xl">
+      <section className="py-20 sm:py-24 lg:py-32 xl:py-40 px-4" style={{ backgroundColor: colors.black }}>
+        <div className="container mx-auto max-w-7xl xl:max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <Badge className="mb-4 px-4 py-2 bg-[#bfa5ff] text-[#0a0b0d] border-0">
+            <Badge className="mb-4 px-4 py-2 border-0" style={{ backgroundColor: colors.brand.primary[500], color: colors.black }}>
               <Fingerprint className="h-4 w-4 mr-2" />
               What is PIN?
             </Badge>
@@ -121,35 +122,42 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-[240px]">
             {[
               {
                 icon: Fingerprint,
                 title: "Verified Identity",
                 description: "Enterprise-grade verification of professional credentials, work history, and identity markers.",
                 color: "#7bb8ff",
-                gradient: "from-blue-500/10 to-blue-500/5"
+                className: "lg:col-span-2 lg:row-span-1"
               },
               {
                 icon: Database,
                 title: "Blockchain-Backed",
                 description: "Decentralized, immutable ledger ensuring tamper-proof records and cryptographic authenticity.",
                 color: "#bfa5ff",
-                gradient: "from-purple-500/10 to-purple-500/5"
+                className: "lg:col-span-1 lg:row-span-2"
               },
               {
                 icon: Globe,
                 title: "Global Recognition",
-                description: "A universal trust layer accepted by leading institutions across 195+ countries.",
+                description: "A universal trust layer accepted by institutions across 195+ countries.",
                 color: "#32f08c",
-                gradient: "from-emerald-500/10 to-emerald-500/5"
+                className: "lg:col-span-1 lg:row-span-1"
               },
               {
                 icon: Share2,
                 title: "AI Skill Verification",
                 description: "Algorithmic validation of technical contributions and professional competencies.",
                 color: "#7bb8ff",
-                gradient: "from-blue-500/10 to-blue-500/5"
+                className: "lg:col-span-1 lg:row-span-1"
+              },
+              {
+                icon: Zap,
+                title: "Instant Verification",
+                description: "Real-time verification through our global partner network.",
+                color: "#bfa5ff",
+                className: "lg:col-span-2 lg:row-span-1"
               }
             ].map((feature, index) => (
               <motion.div
@@ -158,17 +166,19 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8, scale: 1.02 }}
+                className={feature.className}
               >
-                <Card className="p-6 h-full bg-white/5 backdrop-blur-xl border-white/10 hover:shadow-2xl transition-all duration-300">
+                <Card className="p-8 h-full bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-500 group relative overflow-hidden">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  
                   <div 
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
                     style={{ backgroundColor: `${feature.color}20` }}
                   >
                     <feature.icon className="h-7 w-7" style={{ color: feature.color }} />
                   </div>
-                  <h3 className="text-lg mb-2 text-white">{feature.title}</h3>
-                  <p className="text-sm text-white/90 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-bold mb-3 text-white">{feature.title}</h3>
+                  <p className="text-base text-white/70 leading-relaxed">{feature.description}</p>
                 </Card>
               </motion.div>
             ))}
@@ -177,10 +187,10 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       </section>
 
       {/* HOW PIN WORKS - Dark Section */}
-      <section className="py-24 px-4 relative overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
+      <section className="py-20 sm:py-24 lg:py-32 xl:py-40 px-4 relative overflow-hidden" style={{ backgroundColor: colors.black }}>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(191,165,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(191,165,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]" />
         
-        <div className="container mx-auto max-w-7xl relative z-10">
+        <div className="container mx-auto max-w-7xl xl:max-w-[1400px] relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -270,7 +280,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       </section>
 
       {/* TESTIMONIALS - Dark Section */}
-      <section className="py-24 px-4" style={{ backgroundColor: '#0a0b0d' }}>
+      <section className="py-16 sm:py-24 px-4" style={{ backgroundColor: colors.black }}>
         <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -347,137 +357,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
         </div>
       </section>
 
-      {/* WHAT YOU SEE ON YOUR DASHBOARD - Dark Section */}
-      <section className="py-24 px-4 relative overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
-        {/* Abstract background ambient glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none opacity-20">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#bfa5ff] rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#32f08c] rounded-full blur-[120px]" />
-        </div>
-
-        <div className="container mx-auto max-w-7xl relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl sm:text-5xl mb-6 text-white font-bold">
-              Trusted by our global partners
-            </h2>
-            <p className="text-xl text-white/70 max-w-4xl mx-auto leading-relaxed">
-              Leading organizations leverage the PIN protocol to automate cross-border trust, streamline KYC compliance, and unlock verified global opportunities for their workforce.
-            </p>
-          </motion.div>
-
-          {/* Infinite Logo Marquee */}
-          <div className="relative mb-24 before:absolute before:left-0 before:top-0 before:z-10 before:h-full before:w-20 before:bg-gradient-to-r before:from-[#0a0b0d] before:to-transparent after:absolute after:right-0 after:top-0 after:z-10 after:h-full after:w-20 after:bg-gradient-to-l after:from-[#0a0b0d] after:to-transparent">
-            <div className="overflow-hidden">
-              <div className="animate-marquee flex gap-12 items-center py-4">
-                {[
-                  { name: 'Paystack', logo: 'https://www.google.com/s2/favicons?domain=paystack.com&sz=128', url: 'https://paystack.com' },
-                  { name: 'Microsoft', logo: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128', url: 'https://www.microsoft.com' },
-                  { name: 'AWS', logo: '/logos/Amazon Web Services_idS5TK0MYh_1.png', url: 'https://aws.amazon.com' },
-                  { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
-                  { name: 'Stripe', logo: 'https://www.google.com/s2/favicons?domain=stripe.com&sz=128', url: 'https://stripe.com' },
-                  { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
-                  { name: 'Google', logo: '/logos/icons8-google-logo-96.png', url: 'https://www.google.com' },
-                  { name: 'LinkedIn', logo: '/logos/LI-Logo.png', url: 'https://www.linkedin.com' },
-                  { name: 'Meta', logo: 'https://www.google.com/s2/favicons?domain=meta.com&sz=128', url: 'https://www.meta.com' },
-                  { name: 'Shopify', logo: 'https://www.google.com/s2/favicons?domain=shopify.com&sz=128', url: 'https://www.shopify.com' },
-                ].concat([
-                  { name: 'Paystack', logo: 'https://www.google.com/s2/favicons?domain=paystack.com&sz=128', url: 'https://paystack.com' },
-                  { name: 'Microsoft', logo: 'https://www.google.com/s2/favicons?domain=microsoft.com&sz=128', url: 'https://www.microsoft.com' },
-                  { name: 'AWS', logo: '/logos/Amazon Web Services_idS5TK0MYh_1.png', url: 'https://aws.amazon.com' },
-                  { name: 'Moniepoint', logo: '/logos/idbS9qZH-q_1762893650692.png', url: 'https://moniepoint.com' },
-                  { name: 'Stripe', logo: 'https://www.google.com/s2/favicons?domain=stripe.com&sz=128', url: 'https://stripe.com' },
-                  { name: '3MTT', logo: '/logos/Group-5.png', url: 'https://3mtt.nitda.gov.ng' },
-                  { name: 'Google', logo: '/logos/icons8-google-logo-96.png', url: 'https://www.google.com' },
-                  { name: 'LinkedIn', logo: '/logos/LI-Logo.png', url: 'https://www.linkedin.com' },
-                  { name: 'Meta', logo: 'https://www.google.com/s2/favicons?domain=meta.com&sz=128', url: 'https://www.meta.com' },
-                  { name: 'Shopify', logo: 'https://www.google.com/s2/favicons?domain=shopify.com&sz=128', url: 'https://www.shopify.com' },
-                ]).map((company, index) => (
-                  <div key={`${company.name}-${index}`} className="flex-shrink-0">
-                    <div className="px-8 py-4 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#bfa5ff]/50 transition-all flex items-center justify-center group">
-                      <img
-                        src={company.logo}
-                        alt={company.name}
-                        className="h-8 sm:h-10 w-auto object-contain opacity-50 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${company.name.toLowerCase()}`;
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Grid - Enhanced */}
-          <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { number: 128400, suffix: "+", label: "Active PIN Identities", icon: Fingerprint, color: "#32f08c" },
-              { number: 3200, suffix: "+", label: "Connected Companies", icon: Building, color: "#bfa5ff" },
-              { number: 2.8, suffix: "M+", label: "Instant Verifications Processed", icon: ShieldCheck, color: "#7bb8ff", decimals: 1 },
-              { number: 60, suffix: "+", label: "Countries with PIN Coverage", icon: Globe, color: "#7bb8ff" }
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <Card 
-                  className="p-8 border-white/10 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-xl relative overflow-hidden group h-full"
-                  style={{ minHeight: '220px' }}
-                >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/10 transition-colors" />
-                  
-                  <div 
-                    className="w-12 h-12 rounded-xl mb-6 flex items-center justify-center transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: `${stat.color}20`, border: `1px solid ${stat.color}40` }}
-                  >
-                    <stat.icon className="h-6 w-6" style={{ color: stat.color }} />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{stat.label}</div>
-                    <div className="text-4xl font-bold text-white tabular-nums tracking-tighter">
-                      <CountUp
-                        end={stat.number}
-                        duration={2.5}
-                        separator=","
-                        decimals={stat.decimals || 0}
-                        enableScrollSpy
-                        scrollSpyOnce
-                      />
-                      {stat.suffix}
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex items-center gap-2">
-                    <span className="flex h-2 w-2 rounded-full" style={{ backgroundColor: stat.color }}>
-                      <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full opacity-75" style={{ backgroundColor: stat.color }}></span>
-                    </span>
-                    <span 
-                      className="text-[10px] uppercase tracking-widest font-bold font-mono"
-                      style={{ color: 'rgba(255, 255, 255, 0.9)' }}
-                    >
-                      Live Sync Active
-                    </span>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* PRICING PREVIEW - Dark Section */}
-      <section className="py-24 px-4 relative overflow-hidden" style={{ backgroundColor: '#0a0b0d' }}>
+      <section className="py-16 sm:py-24 px-4 relative overflow-hidden" style={{ backgroundColor: colors.black }}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(191,165,255,0.1),transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(50,240,140,0.1),transparent_50%)]" />
         
@@ -509,7 +390,8 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
               >
                 <motion.div 
                    animate={{ x: billingCycle === 'monthly' ? 0 : (window.innerWidth < 640 ? 24 : 28) }}
-                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#32f08c] shadow-[0_0_10px_rgba(50,240,140,0.5)]"
+                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-lg"
+                  style={{ backgroundColor: colors.brand.secondary[500] }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
               </button>
@@ -637,7 +519,7 @@ export function LandingPage({ onLogin, onNavigate, isAuthenticated = false, user
       <FAQSection />
 
       {/* FINAL CTA - High Intensity Section */}
-      <section className="py-32 px-4 relative overflow-hidden" style={{ backgroundColor: '#0A0B0D' }}>
+      <section className="py-32 px-4 relative overflow-hidden" style={{ backgroundColor: colors.black }}>
         {/* Animated Gradient Background */}
         <div className="absolute inset-0 opacity-30 z-0">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-blue-600 via-purple-600 to-emerald-500 rounded-full blur-[120px] animate-pulse" />

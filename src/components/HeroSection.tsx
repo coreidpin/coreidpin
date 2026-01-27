@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ArrowRight, CheckCircle, Shield, Play, Fingerprint, Clock, Sparkles, ChevronRight, Loader2 } from 'lucide-react';
+import { colors, spacing, typography } from '../styles/designSystem';
+import { useMotionValue, useTransform } from 'framer-motion';
 
 interface HeroSectionProps {
   onNavigate: (page: string) => void;
@@ -59,6 +61,26 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
     }
   };
 
+  // 3D Tilt Effect for Desktop
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useTransform(mouseY, [-300, 300], [15, -15]);
+  const rotateY = useTransform(mouseX, [-300, 300], [-15, 15]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
   return (
     <>
       {/* HERO SECTION - Modern Light, Mobile-First */}
@@ -98,18 +120,17 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   transition={{ delay: 0.2 }}
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4 sm:mb-6 border border-slate-200 bg-white"
                 >
-                  <Sparkles className="h-4 w-4" style={{ color: '#32F08C' }} />
-                  <span className="text-xs sm:text-sm" style={{ color: '#7BB8FF' }}>Introducing PIN</span>
-                  <Badge className="ml-1 text-xs" style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>New</Badge>
+                  <Sparkles className="h-4 w-4" style={{ color: colors.brand.secondary[500] }} />
+                  <span className="text-xs sm:text-sm" style={{ color: colors.brand.primary[400] }}>Introducing PIN</span>
+                  <Badge className="ml-1 text-xs" style={{ backgroundColor: colors.neutral[900], color: colors.white }}>New</Badge>
                 </motion.div>
 
-                {/* Main Headline */}
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-4 sm:mb-5 md:mb-6 leading-tight font-bold"
-                  style={{ color: '#0A0B0D' }}
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl mb-4 sm:mb-6 leading-tight font-bold tracking-tight"
+                  style={{ color: colors.black }}
                 >
                   Your Phone Number. Your Verified Global PIN for{' '}
                   <span className="relative inline-block min-w-[200px]">
@@ -126,13 +147,12 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   </span>
                 </motion.h1>
 
-                {/* Subheadline */}
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="text-base sm:text-lg md:text-xl mb-6 sm:mb-7 md:mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed"
-                  style={{ color: 'rgba(10,11,13,0.70)' }}
+                  className="text-sm sm:text-base md:text-lg lg:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed opacity-80"
+                  style={{ color: colors.black }}
                 >
                   Gidi-PIN turns your phone number into a secure, universal Professional Identity Number (PIN). One identity, recognized across companies, platforms, and borders — powered by enterprise-grade infrastructure.
                 </motion.p>
@@ -154,7 +174,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                       group hover:scale-105 transition-all duration-200 
                       text-white disabled:opacity-70 disabled:cursor-not-allowed
                     "
-                    style={{ backgroundColor: '#0A0B0D' }}
+                    style={{ backgroundColor: colors.black }}
                   >
                     {isNavigating ? (
                       <>
@@ -178,7 +198,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                       text-base px-6 py-3 sm:text-lg sm:px-8 sm:py-6 
                       hover:scale-105 transition-all duration-200
                     "
-                    style={{ borderColor: '#BFA5FF', color: '#0A0B0D' }}
+                    style={{ borderColor: colors.brand.primary[200], color: colors.black }}
                   >
                     <Play className="h-5 w-5 mr-2" />
                     See How It Works
@@ -190,18 +210,18 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
-                  className="flex items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs sm:text-sm text-gray-400"
+                  className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-[10px] sm:text-xs font-medium uppercase tracking-wider text-slate-500"
                 >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" style={{ color: '#32f08c' }} />
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="h-3.5 w-3.5" style={{ color: colors.brand.secondary[500] }} />
                     <span>Free forever</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" style={{ color: '#7bb8ff' }} />
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" style={{ color: colors.brand.primary[400] }} />
                     <span>5 min setup</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" style={{ color: '#bfa5ff' }} />
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="h-3.5 w-3.5" style={{ color: colors.brand.primary[300] }} />
                     <span>Blockchain secured</span>
                   </div>
                 </motion.div>
@@ -212,7 +232,10 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4, duration: 1 }}
-                className="relative flex flex-col items-center justify-center gap-8 lg:gap-12"
+                className="relative hidden lg:flex flex-col items-center justify-center gap-8 lg:gap-12 perspective-1000"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
               >
                 {/* Phone Number Card */}
                 <motion.div
@@ -220,7 +243,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.6, duration: 0.8 }}
                   className="relative group rounded-2xl p-6 md:p-8 border border-white/10 shadow-2xl w-64 md:w-72"
-                  style={{ backgroundColor: '#111827', color: 'white' }}
+                  style={{ backgroundColor: colors.neutral[900], color: 'white' }}
                 >
                   <div className="text-xs mb-2 text-center uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Phone Number</div>
                   <div className="text-xl md:text-2xl font-mono tracking-tighter text-center" style={{ color: 'white' }}>
@@ -230,6 +253,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                     className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"
                     animate={{ opacity: [0.3, 0.5, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity }}
+                    style={{ transform: "translateZ(20px)" }}
                   />
                 </motion.div>
 
@@ -254,10 +278,10 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   transition={{ delay: 1.4, duration: 0.8, type: "spring" }}
                   className="relative group rounded-2xl p-6 md:p-8 border shadow-2xl w-64 md:w-72"
                   style={{ 
-                    backgroundColor: '#0A0B0D', 
+                    backgroundColor: colors.black, 
                     color: 'white', 
-                    borderColor: 'rgba(50, 240, 140, 0.5)', 
-                    boxShadow: '0 0 50px rgba(50, 240, 140, 0.2)' 
+                    borderColor: `${colors.brand.secondary[500]}80`, 
+                    boxShadow: `0 0 50px ${colors.brand.secondary[500]}33` 
                   }}
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -265,17 +289,36 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      <CheckCircle className="h-10 w-10" style={{ color: '#32f08c' }} />
+                      <CheckCircle className="h-10 w-10" style={{ color: colors.brand.secondary[500] }} />
                     </motion.div>
                     <div className="text-center">
-                      <div className="text-xs mb-1 uppercase tracking-widest" style={{ color: 'rgba(50, 240, 140, 0.6)' }}>Verified PIN</div>
+                      <div className="text-xs mb-1 uppercase tracking-widest" style={{ color: `${colors.brand.secondary[500]}99` }}>Verified PIN</div>
                       <div className="text-xl md:text-2xl font-semibold" style={{ color: 'white' }}>PIN-234-812345</div>
                     </div>
                   </div>
                   
                   {/* Outer Glow */}
-                  <div className="absolute -inset-0.5 rounded-2xl bg-emerald-500/20 blur opacity-70" />
+                  <div className="absolute -inset-0.5 rounded-2xl bg-emerald-500/20 blur opacity-70" style={{ transform: "translateZ(-10px)" }} />
                 </motion.div>
+                
+                {/* Mobile version without 3D effect */}
+                <div className="lg:hidden relative flex flex-col items-center justify-center gap-8">
+                   {/* Phone Number Card */}
+                   <div className="relative group rounded-2xl p-6 border border-white/10 shadow-2xl w-64" style={{ backgroundColor: colors.neutral[900], color: 'white' }}>
+                    <div className="text-xs mb-2 text-center uppercase tracking-widest text-white/40">Phone Number</div>
+                    <div className="text-xl font-mono text-center text-white">+234 812 345 6789</div>
+                  </div>
+                  {/* Verified PIN Card */}
+                  <div className="relative group rounded-2xl p-6 border shadow-2xl w-64" style={{ backgroundColor: colors.black, color: 'white', borderColor: `${colors.brand.secondary[500]}80` }}>
+                    <div className="flex flex-col items-center gap-3">
+                      <CheckCircle className="h-10 w-10" style={{ color: colors.brand.secondary[500] }} />
+                      <div className="text-center">
+                        <div className="text-xs mb-1 uppercase tracking-widest text-[#32f08c]/60">Verified PIN</div>
+                        <div className="text-xl font-semibold text-white">PIN-234-812345</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             </div>
           </div>

@@ -1,15 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Building, Globe, Fingerprint, ShieldCheck } from 'lucide-react';
-import CountUp from 'react-countup';
-
-type Metric = {
-  label: string;
-  value: number;
-  suffix: string;
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  color: string;
-};
+import { Building, ShieldCheck, Key, Users, BookOpen, Webhook, Settings, Zap, BarChart3, Shield, LayoutGrid, Sparkles } from 'lucide-react';
+import { colors } from '../styles/designSystem';
 
 interface TrustBannerProps {
   title?: string;
@@ -17,40 +9,38 @@ interface TrustBannerProps {
   className?: string;
 }
 
-const metrics: Metric[] = [
-  { label: 'Active PIN Identities', value: 128400, suffix: '+', icon: Fingerprint, color: '#32f08c' },
-  { label: 'Connected Companies', value: 3200, suffix: '+', icon: Building, color: '#bfa5ff' },
-  { label: 'Instant Verifications', value: 2.8, suffix: 'M+', icon: ShieldCheck, color: '#7bb8ff' },
-  { label: 'Countries Covered', value: 60, suffix: '+', icon: Globe, color: '#7bb8ff' },
-];
-
 export function TrustBanner({
   title = 'What you see on your dashboard',
-  description = 'Unlock a trusted, universal identity layer powered by PIN — enabling professionals, employers, and platforms to verify and connect instantly across borders.',
+  description = 'Powerful, intuitive business console to manage your global workforce identity and verify trust in real-time.',
   className = '',
 }: TrustBannerProps) {
   const containerRef = useRef(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
+  const tabs = [
+    { icon: LayoutGrid, label: 'Overview', active: true },
+    { icon: Key, label: 'API Keys' },
+    { icon: Users, label: 'Team' },
+    { icon: Shield, label: 'Verify Identity' },
+    { icon: BookOpen, label: 'Documentation' },
+    { icon: Webhook, label: 'Webhooks' },
+    { icon: Settings, label: 'Settings' },
+  ];
+
   return (
     <div 
-      className={`relative py-24 overflow-hidden ${className}`} 
-      style={{ backgroundColor: '#050608' }}
+      className={`relative py-24 sm:py-32 overflow-hidden ${className}`} 
+      style={{ backgroundColor: colors.black }}
       ref={containerRef}
     >
-      {/* Background Elements */}
+      {/* Subtle Background */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
-      {/* Cyber Grid / Glowing Orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#bfa5ff]/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-[#32f08c]/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
-
       <div className="relative container mx-auto px-4">
-        <div className="text-center max-w-4xl mx-auto mb-20">
+        {/* Header Section */}
+        <div className="text-center max-w-4xl mx-auto mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -59,74 +49,96 @@ export function TrustBanner({
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
               {title}
             </h2>
-            <p className="text-lg text-white/90 leading-relaxed font-light">
+            <p 
+              className="text-lg sm:text-xl font-medium leading-relaxed max-w-3xl mx-auto opacity-80 text-center mb-10"
+              style={{ color: colors.white }}
+            >
               {description}
             </p>
           </motion.div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {metrics.map((metric, index) => (
-            <motion.div
-              key={metric.label}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="group relative"
-            >
-              <div className="h-full rounded-3xl p-8 bg-white/[0.03] backdrop-blur-xl border border-white/10 hover:border-[#32f08c]/30 hover:bg-white/[0.05] transition-all duration-300">
-                {/* Decorative glow on hover */}
-                <div 
-                  className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-20 blur-2xl transition-opacity duration-500"
-                  style={{ backgroundColor: metric.color }}
-                />
-                
-                <div className="relative z-10">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div 
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:rotate-6 sm:group-hover:scale-110"
-                      style={{ backgroundColor: `${metric.color}15`, border: `1px solid ${metric.color}30` }}
-                    >
-                      <metric.icon className="h-6 w-6" style={{ color: metric.color }} />
+        {/* Clean, Static Business Console Preview */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-2xl bg-white border border-slate-200"
+        >
+            {/* Console Header */}
+            <div className="px-6 py-6 sm:px-8 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border-b border-slate-100 bg-[#f8fafc]">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white flex items-center justify-center text-indigo-600 shadow-sm border border-slate-200/60">
+                  <LayoutGrid className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Business Console</h3>
+                  <p className="text-slate-500 font-medium text-xs sm:text-sm">Welcome to GidiPIN API</p>
+                </div>
+              </div>
+              <div className="px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-white border border-indigo-100 text-indigo-600 font-bold text-[10px] sm:text-xs tracking-widest uppercase shadow-sm self-start sm:self-auto">
+                FREE Tier
+              </div>
+            </div>
+
+            {/* Dashboard Content */}
+            <div className="p-6 sm:p-10 bg-white">
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 sm:mb-10">
+                {[
+                  { icon: Zap, label: 'Monthly Quota', value: '1,000', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  { icon: BarChart3, label: 'This Month', value: '0 requests', color: 'text-slate-600', bg: 'bg-slate-50' },
+                  { icon: Sparkles, label: 'Status', value: 'Active', color: 'text-emerald-600', bg: 'bg-emerald-50', isStatus: true },
+                ].map((metric) => (
+                  <div key={metric.label} className="group p-5 sm:p-6 rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-300 bg-white">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${metric.bg} flex items-center justify-center ${metric.color} flex-shrink-0`}>
+                        <metric.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">{metric.label}</div>
+                        <div className={`text-xl sm:text-2xl font-bold tracking-tight ${metric.isStatus ? metric.color : 'text-slate-900'}`}>{metric.value}</div>
+                      </div>
                     </div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/90 group-hover:text-white transition-colors">
-                      {metric.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="border-t border-slate-100 pt-6 sm:pt-8">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                  {/* Left Nav Group - Hidden on mobile */}
+                  <div className="hidden sm:flex items-center gap-8 pl-2 border-r border-slate-100 pr-8">
+                    <div className="flex items-center gap-2 text-slate-900 group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+                      <Building className="w-5 h-5" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Home</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-900 group cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+                      <Users className="w-5 h-5" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Team</span>
                     </div>
                   </div>
 
-                  <div className="text-5xl font-bold text-white tracking-tighter tabular-nums flex items-baseline gap-1">
-                    {isInView ? (
-                      <CountUp
-                        end={metric.value}
-                        decimals={metric.value % 1 !== 0 ? 1 : 0}
-                        duration={2.5}
-                        separator=","
-                      />
-                    ) : (
-                      <span>0</span>
-                    )}
-                    <span className="text-[#32f08c] font-medium">{metric.suffix}</span>
-                  </div>
-
-                  <div className="mt-10 flex items-center gap-2.5">
-                    <div className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: metric.color }}></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: metric.color }}></span>
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/70 group-hover:text-white/90 transition-colors">
-                      Live Network Active
-                    </span>
+                  {/* Feature Tabs - Scrollable on mobile */}
+                  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 sm:pb-0 -mx-6 px-6 sm:mx-0 sm:px-0">
+                    {tabs.map((tab) => (
+                      <div 
+                        key={tab.label}
+                        className={`px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          tab.active 
+                            ? 'bg-white text-slate-900 shadow-sm border border-slate-200 ring-1 ring-slate-100' 
+                            : 'text-slate-500 hover:text-slate-900'
+                        }`}
+                      >
+                        {tab.label}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+        </motion.div>
       </div>
-      
-      {/* Bottom accent grid line */}
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
     </div>
   );
 }

@@ -81,7 +81,7 @@ export function HeroProfileCard({
           <div className="flex flex-wrap items-center gap-2 text-white">
             <div className="flex items-center gap-1.5">
               <Briefcase className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm !text-slate-300" style={{
+              <span className="text-sm !text-slate-300 font-medium" style={{
                 fontSize: typography.fontSize.sm[0]
               }}>
                 {role}
@@ -92,7 +92,7 @@ export function HeroProfileCard({
 
             <div className="flex items-center gap-1.5">
               <MapPin className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm !text-slate-300" style={{
+              <span className="text-sm !text-slate-300 font-medium" style={{
                 fontSize: typography.fontSize.sm[0]
               }}>
                 {country}

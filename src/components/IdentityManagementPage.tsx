@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, User, Phone, Mail, Briefcase, CheckCircle2, 
   ArrowLeft, Save, Loader2, X, Camera, Upload, Edit2,
-  Linkedin, Twitter, Github, Instagram, Facebook, Youtube, Globe, GraduationCap 
+  Linkedin, Twitter, Github, Instagram, Facebook, Youtube, Globe, GraduationCap,
+  Zap, Building, Plus, Pencil, Trash2, FileText, Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,6 +42,7 @@ import { calculateProfileCompletion } from '../utils/profileCompletion';
 import { ProfileCompletionWidget } from './dashboard/ProfileCompletionWidget';
 import { HRISConnectModal } from './hris/HRISConnectModal';
 import { syncFinchData } from '../utils/hris-api';
+import { FullWidthCard } from './ui/FullWidthCard';
 
 // Constants
 const PROFESSIONAL_ROLES = [
@@ -120,6 +122,12 @@ export const IdentityManagementPage: React.FC = () => {
       toast.dismiss();
       toast.error('Failed to sync/save verified data');
     }
+  };
+
+  // Helper: Convert empty date strings to null for database compatibility
+  const sanitizeDateField = (dateValue: string | null | undefined): string | null => {
+    if (!dateValue || dateValue.trim() === '') return null;
+    return dateValue;
   };
 
   // Data State
@@ -450,7 +458,7 @@ export const IdentityManagementPage: React.FC = () => {
 
         // Format dates: input type="month" gives "YYYY-MM", Postgres needs "YYYY-MM-DD"
         const formatDate = (dateString: string) => {
-             if (!dateString) return null;
+             if (!dateString || dateString.trim() === '') return null;
              return dateString.length === 7 ? `${dateString}-01` : dateString;
         };
 
@@ -1334,17 +1342,17 @@ Return ONLY the JSON object, no markdown, no explanations.`;
   );
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 py-4 sm:py-8 selection:bg-blue-500/30">
-      <div className="container mx-auto px-3 sm:px-4 max-w-6xl">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-blue-500/30" style={{ paddingTop: '64px', paddingBottom: '24px' }}>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 space-y-4 sm:space-y-6 md:space-y-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-10 relative overflow-hidden rounded-2xl"
+          className="rounded-3xl overflow-hidden relative mb-6 sm:mb-8 border border-white/10"
           style={{
-            background: gradients.darkSlate,
-            boxShadow: shadows.xl,
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
           }}
         >
           {/* Animated gradient overlay */}
@@ -1373,22 +1381,23 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             }}
           />
 
-          <div className="relative z-10 p-4 sm:p-6 md:p-8">
+          <div className="relative z-10 p-3 sm:p-6 md:p-8">
             <Button
               variant="ghost"
               onClick={() => navigate('/dashboard')}
-              className="mb-3 sm:mb-4 text-white/70 hover:text-white hover:bg-white/10 pl-0 group text-sm sm:text-base"
+              className="mb-2 sm:mb-4 text-white/70 hover:text-white hover:bg-white/10 pl-0 group text-xs sm:text-sm md:text-base min-h-[44px]"
             >
-              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:-translate-x-1 transition-transform" />
-              Back to Dashboard
+              <ArrowLeft className="h-4 w-4 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 group-hover:-translate-x-1 transition-transform" />
+              <span className="hidden xs:inline">Back to Dashboard</span>
+              <span className="xs:hidden">Back</span>
             </Button>
             
-            <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-baseline gap-1 sm:gap-2">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">
                 Manage Identity
               </h1>
               <span className="text-white/40 hidden sm:inline">•</span>
-              <p className="text-white text-sm sm:text-base md:text-lg w-full sm:w-auto">Your professional identity hub</p>
+              <p className="text-white/80 text-sm sm:text-base md:text-lg">Your professional identity hub</p>
             </div>
           </div>
         </motion.div>
@@ -1398,28 +1407,36 @@ Return ONLY the JSON object, no markdown, no explanations.`;
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`mb-6 p-4 rounded-xl border backdrop-blur-md ${
+            className={`mb-6 p-4 rounded-2xl border flex items-center gap-3 ${
               message.type === 'success'
-                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
-                : 'bg-red-500/10 border-red-500/20 text-red-400'
+                ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
+                : 'bg-red-50 border-red-100 text-red-800'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{message.text}</span>
-              <button onClick={() => setMessage(null)} className="hover:bg-white/10 p-1 rounded-full transition-colors">
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                 message.type === 'success' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+            }`}>
+                {message.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <X className="h-5 w-5" />}
+            </div>
+            <div className="flex items-center justify-between flex-1">
+              <span className="font-semibold text-sm sm:text-base">{message.text}</span>
+              <button 
+                onClick={() => setMessage(null)} 
+                className="hover:bg-black/5 p-1.5 rounded-xl transition-colors text-current/60 hover:text-current"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
           </motion.div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 sm:space-y-12 mt-4 sm:mt-8">
-          <TabsList className="flex flex-wrap w-full bg-slate-100 border border-slate-200 p-1 rounded-xl gap-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6 sm:space-y-8 md:space-y-10 mt-3 sm:mt-6">
+          <TabsList className="inline-flex items-center bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50 gap-1">
             <TabsTrigger 
               value="overview" 
-              className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base transition-all duration-300"
+              className="min-h-[40px] px-6 rounded-xl text-sm transition-all duration-300 data-[state=active]:shadow-sm"
               style={{
-                color: activeTab === 'overview' ? colors.white : colors.neutral[700],
+                color: activeTab === 'overview' ? colors.white : colors.neutral[600],
                 backgroundColor: activeTab === 'overview' ? colors.black : 'transparent',
                 fontWeight: '600'
               }}
@@ -1428,9 +1445,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </TabsTrigger>
             <TabsTrigger 
               value="details" 
-              className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base text-center transition-all duration-300"
+              className="min-h-[40px] px-6 rounded-xl text-sm transition-all duration-300 data-[state=active]:shadow-sm"
               style={{
-                color: activeTab === 'details' ? colors.white : colors.neutral[700],
+                color: activeTab === 'details' ? colors.white : colors.neutral[600],
                 backgroundColor: activeTab === 'details' ? colors.black : 'transparent',
                 fontWeight: '600'
               }}
@@ -1440,9 +1457,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </TabsTrigger>
             <TabsTrigger 
               value="work" 
-              className="flex-1 py-3 px-2 rounded-lg text-sm sm:text-base transition-all duration-300"
+              className="min-h-[40px] px-6 rounded-xl text-sm transition-all duration-300 data-[state=active]:shadow-sm"
               style={{
-                color: activeTab === 'work' ? colors.white : colors.neutral[700],
+                color: activeTab === 'work' ? colors.white : colors.neutral[600],
                 backgroundColor: activeTab === 'work' ? colors.black : 'transparent',
                 fontWeight: '600'
               }}
@@ -1464,39 +1481,36 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="relative overflow-hidden rounded-xl -mx-3 sm:mx-0"
-              style={{
-                background: gradients.darkSlate,
-                boxShadow: shadows.xl,
-              }}
+              className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
             >
-              <PremiumBackground />
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50 pointer-events-none" />
               
-              <div className="relative z-10 p-6 sm:p-8 md:p-10 space-y-8">
+              
+              <div className="relative z-10 p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
                 {/* Header */}
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                     <Shield className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Identity Overview</h3>
-                    <p className="text-gray-400 text-sm">Your professional identity at a glance</p>
+                    <h3 className="text-xl font-bold text-gray-900">Identity Overview</h3>
+                    <p className="text-slate-600 text-sm">Your verified profile and professional health</p>
                   </div>
                 </div>
 
                 
                 {/* Profile Picture & Basic Info */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 md:gap-8">
                   <div className="flex-shrink-0 relative group/avatar">
                     <div 
-                      className="w-32 h-32 rounded-full bg-black border-4 border-white/10 shadow-xl flex items-center justify-center cursor-pointer relative overflow-hidden ring-2 ring-white/5 group-hover/avatar:ring-blue-500/50 transition-all duration-300"
+                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-slate-100 border-4 border-white shadow-md flex items-center justify-center cursor-pointer relative overflow-hidden ring-1 ring-slate-200 group-hover/avatar:ring-blue-500/50 transition-all duration-300"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {profile?.profile_picture_url ? (
                         <img src={profile.profile_picture_url} alt="Profile" loading="lazy" className="w-full h-full rounded-full object-cover" />
                       ) : (
                         <div className="text-center">
-                          <User className="h-12 w-12 text-gray-600 mx-auto mb-2" />
+                          <User className="h-10 w-10 sm:h-12 sm:w-12 text-slate-400 mx-auto" />
                         </div>
                       )}
                       
@@ -1519,33 +1533,31 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   
                   <div className="flex-1 space-y-4 text-center sm:text-left w-full">
                     <div>
-                      <h3 className="text-3xl font-bold text-white tracking-tight">{formData.name || 'Not Set'}</h3>
-                      <p className="text-gray-400 text-lg">{formData.role || 'No Role Set'}</p>
+                      <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{formData.name || 'Not Set'}</h3>
+                      <p className="text-blue-600 font-semibold text-lg">{formData.role || 'No Role Set'}</p>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto sm:mx-0">
-                      <motion.div 
-                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 transition-all"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md mx-auto sm:mx-0">
+                      <div 
+                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 transition-all"
                       >
-                        <Phone className="h-4 w-4 text-purple-400" />
-                        <span className="text-sm text-gray-300">{formData.phone || 'Not Set'}</span>
-                      </motion.div>
-                      <motion.div 
-                        whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5 transition-all"
+                        <Phone className="h-4 w-4 text-slate-600" />
+                        <span className="text-sm font-semibold text-gray-900">{formData.phone || 'Not Set'}</span>
+                      </div>
+                      <div 
+                        className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 transition-all"
                       >
-                        <Mail className="h-4 w-4 text-blue-400" />
-                        <span className="text-sm text-gray-300 truncate">{formData.email || 'Not Set'}</span>
-                      </motion.div>
+                        <Mail className="h-4 w-4 text-slate-600" />
+                        <span className="text-sm font-semibold text-gray-900 truncate">{formData.email || 'Not Set'}</span>
+                      </div>
                     </div>
 
                     {/* PIN Display */}
                     {pinData && (
-                      <div className="inline-flex items-center gap-3 px-4 py-2 bg-black/40 rounded-lg border border-white/10 shadow-inner mt-2 backdrop-blur-sm">
-                        <Shield className="h-4 w-4 text-emerald-400" />
-                        <span className="font-mono text-emerald-400 font-bold tracking-widest text-lg">{pinData.pin_number}</span>
-                        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] ml-2">
+                      <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 mt-2">
+                        <Shield className="h-4 w-4 text-emerald-600" />
+                        <span className="font-mono text-gray-900 font-bold tracking-widest text-lg">{pinData.pin_number}</span>
+                        <Badge className="bg-emerald-100 text-emerald-900 border-emerald-200 text-[10px] font-bold px-2 py-0.5 ml-2">
                           ACTIVE PIN
                         </Badge>
                       </div>
@@ -1572,7 +1584,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                                 href={link.url} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="p-2 bg-white/5 rounded-full hover:bg-white/10 text-white/70 hover:text-white transition-colors border border-white/5"
+                                className="p-2.5 bg-slate-100 rounded-xl hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-all border border-slate-200 shadow-sm"
                                 title={link.platform}
                               >
                                   <Icon className="h-4 w-4" />
@@ -1584,51 +1596,45 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
                 </div>
 
-                <Separator className="bg-white/10" />
+                <Separator className="bg-slate-100" />
 
                 {/* Profile Completeness */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-400">Profile Completeness</span>
-                    <span className="text-sm font-bold text-blue-400">{profileCompleteness}%</span>
+                    <span className="text-sm font-semibold text-slate-700">Profile Strength</span>
+                    <span className="text-sm font-bold text-blue-600">{profileCompleteness}%</span>
                   </div>
-                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${profileCompleteness}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
+                      className="h-full bg-gradient-to-r from-blue-600 to-blue-500 rounded-full" 
                     />
                   </div>
                 </div>
 
                 {/* Verification Badges */}
-                <div>
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Verification Status</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="pt-2">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Identity Verification</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {profile?.email_verified ? (
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 shadow-sm">
-                        <div className="p-1 rounded-full bg-emerald-500/20">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                        </div>
-                        <span className="text-sm font-medium text-emerald-400">Email</span>
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-emerald-50 border border-emerald-200 shadow-sm">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span className="text-sm font-bold text-emerald-950">Email</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/5 opacity-60">
-                        <div className="p-1 rounded-full bg-white/10">
-                          <CheckCircle2 className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-500">Email</span>
+                      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="w-4 h-4 rounded-full border border-slate-300" />
+                        <span className="text-sm font-bold text-gray-600">Email</span>
                       </div>
                     )}
                     
                     {/* Placeholder badges for other verifications */}
                     {['Phone', 'Work', 'Identity'].map((item) => (
-                      <div key={item} className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-xl border border-white/5 opacity-60">
-                         <div className="p-1 rounded-full bg-white/10">
-                          <CheckCircle2 className="h-4 w-4 text-gray-500" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-500">{item}</span>
+                      <div key={item} className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="w-4 h-4 rounded-full border border-slate-300" />
+                        <span className="text-sm font-bold text-slate-600">{item}</span>
                       </div>
                     ))}
                   </div>
@@ -1650,83 +1656,80 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="relative overflow-hidden rounded-xl"
-              style={{
-                background: 'linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-              }}
+              className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
             >
-              <PremiumBackground />
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-transparent to-blue-50/50 pointer-events-none" />
               
-              <div className="relative z-10 p-6 space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+              
+              <div className="relative z-10 p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                  <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
                     <User className="h-5 w-5" />
                   </div>
-                  <h3 className="text-xl font-bold text-white">Personal Information</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">Personal Information</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div className="space-y-2">
-                    <Label className="text-gray-400">Full Name</Label>
+                    <Label className="text-gray-600 text-sm font-semibold">Full Name</Label>
                     <Input 
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all h-11 sm:h-10 text-base" 
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-gray-400">Date of Birth</Label>
+                    <Label className="text-slate-600 text-sm font-semibold">Date of Birth</Label>
                     <Input 
                       type="date"
                       value={formData.date_of_birth}
                       onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all [color-scheme:dark]" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all [color-scheme:light] h-11 sm:h-10 text-base" 
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-400">Gender</Label>
+                    <Label className="text-gray-700 text-sm font-semibold">Gender</Label>
                     <Select value={formData.gender} onValueChange={(value) => setFormData({ ...formData, gender: value })}>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all">
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all h-11 sm:h-10 text-base">
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#1a1a1a] border-white/10 text-white">
-                        <SelectItem value="male" className="focus:bg-white/10 focus:text-white cursor-pointer">Male</SelectItem>
-                        <SelectItem value="female" className="focus:bg-white/10 focus:text-white cursor-pointer">Female</SelectItem>
-                        <SelectItem value="non-binary" className="focus:bg-white/10 focus:text-white cursor-pointer">Non-binary</SelectItem>
-                        <SelectItem value="prefer-not-to-say" className="focus:bg-white/10 focus:text-white cursor-pointer">Prefer not to say</SelectItem>
+                      <SelectContent className="bg-white border-gray-200 text-gray-900">
+                        <SelectItem value="male" className="focus:bg-gray-50 cursor-pointer">Male</SelectItem>
+                        <SelectItem value="female" className="focus:bg-gray-50 cursor-pointer">Female</SelectItem>
+                        <SelectItem value="non-binary" className="focus:bg-gray-50 cursor-pointer">Non-binary</SelectItem>
+                        <SelectItem value="prefer-not-to-say" className="focus:bg-gray-50 cursor-pointer">Prefer not to say</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-400">Nationality</Label>
+                    <Label className="text-gray-700 text-sm font-semibold">Nationality</Label>
                     <Input 
                       value={formData.nationality}
                       onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 sm:h-10" 
                       placeholder="e.g. Nigerian"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-400">City</Label>
+                    <Label className="text-gray-700 text-sm font-semibold">City</Label>
                     <Input 
                       value={formData.city}
                       onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 sm:h-10" 
                       placeholder="e.g. Lagos"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-gray-400">Phone Number</Label>
+                    <Label className="text-gray-700 text-sm font-semibold">Phone Number</Label>
                     <Input 
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 sm:h-10" 
                     />
                   </div>
                 </div>
@@ -1735,13 +1738,14 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
             {/* Contact Identity (Critical Section) */}
             <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
-              <CardHeader className="border-b border-slate-50 bg-slate-50/30 pb-4">
+              <CardHeader className="border-b border-slate-100 pb-4">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="space-y-1">
                     <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                      <Phone className="h-5 w-5 text-blue-500" />
                       Contact Identity
                     </CardTitle>
-                    <CardDescription className="text-slate-500 mt-1">
+                    <CardDescription className="text-slate-500">
                       Manage your primary contact channels and verification status
                     </CardDescription>
                   </div>
@@ -1753,10 +1757,10 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   {/* Primary Identity: Phone */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-slate-700 font-semibold text-sm">Phone Number</Label>
+                      <Label className="text-gray-700 font-semibold text-sm">Phone Number</Label>
                       <div className="flex items-center gap-2">
                         {profile?.phone_verified ? (
-                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
+                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
                             <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
                           </Badge>
                         ) : (
@@ -1768,7 +1772,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2"
+                                className="h-8 min-h-[32px] sm:h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-2 sm:px-3"
                                 onClick={() => {
                                   setShowPhoneVerifyModal(true);
                                   setPhoneOTP('');
@@ -1798,7 +1802,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="h-full w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                            className="h-full w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                             onClick={() => {
                               const input = document.querySelector('input[class*="font-mono"]') as HTMLInputElement;
                               input?.focus();
@@ -1809,7 +1813,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         </div>
                       </div>
                     </div>
-                    <p className="text-[11px] text-slate-400 pl-1">
+                    <p className="text-[11px] text-gray-400 pl-1">
                       This is your unique identifier on GidiPIN
                     </p>
                   </div>
@@ -1817,9 +1821,9 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   {/* Primary Email */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-slate-700 font-semibold text-sm">Email Address</Label>
+                      <Label className="text-gray-700 font-semibold text-sm">Email Address</Label>
                       {profile?.email_verified ? (
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-900 hover:bg-emerald-200 border-emerald-200 rounded-full px-3">
                           <CheckCircle2 className="h-3 w-3 mr-1.5" /> Verified
                         </Badge>
                       ) : (
@@ -1831,38 +1835,38 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                        <Mail className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        <Mail className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                       </div>
                       <Input 
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="bg-white border-slate-200 text-slate-900 pl-10 h-11 shadow-sm focus:border-blue-500 focus:ring-blue-500/20" 
+                        className="bg-white border-gray-200 text-gray-900 pl-10 h-11 shadow-sm focus:border-blue-500 focus:ring-blue-500/20" 
                       />
                     </div>
                   </div>
 
                   {/* Recovery Email */}
                   <div className="space-y-3 md:col-span-2">
-                    <Separator className="mb-6 bg-slate-100" />
+                    <Separator className="mb-6 bg-gray-100" />
                     <div className="max-w-md">
-                      <Label className="text-slate-700 font-semibold text-sm mb-1.5 block">Recovery Email</Label>
-                      <p className="text-xs text-slate-500 mb-3">Used for account recovery if you lose access to your primary email.</p>
+                      <Label className="text-gray-700 font-semibold text-sm mb-1.5 block">Recovery Email</Label>
+                      <p className="text-xs text-gray-500 mb-3">Used for account recovery if you lose access to your primary email.</p>
                       
                       <div className="relative flex gap-3">
                         <div className="relative flex-1 group">
                           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <Mail className="h-4 w-4 text-slate-400 group-focus-within:text-purple-500 transition-colors" />
+                            <Mail className="h-4 w-4 text-gray-400 group-focus-within:text-purple-500 transition-colors" />
                           </div>
                           <Input 
                             value={formData.recovery_email || ''}
                             onChange={(e) => setFormData({ ...formData, recovery_email: e.target.value })}
-                            className="bg-white border-slate-200 text-slate-900 pl-10 h-11 shadow-sm placeholder:text-slate-400 focus:border-purple-500 focus:ring-purple-500/20"
+                            className="bg-white border-gray-200 text-gray-900 pl-10 h-11 shadow-sm placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500/20"
                             placeholder="backup@example.com"
                           />
                         </div>
                         <Button 
                           variant="outline"
-                          className="h-11 px-4 border-slate-200 text-slate-600 hover:text-purple-600 hover:border-purple-200 hover:bg-purple-50"
+                          className="h-11 px-4 border-gray-200 text-gray-600 hover:text-purple-600 hover:border-purple-200 hover:bg-purple-50"
                         >
                           <Save className="h-4 w-4 mr-2" />
                           Save
@@ -1872,11 +1876,11 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   </div>
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-slate-100">
+                <div className="mt-8 pt-8 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-6">
                     <div className="space-y-1">
-                       <h3 className="text-sm font-semibold text-slate-900">Social Connections</h3>
-                       <p className="text-xs text-slate-500">Connect your professional profiles to build trust</p>
+                       <h3 className="text-sm font-semibold text-gray-900">Social Connections</h3>
+                       <p className="text-xs text-gray-500">Connect your professional profiles to build trust</p>
                     </div>
                   </div>
 
@@ -1926,21 +1930,23 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </Card>
 
             {/* Availability & Work Preferences */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-900 flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-green-600" />
-                  Availability & Work Preferences
-                </CardTitle>
-                <CardDescription className="text-slate-500">
-                  Let employers know your current status and preferred work arrangement
-                </CardDescription>
+            <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-gray-100 pb-4">
+                <div className="space-y-1">
+                  <CardTitle className="text-gray-900 flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-emerald-600" />
+                    Availability & Work Preferences
+                  </CardTitle>
+                  <CardDescription className="text-gray-500">
+                    Set your current status and preferred professional arrangement
+                  </CardDescription>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Availability Status */}
                   <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Current Status</Label>
+                    <Label className="text-gray-700 font-medium">Current Status</Label>
                     <Select 
                       value={formData.availability_status} 
                       onValueChange={(value) => setFormData({ 
@@ -1948,7 +1954,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         availability_status: value 
                       })}
                     >
-                      <SelectTrigger className="bg-white border-slate-200">
+                      <SelectTrigger className="bg-white border-gray-200 h-11 sm:h-10 text-base sm:text-sm">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1982,7 +1988,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
                   {/* Work Preference */}
                   <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Work Arrangement</Label>
+                    <Label className="text-gray-700 font-medium">Work Arrangement</Label>
                     <Select 
                       value={formData.work_preference} 
                       onValueChange={(value) => setFormData({ 
@@ -1990,7 +1996,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         work_preference: value 
                       })}
                     >
-                      <SelectTrigger className="bg-white border-slate-200">
+                      <SelectTrigger className="bg-white border-gray-200 h-11 sm:h-10 text-base sm:text-sm">
                         <SelectValue placeholder="Select preference" />
                       </SelectTrigger>
                       <SelectContent>
@@ -2015,16 +2021,21 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </Card>
 
             {/* Professional Summary */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-900 flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-green-600" />
-                  Professional Summary
-                </CardTitle>
+            <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-gray-100 pb-4">
+                <div className="space-y-1">
+                  <CardTitle className="text-gray-900 flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    Professional Summary
+                  </CardTitle>
+                  <CardDescription className="text-gray-500">
+                    A brief overview of your professional role and background
+                  </CardDescription>
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 pt-6">
                 <div>
-                  <Label className="text-slate-700">Professional Title</Label>
+                  <Label className="text-gray-600 font-semibold mb-2 block">Professional Title</Label>
                   <Select 
                     value={formData.role}
                     onValueChange={(value) => {
@@ -2033,12 +2044,12 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                       if (value !== 'Custom') setCustomRoleText('');
                     }}
                   >
-                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
+                    <SelectTrigger className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 sm:h-10 text-base sm:text-sm">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-200">
+                    <SelectContent className="bg-white border-gray-200">
                       {PROFESSIONAL_ROLES.map((role) => (
-                        <SelectItem key={role} value={role} className="text-slate-900">{role}</SelectItem>
+                        <SelectItem key={role} value={role} className="text-gray-900">{role}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -2046,57 +2057,57 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     <Input 
                       value={customRoleText}
                       onChange={(e) => setCustomRoleText(e.target.value)}
-                      className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 mt-2" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 mt-2 h-11 sm:h-10 text-base" 
                       placeholder="Enter your custom role"
                     />
                   )}
                 </div>
 
                 <div>
-                  <Label className="text-slate-700">Professional Bio</Label>
+                  <Label className="text-gray-600 font-semibold mb-2 block">Professional Bio</Label>
                   <Textarea 
                     value={formData.bio}
                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 min-h-[100px]" 
+                    className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 min-h-[120px] sm:min-h-[100px] text-base" 
                     placeholder="Tell us about your professional background..."
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <Label className="text-slate-700">Years of Experience</Label>
+                    <Label className="text-gray-600 font-semibold mb-2 block">Years of Experience</Label>
                     <Input 
                       type="number"
                       value={formData.years_of_experience}
                       onChange={(e) => setFormData({ ...formData, years_of_experience: e.target.value })}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/50" 
+                      className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 sm:h-10 text-base" 
                       placeholder="e.g. 5"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-slate-700">Industry</Label>
+                    <Label className="text-gray-600 font-semibold mb-2 block">Industry</Label>
                     <Select value={formData.industry} onValueChange={(value) => setFormData({ ...formData, industry: value })}>
-                      <SelectTrigger className="bg-white border-slate-200 text-slate-900 placeholder:text-slate-400">
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 sm:h-10 text-base sm:text-sm">
                         <SelectValue placeholder="Select industry" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200">
+                      <SelectContent className="bg-white border-gray-200">
                         {INDUSTRIES.map((ind) => (
-                          <SelectItem key={ind} value={ind.toLowerCase()} className="text-slate-900">{ind}</SelectItem>
+                          <SelectItem key={ind} value={ind.toLowerCase()} className="text-gray-900">{ind}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label className="text-slate-700">Work Preference</Label>
+                    <Label className="text-gray-600 font-semibold mb-2 block">Work Preference</Label>
                     <Select value={formData.work_preference} onValueChange={(value) => setFormData({ ...formData, work_preference: value })}>
-                      <SelectTrigger className="bg-white border-slate-200 text-slate-900">
+                      <SelectTrigger className="bg-white border-gray-200 text-gray-900 h-11 sm:h-10 text-base sm:text-sm">
                         <SelectValue placeholder="Select preference" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-slate-200">
+                      <SelectContent className="bg-white border-gray-200">
                         {WORK_PREFERENCES.map((pref) => (
-                          <SelectItem key={pref} value={pref} className="text-slate-900 capitalize">{pref}</SelectItem>
+                          <SelectItem key={pref} value={pref} className="text-gray-900 capitalize">{pref}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -2106,21 +2117,21 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </Card>
 
             {/* Save Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-center sm:justify-end pt-4">
               <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-white hover:bg-gray-100 text-black font-semibold border-2 border-black"
+                className="bg-black hover:bg-slate-800 text-white font-bold rounded-2xl w-full sm:w-auto min-h-[52px] px-10 text-base shadow-lg shadow-black/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {saving ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    <span>Saving Changes...</span>
                   </>
                 ) : (
                   <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    <Save className="h-5 w-5 mr-2" />
+                    <span>Save Changes</span>
                   </>
                 )}
               </Button>
@@ -2135,80 +2146,92 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-            {/* CV Import Header */}
-            <div className="flex justify-end">
-              <input
-                type="file"
-                ref={cvInputRef}
-                className="hidden"
-                accept=".pdf,.docx,.txt"
-                onChange={handleCVUpload}
-              />
-              <Button
-                onClick={() => cvInputRef.current?.click()}
-                disabled={isUploadingCV}
-                variant="outline"
-                className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                {isUploadingCV ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Analyzing CV...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Import from CV
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Work Experience */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-slate-900 flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                  Work Experience
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => setShowConnectModal(true)}
-                    size="sm" 
-                    variant="outline"
-                    className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Connect Payroll
-                  </Button>
-                  <Button 
-                    onClick={() => setShowWorkModal(true)}
-                    size="sm" 
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200"
-                  >
-                    Add Position
-                  </Button>
+            {/* Work Experience Section with integrated Import */}
+            <Card className="bg-white border-gray-200 shadow-sm overflow-hidden">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                <div className="space-y-1">
+                  <CardTitle className="text-gray-900 flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-blue-600" />
+                    Work Experience
+                  </CardTitle>
+                  <p className="text-xs text-gray-500">Document your professional journey and verified roles</p>
+                </div>
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <input
+                      type="file"
+                      ref={cvInputRef}
+                      className="hidden"
+                      accept=".pdf,.docx,.txt"
+                      onChange={handleCVUpload}
+                    />
+                    <Button
+                      onClick={() => cvInputRef.current?.click()}
+                      disabled={isUploadingCV}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 sm:flex-none bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                    >
+                      {isUploadingCV ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      Import CV
+                    </Button>
+                    <Button 
+                      onClick={() => setShowConnectModal(true)}
+                      size="sm" 
+                      variant="outline"
+                      className="flex-1 sm:flex-none bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Payroll
+                    </Button>
+                    <Button 
+                      onClick={() => setShowWorkModal(true)}
+                      size="sm" 
+                      className="flex-1 sm:flex-none bg-black hover:bg-gray-800 text-white border-0 shadow-sm"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="pt-6">
                 {workExperienceList.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
-                    <p className="text-slate-500 text-sm">No work experience added yet.</p>
+                  <div className="text-center py-12 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl">
+                    <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                        <Briefcase className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <h4 className="text-slate-900 font-semibold mb-1">No work experience yet</h4>
+                    <p className="text-slate-500 text-sm max-w-xs mx-auto">Add your professional roles or import from your CV to build your verified identity.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {workExperienceList.map((work, index) => (
-                      <div key={work.id || index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="text-slate-900 font-semibold">{work.job_title}</h4>
-                            <p className="text-blue-600 text-sm">{work.company_name}</p>
-                            <p className="text-slate-500 text-xs mt-1">
-                              {work.start_date} - {work.is_current ? 'Present' : work.end_date}
-                            </p>
+                      <div key={work.id || index} className="group relative">
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0">
+                                <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center overflow-hidden">
+                                    {work.company_logo_url ? (
+                                        <img src={work.company_logo_url} alt={work.company_name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Building className="h-6 w-6 text-gray-400" />
+                                    )}
+                                </div>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-gray-900 font-bold text-lg">{work.job_title}</h4>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <p className="text-blue-600 font-medium">{work.company_name}</p>
+                                <span className="w-1 h-1 rounded-full bg-gray-300 hidden sm:inline" />
+                                <p className="text-gray-500 text-sm">
+                                  {work.start_date} - {work.is_current ? 'Present' : work.end_date}
+                                </p>
+                            </div>
                             
                             {/* Verification Status */}
-                            <div className="mt-2">
+                            <div className="mt-2.5">
                                 {work.verification_status === 'verified' ? (
                                     <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200 gap-1 pl-1 pr-2">
                                         <CheckCircle2 className="h-3 w-3" /> 
@@ -2216,7 +2239,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                                     </Badge>
                                 ) : (
                                     <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="text-slate-500 border-slate-200">
+                                        <Badge variant="outline" className="text-gray-500 border-gray-200">
                                             Unverified
                                         </Badge>
                                         <Button 
@@ -2231,7 +2254,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                                 )}
                             </div>
                           </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-1">
                             <Button 
                               onClick={() => {
                                 setTempWork({
@@ -2252,24 +2275,30 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                               }}
                               size="icon" 
                               variant="ghost" 
-                              className="h-8 w-8 text-slate-400 hover:text-slate-900"
+                              className="h-9 w-9 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
                             >
-                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                              <Pencil className="h-4.5 w-4.5" />
                             </Button>
                             <Button 
                               onClick={() => handleRemoveWork(index)}
                               size="icon" 
                               variant="ghost" 
-                              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                              className="h-9 w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >
-                              <X className="h-4 w-4" />
+                              <Trash2 className="h-4.5 w-4.5" />
                             </Button>
                           </div>
+                   
                         </div>
                         {work.description && (
-                          <p className="text-slate-600 text-sm mt-3 border-t border-slate-200 pt-3">
-                            {work.description}
-                          </p>
+                          <div className="mt-4 ml-16">
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                              {work.description}
+                            </p>
+                          </div>
+                        )}
+                        {index < workExperienceList.length - 1 && (
+                            <Separator className="mt-6 bg-slate-100" />
                         )}
                       </div>
                     ))}
@@ -2308,7 +2337,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                         ) : (
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-700">Verification Code</label>
+                                <label className="text-sm font-medium text-gray-700">Verification Code</label>
                                 <Input 
                                     placeholder="123456" 
                                     className="text-center text-lg tracking-widest bg-white border-slate-200 text-slate-900"
@@ -2348,8 +2377,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             />
 
             {/* Education Section */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-slate-100">
                 <CardTitle className="text-slate-900 flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-blue-600" />
                   Education
@@ -2357,55 +2386,73 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Button 
                   onClick={() => setShowEducationModal(true)}
                   size="sm" 
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200"
+                  className="bg-black hover:bg-gray-800 text-white border-0 shadow-sm"
                 >
-                  Add Education
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {(formData.education || []).length === 0 ? (
-                  <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
-                    <p className="text-slate-500 text-sm">No education history added yet.</p>
+                  <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl">
+                    <div className="mx-auto w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                        <GraduationCap className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <h4 className="text-gray-900 font-semibold mb-1">No education added</h4>
+                    <p className="text-gray-500 text-sm max-w-xs mx-auto">Add your academic background and certifications to complete your profile.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {(formData.education || []).map((edu, index) => (
-                      <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 group relative">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="text-slate-900 font-semibold">{edu.school}</h4>
-                            <p className="text-blue-600 text-sm">{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>
-                            <p className="text-slate-500 text-xs mt-1">
-                              {edu.start_year} - {edu.end_year || 'Present'}
-                            </p>
+                      <div key={index} className="group relative">
+                        <div className="flex gap-4">
+                          <div className="flex-shrink-0">
+                                <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                    <Building className="h-6 w-6 text-gray-400" />
+                                </div>
                           </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex-1">
+                            <h4 className="text-gray-900 font-bold text-lg">{edu.school}</h4>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <p className="text-blue-600 font-medium">{edu.degree}{edu.field ? `, ${edu.field}` : ''}</p>
+                                <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:inline" />
+                                <p className="text-slate-500 text-sm">
+                                  {edu.start_year} - {edu.end_year || 'Present'}
+                                </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
                             <Button 
                               onClick={() => {
                                 setTempEducation(edu);
-                                handleRemoveEducation(index); // Remove to re-add on save (simplifies edit)
+                                handleRemoveEducation(index);
                                 setShowEducationModal(true);
                               }}
                               size="icon" 
                               variant="ghost" 
-                              className="h-8 w-8 text-slate-400 hover:text-slate-900"
+                              className="h-9 w-9 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Pencil className="h-4.5 w-4.5" />
                             </Button>
                             <Button 
                               onClick={() => handleRemoveEducation(index)}
                               size="icon" 
                               variant="ghost" 
-                              className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                              className="h-9 w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                             >
-                              <X className="h-4 w-4" />
+                              <Trash2 className="h-4.5 w-4.5" />
                             </Button>
                           </div>
                         </div>
                         {edu.description && (
-                          <p className="text-slate-600 text-sm mt-3 border-t border-slate-200 pt-3">
-                            {edu.description}
-                          </p>
+                          <div className="mt-4 ml-16">
+                            <p className="text-gray-600 text-sm leading-relaxed">
+                              {edu.description}
+                            </p>
+                          </div>
+                        )}
+                        {index < (formData.education || []).length - 1 && (
+                            <Separator className="mt-6 bg-slate-100" />
                         )}
                       </div>
                     ))}
@@ -2417,33 +2464,36 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             {/* Skills & Tools */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Skills */}
-              <Card className="bg-white border-slate-200 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-slate-900 text-lg">Skills</CardTitle>
+              <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="pb-3 border-b border-slate-50">
+                  <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
+                    <Zap className="h-4.5 w-4.5 text-blue-500" />
+                    Skills
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                   <div className="space-y-4">
                     <div className="flex gap-2">
                       <Input 
                         value={skillInput}
                         onChange={(e) => setSkillInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddTag('skills', skillInput, setSkillInput)}
-                        placeholder="Add a skill (e.g. React)"
-                        className="bg-white border-slate-200 text-slate-900"
+                        placeholder="e.g. React"
+                        className="bg-white border-slate-200 text-slate-900 h-10"
                       />
                       <Button 
                         onClick={() => handleAddTag('skills', skillInput, setSkillInput)}
-                        variant="outline"
-                        className="border-white/20 text-white"
+                        variant="secondary"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-900 h-10 px-4"
                       >
                         Add
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.skills.map((skill) => (
-                        <Badge key={skill} className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 pr-1">
+                        <Badge key={skill} className="bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 px-2 py-1 gap-1 rounded-md transition-all">
                           {skill}
-                          <button onClick={() => handleRemoveTag('skills', skill)} className="ml-2 hover:text-blue-800">
+                          <button onClick={() => handleRemoveTag('skills', skill)} className="ml-1 hover:text-blue-800 transition-colors">
                             <X className="h-3 w-3" />
                           </button>
                         </Badge>
@@ -2454,33 +2504,36 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </Card>
 
               {/* Tools */}
-              <Card className="bg-white border-slate-200 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-slate-900 text-lg">Tools & Software</CardTitle>
+              <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+                <CardHeader className="pb-3 border-b border-slate-50">
+                  <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
+                    <Settings className="h-4.5 w-4.5 text-purple-500" />
+                    Tools & Software
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                   <div className="space-y-4">
                     <div className="flex gap-2">
                       <Input 
                         value={toolInput}
                         onChange={(e) => setToolInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddTag('tools', toolInput, setToolInput)}
-                        placeholder="Add a tool (e.g. Figma)"
-                        className="bg-white border-slate-200 text-slate-900"
+                        placeholder="e.g. Figma"
+                        className="bg-white border-slate-200 text-slate-900 h-10"
                       />
                       <Button 
                         onClick={() => handleAddTag('tools', toolInput, setToolInput)}
-                        variant="outline"
-                        className="border-white/20 text-white"
+                        variant="secondary"
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-900 h-10 px-4"
                       >
                         Add
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.tools.map((tool) => (
-                        <Badge key={tool} className="bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 pr-1">
+                        <Badge key={tool} className="bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100 px-2 py-1 gap-1 rounded-md transition-all">
                           {tool}
-                          <button onClick={() => handleRemoveTag('tools', tool)} className="ml-2 hover:text-purple-800">
+                          <button onClick={() => handleRemoveTag('tools', tool)} className="ml-1 hover:text-purple-800 transition-colors">
                             <X className="h-3 w-3" />
                           </button>
                         </Badge>
@@ -2492,33 +2545,36 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             </div>
 
             {/* Industry Tags */}
-            <Card className="bg-white border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-slate-900 text-lg">Industry Focus</CardTitle>
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+              <CardHeader className="pb-3 border-b border-slate-50">
+                <CardTitle className="text-gray-900 text-lg flex items-center gap-2">
+                  <Globe className="h-4.5 w-4.5 text-emerald-500" />
+                  Industry Focus
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="space-y-4">
                   <div className="flex gap-2">
                     <Input 
                       value={industryInput}
                       onChange={(e) => setIndustryInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddTag('industry_tags', industryInput, setIndustryInput)}
-                      placeholder="Add industry (e.g. Fintech)"
-                      className="bg-white border-slate-200 text-slate-900"
+                      placeholder="e.g. Fintech"
+                      className="bg-white border-slate-200 text-slate-900 h-10"
                     />
                     <Button 
                       onClick={() => handleAddTag('industry_tags', industryInput, setIndustryInput)}
-                      variant="outline"
-                      className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                      variant="secondary"
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-900 h-10 px-4"
                     >
                       Add
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.industry_tags.map((tag) => (
-                      <Badge key={tag} className="bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100 pr-1">
+                      <Badge key={tag} className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 px-2 py-1 gap-1 rounded-md transition-all">
                         {tag}
-                        <button onClick={() => handleRemoveTag('industry_tags', tag)} className="ml-2 hover:text-indigo-800">
+                        <button onClick={() => handleRemoveTag('industry_tags', tag)} className="ml-1 hover:text-emerald-800 transition-colors">
                           <X className="h-3 w-3" />
                         </button>
                       </Badge>
@@ -2531,7 +2587,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
             {/* Certifications */}
             <Card className="bg-white border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-slate-900 flex items-center gap-2">
+                <CardTitle className="text-gray-900 flex items-center gap-2">
                   <Shield className="h-5 w-5 text-green-600" />
                   Certifications
                 </CardTitle>
@@ -2545,7 +2601,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </CardHeader>
               <CardContent>
                 {formData.certifications.length === 0 ? (
-                  <div className="text-center py-8 border border-dashed border-slate-200 rounded-lg">
+                  <div className="text-center py-8 bg-slate-50 border border-dashed border-slate-200 rounded-lg">
                     <p className="text-slate-500 text-sm">No certifications added yet.</p>
                   </div>
                 ) : (
@@ -2577,7 +2633,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               <Button
                 onClick={handleSaveWorkIdentity}
                 disabled={saving}
-                className="bg-white hover:bg-gray-100 text-black font-semibold border-2 border-black"
+                className="bg-black hover:bg-slate-800 text-white font-semibold shadow-md px-8 py-6 rounded-2xl transition-all active:scale-95"
               >
                 {saving ? (
                   <>
@@ -2599,8 +2655,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Work Experience Modal */}
         <Dialog open={showWorkModal} onOpenChange={setShowWorkModal}>
-          <DialogContent className="w-full h-full sm:h-auto sm:max-w-[500px] sm:max-h-[85vh] flex flex-col p-0 gap-0 bg-white border-slate-200 text-slate-900">
-            <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 flex-shrink-0">
+          <DialogContent className="w-full h-full sm:h-auto sm:max-w-[500px] sm:max-h-[85vh] flex flex-col p-0 gap-0 bg-white border-gray-200 text-gray-900">
+            <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
               <DialogTitle className="text-base sm:text-lg">{editingWorkIndex !== null ? 'Edit Position' : 'Add Position'}</DialogTitle>
             </DialogHeader>
             
@@ -2616,20 +2672,20 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               <TabsContent value="basic" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-3 sm:space-y-4 mt-2 min-h-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company</Label>
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Company</Label>
                     <Input 
                       value={tempWork.company}
                       onChange={(e) => setTempWork({ ...tempWork, company: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm"
+                      className="bg-white border-gray-200 text-gray-900 h-11 sm:h-9 text-base sm:text-sm"
                       placeholder="e.g. Acme Corp"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Role/Title</Label>
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Role/Title</Label>
                     <Input 
                       value={tempWork.role}
                       onChange={(e) => setTempWork({ ...tempWork, role: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm"
+                      className="bg-white border-gray-200 text-gray-900 h-11 sm:h-9 text-base sm:text-sm"
                       placeholder="e.g. Senior Engineer"
                     />
                   </div>
@@ -2637,22 +2693,22 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Start Date</Label>
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Start Date</Label>
                     <Input 
                       type="month"
                       value={tempWork.start_date}
                       onChange={(e) => setTempWork({ ...tempWork, start_date: e.target.value })}
-                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm"
+                      className="bg-white border-gray-200 text-gray-900 h-11 sm:h-9 text-base sm:text-sm"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">End Date</Label>
+                    <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">End Date</Label>
                     <Input 
                       type="month"
                       value={tempWork.end_date}
                       onChange={(e) => setTempWork({ ...tempWork, end_date: e.target.value })}
                       disabled={tempWork.current}
-                      className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm disabled:opacity-50"
+                      className="bg-white border-gray-200 text-gray-900 h-11 sm:h-9 text-base sm:text-sm disabled:opacity-50"
                     />
                   </div>
                 </div>
@@ -2673,12 +2729,12 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
                 {/* Employment Type */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Employment Type</Label>
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Employment Type</Label>
                   <Select
                     value={tempWork.employment_type}
                     onValueChange={(value) => setTempWork({...tempWork, employment_type: value as EmploymentType})}
                   >
-                    <SelectTrigger className="bg-white border-slate-200 text-slate-900 h-11 sm:h-9 text-base sm:text-sm">
+                    <SelectTrigger className="bg-white border-gray-200 text-gray-900 h-11 sm:h-9 text-base sm:text-sm">
                       <SelectValue placeholder="Select employment type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -2695,11 +2751,11 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               {/* Tab 2: Details (Description, Skills, Achievements) */}
               <TabsContent value="details" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-3 sm:space-y-4 mt-2 min-h-0">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</Label>
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</Label>
                   <Textarea 
                     value={tempWork.description}
                     onChange={(e) => setTempWork({ ...tempWork, description: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900 min-h-[80px] text-base sm:text-sm resize-none"
+                    className="bg-white border-gray-200 text-gray-900 min-h-[80px] text-base sm:text-sm resize-none"
                     placeholder="Briefly describe your responsibilities..."
                   />
                 </div>
@@ -2732,7 +2788,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               <TabsContent value="proof" className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 space-y-3 sm:space-y-4 mt-2 min-h-0">
                 {/* Company Logo Upload */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Company Logo</Label>
+                  <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Company Logo</Label>
                   <div className="scale-95 sm:scale-90 origin-left">
                       <CompanyLogoUpload
                       companyName={tempWork.company}
@@ -2746,8 +2802,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 {/* Proof of Work Documents */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                      <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Proof of Work</Label>
-                      <span className="text-[10px] text-slate-400">Optional</span>
+                      <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Proof of Work</Label>
+                      <span className="text-[10px] text-gray-400">Optional</span>
                   </div>
                   <div className="scale-95 origin-top-left">
                       <ProofDocumentUpload
@@ -2761,8 +2817,8 @@ Return ONLY the JSON object, no markdown, no explanations.`;
               </TabsContent>
             </Tabs>
 
-            <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-100 bg-slate-50/50 flex-shrink-0 flex-row gap-2 sm:gap-3">
-              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="flex-1 sm:flex-none h-11 sm:h-9 border-slate-200 text-slate-700 hover:bg-slate-50 text-base sm:text-sm">Cancel</Button>
+            <DialogFooter className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0 flex-row gap-2 sm:gap-3">
+              <Button variant="outline" onClick={() => setShowWorkModal(false)} className="flex-1 sm:flex-none h-11 sm:h-9 border-gray-200 text-gray-700 hover:bg-gray-50 text-base sm:text-sm">Cancel</Button>
               <Button onClick={handleSaveWork} className="flex-1 sm:flex-none h-11 sm:h-9 bg-white hover:bg-gray-50 text-black border-2 border-black text-base sm:text-sm px-6 font-semibold">Save</Button>
             </DialogFooter>
           </DialogContent>
@@ -2770,7 +2826,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Education Modal */}
         <Dialog open={showEducationModal} onOpenChange={setShowEducationModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[500px]">
+          <DialogContent className="bg-white border-gray-200 text-gray-900 w-full sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Add Education</DialogTitle>
             </DialogHeader>
@@ -2780,7 +2836,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Input 
                   value={tempEducation.school}
                   onChange={(e) => setTempEducation({ ...tempEducation, school: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900"
+                  className="bg-white border-gray-200 text-gray-900"
                   placeholder="e.g. University of Lagos"
                 />
               </div>
@@ -2790,7 +2846,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <Input 
                     value={tempEducation.degree}
                     onChange={(e) => setTempEducation({ ...tempEducation, degree: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-gray-200 text-gray-900"
                     placeholder="e.g. BSc"
                   />
                 </div>
@@ -2799,7 +2855,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   <Input 
                     value={tempEducation.field}
                     onChange={(e) => setTempEducation({ ...tempEducation, field: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-gray-200 text-gray-900"
                     placeholder="e.g. Computer Science"
                   />
                 </div>
@@ -2811,7 +2867,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     type="number"
                     value={tempEducation.start_year}
                     onChange={(e) => setTempEducation({ ...tempEducation, start_year: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-gray-200 text-gray-900"
                     placeholder="2018"
                   />
                 </div>
@@ -2821,7 +2877,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                     type="number"
                     value={tempEducation.end_year}
                     onChange={(e) => setTempEducation({ ...tempEducation, end_year: e.target.value })}
-                    className="bg-white border-slate-200 text-slate-900"
+                    className="bg-white border-gray-200 text-gray-900"
                     placeholder="2022"
                   />
                 </div>
@@ -2831,13 +2887,13 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Textarea 
                   value={tempEducation.description}
                   onChange={(e) => setTempEducation({ ...tempEducation, description: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900 min-h-[80px]"
+                  className="bg-white border-gray-200 text-gray-900 min-h-[80px]"
                   placeholder="Activities, societies, honors..."
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEducationModal(false)} className="border-slate-200 text-slate-700 hover:bg-slate-50">Cancel</Button>
+              <Button variant="outline" onClick={() => setShowEducationModal(false)} className="border-gray-200 text-gray-700 hover:bg-gray-50">Cancel</Button>
               <Button onClick={handleSaveEducation} className="bg-blue-600 hover:bg-blue-700 text-white">Save Education</Button>
             </DialogFooter>
           </DialogContent>
@@ -2845,7 +2901,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
 
         {/* Certification Modal */}
         <Dialog open={showCertModal} onOpenChange={setShowCertModal}>
-          <DialogContent className="bg-white border-slate-200 text-slate-900 w-full sm:max-w-[400px]">
+          <DialogContent className="bg-white border-gray-200 text-gray-900 w-full sm:max-w-[400px]">
             <DialogHeader>
               <DialogTitle>Add Certification</DialogTitle>
             </DialogHeader>
@@ -2855,7 +2911,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Input 
                   value={tempCert.name}
                   onChange={(e) => setTempCert({ ...tempCert, name: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900"
+                  className="bg-white border-gray-200 text-gray-900"
                 />
               </div>
               <div>
@@ -2863,7 +2919,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                 <Input 
                   value={tempCert.issuer}
                   onChange={(e) => setTempCert({ ...tempCert, issuer: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900"
+                  className="bg-white border-gray-200 text-gray-900"
                 />
               </div>
               <div>
@@ -2872,7 +2928,7 @@ Return ONLY the JSON object, no markdown, no explanations.`;
                   type="month"
                   value={tempCert.date}
                   onChange={(e) => setTempCert({ ...tempCert, date: e.target.value })}
-                  className="bg-white border-slate-200 text-slate-900"
+                  className="bg-white border-gray-200 text-gray-900"
                 />
               </div>
               <div>

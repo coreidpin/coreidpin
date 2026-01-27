@@ -24,10 +24,11 @@
   .hero-grid {
     display: flex;
     flex-direction: column;
-    justify-content: center; /* vertical */
-    align-items: center;     /* horizontal */
-    min-height: 75vh;        /* fill most of viewport for true centering */
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;        /* Slightly reduced to accommodate notch/URL bar */
     width: 100%;
+    padding-top: 2rem;       /* Using design system spacing units */
   }
 
   .hero-text {
@@ -36,18 +37,18 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 0 20px;
-    min-height: 60vh; /* helps vertical centering on tall mobiles */
-    margin: 0 auto; /* explicit horizontal centering */
+    padding: 0 1rem;         /* Standardized to design system spacing */
+    min-height: 50vh;
+    margin: 0 auto;
     width: 100%;
-    gap: 0.5rem; /* consistent spacing between text elements */
+    gap: 0.75rem;            /* Refined gap for better vertical rhythm */
   }
 }
 
 /* Mobile optimizations for glow overlays in WhyWeExist cards */
 @media (max-width: 768px) {
   .group .absolute.inset-0.rounded-2xl.blur-xl {
-    filter: blur(clamp(6px, 2vw, 12px));
+    filter: blur(8px);       /* Simplified for performance on mobile */
     will-change: opacity, filter;
   }
   .group:active .absolute.inset-0.rounded-2xl.blur-xl {
@@ -60,7 +61,7 @@
   .hero-mobile {
     margin-inline: auto;
     text-align: center;
-    padding-inline: 16px;
+    padding-inline: 1.25rem; /* designSystem.spacing.lg equivalent */
   }
 
   /* Badge row alignment */
@@ -68,23 +69,24 @@
     margin-inline: auto;
   }
 
-  /* Headline sizing and tracking for tight mobile fit */
+  /* Headline sizing using design system scale */
   .hero-mobile h1 {
-    font-size: clamp(30px, 7vw, 38px);
-    line-height: 1.12;
-    letter-spacing: -0.01em;
+    font-size: 2.25rem;     /* designSystem.typography.fontSize.4xl */
+    line-height: 1.15;
+    letter-spacing: -0.02em;
   }
 
   /* Subheadline width and spacing */
   .hero-mobile p {
-    max-width: 92vw;
+    max-width: 90vw;
     margin-inline: auto;
+    font-size: 1rem;        /* designSystem.typography.fontSize.base */
   }
 
-  /* CTA block: touch-friendly sizing and spacing */
+  /* CTA block: touch-friendly sizing using accessibility standards */
   .hero-mobile button {
-    min-height: 52px;
-    padding: 14px 18px;
+    min-height: 3rem;       /* accessibility.minTouchTarget equivalent */
+    padding: 0.75rem 1.5rem;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
