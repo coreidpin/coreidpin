@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { 
   Mail, TrendingUp, MousePointer, AlertCircle, 
-  Send, Check, X, Clock, RefreshCw, Eye, Edit3, Users
+  Send, Check, X, Clock, RefreshCw, Eye, Edit3, Users,
+  ArrowLeft
 } from 'lucide-react';
 import { emailService, type EmailStatistics, type QueuedEmail, type EmailLog } from '../services/email.service';
 import { toast } from 'sonner';
 import { supabase } from '../../utils/supabase/client';
 
 export default function EmailManagement() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<EmailStatistics | null>(null);
   const [queue, setQueue] = useState<QueuedEmail[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
@@ -210,9 +213,18 @@ export default function EmailManagement() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Email Management</h1>
-          <p className="text-gray-600 mt-1">Manage email notifications and view analytics</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Email Management</h1>
+            <p className="text-gray-600 mt-1">Manage email notifications and view analytics</p>
+          </div>
         </div>
         <Button onClick={loadData} variant="outline">
           <RefreshCw className="w-4 h-4 mr-2" />

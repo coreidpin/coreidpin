@@ -9,7 +9,9 @@ import {
   GraduationCap, 
   Clock,
   Download,
-  Bell
+  Bell,
+  ArrowUpRight,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,8 +23,8 @@ import { PINActivationFunnel } from '../components/analytics/PINActivationFunnel
 import { dashboardService, DashboardStats, RecentActivityItem } from '../services/dashboard.service';
 import { analyticsService } from '../services/analytics.service';
 import { toast } from '../utils/toast';
-
 import { AdminDashboardSkeleton } from '../components/AdminDashboardSkeleton';
+import { cn } from '@/lib/utils';
 
 export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +44,6 @@ export function AdminDashboard() {
     async function loadDashboardData() {
       try {
         setIsLoading(true);
-        // Run in parallel
         const [statsData, activityData] = await Promise.all([
           dashboardService.getDashboardStats(),
           dashboardService.getRecentActivity()
@@ -77,6 +78,16 @@ export function AdminDashboard() {
     }
   };
 
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'user': return 'bg-blue-100/50 text-blue-600';
+      case 'security': return 'bg-amber-100/50 text-amber-600';
+      case 'api': return 'bg-indigo-100/50 text-indigo-600';
+      case 'endorsement': return 'bg-emerald-100/50 text-emerald-600';
+      default: return 'bg-neutral-100 text-neutral-600';
+    }
+  };
+
   if (isLoading) {
     return (
       <AdminLayout breadcrumbs={['Overview']} onLogout={handleLogout}>
@@ -87,158 +98,170 @@ export function AdminDashboard() {
 
   return (
     <AdminLayout breadcrumbs={['Overview']} onLogout={handleLogout}>
-      <div className="space-y-6">
+      <div className="space-y-8 max-w-7xl mx-auto">
         {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-500 mt-1">Welcome back! Here's what's happening with your platform.</p>
+          <h1 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-600">
+            Overview
+          </h1>
+          <p className="text-sm md:text-base text-neutral-500 mt-1">
+            Welcome back, Super Admin
+          </p>
         </div>
+        
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+          <div className="flex gap-2 w-full sm:w-auto">
+             <Button
+                variant="outline"
+                size="sm"
+                className="bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-700 shadow-sm transition-all duration-200 hover:shadow-md"
+                onClick={() => window.location.href = '/admin/announcements'}
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                Announcements
+              </Button>
+            <Button
+              size="sm"
+              className="bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-md shadow-brand-primary-500/20 transition-all duration-200 hover:shadow-lg hover:scale-105"
+              onClick={async () => {
+                try {
+                  const blob = await analyticsService.exportUsers();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success('Users exported successfully');
+                } catch (error) {
+                  toast.error('Failed to export users');
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+            </Button>
+          </div>
+        </div>
+      </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                +{stats.dailySignups} today
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Professionals</CardTitle>
-              <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeProfessionals.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.totalUsers > 0 
-                  ? ((stats.activeProfessionals / stats.totalUsers) * 100).toFixed(1) 
-                  : 0}% of total
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Partners</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activePartners}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.apiIntegrations} API integrations
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Endorsement Activity</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.endorsementActivity.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                This month
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 animate-[slideInUp_0.5s_cubic-bezier(0.16,1,0.3,1)]">
+          {[
+            {
+              title: "Total Users",
+              value: stats.totalUsers.toLocaleString(),
+              subtext: `+${stats.dailySignups} today`,
+              icon: Users,
+              color: "text-blue-600",
+              bgColor: "bg-blue-50/50",
+              trend: "up"
+            },
+            {
+              title: "Active Professionals",
+              value: stats.activeProfessionals.toLocaleString(),
+              subtext: `${stats.totalUsers > 0 ? ((stats.activeProfessionals / stats.totalUsers) * 100).toFixed(1) : 0}% of total`,
+              icon: GraduationCap,
+              color: "text-indigo-600",
+              bgColor: "bg-indigo-50/50",
+              trend: "neutral"
+            },
+            {
+              title: "Active Partners",
+              value: stats.activePartners,
+              subtext: `${stats.apiIntegrations} API integrations`,
+              icon: Building,
+              color: "text-amber-600",
+              bgColor: "bg-amber-50/50",
+              trend: "up"
+            },
+            {
+              title: "Endorsement Activity",
+              value: stats.endorsementActivity.toLocaleString(),
+              subtext: "This month",
+              icon: CheckCircle,
+              color: "text-emerald-600",
+              bgColor: "bg-emerald-50/50",
+              trend: "up"
+            }
+          ].map((stat, i) => (
+            <Card key={i} className="group relative overflow-hidden border-none shadow-[0_2px_10px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 bg-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-neutral-500 tracking-wide uppercase text-[11px]">{stat.title}</CardTitle>
+                <div className={cn("p-2 rounded-xl transition-colors duration-300 group-hover:bg-neutral-50", stat.bgColor)}>
+                  <stat.icon className={cn("h-4.5 w-4.5 transition-transform duration-300 group-hover:scale-110", stat.color)} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-neutral-900 tracking-tight">{stat.value}</div>
+                <div className="flex items-center mt-1 text-xs font-medium text-neutral-500">
+                  {stat.trend === 'up' && <ArrowUpRight className="h-3.5 w-3.5 mr-1 text-emerald-500" />}
+                  {stat.subtext}
+                </div>
+                {/* Decorative gradient overlay on hover */}
+                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-neutral-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Quick Actions Bar */}
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">Quick Actions</h3>
-                <p className="text-xs text-gray-600 mt-0.5">Common administrative tasks</p>
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white hover:bg-gray-50"
-                  onClick={async () => {
-                    try {
-                      const blob = await analyticsService.exportUsers();
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                      toast.success('Users exported successfully');
-                    } catch (error) {
-                      toast.error('Failed to export users');
-                    }
-                  }}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Users
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-white hover:bg-gray-50"
-                  onClick={() => window.location.href = '/admin/announcements'}
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  Send Announcement
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Analytics Section */}
-        <div className="space-y-8">
-          {/* Section Header */}
+        <div className="space-y-8 animate-[slideInUp_0.6s_cubic-bezier(0.16,1,0.3,1)] delay-100">
           <div className="flex items-center gap-3">
-            <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
-            <h2 className="text-2xl font-bold text-gray-900">Analytics Overview</h2>
+             <div className="p-1.5 bg-brand-primary-100 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-brand-primary-600" />
+            </div>
+            <h2 className="text-xl font-bold text-neutral-900">Analytics Overview</h2>
           </div>
 
-          {/* User Growth - Full Width */}
-          <UserGrowthChart />
+          <Card className="border-neutral-200/60 shadow-sm overflow-hidden">
+             <CardContent className="p-0">
+               <UserGrowthChart />
+             </CardContent>
+          </Card>
           
-          {/* Two Column Layout - Balanced */}
           <div className="grid gap-6 lg:grid-cols-2">
             <UserTypeBreakdown />
             <SystemHealth />
           </div>
 
-          {/* PIN Funnel - Full Width */}
           <PINActivationFunnel />
         </div>
 
         {/* Recent Activity Section */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
+        <div className="animate-[slideInUp_0.7s_cubic-bezier(0.16,1,0.3,1)] delay-200">
+           <div className="flex items-center gap-3 mb-4">
+             <div className="p-1.5 bg-brand-primary-100 rounded-lg">
+              <Clock className="h-5 w-5 text-brand-primary-600" />
+            </div>
+            <h2 className="text-xl font-bold text-neutral-900">Recent Activity</h2>
+          </div>
+          
+          <Card className="border-neutral-200/60 shadow-sm overflow-hidden">
+            <CardContent className="p-0">
+              <div className="divide-y divide-neutral-100">
                 {recentActivity.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500">No recent activity found</div>
+                    <div className="flex flex-col items-center justify-center py-12 text-neutral-400">
+                      <Clock className="h-12 w-12 mb-3 opacity-20" />
+                      <p>No recent activity found</p>
+                    </div>
                 ) : (
                     recentActivity.map((item, index) => {
                       const Icon = getActivityIcon(item.type);
+                      const colorClass = getActivityColor(item.type);
+                      
                       return (
-                        <div key={item.id || index} className="flex items-center">
-                          <div className="mr-4 p-2 bg-blue-50 rounded-full">
-                            <Icon className="h-4 w-4 text-blue-600" />
+                        <div key={item.id || index} className="flex items-center p-4 hover:bg-neutral-50/50 transition-colors duration-200 group">
+                          <div className={cn("mr-4 p-2.5 rounded-full shrink-0 transition-transform duration-300 group-hover:scale-110", colorClass)}>
+                            <Icon className="h-4 w-4" />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{item.action}</p>
-                            <p className="text-xs text-gray-500">{item.user}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-neutral-900 truncate group-hover:text-brand-primary-600 transition-colors">{item.action}</p>
+                            <p className="text-xs text-neutral-500 truncate">{item.user}</p>
                           </div>
-                          <div className="flex items-center text-xs text-gray-400">
-                            <Clock className="h-3 w-3 mr-1" />
+                          <div className="flex items-center text-xs text-neutral-400 font-medium bg-white px-2 py-1 rounded-full border border-neutral-100 shadow-sm">
+                            <Clock className="h-3 w-3 mr-1.5" />
                             {new Date(item.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>

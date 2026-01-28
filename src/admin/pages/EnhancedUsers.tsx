@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Users,
@@ -14,7 +15,8 @@ import {
   XCircle,
   Eye,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
 import {
   userManagementService,
@@ -24,6 +26,7 @@ import {
 } from '../services/user-management.service';
 
 export function EnhancedUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [statistics, setStatistics] = useState<UserStatistics | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -194,9 +197,18 @@ export function EnhancedUsers() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage and monitor all platform users</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <p className="text-gray-600 mt-1">Manage and monitor all platform users</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -220,7 +232,7 @@ export function EnhancedUsers() {
       {/* Statistics Cards */}
       {statistics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%)' }}>
             <div className="absolute top-0 right-0 -mt-4 -mr-4">
               <Users className="h-24 w-24 opacity-10" />
             </div>
@@ -230,7 +242,7 @@ export function EnhancedUsers() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #059669 100%)' }}>
             <div className="absolute top-0 right-0 -mt-4 -mr-4">
               <UserCheck className="h-24 w-24 opacity-10" />
             </div>
@@ -240,7 +252,7 @@ export function EnhancedUsers() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #4f46e5 100%)' }}>
             <div className="absolute top-0 right-0 -mt-4 -mr-4">
               <Shield className="h-24 w-24 opacity-10" />
             </div>
@@ -250,7 +262,7 @@ export function EnhancedUsers() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)' }}>
             <div className="absolute top-0 right-0 -mt-4 -mr-4">
               <Users className="h-24 w-24 opacity-10" />
             </div>
@@ -261,7 +273,7 @@ export function EnhancedUsers() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-red-500 to-pink-600 p-6 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-xl p-6 text-white shadow-lg" style={{ background: 'linear-gradient(135deg, #ef4444 0%, #db2777 100%)' }}>
             <div className="absolute top-0 right-0 -mt-4 -mr-4">
               <UserX className="h-24 w-24 opacity-10" />
             </div>

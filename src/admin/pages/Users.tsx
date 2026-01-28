@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { UsersTable, UserProfile } from '../components/users/UsersTable';
 import { UserDetailModal } from '../components/users/UserDetailModal';
 import { UserSearch } from '../components/users/UserSearch';
 import { UserFilters, UserFilterOptions } from '../components/users/UserFilters';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Users } from 'lucide-react';
+import { Users, ArrowLeft } from 'lucide-react';
 import { usersService } from '../services';
 import { analyticsService } from '../services/analytics.service';
 import { toast } from '../utils/toast';
@@ -16,6 +17,7 @@ import { Button } from '../../components/ui/button';
 import { Download, RefreshCw } from 'lucide-react';
 
 export function UsersPage() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -127,12 +129,23 @@ export function UsersPage() {
       <ErrorBoundary>
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-semibold" style={{ color: '#0A2540' }}>
-              Users
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Manage and view all registered users ({total.toLocaleString()} total)
-            </p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/admin/dashboard')} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft className="h-6 w-6 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-semibold" style={{ color: '#0A2540' }}>
+                  Users
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Manage and view all registered users ({total.toLocaleString()} total)
+                </p>
+              </div>
+            </div>
           </div>
 
           <Card>

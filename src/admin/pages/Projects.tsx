@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { ProjectsTable, Project } from '../components/projects/ProjectsTable';
 import { ProjectDetailModal } from '../components/projects/ProjectDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Search, FolderGit2 } from 'lucide-react';
+import { Search, FolderGit2, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import {
   Select,
@@ -20,6 +21,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/shared/DataTable/Pagination';
 
 export function ProjectsPage() {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,10 +127,21 @@ export function ProjectsPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-            <p className="text-gray-500 mt-1">
-              Manage and verify professional projects
-            </p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/admin/dashboard')} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft className="h-6 w-6 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+                <p className="text-gray-500 mt-1">
+                  Manage and verify professional projects
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Stats Cards - Simplified for now */}

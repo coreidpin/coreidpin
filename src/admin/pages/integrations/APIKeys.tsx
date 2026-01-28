@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../layouts/AdminLayout';
 import { APIKeysTable, APIKey } from '../../components/integrations/APIKeysTable';
 import { APIKeyDetailModal } from '../../components/integrations/APIKeyDetailModal';
@@ -6,7 +7,7 @@ import { CreateAPIKeyModal, CreateAPIKeyData } from '../../components/integratio
 import { supabase } from '../../../utils/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import {
   Select,
@@ -18,6 +19,7 @@ import {
 import { toast } from '../../utils/toast';
 
 export function APIKeysPage() {
+  const navigate = useNavigate();
   const [apiKeys, setApiKeys] = useState<APIKey[]>([]);
   const [filteredKeys, setFilteredKeys] = useState<APIKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -186,11 +188,20 @@ export function APIKeysPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">API Keys</h1>
-            <p className="text-gray-500 mt-1">
-              Manage API keys for external integrations and partners
-            </p>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/admin/dashboard')} 
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="h-6 w-6 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">API Keys</h1>
+              <p className="text-gray-500 mt-1">
+                Manage API keys for external integrations and partners
+              </p>
+            </div>
           </div>
           <Button onClick={() => setIsCreateModalOpen(true)} className="bg-black hover:bg-gray-800 text-white">
             <Plus className="mr-2 h-4 w-4" />

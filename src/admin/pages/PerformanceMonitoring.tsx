@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Activity, AlertTriangle, CheckCircle, Clock, Database, Server, TrendingUp, Zap, AlertCircle } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Clock, Database, Server, TrendingUp, Zap, AlertCircle, ArrowLeft } from 'lucide-react';
 import { monitoringService, TimePeriod } from '../services/monitoring.service';
 
 export function PerformanceMonitoring() {
+  const navigate = useNavigate();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('1h');
   const [summary, setSummary] = useState<any>(null);
   const [trends, setTrends] = useState<any[]>([]);
@@ -99,9 +101,18 @@ export function PerformanceMonitoring() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Performance Monitoring</h1>
-          <p className="text-gray-600 mt-1">Real-time API and database performance metrics</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Performance Monitoring</h1>
+            <p className="text-gray-600 mt-1">Real-time API and database performance metrics</p>
+          </div>
         </div>
         
         {/* Period Selector */}
@@ -225,7 +236,7 @@ export function PerformanceMonitoring() {
         </div>
 
         {/* Requests/Min */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
           <div className="absolute top-0 right-0 -mt-4 -mr-4">
             <Zap className="h-24 w-24 opacity-10" />
           </div>

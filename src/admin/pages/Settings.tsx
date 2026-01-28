@@ -1,14 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { GeneralSettingsForm } from '../components/settings/GeneralSettingsForm';
 import { SecuritySettingsForm } from '../components/settings/SecuritySettingsForm';
 import { AdminUserManagement } from '../components/settings/AdminUserManagement';
 import { AuditLogViewer } from '../components/settings/AuditLogViewer';
-import { Settings as SettingsIcon, Shield, Users, FileText } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Users, FileText, ArrowLeft } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 
 export default function Settings() {
+  const navigate = useNavigate();
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
     localStorage.removeItem('adminSession');
@@ -19,12 +21,23 @@ export default function Settings() {
     <AdminLayout breadcrumbs={['System', 'Settings']} onLogout={handleLogout}>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold" style={{ color: '#0A2540' }}>
-            Settings
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Manage system configuration and administrative access
-          </p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-semibold" style={{ color: '#0A2540' }}>
+              Settings
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Manage system configuration and administrative access
+            </p>
+          </div>
+        </div>
         </div>
         
         <Tabs defaultValue="general" className="space-y-6">

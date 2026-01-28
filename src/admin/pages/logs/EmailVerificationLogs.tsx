@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../../layouts/AdminLayout';
 import { AuthLogsTable, AuthLog } from '../../components/logs/AuthLogsTable';
 import { AuthLogDetailModal } from '../../components/logs/AuthLogDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
-import { Search, Mail } from 'lucide-react';
+import { Search, Mail, ArrowLeft } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import {
   Select,
@@ -20,6 +21,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { Pagination } from '../../components/shared/DataTable/Pagination';
 
 export function EmailVerificationLogsPage() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState<AuthLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,10 +99,21 @@ export function EmailVerificationLogsPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Email Verification Logs</h1>
-            <p className="text-gray-500 mt-1">
-              Monitor email verification attempts and success rates
-            </p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/admin/dashboard')} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft className="h-6 w-6 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Email Verification Logs</h1>
+                <p className="text-gray-500 mt-1">
+                  Monitor email verification attempts and success rates
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Stats Cards */}

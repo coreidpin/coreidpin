@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '../layouts/AdminLayout';
 import { EndorsementsTable, Endorsement } from '../components/endorsements/EndorsementsTable';
 import { EndorsementDetailModal } from '../components/endorsements/EndorsementDetailModal';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
-import { Search, Award } from 'lucide-react';
+import { Search, Award, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import {
   Select,
@@ -20,6 +21,7 @@ import { EmptyState } from '../components/EmptyState';
 import { Pagination } from '../components/shared/DataTable/Pagination';
 
 export function EndorsementsPage() {
+  const navigate = useNavigate();
   const [endorsements, setEndorsements] = useState<Endorsement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,10 +109,21 @@ export function EndorsementsPage() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Endorsements</h1>
-            <p className="text-gray-500 mt-1">
-              Manage and verify professional endorsements
-            </p>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => navigate('/admin/dashboard')} 
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft className="h-6 w-6 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Endorsements</h1>
+                <p className="text-gray-500 mt-1">
+                  Manage and verify professional endorsements
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Stats Cards */}

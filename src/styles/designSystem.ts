@@ -28,6 +28,7 @@ export const colors = {
       700: '#4338CA',
       800: '#3730A3',
       900: '#312E81',   // Darkest indigo
+      950: '#1E1B4B',   // Midnight indigo (Sidebar bg)
     },
     secondary: {
       50: '#ECFDF5',

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Plus, Search, Edit, Trash2, Eye, EyeOff, 
-  Save, X, HelpCircle, Folder, ChevronDown, ChevronUp
+  Save, X, HelpCircle, Folder, ChevronDown, ChevronUp,
+  ArrowLeft
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -9,6 +11,7 @@ import { cmsService, CMSPage, CMSFAQ, CMSCategory } from '../services/cms.servic
 import { toast } from 'sonner';
 
 export default function ContentManagement() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'pages' | 'faqs' | 'categories'>('pages');
   const [loading, setLoading] = useState(false);
 
@@ -165,9 +168,18 @@ export default function ContentManagement() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
-          <p className="text-gray-600 mt-1">Manage pages, FAQs, and help articles</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
+            <p className="text-gray-600 mt-1">Manage pages, FAQs, and help articles</p>
+          </div>
         </div>
       </div>
 

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Globe, MapPin, Users, TrendingUp, Building, Shield, CheckCircle } from 'lucide-react';
+import { Globe, MapPin, Users, TrendingUp, Building, Shield, CheckCircle, ArrowLeft } from 'lucide-react';
 import { geographicService, CountryData, DemographicData, GeographicGrowth } from '../services/geographic.service';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
 export function GeographicInsights() {
+  const navigate = useNavigate();
   const [countries, setCountries] = useState<CountryData[]>([]);
   const [demographics, setDemographics] = useState<DemographicData[]>([]);
   const [growth, setGrowth] = useState<GeographicGrowth[]>([]);
@@ -83,9 +85,18 @@ export function GeographicInsights() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Geographic & Demographic Insights</h1>
-          <p className="text-gray-600 mt-1">User distribution and demographics analysis</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Geographic & Demographic Insights</h1>
+            <p className="text-gray-600 mt-1">User distribution and demographics analysis</p>
+          </div>
         </div>
 
         {/* Growth Period Selector */}
@@ -151,7 +162,7 @@ export function GeographicInsights() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 p-6 text-white shadow-lg">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white shadow-lg">
           <div className="absolute top-0 right-0 -mt-4 -mr-4">
             <TrendingUp className="h-24 w-24 opacity-10" />
           </div>
@@ -165,7 +176,7 @@ export function GeographicInsights() {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-6 text-white shadow-lg">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-lg">
           <div className="absolute top-0 right-0 -mt-4 -mr-4">
             <Users className="h-24 w-24 opacity-10" />
           </div>

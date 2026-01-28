@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
   Settings,
@@ -10,13 +11,15 @@ import {
   Server,
   Save,
   RefreshCw,
-  History
+  History,
+  ArrowLeft
 } from 'lucide-react';
 import { systemSettingsService, type SettingsByCategory } from '../services/system-settings.service';
 
 type TabType = 'general' | 'features' | 'email' | 'security' | 'api' | 'system';
 
 export function SystemSettings() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [settings, setSettings] = useState<SettingsByCategory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -175,8 +178,19 @@ export function SystemSettings() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
-        <p className="text-gray-600 mt-1">Configure your platform settings and preferences</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+            <p className="text-gray-600 mt-1">Configure your platform settings and preferences</p>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}

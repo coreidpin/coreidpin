@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
   Shield,
@@ -9,11 +10,13 @@ import {
   Download,
   RefreshCw,
   Search,
-  Filter
+  Filter,
+  ArrowLeft
 } from 'lucide-react';
 import { auditService, type AuditLog, type AuditFilters, type AuditStatistics } from '../services/audit.service';
 
 export function AuditLogs() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [statistics, setStatistics] = useState<AuditStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,9 +102,18 @@ export function AuditLogs() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
-          <p className="text-gray-600 mt-1">Track all administrative actions and system events</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Audit Logs</h1>
+            <p className="text-gray-600 mt-1">Track all administrative actions and system events</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button

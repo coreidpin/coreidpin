@@ -98,51 +98,57 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
   const sidebarWidth = isMobile ? '280px' : (isCollapsed ? '80px' : '280px');
   
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Overlay */}
-      {isMobile && isMobileOpen && (
-        <div 
-          className="fixed inset-0 z-30 bg-black/50"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
+    <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 selection:bg-brand-100 selection:text-brand-900">
+      {/* Mobile Overlay with Fade Animation */}
+      <div 
+        className={`fixed inset-0 z-30 bg-neutral-950/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+          isMobile && isMobileOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMobileOpen(false)}
+      />
 
-      {/* Sidebar */}
+      {/* Sidebar with Slide/Collapse Animation */}
       <aside 
-        className={`fixed top-0 left-0 z-40 h-screen transition-all duration-300 ease-in-out bg-[#0A2540] ${
+        className={`fixed top-0 left-0 z-40 h-screen shadow-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden bg-neutral-950 border-r border-white/5 ${
           isMobile 
             ? (isMobileOpen ? 'translate-x-0' : '-translate-x-full') 
             : 'translate-x-0'
         }`}
         style={{ 
           width: sidebarWidth,
-          backgroundColor: '#0A2540', // Force background color
-          overflowX: 'hidden' // Force overflow hidden
         }}
       >
-        <div className="h-full flex flex-col w-[280px]"> {/* Fixed internal width to prevent content squishing */}
-          {/* Logo */}
-          <div className="px-6 py-5 border-b border-white/10 h-[80px] flex items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#445DFF' }}>
+        <div className="h-full flex flex-col w-[280px]"> {/* Fixed internal width */}
+          {/* Logo with Fade Transition */}
+          <div className="px-6 h-[80px] flex items-center border-b border-white/5">
+            <Link to="/admin/dashboard" className="flex items-center gap-3 group relative">
+              <div className="absolute inset-0 bg-brand-primary-500/0 group-hover:bg-brand-primary-500/10 rounded-xl transition-colors duration-300 -m-2 opacity-0 group-hover:opacity-100" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary-500 to-brand-primary-600 shadow-lg shadow-brand-primary-500/20 flex items-center justify-center shrink-0 relative z-10 group-hover:scale-105 transition-transform duration-300">
                 <Shield className="h-6 w-6 text-white" />
               </div>
               <div 
-                className={`transition-opacity duration-200 ${isCollapsed && !isMobile ? 'opacity-0' : 'opacity-100'}`}
-                style={{ display: isCollapsed && !isMobile ? 'none' : 'block' }} 
+                className={`transition-all duration-300 origin-left ${
+                  isCollapsed && !isMobile 
+                    ? 'opacity-0 scale-95 translate-x-[-10px]' 
+                    : 'opacity-100 scale-100 translate-x-0'
+                }`}
+                style={{
+                  width: isCollapsed && !isMobile ? 0 : 'auto',
+                  overflow: 'hidden'
+                }}
               >
-                <h1 className="text-xl font-bold text-white">GidiPIN</h1>
-                <p className="text-xs text-gray-400">Admin Portal</p>
+                <h1 className="text-xl font-bold text-white tracking-tight">GidiPIN</h1>
+                <p className="text-xs text-brand-primary-200 font-medium tracking-wide">Admin Portal</p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto overflow-x-hidden" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+          <nav className="flex-1 min-h-0 px-3 py-6 space-y-8 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {navigationGroups.map((group) => (
               <div key={group.title}>
                 <h3 
-                  className={`px-3 mb-2 text-xs font-semibold text-gray-500 tracking-wider transition-opacity duration-200 ${
+                  className={`px-3 mb-3 text-[10px] font-bold text-neutral-500 uppercase tracking-widest transition-opacity duration-300 ${
                     isCollapsed && !isMobile ? 'opacity-0' : 'opacity-100'
                   }`}
                   style={{ display: isCollapsed && !isMobile ? 'none' : 'block' }}
@@ -159,18 +165,22 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
                         key={item.path}
                         to={item.path}
                         title={isCollapsed && !isMobile ? item.label : undefined}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap ${
+                        className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative overflow-hidden active:scale-95 ${
                           isActive 
-                            ? 'bg-[#445DFF] text-white shadow-lg shadow-[#445DFF]/20' 
-                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/20' 
+                            : 'text-neutral-400 hover:bg-white/5 hover:text-white'
                         }`}
                       >
-                        <Icon className="h-5 w-5 shrink-0" />
+                        {isActive && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3 bg-white/30 rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                        )}
+                        <Icon className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isActive ? 'scale-110 text-white' : 'group-hover:scale-110 group-hover:text-white'}`} />
                         <span 
-                          className={`font-medium transition-opacity duration-200 ${
-                            isCollapsed && !isMobile ? 'opacity-0' : 'opacity-100'
+                          className={`font-medium text-sm transition-all duration-300 origin-left ${
+                            isCollapsed && !isMobile 
+                              ? 'opacity-0 w-0 translate-x-[-10px]' 
+                              : 'opacity-100 w-auto translate-x-0'
                           }`}
-                          style={{ display: isCollapsed && !isMobile ? 'none' : 'block' }}
                         >
                           {item.label}
                         </span>
@@ -183,68 +193,71 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
           </nav>
 
           {/* User section */}
-          <div className="px-3 py-4 border-t border-white/10">
-            <div className={`flex items-center gap-3 px-3 py-2.5 mb-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer ${isCollapsed && !isMobile ? 'justify-center' : ''}`}>
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#445DFF] to-[#32F08C] flex items-center justify-center shrink-0">
-                <span className="text-white font-semibold text-xs">SA</span>
+          <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
+            <div className={`flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group ${isCollapsed && !isMobile ? 'justify-center' : ''}`}>
+              <div className="w-9 h-9 rounded-full ring-2 ring-white/10 bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg relative overflow-hidden group-hover:ring-indigo-500/50 transition-all duration-300">
+                <span className="text-white font-bold text-xs relative z-10">SA</span>
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </div>
               <div 
-                className={`flex-1 min-w-0 transition-opacity duration-200 ${isCollapsed && !isMobile ? 'opacity-0' : 'opacity-100'}`}
-                style={{ display: isCollapsed && !isMobile ? 'none' : 'block' }}
+                className={`flex-1 min-w-0 transition-all duration-300 ${
+                  isCollapsed && !isMobile ? 'opacity-0 w-0' : 'opacity-100 w-auto'
+                }`}
               >
-                <p className="text-sm font-medium text-white truncate">Super Admin</p>
-                <p className="text-xs text-gray-400 truncate">admin@gidipin.work</p>
+                <p className="text-sm font-semibold text-white truncate">Super Admin</p>
+                <p className="text-[10px] text-neutral-400 truncate tracking-wide">admin@gidipin.work</p>
               </div>
             </div>
+            
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-red-500/10 hover:text-red-400 transition-colors ${
+              className={`mt-2 w-full flex items-center gap-3 px-3 py-2 rounded-lg text-neutral-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 group ${
                 isCollapsed && !isMobile ? 'justify-center' : ''
               }`}
+              title="Logout"
             >
-              <LogOut className="h-5 w-5 shrink-0" />
+              <LogOut className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:-translate-x-1" />
               <span 
-                className={`font-medium transition-opacity duration-200 ${
-                  isCollapsed && !isMobile ? 'opacity-0' : 'opacity-100'
+                className={`text-sm font-medium transition-all duration-300 ${
+                  isCollapsed && !isMobile ? 'opacity-0 w-0 hidden' : 'opacity-100 w-auto block'
                 }`}
-                style={{ display: isCollapsed && !isMobile ? 'none' : 'block' }}
               >
-                Logout
+                Sign Out
               </span>
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div 
-        className="transition-all duration-300 ease-in-out"
+        className="transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{ marginLeft: isMobile ? 0 : (isCollapsed ? '80px' : '280px') }}
       >
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="px-4 py-3 md:px-6 md:py-4">
-            <div className="flex items-center justify-between">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-neutral-200/60 shadow-sm transition-all duration-300">
+          <div className="px-4 py-3 md:px-6 h-16 flex items-center">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-4">
                 <button
                   onClick={toggleSidebar}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 transition-all duration-200 active:scale-95"
                 >
-                  <Menu className="h-5 w-5 text-gray-600" />
+                  <Menu className="h-5 w-5" />
                 </button>
                 
-                {/* Breadcrumbs */}
+                {/* Breadcrumbs with Fade In - Hidden on Mobile */}
                 {breadcrumbs.length > 0 && (
-                  <nav className="hidden sm:flex items-center gap-2 overflow-x-auto">
-                    <span className="text-sm text-gray-500">Admin</span>
+                  <nav className="hidden md:flex items-center gap-2 overflow-x-auto min-w-0 animate-[fadeIn_0.3s_ease-out]">
+                    <span className="text-sm font-medium text-neutral-400 hover:text-neutral-600 transition-colors shrink-0">Admin</span>
                     {breadcrumbs.map((crumb, index) => (
                       <Fragment key={index}>
-                        <ChevronRight className="h-4 w-4 text-gray-400" />
+                        <ChevronRight className="h-4 w-4 text-neutral-300" />
                         <span 
-                          className={`text-sm ${
+                          className={`text-sm transition-colors duration-200 ${
                             index === breadcrumbs.length - 1 
-                              ? 'text-gray-900 font-medium' 
-                              : 'text-gray-500'
+                              ? 'text-neutral-900 font-semibold bg-neutral-100 px-2 py-0.5 rounded-md' 
+                              : 'text-neutral-500 hover:text-neutral-700 font-medium'
                           }`}
                         >
                           {crumb}
@@ -254,12 +267,20 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
                   </nav>
                 )}
               </div>
+              
+              {/* Right Side Tools */}
+              <div className="flex items-center gap-3">
+                <button className="p-2 rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-all duration-200 relative">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
+                </button>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-4 md:p-6">
+        {/* Page Content with Slide Up Animation */}
+        <main className="flex-1 p-3 md:p-8 animate-[slideInUp_0.4s_cubic-bezier(0.16,1,0.3,1)] overflow-x-hidden min-h-0">
           {children}
         </main>
       </div>

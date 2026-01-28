@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, Users, TrendingUp, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Activity, Users, TrendingUp, Zap, ArrowLeft } from 'lucide-react';
 import { ActiveUsersChart } from '../components/engagement/ActiveUsersChart';
 import { RetentionCohortTable } from '../components/engagement/RetentionCohortTable';
 import { FeatureUsageCard } from '../components/engagement/FeatureUsageCard';
 import { engagementService, EngagementMetric } from '../services/engagement.service';
 
 export function EngagementPage() {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState<EngagementMetric[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,9 +44,18 @@ export function EngagementPage() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">User Engagement</h1>
-          <p className="text-gray-600 mt-1">Monitor user activity, retention, and feature adoption</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">User Engagement</h1>
+            <p className="text-gray-600 mt-1">Monitor user activity, retention, and feature adoption</p>
+          </div>
         </div>
         <button
           onClick={loadMetrics}

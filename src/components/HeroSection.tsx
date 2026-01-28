@@ -242,18 +242,31 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: 0.6, duration: 0.8 }}
-                  className="relative group rounded-2xl p-6 md:p-8 border border-white/10 shadow-2xl w-64 md:w-72"
+                  className="relative group rounded-2xl border border-white/10 shadow-2xl w-64 md:w-72"
                   style={{ backgroundColor: colors.neutral[900], color: 'white' }}
                 >
-                  <div className="text-xs mb-2 text-center uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Phone Number</div>
-                  <div className="text-xl md:text-2xl font-mono tracking-tighter text-center" style={{ color: 'white' }}>
-                    +234 812 345 6789
+                  <div className="relative overflow-hidden rounded-2xl p-6 md:p-8 h-full w-full">
+                    <div className="relative z-10">
+                      <div className="text-xs mb-2 text-center uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>Phone Number</div>
+                      <div className="text-xl md:text-2xl font-mono tracking-tighter text-center" style={{ color: 'white' }}>
+                        +234 812 345 6789
+                      </div>
+                    </div>
+                    
+                    {/* Secure Scan Effect */}
+                    <motion.div
+                      className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent -skew-x-12"
+                      initial={{ x: '-150%' }}
+                      animate={{ x: '150%' }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+                    />
                   </div>
+
                   <motion.div 
                     className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"
                     animate={{ opacity: [0.3, 0.5, 0.3] }}
                     transition={{ duration: 3, repeat: Infinity }}
-                    style={{ transform: "translateZ(20px)" }}
+                    style={{ transform: "translateZ(20px)", zIndex: -1 }}
                   />
                 </motion.div>
 
@@ -276,7 +289,7 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                   initial={{ x: 20, opacity: 0, scale: 0.9 }}
                   animate={{ x: 0, opacity: 1, scale: 1 }}
                   transition={{ delay: 1.4, duration: 0.8, type: "spring" }}
-                  className="relative group rounded-2xl p-6 md:p-8 border shadow-2xl w-64 md:w-72"
+                  className="relative group rounded-2xl border shadow-2xl w-64 md:w-72"
                   style={{ 
                     backgroundColor: colors.black, 
                     color: 'white', 
@@ -284,21 +297,31 @@ export function HeroSection({ onNavigate, isAuthenticated, setShowWaitlist }: He
                     boxShadow: `0 0 50px ${colors.brand.secondary[500]}33` 
                   }}
                 >
-                  <div className="flex flex-col items-center gap-3">
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <CheckCircle className="h-10 w-10" style={{ color: colors.brand.secondary[500] }} />
-                    </motion.div>
-                    <div className="text-center">
-                      <div className="text-xs mb-1 uppercase tracking-widest" style={{ color: `${colors.brand.secondary[500]}99` }}>Verified PIN</div>
-                      <div className="text-xl md:text-2xl font-semibold" style={{ color: 'white' }}>PIN-234-812345</div>
+                  <div className="relative overflow-hidden rounded-2xl p-6 md:p-8 h-full w-full">
+                    <div className="relative z-10 flex flex-col items-center gap-3">
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <CheckCircle className="h-10 w-10" style={{ color: colors.brand.secondary[500] }} />
+                      </motion.div>
+                      <div className="text-center">
+                        <div className="text-xs mb-1 uppercase tracking-widest" style={{ color: `${colors.brand.secondary[500]}99` }}>Verified PIN</div>
+                        <div className="text-xl md:text-2xl font-semibold" style={{ color: 'white' }}>PIN-234-812345</div>
+                      </div>
                     </div>
+
+                    {/* Secure Scan Effect */}
+                    <motion.div
+                      className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-emerald-400/10 to-transparent -skew-x-12"
+                      initial={{ x: '-150%' }}
+                      animate={{ x: '150%' }}
+                      transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut", delay: 1.5 }}
+                    />
                   </div>
                   
                   {/* Outer Glow */}
-                  <div className="absolute -inset-0.5 rounded-2xl bg-emerald-500/20 blur opacity-70" style={{ transform: "translateZ(-10px)" }} />
+                  <div className="absolute -inset-0.5 rounded-2xl bg-emerald-500/20 blur opacity-70" style={{ transform: "translateZ(-10px)", zIndex: -1 }} />
                 </motion.div>
                 
                 {/* Mobile version without 3D effect */}

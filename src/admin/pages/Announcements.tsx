@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
   Bell,
@@ -8,11 +9,13 @@ import {
   Trash2,
   CheckCircle,
   XCircle,
-  Megaphone
+  Megaphone,
+  ArrowLeft
 } from 'lucide-react';
 import { notificationService, type Announcement, type NotificationStatistics } from '../services/notification.service';
 
 export function Announcements() {
+  const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [statistics, setStatistics] = useState<NotificationStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,9 +174,18 @@ export function Announcements() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Announcements</h1>
-          <p className="text-gray-600 mt-1">Manage system-wide announcements and notifications</p>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/admin/dashboard')} 
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-6 w-6 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Announcements</h1>
+            <p className="text-gray-600 mt-1">Manage system-wide announcements and notifications</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <button

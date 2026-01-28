@@ -255,39 +255,39 @@ export function SolutionPage() {
           <div className="p-6 overflow-x-auto" style={{ backgroundColor: colors.black }}>
               <pre className="text-sm text-white/80">
                 <code>
-                  <span style={{ color: 'var(--brand-accent)' }}>POST</span> <span className="text-white">/api/v1/pin/create</span>
+                  <span style={{ color: colors.brand.accent[400] }}>POST</span> <span className="text-white">/api/v1/pin/create</span>
                   {'\n\n'}
-                  <span className="text-white/70">{'{'}</span>
-                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                  <span className="text-white">{'{'}</span>
+                  {'\n  '}<span style={{ color: colors.brand.primary[300] }}>
                     "phone"
-                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                  </span><span className="text-white">:</span> <span style={{ color: colors.brand.secondary[300] }}>
                     "+234 803 555 1212"
-                  </span>,
-                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                  </span><span className="text-white">,</span>
+                  {'\n  '}<span style={{ color: colors.brand.primary[300] }}>
                     "partner_token"
-                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                  </span><span className="text-white">:</span> <span style={{ color: colors.brand.secondary[300] }}>
                     "pk_live_..."
                   </span>
-                  {'\n'}<span className="text-white/70">{'}'}</span>
+                  {'\n'}<span className="text-white">{'}'}</span>
                   {'\n\n'}
-                  <span className="text-white/80">// Response</span>
-                  {'\n'}<span className="text-white/80">{'{'}</span>
-                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                  <span className="text-gray-400">// Response</span>
+                  {'\n'}<span className="text-white">{'{'}</span>
+                  {'\n  '}<span style={{ color: colors.brand.primary[300] }}>
                     "pin"
-                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                  </span><span className="text-white">:</span> <span style={{ color: colors.brand.secondary[300] }}>
                     "PIN-234-8035551212"
-                  </span>,
-                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                  </span><span className="text-white">,</span>
+                  {'\n  '}<span style={{ color: colors.brand.primary[300] }}>
                     "status"
-                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                  </span><span className="text-white">:</span> <span style={{ color: colors.brand.secondary[300] }}>
                     "verified"
-                  </span>,
-                  {'\n  '}<span style={{ color: 'var(--brand-primary)' }}>
+                  </span><span className="text-white">,</span>
+                  {'\n  '}<span style={{ color: colors.brand.primary[300] }}>
                     "trust_score"
-                  </span>: <span style={{ color: 'var(--brand-secondary)' }}>
+                  </span><span className="text-white">:</span> <span style={{ color: colors.brand.secondary[300] }}>
                     0.92
                   </span>
-                  {'\n'}<span className="text-white/70">{'}'}</span>
+                  {'\n'}<span className="text-white">{'}'}</span>
                 </code>
               </pre>
             </div>
