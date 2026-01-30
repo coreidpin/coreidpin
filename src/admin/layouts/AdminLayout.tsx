@@ -148,7 +148,7 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
             {navigationGroups.map((group) => (
               <div key={group.title}>
                 <h3 
-                  className={`px-3 mb-3 text-[10px] font-bold text-neutral-500 uppercase tracking-widest transition-opacity duration-300 ${
+                  className={`px-3 mb-3 text-[10px] font-bold text-brand-primary-300/60 uppercase tracking-widest transition-opacity duration-300 ${
                     isCollapsed && !isMobile ? 'opacity-0' : 'opacity-100'
                   }`}
                   style={{ display: isCollapsed && !isMobile ? 'none' : 'block' }}
@@ -167,14 +167,14 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
                         title={isCollapsed && !isMobile ? item.label : undefined}
                         className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative overflow-hidden active:scale-95 ${
                           isActive 
-                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/20' 
-                            : 'text-neutral-400 hover:bg-white/5 hover:text-white'
+                            ? 'bg-brand-primary-600 text-white shadow-md shadow-brand-primary-900/20' 
+                            : 'text-brand-primary-100/70 hover:bg-white/5 hover:text-white'
                         }`}
                       >
                         {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3 bg-white/30 rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-white/20 rounded-r-full" />
                         )}
-                        <Icon className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isActive ? 'scale-110 text-white' : 'group-hover:scale-110 group-hover:text-white'}`} />
+                        <Icon className={`h-5 w-5 shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
                         <span 
                           className={`font-medium text-sm transition-all duration-300 origin-left ${
                             isCollapsed && !isMobile 
@@ -193,9 +193,9 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
+          <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-sm">
             <div className={`flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer group ${isCollapsed && !isMobile ? 'justify-center' : ''}`}>
-              <div className="w-9 h-9 rounded-full ring-2 ring-white/10 bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg relative overflow-hidden group-hover:ring-indigo-500/50 transition-all duration-300">
+              <div className="w-9 h-9 rounded-full ring-2 ring-white/10 bg-gradient-to-br from-brand-primary-400 to-brand-primary-600 flex items-center justify-center shrink-0 shadow-lg relative overflow-hidden group-hover:ring-brand-primary-500/50 transition-all duration-300">
                 <span className="text-white font-bold text-xs relative z-10">SA</span>
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
               </div>
@@ -205,7 +205,7 @@ export function AdminLayout({ children, breadcrumbs = [], onLogout }: AdminLayou
                 }`}
               >
                 <p className="text-sm font-semibold text-white truncate">Super Admin</p>
-                <p className="text-[10px] text-neutral-400 truncate tracking-wide">admin@gidipin.work</p>
+                <p className="text-xs text-brand-primary-200 truncate">admin@gidipin.work</p>
               </div>
             </div>
             

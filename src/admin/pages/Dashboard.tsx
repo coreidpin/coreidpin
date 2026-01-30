@@ -155,7 +155,7 @@ export function AdminDashboard() {
               subtext: `+${stats.dailySignups} today`,
               icon: Users,
               color: "text-blue-600",
-              bgColor: "bg-blue-50/50",
+              bgColor: "bg-blue-50",
               trend: "up"
             },
             {
@@ -164,7 +164,7 @@ export function AdminDashboard() {
               subtext: `${stats.totalUsers > 0 ? ((stats.activeProfessionals / stats.totalUsers) * 100).toFixed(1) : 0}% of total`,
               icon: GraduationCap,
               color: "text-indigo-600",
-              bgColor: "bg-indigo-50/50",
+              bgColor: "bg-indigo-50",
               trend: "neutral"
             },
             {
@@ -173,7 +173,7 @@ export function AdminDashboard() {
               subtext: `${stats.apiIntegrations} API integrations`,
               icon: Building,
               color: "text-amber-600",
-              bgColor: "bg-amber-50/50",
+              bgColor: "bg-amber-50",
               trend: "up"
             },
             {
@@ -182,25 +182,24 @@ export function AdminDashboard() {
               subtext: "This month",
               icon: CheckCircle,
               color: "text-emerald-600",
-              bgColor: "bg-emerald-50/50",
+              bgColor: "bg-emerald-50",
               trend: "up"
             }
           ].map((stat, i) => (
-            <Card key={i} className="group relative overflow-hidden border-none shadow-[0_2px_10px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 bg-white">
+            <Card key={i} className="group overflow-hidden border-neutral-200/60 shadow-sm hover:shadow-xl hover:shadow-brand-primary-500/5 transition-all duration-300 hover:-translate-y-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-neutral-500 tracking-wide uppercase text-[11px]">{stat.title}</CardTitle>
-                <div className={cn("p-2 rounded-xl transition-colors duration-300 group-hover:bg-neutral-50", stat.bgColor)}>
-                  <stat.icon className={cn("h-4.5 w-4.5 transition-transform duration-300 group-hover:scale-110", stat.color)} />
+                <CardTitle className="text-sm font-medium text-neutral-500">{stat.title}</CardTitle>
+                <div className={cn("p-2 rounded-lg transition-colors duration-300 group-hover:bg-white", stat.bgColor)}>
+                  <stat.icon className={cn("h-4 w-4", stat.color)} />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-neutral-900 tracking-tight">{stat.value}</div>
-                <div className="flex items-center mt-1 text-xs font-medium text-neutral-500">
-                  {stat.trend === 'up' && <ArrowUpRight className="h-3.5 w-3.5 mr-1 text-emerald-500" />}
+                <div className="text-2xl font-bold text-neutral-900">{stat.value}</div>
+                <div className="flex items-center mt-1 text-xs text-neutral-500">
+                  {stat.trend === 'up' && <ArrowUpRight className="h-3 w-3 mr-1 text-emerald-500" />}
                   {stat.subtext}
                 </div>
-                {/* Decorative gradient overlay on hover */}
-                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-neutral-200 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-primary-500/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
               </CardContent>
             </Card>
           ))}
